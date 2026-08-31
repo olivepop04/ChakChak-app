@@ -1,0 +1,140 @@
+/**
+ * 서비스 전역 상수.
+ *
+ * 여기 없는 문자열을 화면에 직접 적지 말 것.
+ * 사람마다 '아동청소년' / '아동·청소년' / '청소년' 을 다르게 적으면
+ * 추천 필터가 조용히 안 맞기 시작한다.
+ */
+
+// ── 카테고리 (DB actions.category CHECK 와 반드시 같아야 한다) ──────────
+export const CATEGORIES = [
+  '동물',
+  '환경',
+  '지역사회',
+  '아동·청소년',
+  '노인',
+  '장애',
+  '교육',
+  '기타',
+] as const;
+export type Category = (typeof CATEGORIES)[number];
+
+// ── 참여 가능 시간 ────────────────────────────────────────────────
+export const AVAILABLE_TIMES = [
+  '평일',
+  '주말',
+  '오전',
+  '오후',
+  '저녁',
+  '시간이 생길 때마다',
+] as const;
+export type AvailableTime = (typeof AVAILABLE_TIMES)[number];
+
+// ── 성별 ─────────────────────────────────────────────────────────
+export const GENDERS = ['MALE', 'FEMALE'] as const;
+export type Gender = (typeof GENDERS)[number];
+
+export const GENDER_LABEL: Record<Gender, string> = {
+  MALE: '남성',
+  FEMALE: '여성',
+};
+
+/** 항목별 성별 제한. 예) 남성 어르신 목욕 봉사 → MALE */
+export const GENDER_REQUIREMENTS = ['MALE', 'FEMALE', 'ANY'] as const;
+export type GenderRequirement = (typeof GENDER_REQUIREMENTS)[number];
+
+export const GENDER_REQUIREMENT_LABEL: Record<GenderRequirement, string> = {
+  MALE: '남성만',
+  FEMALE: '여성만',
+  ANY: '누구나',
+};
+
+// ── 액션 상태 ─────────────────────────────────────────────────────
+export const ACTION_STATUSES = [
+  'DRAFT',
+  'ACTIVE',
+  'ENDED',
+  'COMPLETED',
+  'CANCELLED',
+] as const;
+export type ActionStatus = (typeof ACTION_STATUSES)[number];
+
+export const ACTION_STATUS_LABEL: Record<ActionStatus, string> = {
+  DRAFT: '작성 중',
+  ACTIVE: '모집 중',
+  ENDED: '결과 작성 필요',
+  COMPLETED: '완료',
+  CANCELLED: '취소됨',
+};
+
+// ── 참여 상태 ─────────────────────────────────────────────────────
+export const PARTICIPATION_STATUSES = [
+  'BEFORE_ACTION',
+  'AFTER_ACTION',
+  'ACTUALLY_PARTICIPATED',
+  'LEFT',
+] as const;
+export type ParticipationStatus = (typeof PARTICIPATION_STATUSES)[number];
+
+export const PARTICIPATION_STATUS_LABEL: Record<ParticipationStatus, string> = {
+  BEFORE_ACTION: '참여 예정',
+  AFTER_ACTION: '소감 작성 필요',
+  ACTUALLY_PARTICIPATED: '참여 완료',
+  LEFT: '참여 취소',
+};
+
+// ── 모집 항목 ─────────────────────────────────────────────────────
+export type ItemType = 'PERSON' | 'GOODS';
+
+/**
+ * RANGE   min=3, max=3  → "정확히 3명"
+ * RANGE   min=3, max=5  → "3~5명"
+ * MINIMUM min=10, max=null → "최소 10명, 계속 모집"
+ */
+export type TargetType = 'RANGE' | 'MINIMUM';
+
+/** 물품 단위 추천값. 자유 입력도 허용한다. */
+export const UNIT_SUGGESTIONS = [
+  '개',
+  '통',
+  '박스',
+  '벌',
+  '권',
+  'kg',
+  '세트',
+] as const;
+
+export const PERSON_UNIT = '명';
+
+// ── 알림 6종 ──────────────────────────────────────────────────────
+export const NOTIFICATION_TYPES = [
+  'SCHEDULE',
+  'RESULT_REQUEST',
+  'RESULT_PUBLISHED',
+  'VOICE_REQUEST',
+  'CANCELLED',
+  'INVITED',
+] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+// ── 업로드 제한 ────────────────────────────────────────────────────
+export const UPLOAD = {
+  /** 액션 대표 이미지 */
+  ACTION_IMAGE_MAX: 3,
+  /** 결과 사진 — 최소 1장 필수 */
+  RESULT_IMAGE_MIN: 1,
+  RESULT_IMAGE_MAX: 5,
+  MAX_BYTES: 5 * 1024 * 1024,
+  ALLOWED_MIME: ['image/jpeg', 'image/png', 'image/webp'] as const,
+} as const;
+
+// ── 텍스트 길이 ────────────────────────────────────────────────────
+export const LIMITS = {
+  CREW_VOICE_MIN: 10,
+  CREW_VOICE_MAX: 1000,
+  CHAT_MIN: 1,
+  CHAT_MAX: 1000,
+  NICKNAME_MIN: 2,
+  NICKNAME_MAX: 20,
+  CANCEL_REASON_MIN: 5,
+} as const;

@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+
+html,
+body {
+  @apply bg-neutral-100;
+}
+
+/* The app shell is a centered mobile-width column. */
+.app-shell {
+  @apply mx-auto min-h-dvh max-w-app bg-white;
+}
