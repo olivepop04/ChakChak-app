@@ -37,12 +37,17 @@ export const TEMPERATURE: Record<AgentType, number> = {
   TRENDS: 0.4,
 };
 
-interface CallOptions<T> {
+/**
+ * 스키마 타입(S)에서 결과 타입을 뽑아냅니다.
+ * z.ZodSchema<T> 로 받으면 .default() 를 쓴 필드가 optional 로 추론되어
+ * 호출하는 쪽에서 "undefined 일 수 있음" 오류가 납니다.
+ */
+interface CallOptions<S extends z.ZodTypeAny> {
   agent: AgentType;
   promptVersion: string;
   system: string;
   user: string;
-  schema: z.ZodSchema<T>;
+  schema: S;
   temperature?: number;
   maxTokens?: number;
   /** 로그용. 없으면 생략된다 */
@@ -60,7 +65,9 @@ export class AIError extends Error {
   }
 }
 
-export async function callStructuredAI<T>(opts: CallOptions<T>): Promise<T> {
+export async function callStructuredAI<S extends z.ZodTypeAny>(
+  opts: CallOptions<S>,
+): Promise<z.infer<S>> {
   const {
     agent,
     promptVersion,

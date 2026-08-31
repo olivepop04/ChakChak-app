@@ -139,6 +139,23 @@ try {
   badErr ? ok('MINIMUM 에 max 를 넣으면 DB가 거절함')
          : no('CHECK 제약이 작동하지 않음 — MINIMUM+max 가 저장됨');
 
+  // ── 3-b. AI 색인 저장 권한 ────────────────────────────────
+  // 액션 공개 시 /api/ai/classify 가 여기에 행을 넣습니다.
+  // INSERT 정책이 빠지면 "AI 는 성공했는데 색인은 비어 있는" 상태가 됩니다.
+  console.log('');
+  console.log('[3-b] Owner 가 AI 색인을 저장할 수 있는가');
+
+  const cA = await asUser(emailA);
+  const { error: metaErr } = await cA.from('action_ai_metadata').upsert({
+    action_id: act.id,
+    categories: ['동물'],
+    activity_types: [], target_groups: [], participation_modes: [],
+    skills: [], keywords: ['검증'],
+    difficulty: null, ai_model: 'test', prompt_version: 'verify',
+  });
+  metaErr ? no('색인 저장 실패 — RLS INSERT 정책을 확인하세요', metaErr.message.slice(0, 50))
+          : ok('Owner 가 action_ai_metadata 에 저장 가능');
+
   // ── 4. 성별 제한 ──────────────────────────────────────────
   console.log('\n[4] 항목별 성별 제한이 서버에서 막히는가  (D4)');
 
