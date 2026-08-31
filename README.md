@@ -339,6 +339,22 @@ npm run build
 npm run typecheck
 ```
 
+시연용 데이터를 채우거나 지웁니다. (로컬 전용)
+
+```bash
+npm run seed
+```
+
+```bash
+npm run seed:clean
+```
+
+스키마를 바꾼 뒤 권한·정원·성별 제한이 실제로 막히는지 확인합니다.
+
+```bash
+npm run verify:db
+```
+
 ---
 
 ## DB 세팅 (최초 1회 · 민호 담당)

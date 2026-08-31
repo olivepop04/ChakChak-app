@@ -196,51 +196,66 @@ const res = await cancelAction(supabase, actionId, reason);
 
 ## 2~3주차 — 시드 데이터
 
-**파일:** `supabase/04_seed.sql` (예시 1건이 이미 있습니다)
+**파일:** `scripts/seed.mjs`
 
-### 왜 필요한가
+### 이미 39개가 들어 있습니다
 
-트렌드 그래프는 데이터가 없으면 **빈 화면으로 발표에 나갑니다.** 그리고 Home 피드도 액션이 3개뿐이면 초라해 보입니다.
-
-### 목표
-
-- 액션 **30~50개**
-- 카테고리 8종에 고루 분포 (동물이 15개, 나머지 1개씩 이러면 그래프가 의미 없습니다)
-- 기간을 흩뿌리기 — 최근 8주에 걸쳐 `created_at`을 다르게 (주간 추이 그래프를 위해)
-- 상태 섞기 — ACTIVE 절반, COMPLETED 30%, ENDED·CANCELLED 조금
-- 참여 데이터도 필요 — 액션마다 `participations` 몇 건씩
-
-### 만드는 순서
-
-1. Supabase 대시보드 → Authentication → Users 에서 **테스트 계정 5~8개** 생성
-2. 그 계정들의 `id`를 복사
-3. `04_seed.sql`의 예시를 복사해서 늘리기
-
-**`created_at`을 흩뿌리는 요령**
-
-```sql
-INSERT INTO actions (owner_id, title, ..., created_at)
-VALUES (v_owner, '...', ..., now() - interval '23 days');
+```bash
+npm run seed
 ```
 
-**참여 데이터 넣기** — `join_action()` RPC는 로그인 상태를 요구하므로 시드에서는 직접 넣습니다.
-
-```sql
-INSERT INTO participations (action_id, user_id, status)
-VALUES (v_action, v_user2, 'ACTUALLY_PARTICIPATED');
-
-INSERT INTO participation_items (participation_id, action_item_id, quantity)
-VALUES (v_participation, v_item, 1);
+```bash
+npm run seed:clean
 ```
 
-> 소감(`crew_voices`)도 몇 건 넣어야 결과 화면이 채워집니다.
+`npm run seed` 는 **여러 번 돌려도 안전합니다.** 기존 시드를 지우고 새로 넣습니다.
+시드 계정은 이메일이 `@good.seed` 로 끝나서 그것만 골라 지웁니다. **실제 사용자 데이터는 건드리지 않습니다.**
 
-### 완료 기준
+시드 계정으로 로그인해볼 수 있습니다.
 
-- [ ] Home 피드에 액션이 20개 이상 보인다
-- [ ] 카테고리 8종이 모두 최소 2개씩 있다
-- [ ] 완료된 액션에 결과와 소감이 들어 있다
-- [ ] 모집 방식 3가지(정확히 N명 / N~M명 / 최소 N명)가 모두 들어 있다
+```
+seed1@good.seed  (seed2 … seed8)
+비밀번호: good1234!
+```
+
+### 데이터를 바꾸려면
+
+`scripts/seed.mjs` 파일 **맨 위 `USERS` 와 `ACTIONS` 배열만** 고치면 됩니다. 나머지는 건드릴 필요 없습니다.
+
+액션 하나는 이렇게 생겼습니다.
+
+```js
+['우리 동네 보호소를 함께 도와요', '동물', IMG.dog, '서울특별시 성동구 왕십리로 100', 'ACTIVE', 0, 5,
+  [['산책 도우미', 'PERSON', 'M', 5, null, '명', 'ANY'],
+   ['사료',       'GOODS',  'M', 50, null, '포', 'ANY']]],
+```
+
+| 자리 | 뜻 |
+|---|---|
+| 1 | 제목 |
+| 2 | 카테고리 (8종 중 하나) |
+| 3 | 대표 이미지 |
+| 4 | 장소 |
+| 5 | 상태 — `ACTIVE` / `ENDED` / `COMPLETED` / `CANCELLED` |
+| 6 | 며칠 전에 만들어졌는지 (주간 추이 그래프용) |
+| 7 | 활동일이 며칠 뒤(+) 또는 며칠 전(−) |
+| 8 | 모집 항목들 — `[이름, 종류, 방식, 최소, 최대, 단위, 성별]` |
+
+**방식**은 `'R'`(정해진 인원, 최소~최대) 또는 `'M'`(최소 인원만, 상한 없음)입니다.
+
+> ⚠️ 상태가 `COMPLETED` 면 7번(활동일)이 반드시 **음수**여야 합니다. 이미 끝난 활동이어야 결과가 있을 수 있으니까요.
+
+### 현재 분포
+
+```
+카테고리  8종 전부 (3~6개씩)
+상태      ACTIVE 24 · COMPLETED 10 · ENDED 4 · CANCELLED 1
+기간      최근 8주에 분산
+모집방식  RANGE 22 · MINIMUM 32
+결과      10건 · 소감 25건 · 좋아요 115건
+```
+
+발표용으로 더 늘리고 싶으면 `ACTIONS` 에 줄을 추가하고 다시 `npm run seed` 를 돌리면 됩니다.
 
 ---
 
