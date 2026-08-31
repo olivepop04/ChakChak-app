@@ -24,9 +24,13 @@ const PROTECTED_PREFIXES = [
   '/user',
 ];
 
-/** /action/[id] 는 비회원도 열람 가능하지만, 그 하위는 로그인 필요 */
+/**
+ * /action/[id] 는 비회원도 열람 가능하지만, 그 하위는 로그인 필요.
+ * /action/[id]/result 는 결과 열람이라 공개다. 작성(/result/write)만 막는다.
+ */
 const PROTECTED_ACTION_SUBPATHS = [
   '/join',
+  '/welcome', // You're In! 화면
   '/chat',
   '/crew',
   '/result/write',

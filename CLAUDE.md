@@ -41,14 +41,53 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
 **3. 데이터가 빈 배열로만 나온다면 RLS입니다** — 에러가 안 나고 조용히 빈 결과가 옵니다. `supabase/02_rls.sql`에서 해당 테이블 정책을 확인하세요.
 
-**4. 참여 신청·소감 저장은 반드시 RPC로** — `.insert()`를 여러 번 부르면 트랜잭션이 아닙니다. 아래 함수를 쓰세요.
+**4. 데이터는 공용 함수로만** — 아래 5번 참고.
+
+**5. 진행률은 뷰에서 읽으세요** — `action_item_progress`. 카드마다 합계 쿼리를 돌리면 피드에서 쿼리가 수십 번 나갑니다. (`lib/queries/`가 이미 그렇게 하고 있습니다)
+
+---
+
+## 데이터 다루는 법 (가장 중요)
+
+> **읽기는 `lib/queries/`, 쓰기는 `lib/mutations.ts`.**
+> 화면에서 `supabase.from(...)` 이나 `supabase.rpc(...)` 를 직접 쓰지 마세요.
+
+각자 쿼리를 짜면 `LEFT` 제외를 빠뜨리거나 조인을 틀리게 해서 **같은 데이터가 화면마다 다르게 보입니다.**
+
+### 읽기
+
+| 함수 | 용도 |
+|---|---|
+| `getActionFeed` | Home 피드 (ACTIVE만) |
+| `getActionDetail` | 액션 상세 (진행률·내 참여 상태 포함) |
+| `getActionItems` | 항목별 진행 상황 |
+| `getMyCreatedActions` | 내가 만든 액션 (DRAFT 포함) |
+| `getMyJoinedActions` | 내가 참여한 액션 (LEFT 제외) |
+| `getSavedActions` | 저장한 액션 |
+| `getPublicActionsByOwner` | 남이 만든 공개 액션 |
+| `getParticipatedActions` | 남이 참여한 **완료된** 액션 |
+| `getRecommendCandidates` | 추천 후보 (제외 규칙 적용됨) |
+| `getActionCrew` | The Crew 목록 |
+| `getActionResult` | 결과 + 소감 |
+| `getChatPosts` | 게시판 (원글 + 댓글) |
+| `getProfile` / `getFollowers` / `getFollowing` / `searchUsers` | 프로필·팔로우 |
+| `getNotifications` | 알림 |
+
+### 쓰기 — 전부 `lib/mutations.ts`
+
+모든 함수가 `{ ok, data }` 또는 `{ ok: false, message }` 를 돌려줍니다.
+`message`는 **그대로 사용자에게 보여주면 되는 한국어**라 `try/catch`가 필요 없습니다.
 
 ```ts
-await supabase.rpc('join_action', { p_action_id: id, p_items: items });
-await supabase.rpc('submit_crew_voice', { p_action_id: id, p_content: text });
+const res = await joinAction(supabase, actionId, items);
+if (!res.ok) { setError(res.message); return; }
 ```
 
-**5. 진행률은 뷰에서 읽으세요** — `action_item_progress`. 카드마다 합계 쿼리를 돌리면 피드에서 쿼리가 수십 번 나갑니다.
+`joinAction` · `leaveAction` · `submitCrewVoice` · `postChatMessage` · `deleteChatMessage` ·
+`publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
+`toggleLike` · `toggleSave` · `toggleFollow` · `shareToUser` · `markNotificationRead`
+
+**필요한 함수가 없으면 직접 추가하지 말고 민호에게 요청하세요.** `lib/`은 공유 구역입니다.
 
 ---
 

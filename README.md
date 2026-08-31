@@ -1,102 +1,363 @@
 # GOOD
 
-좋은 일(액션)을 만들고, 참여하고, 결과까지 공유하는 모바일 웹 서비스입니다.
+좋은 일(**액션**)을 만들고, 참여하고, 결과까지 함께 나누는 모바일 웹 서비스입니다.
 
-- Next.js 15 (App Router) · TypeScript · Tailwind CSS
-- Supabase (PostgreSQL · Auth · Storage)
-- OpenAI gpt-4o-mini · Recharts
-- Vercel 배포
-
-개발 규칙과 결정 사항은 [CLAUDE.md](./CLAUDE.md)에 있습니다. **먼저 읽어주세요.**
+- **Next.js 15** (App Router) · TypeScript · Tailwind CSS
+- **Supabase** — 데이터베이스 · 로그인 · 파일 저장
+- **OpenAI** gpt-4o-mini — AI 에이전트 3종
+- **Vercel** 배포
 
 ---
 
-## 처음 세팅 (팀원용)
+## 목차
 
-### 1. 코드 받기
+1. [처음 시작하기](#1-처음-시작하기)
+2. [매일 하는 작업 흐름](#2-매일-하는-작업-흐름)
+3. [내가 맡은 부분 찾기](#3-내가-맡은-부분-찾기)
+4. [데이터 다루는 법](#4-데이터-다루는-법)
+5. [폴더 구조](#5-폴더-구조)
+6. [막혔을 때](#6-막혔을-때)
+
+---
+
+## 1. 처음 시작하기
+
+### 1-1. 준비물 확인
+
+터미널(Windows는 **Git Bash** 또는 PowerShell)을 열고 아래를 하나씩 쳐보세요.
 
 ```bash
-git clone <저장소 주소>
+node -v
+```
+
+`v20` 이상이 나와야 합니다. 아무것도 안 나오거나 버전이 낮으면 [nodejs.org](https://nodejs.org)에서 **LTS 버전**을 설치하세요.
+
+```bash
+git --version
+```
+
+버전이 안 나오면 [git-scm.com](https://git-scm.com)에서 설치하세요.
+
+### 1-2. 코드 받기
+
+```bash
+git clone https://github.com/minho880910-spec/final_proj.git
+```
+
+```bash
 cd final_proj
+```
+
+### 1-3. 라이브러리 설치
+
+```bash
 npm install
 ```
 
-### 2. 환경변수
+2~3분 걸립니다. `node_modules` 폴더가 생기면 성공입니다. 이 폴더는 git에 올라가지 않으니 신경 쓰지 않아도 됩니다.
 
-`.env.local.example`을 `.env.local`로 복사하고 값을 채웁니다.
+> **warning가 여러 줄 나와도 정상입니다.** `error`만 아니면 넘어가세요.
+
+### 1-4. 환경변수 파일 만들기
 
 ```bash
 cp .env.local.example .env.local
 ```
 
-Supabase 값은 대시보드의 **Project Settings → API**에 있습니다.
-`.env.local`은 git에 올라가지 않습니다. **키를 메신저로 주고받지 마세요.**
+> PowerShell을 쓴다면 `copy .env.local.example .env.local`
 
-### 3. 실행
+`.env.local` 파일을 열면 이렇게 생겼습니다.
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...
+OPENAI_API_KEY=sk-...
+```
+
+**민호에게 받은 값으로 채우세요.** 아직 못 받았어도 다음 단계는 진행할 수 있습니다.
+
+> ⚠️ **이 파일은 절대 git에 올리면 안 됩니다.** `.gitignore`에 이미 등록돼 있으니 그냥 두시면 됩니다.
+> 그리고 **키를 카톡·디스코드로 주고받지 마세요.** 캡처가 남고 대화방은 검색됩니다.
+
+### 1-5. 실행해보기
 
 ```bash
 npm run dev
 ```
 
-http://localhost:3000 을 엽니다. Supabase 연결 전에도 화면은 뜹니다.
+터미널에 `Ready in ...` 이 뜨면 브라우저에서 **http://localhost:3000** 을 여세요.
+
+Supabase 값을 아직 안 채웠다면 노란 안내 상자가 보입니다. **정상입니다.** 화면 아래쪽에 모집 표시 예시와 아바타가 보이면 설치가 제대로 된 것입니다.
+
+끄고 싶으면 터미널에서 `Ctrl + C`.
 
 ---
 
-## DB 만들기 (최초 1회, 민호가 진행)
+## 2. 매일 하는 작업 흐름
 
-Supabase 대시보드 → **SQL Editor**에서 아래 순서대로 실행합니다.
+### 2-1. 작업 시작할 때
 
-| 순서 | 파일 | 내용 |
-|---|---|---|
-| 1 | `supabase/01_schema.sql` | 테이블 14개 · 뷰 · 트리거 |
-| 2 | `supabase/02_rls.sql` | RLS 정책 전체 · Storage 버킷 |
-| 3 | `supabase/03_functions.sql` | RPC 함수 (참여·소감·상태 전환) |
-| 4 | `supabase/04_seed.sql` | 시연용 더미 데이터 |
-
-한 파일씩 통째로 붙여넣고 실행하세요. 나눠서 하면 어디까지 적용됐는지 알 수 없게 됩니다.
-
-**이후 스키마 변경은 콘솔에서 직접 하지 말고** `supabase/05_...sql` 처럼 새 파일로 쌓습니다.
-
-타입 파일은 스키마를 올린 뒤 다시 생성합니다.
+**항상 최신 코드를 먼저 받으세요.** 이걸 건너뛰면 나중에 충돌이 크게 납니다.
 
 ```bash
-npx supabase gen types typescript --project-id <프로젝트ID> > lib/types/database.ts
+git checkout dev && git pull origin dev
 ```
+
+그 다음 **내 작업용 브랜치**를 만듭니다. 이름은 `feature/이름-화면` 형식으로.
+
+```bash
+git checkout -b feature/민호-알림화면
+```
+
+### 2-2. 작업하는 중
+
+파일을 고치고 저장하면 브라우저가 자동으로 새로고침됩니다. 계속 그렇게 만들어 나가면 됩니다.
+
+### 2-3. 올리기 전에 반드시
+
+```bash
+npm run build
+```
+
+**이게 통과해야 올립니다.** 타입 오류가 있는 코드가 `dev`에 들어가면 다음 사람이 전부 막힙니다.
+오류가 나면 메시지에 파일 이름과 줄 번호가 나오니 그곳을 고치세요.
+
+### 2-4. 올리기
+
+```bash
+git add -A && git commit -m "feat: 알림 목록 화면 추가"
+```
+
+```bash
+git push -u origin feature/민호-알림화면
+```
+
+터미널에 GitHub 링크가 뜹니다. 그걸 눌러 **Pull request**를 만들고, **받는 브랜치가 `dev`인지** 확인한 뒤 만드세요. `main`으로 가면 안 됩니다.
+
+### 2-5. 커밋 메시지 쓰는 법
+
+앞에 종류를 붙이고 한국어로 무엇을 했는지 씁니다.
+
+| 앞머리 | 언제 |
+|---|---|
+| `feat:` | 새 기능을 만들었을 때 |
+| `fix:` | 잘못된 걸 고쳤을 때 |
+| `style:` | 화면 모양만 바꿨을 때 |
+| `refactor:` | 동작은 같은데 코드를 정리했을 때 |
+| `docs:` | 문서만 고쳤을 때 |
 
 ---
 
-## 폴더 구조
+## 3. 내가 맡은 부분 찾기
+
+**작업을 시작하기 전에 본인 담당 문서를 반드시 읽어주세요.** 화면마다 어떤 데이터를 어떻게 가져오는지, 무엇을 만들면 끝인지가 전부 적혀 있습니다.
+
+| 담당 | 문서 |
+|---|---|
+| 모두 (필독) | [docs/00-공통-개발규칙.md](docs/00-공통-개발규칙.md) |
+| 민호 — 통합·인프라·알림 | [docs/01-민호-통합.md](docs/01-민호-통합.md) |
+| 조장 — Activity·트렌드·시드 | [docs/02-조장-activity.md](docs/02-조장-activity.md) |
+| 디자이너 — UI·Home·Detail | [docs/03-디자인-ui.md](docs/03-디자인-ui.md) |
+| 개발 A — 가입·프로필·Discover | [docs/04-개발A-auth-discover.md](docs/04-개발A-auth-discover.md) |
+| 개발 B — 참여·게시판·결과 | [docs/05-개발B-join-result.md](docs/05-개발B-join-result.md) |
+
+그리고 [CLAUDE.md](./CLAUDE.md)에 팀 규칙과 결정 사항이 정리돼 있습니다. **AI에게 코드를 짜달라고 할 때도 이 파일을 같이 읽히면** 결과가 훨씬 일관됩니다.
+
+---
+
+## 4. 데이터 다루는 법
+
+**이 부분이 가장 중요합니다.** 여기만 지키면 오류가 크게 줄어듭니다.
+
+### 4-1. 규칙 두 줄
+
+> **읽을 때는 `lib/queries/` 의 함수를 부른다.**
+> **쓸 때는 `lib/mutations.ts` 의 함수를 부른다.**
+
+`supabase.from('actions').select(...)` 같은 코드를 **화면에 직접 쓰지 마세요.** 사람마다 조건을 다르게 걸어서 같은 데이터가 화면마다 다르게 보이게 됩니다.
+
+### 4-2. 읽기 예시 (서버 컴포넌트)
+
+```tsx
+// app/page.tsx
+import { createClient } from '@/lib/supabase/server';
+import { getActionFeed } from '@/lib/queries/actions';
+import { ActionCard } from '@/components/ui/ActionCard';
+
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const actions = await getActionFeed(supabase, { viewerId: user?.id ?? null });
+
+  return (
+    <div className="flex flex-col gap-4 p-5">
+      {actions.map((a) => <ActionCard key={a.id} action={a} />)}
+    </div>
+  );
+}
+```
+
+### 4-3. 쓰기 예시 (클라이언트 컴포넌트)
+
+`mutations` 함수는 **성공/실패와 사람이 읽을 수 있는 메시지**를 돌려줍니다. `try/catch`를 쓰지 않아도 됩니다.
+
+```tsx
+'use client';
+import { createClient } from '@/lib/supabase/client';
+import { joinAction } from '@/lib/mutations';
+import { useRouter } from 'next/navigation';
+
+export function JoinButton({ actionId, items }) {
+  const router = useRouter();
+
+  async function handleClick() {
+    const supabase = createClient();
+    const res = await joinAction(supabase, actionId, items);
+
+    if (!res.ok) {
+      alert(res.message);   // "「요리 담당」 모집이 완료되었습니다. (3 / 3)"
+      return;
+    }
+    router.push(`/action/${actionId}/welcome`);
+  }
+
+  return <button onClick={handleClick}>참여 확정하기</button>;
+}
+```
+
+### 4-4. 서버용? 클라이언트용?
+
+| 상황 | 쓰는 것 |
+|---|---|
+| 파일 맨 위에 `'use client'`가 **없다** | `import { createClient } from '@/lib/supabase/server'` → **`await createClient()`** |
+| 파일 맨 위에 `'use client'`가 **있다** | `import { createClient } from '@/lib/supabase/client'` → **`createClient()`** (await 없음) |
+
+버튼 클릭·입력처럼 사용자가 조작하는 부분만 `'use client'`로 만들고, 데이터를 불러와 보여주기만 하는 화면은 서버 컴포넌트로 두는 게 빠릅니다.
+
+### 4-5. 필요한 조회 함수가 없다면
+
+`lib/queries/`에 직접 추가하지 말고 **민호에게 먼저 말해주세요.** 이 폴더는 다섯 명이 함께 쓰는 공유 구역이라 각자 고치면 충돌이 납니다.
+
+---
+
+## 5. 폴더 구조
 
 ```
-app/                  화면 (App Router)
+app/                     화면 (파일 경로 = 웹 주소)
+  page.tsx               →  /
+  action/[id]/page.tsx   →  /action/어떤아이디
 components/
-  ui/                 공통 UI — 공유 구역. 고칠 때 먼저 말하기
-  layout/             헤더·하단탭
-  action/             액션 관련 컴포넌트
-lib/
-  supabase/           클라이언트 3종 (브라우저·서버·미들웨어)
-  constants/          카테고리·시간·상태 등 모든 상수
-  utils/quota.ts      모집 수량 표시 규칙 ★
-  openai.ts           AI 호출 공통 함수 (서버 전용)
-  types/database.ts   DB 타입 (자동 생성으로 교체할 것)
-supabase/             SQL
-middleware.ts         세션 갱신 + 보호 경로
+  ui/                    공통 UI  ⚠️ 공유 구역
+  layout/                헤더·하단탭  ⚠️ 공유 구역
+  action/                액션 관련 컴포넌트
+lib/                     ⚠️ 공유 구역 — 고치기 전에 말하기
+  queries/               데이터 읽기 함수
+  mutations.ts           데이터 쓰기 함수
+  supabase/              접속 설정 (건드릴 일 없음)
+  constants/             카테고리·상태 등 모든 상수
+  utils/quota.ts         모집 수량 표시 규칙 ★
+  types/                 타입 정의
+supabase/                DB SQL 파일
+docs/                    담당별 작업 가이드
+middleware.ts            로그인 확인 (건드릴 일 없음)
+CLAUDE.md                팀 규칙 ★ 먼저 읽기
 ```
+
+**⚠️ 공유 구역**을 고쳐야 하면 팀 채팅에 먼저 알려주세요. 그 외 본인 담당 폴더는 마음껏 고치셔도 됩니다.
 
 ---
 
-## 자주 쓰는 명령
+## 6. 막혔을 때
+
+### 화면에 아무것도 안 나오고 빈 목록만 보여요
+
+**십중팔구 RLS(권한 설정)입니다.** 에러가 안 나고 조용히 빈 배열이 돌아오기 때문에 찾기 어렵습니다.
+
+1. 로그인은 되어 있나요?
+2. 그 데이터를 볼 권한이 있는 사용자인가요? (예: 게시판은 참여자만 볼 수 있습니다)
+3. `supabase/02_rls.sql`에서 해당 테이블 정책을 확인하세요.
+
+### `params.id`가 undefined예요
+
+Next.js 15에서는 `params`가 **Promise**입니다.
+
+```tsx
+// ❌ 안 됨
+export default function Page({ params }: { params: { id: string } }) {
+  const id = params.id;
+}
+
+// ✅ 맞음
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+}
+```
+
+검색해서 나오는 예제 대부분이 구버전이라 **다들 한 번씩 여기서 막힙니다.**
+
+### `Module not found` 오류
+
+`npm install`을 다시 해보세요. 그래도 안 되면 `node_modules` 폴더를 지우고 다시 설치합니다.
+
+```bash
+rm -rf node_modules package-lock.json && npm install
+```
+
+### `npm run build`가 실패해요
+
+타입 오류입니다. 메시지에 `파일이름.tsx(줄번호,글자번호): error TS...` 형태로 위치가 나옵니다. 그 줄을 보세요.
+자주 나는 원인은 **`null`일 수 있는 값을 그냥 쓴 것**입니다. `값?.속성` 이나 `값 ?? 기본값`으로 처리하세요.
+
+### git에서 충돌(conflict)이 났어요
+
+**혼자 해결하려다 남의 코드를 지우는 일이 자주 생깁니다.** 민호에게 화면 캡처와 함께 물어보세요.
+급하면 이렇게 원래 상태로 되돌릴 수 있습니다(내 작업도 사라지니 주의).
+
+```bash
+git merge --abort
+```
+
+### 그래도 모르겠으면
+
+팀 채팅에 **① 무엇을 하려 했는지 ② 오류 메시지 전체 캡처 ③ 어느 파일인지** 세 가지를 함께 올려주세요. 이 세 가지가 있으면 대부분 몇 분 안에 풀립니다.
+
+---
+
+## 개발자용 명령 모음
 
 ```bash
 npm run dev
-```
-
-```bash
-npm run typecheck
 ```
 
 ```bash
 npm run build
 ```
 
-PR을 올리기 전에 `npm run build`가 통과하는지 확인해주세요.
+```bash
+npm run typecheck
+```
+
+---
+
+## DB 세팅 (최초 1회 · 민호 담당)
+
+Supabase 대시보드 → **SQL Editor**에서 순서대로 실행합니다.
+
+| 순서 | 파일 | 내용 |
+|---|---|---|
+| 1 | `supabase/01_schema.sql` | 테이블 15개 · 뷰 · 트리거 |
+| 2 | `supabase/02_rls.sql` | 권한 정책 전체 · 파일 저장소 |
+| 3 | `supabase/03_functions.sql` | 참여·소감·상태 전환 함수 |
+| 4 | `supabase/04_seed.sql` | 시연용 데이터 |
+
+한 파일씩 통째로 붙여넣고 실행하세요. 나눠서 하면 어디까지 적용됐는지 알 수 없게 됩니다.
+
+실행 후 타입 파일을 자동 생성본으로 교체합니다.
+
+```bash
+npx supabase gen types typescript --project-id <프로젝트ID> > lib/types/database.ts
+```
+
+**이후 스키마 변경은 콘솔에서 직접 하지 말고** `supabase/05_....sql`처럼 새 파일로 쌓으세요.

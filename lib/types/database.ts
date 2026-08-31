@@ -19,7 +19,7 @@ import type {
   NotificationType,
 } from '@/lib/constants';
 
-export interface Profile {
+export type Profile = {
   id: string;
   name: string;
   nickname: string;
@@ -33,7 +33,7 @@ export interface Profile {
   updated_at: string;
 }
 
-export interface Action {
+export type Action = {
   id: string;
   owner_id: string;
   title: string;
@@ -53,7 +53,7 @@ export interface Action {
   updated_at: string;
 }
 
-export interface ActionItem {
+export type ActionItem = {
   id: string;
   action_id: string;
   type: ItemType;
@@ -69,7 +69,7 @@ export interface ActionItem {
   created_at: string;
 }
 
-export interface Participation {
+export type Participation = {
   id: string;
   action_id: string;
   user_id: string;
@@ -79,7 +79,7 @@ export interface Participation {
   updated_at: string;
 }
 
-export interface ParticipationItem {
+export type ParticipationItem = {
   id: string;
   participation_id: string;
   action_item_id: string;
@@ -87,7 +87,7 @@ export interface ParticipationItem {
   created_at: string;
 }
 
-export interface ActionResult {
+export type ActionResult = {
   id: string;
   action_id: string;
   content: string | null;
@@ -96,7 +96,7 @@ export interface ActionResult {
   created_at: string;
 }
 
-export interface CrewVoice {
+export type CrewVoice = {
   id: string;
   action_id: string;
   user_id: string;
@@ -104,7 +104,7 @@ export interface CrewVoice {
   created_at: string;
 }
 
-export interface ChatMessage {
+export type ChatMessage = {
   id: string;
   action_id: string;
   user_id: string;
@@ -114,7 +114,7 @@ export interface ChatMessage {
   created_at: string;
 }
 
-export interface Notification {
+export type Notification = {
   id: string;
   user_id: string;
   type: NotificationType;
@@ -124,7 +124,7 @@ export interface Notification {
   created_at: string;
 }
 
-export interface ActionAiMetadata {
+export type ActionAiMetadata = {
   action_id: string;
   categories: string[];
   activity_types: string[];
@@ -140,7 +140,7 @@ export interface ActionAiMetadata {
 }
 
 /** 뷰 — 항목별 진행 상황 (LEFT 참여 제외) */
-export interface ActionItemProgress {
+export type ActionItemProgress = {
   action_item_id: string;
   action_id: string;
   type: ItemType;
@@ -156,16 +156,28 @@ export interface ActionItemProgress {
 }
 
 /** 뷰 — 좋아요/저장/참여 수. 개인정보 없이 숫자만. */
-export interface ActionSocialCounts {
+export type ActionSocialCounts = {
   action_id: string;
   like_count: number;
   save_count: number;
   crew_count: number;
 }
 
-type Row<T> = { Row: T; Insert: Partial<T>; Update: Partial<T> };
+/**
+ * supabase-js 는 각 테이블에 Relationships 필드가 있어야 타입을 추론한다.
+ * 빠뜨리면 조회 결과가 전부 never 가 되어 컴파일이 깨진다.
+ * (자동 생성본으로 교체하면 이 헬퍼는 사라진다)
+ */
+type Row<T> = {
+  Row: T;
+  Insert: Partial<T>;
+  Update: Partial<T>;
+  Relationships: [];
+};
 
-export interface Database {
+type ViewRow<T> = { Row: T; Relationships: [] };
+
+export type Database = {
   public: {
     Tables: {
       profiles: Row<Profile>;
@@ -196,10 +208,23 @@ export interface Database {
         action_id: string;
         created_at: string;
       }>;
+      ai_runs: Row<{
+        id: string;
+        user_id: string | null;
+        action_id: string | null;
+        agent_type: 'REVIEW' | 'CLASSIFY' | 'DISCOVER' | 'TRENDS';
+        prompt_version: string;
+        model: string;
+        output_json: unknown;
+        status: 'SUCCESS' | 'SCHEMA_FAIL' | 'API_FAIL' | 'RETRY_OK';
+        error_code: string | null;
+        latency_ms: number | null;
+        created_at: string;
+      }>;
     };
     Views: {
-      action_item_progress: { Row: ActionItemProgress };
-      action_social_counts: { Row: ActionSocialCounts };
+      action_item_progress: ViewRow<ActionItemProgress>;
+      action_social_counts: ViewRow<ActionSocialCounts>;
     };
     Functions: {
       join_action: {
@@ -225,5 +250,6 @@ export interface Database {
       };
     };
     Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
