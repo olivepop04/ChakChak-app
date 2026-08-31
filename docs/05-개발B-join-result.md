@@ -1,460 +1,211 @@
 # 개발 B — 참여 · 게시판 · 결과
 
-> 먼저 [00-공통-개발규칙.md](./00-공통-개발규칙.md)를 읽어주세요.
+> **이 문서 하나만 AI에게 줘도 됩니다.** 필요한 제약이 아래에 다 들어 있습니다.
+> 팀 공통 작업 규칙(브랜치·PR)은 [00-공통규칙.md](./00-공통규칙.md)에 있습니다.
 
-## 맡는 것
-
-| 시기 | 내용 |
-|---|---|
-| 1~2주차 | Join → You're In! → The Crew |
-| 3주차 | Crew Chat |
-| 4~5주차 | 결과 작성 → 결과 보기 → 소감 작성 |
-
-**왜 이렇게 묶었나:** 참여 → 활동 → 결과 → 소감이 **하나로 이어지는 흐름**이라 한 사람이 맡으면 맥락이 안 끊깁니다. 목록은 길어 보이지만 결과 쪽은 5주차에나 필요하니 실제로는 순차 진행입니다.
-
-**어려운 부분(정원 검증·동시 신청 처리)은 이미 서버에 만들어져 있습니다.** 함수를 부르기만 하면 됩니다.
+```bash
+git checkout feature/개발B-join
+```
 
 ---
 
-## 1주차 — Join 화면
+## 지금 상태
 
-**주소:** `/action/[id]/join`
-**파일:** `app/action/[id]/join/page.tsx`
-**목업:** `03.good_join_v05.html`
+**전부 동작합니다.** 참여 → 활동 → 결과 → 소감이 하나로 이어지는 흐름 전체가 제 담당입니다.
 
-### 데이터
-
-```tsx
-import { getActionDetail } from '@/lib/queries/actions';
-
-const { id } = await params;                     // ★ await 필수
-const supabase = await createClient();
-const { data: { user } } = await supabase.auth.getUser();
-const action = await getActionDetail(supabase, id, user!.id);
-if (!action) notFound();
-```
-
-로그인은 middleware가 이미 확인했으므로 `user`는 있습니다.
-
-또 하나 필요한 것: **내 성별**. 항목별 성별 제한을 미리 표시하려면 필요합니다.
-
-```tsx
-const { data: profile } = await supabase
-  .from('profiles').select('gender').eq('id', user!.id).single();
-```
-
-### 화면 구성
-
-```
-‹  JOIN ACTION
-
-[액션 요약 카드]
-  🐶 우리 동네 보호소를 함께 도와요
-  @olive · 8월 30일 · 서울 성동구
-
-── 내가 할 수 있는 일 ──  (복수 선택)
-
-☑ 일반 Crew
-  최소 10명 · 특별한 조건 없음
-  15명 참여  ████████  최소 인원이 충족되었어요.
-
-☐ 요리 담당                        [조리사 자격증 보유]
-  정확히 3명
-  3 / 3명  ████████  모집이 완료되었어요.        ← 선택 불가
-
-☐ 운반 지원                        [남성만]
-  3~5명
-  4 / 5명  ██████░░  최소 인원 충족 · 1자리 남음
-
-☑ 분유
-  최소 100통
-  64통 참여  ██████░░  최소 36통이 더 필요해요.
-  [−]  10통  [+]                    ← 물품만 수량 입력
-
-── 참여 일정 & 장소 ──
-8월 30일 · 14:00–17:00
-○○동물보호소
-
-── 나의 참여 ──
-🙋 일반 Crew
-🍼 분유 10통
-
-[참여 확정하기]
-```
-
-### 항목 표시 — 이미 만들어진 컴포넌트를 쓰세요
-
-```tsx
-import { QuotaProgress } from '@/components/action/QuotaProgress';
-import { meetsGender } from '@/lib/utils/quota';
-
-{action.items.map((item) => {
-  const genderOk = meetsGender(item, profile?.gender);
-  const disabled = item.isFull || !genderOk;
-
-  return (
-    <label key={item.id} className={disabled ? 'opacity-50' : ''}>
-      <input type="checkbox" disabled={disabled} ... />
-      <QuotaProgress item={item} current={item.currentCount} detailed
-                     conditionName={item.conditionName} />
-      {!genderOk && <p className="text-xs text-red-600">성별 조건이 맞지 않아요.</p>}
-      {item.type === 'GOODS' && checked && <QuantityInput ... />}
-    </label>
-  );
-})}
-```
-
-**절대 하지 말 것:** `{item.currentCount} / {item.max_allowed}` 처럼 직접 조합하기.
-최소 인원형은 퍼센트를 안 쓰고, 정해진 인원형은 최소를 넘기면 분모가 바뀝니다. 그 규칙이 컴포넌트 안에 있습니다.
-
-### 수량 입력
-
-| 항목 종류 | 수량 |
-|---|---|
-| 사람(`PERSON`) | 항상 **1**. 입력 UI 없음 |
-| 물품(`GOODS`) | `[−] [숫자] [+]` + **직접 타이핑도 가능** |
-
-```tsx
-<input
-  type="number" min={1} value={qty}
-  onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
-/>
-```
-
-### 참여 확정
-
-```tsx
-'use client';
-import { joinAction } from '@/lib/mutations';
-
-const res = await joinAction(supabase, actionId, selected.map((s) => ({
-  actionItemId: s.itemId,
-  quantity: s.item.type === 'PERSON' ? 1 : s.qty,
-})));
-
-if (!res.ok) {
-  setError(res.message);   // "「요리 담당」 모집이 완료되었습니다. (3 / 3)"
-  router.refresh();        // 최신 숫자로 갱신
-  return;
-}
-router.push(`/action/${actionId}/welcome`);
-```
-
-### 여기가 가장 중요합니다
-
-> **화면에서 본 숫자를 믿고 신청을 허용하면 안 됩니다.**
->
-> 동시에 두 사람이 마지막 한 자리를 신청하면 **둘 다 화면에는 "1자리 남음"으로 보입니다.**
-> 그래서 최종 판단은 서버(`join_action`)가 항목 행을 잠그고 순서대로 처리합니다.
->
-> 화면의 `disabled`는 **미리 알려주기 위한 것일 뿐**입니다. 서버가 거절하면 그 메시지를 그대로 보여주고 `router.refresh()`로 숫자를 새로 불러오세요.
-
-서버가 확인하는 것: 액션이 ACTIVE인가 · 모집 마감 전인가 · 내 액션이 아닌가 · 이미 참여 중이 아닌가 · 성별 조건 · **정원 초과**
-
-### 완료 기준
-
-- [ ] 모집 방식 3종이 각각 다르게 표시된다
-- [ ] 마감된 항목은 체크가 안 된다
-- [ ] 성별이 안 맞는 항목은 체크가 안 되고 이유가 표시된다
-- [ ] 물품만 수량 입력이 나오고, 사람은 안 나온다
-- [ ] 아무것도 안 고르고 확정하면 안내가 뜬다
-- [ ] 정원이 찬 항목을 신청하면 서버 메시지가 그대로 보이고 숫자가 갱신된다
-- [ ] 성공하면 `/welcome`으로 이동한다
+| 화면 | 주소 | 파일 |
+|---|---|---|
+| 참여하기 | `/action/[id]/join` | `app/action/[id]/join/page.tsx` + `components/action/JoinForm.tsx` |
+| 참여 완료 | `/action/[id]/welcome` | `app/action/[id]/welcome/page.tsx` |
+| 함께하는 사람들 | `/action/[id]/crew` | `app/action/[id]/crew/page.tsx` |
+| 크루 게시판 | `/action/[id]/chat` | `app/action/[id]/chat/page.tsx` + `components/action/ChatBoard.tsx` |
+| 결과 작성 | `/action/[id]/result/write` | `app/action/[id]/result/write/page.tsx` + `components/action/ResultWriteForm.tsx` |
+| 결과 보기 | `/action/[id]/result` | `app/action/[id]/result/page.tsx` |
+| 소감 작성 | `/action/[id]/voice` | `app/action/[id]/voice/page.tsx` + `components/action/VoiceForm.tsx` |
 
 ---
 
-## 1주차 — You're In!
+## 알아둬야 할 규칙 4개
 
-**주소:** `/action/[id]/welcome`
-**파일:** `app/action/[id]/welcome/page.tsx`
-**목업:** `03.good_join_v05.html` 오른쪽 부분
+### ① 화면에서 본 숫자를 믿고 신청을 허용하면 안 됩니다
+
+동시에 두 사람이 마지막 한 자리를 신청하면 **둘 다 화면에는 "1자리 남음"으로 보입니다.**
+
+그래서 최종 판단은 서버(`join_action`)가 합니다. 항목 행을 잠그고 순서대로 처리해서, 두 번째 사람은 이렇게 거절됩니다.
 
 ```
-🎉
-You're In!
-좋은 일을 함께 시작하게 되었어요.
-
-┌────────────────────────────┐
-│ 지금 이 액션을 함께하는 사람들 │
-│ (O)(S)(D)(J)(M) +5          │
-│ 현재 10명이 함께하고 있어요.  │
-└────────────────────────────┘   ← 누르면 /crew 로 이동
-
-[💬 함께하는 사람들과 이야기하기]  → /chat
-[HOME으로 가기]                  → /
+「산책 도우미」 모집이 완료되었습니다. (1 / 1)
 ```
 
-아바타 목록은 `getActionCrew()`로 가져와서 앞 5명만 보여주고 나머지는 `+N`으로.
+화면의 `disabled` 는 **미리 알려주기 위한 것**입니다. 서버가 거절하면 그 메시지를 그대로 보여주고 `router.refresh()` 로 숫자를 다시 불러오세요.
+
+### ② 게시판은 대화방처럼 보이지만 게시판입니다
+
+- **원글 + 댓글 1단계.** 대댓글은 DB 트리거가 막습니다
+- **실시간 아님.** 화면에 들어올 때 최신 목록을 불러옵니다
+- 본인 글만 삭제. **원글을 지우면 딸린 댓글도 함께** 사라집니다
+- 삭제는 행을 지우지 않고 `deleted_at` 에 시각을 적습니다. `getChatPosts()` 가 `content` 를 이미 `'삭제된 글입니다.'` 로 바꿔서 줍니다
+
+**전송 버튼 중복 클릭 방지는 직접 처리해야 합니다.** 빠르게 두 번 누르면 글이 두 개 올라갑니다.
+
+### ③ 소감은 저장과 상태 변경이 함께 일어납니다
+
+`submitCrewVoice()` 안에서 **한 트랜잭션으로** 처리됩니다. 화면에서 상태를 따로 바꿀 필요가 없습니다.
+
+```
+소감 저장  +  참여 상태를 ACTUALLY_PARTICIPATED 로  →  MY 참여 수에 반영
+```
+
+하나만 저장되면 "소감은 썼는데 참여 완료가 안 된" 이상한 상태가 되기 때문입니다.
+
+### ④ 결과 사진은 최소 1장이 필수입니다
+
+DB CHECK 로도 막혀 있습니다. 그리고 **결과를 먼저 저장하고 그다음에 상태를 바꿔야** 합니다. `completeAction()` 이 "결과가 없으면" 거절하기 때문입니다.
 
 ---
 
-## 2주차 — The Crew
+## 첫 작업 제안
 
-**주소:** `/action/[id]/crew`
-**파일:** `app/action/[id]/crew/page.tsx`
-**목업:** `05.good_the_crew_v01.html`
+### ① 참여 흐름 전체를 두 계정으로 돌려보기 (1시간)
 
-```tsx
-import { getActionCrew } from '@/lib/queries/participations';
+시크릿 창(`Ctrl+Shift+N`)으로 계정 두 개를 동시에 띄우고 돌려보세요.
 
-const { owner, crew } = await getActionCrew(supabase, id, user!.id);
-```
+- 정원이 1명인 항목을 두 계정으로 동시에 신청 → 두 번째가 거절되는가
+- 성별 조건이 있는 항목이 체크가 안 되는가
+- 나가기 후 모집 숫자가 줄어드는가
+- 나갔던 사람이 다시 신청할 수 있는가
 
-```
-‹  THE CREW
+### ② 게시판 다듬기 (반나절)
 
-── 리더 ──
-(O) olive          8개 참여 · 3개 리드    [프로필 보기]
+댓글 입력창이 열리고 닫히는 흐름, 삭제 확인 문구, 글이 많을 때의 스크롤을 봐주세요.
 
-── 함께하는 사람들 (10) ──
-(S) sarah          8개 참여 · 2개 리드    [프로필 보기]
-(J) jason          5개 참여 · 3개 리드    [프로필 보기]
-...
-```
+### ③ 결과 화면 (반나절)
 
-- `getActionCrew`가 **나간 사람(LEFT)을 이미 제외**합니다
-- `프로필 보기` → `/user/{id}`
-- 활동 이력 숫자는 `participatedCount`, `ledCount`를 쓰세요 (직접 세지 마세요)
-
-**완료 기준**
-
-- [ ] Owner가 맨 위에 따로 표시된다
-- [ ] 나간 사람이 목록에 없다
-- [ ] 프로필로 이동된다
+`/action/[id]/result` 는 **비회원도 볼 수 있는 화면**입니다. 활동의 마지막을 보여주는 곳이라 발표에서도 쓰입니다.
 
 ---
 
-## 3주차 — Crew Chat
-
-**주소:** `/action/[id]/chat`
-**파일:** `app/action/[id]/chat/page.tsx`
-**목업:** `04.good_project_chat_v01.html`
-
-### 구조 — 대화방처럼 보이지만 게시판입니다
-
-- 원글 + 댓글 **1단계만**. 대댓글은 DB가 막습니다
-- **실시간 아님.** 페이지에 들어올 때 최신 목록을 불러옵니다
-- 텍스트만. 이미지 업로드 없음
-- 본인 글만 삭제 가능. **원글을 지우면 딸린 댓글도 함께 삭제됩니다**
-
-### 데이터
+## 쓸 수 있는 함수
 
 ```tsx
+// 읽기
+import { getActionDetail, getActionItems } from '@/lib/queries/actions';
+import { getActionCrew, getActionResult } from '@/lib/queries/participations';
 import { getChatPosts, canWriteChat } from '@/lib/queries/chat';
 
-const posts = await getChatPosts(supabase, id, user!.id);
-const writable = canWriteChat(action.status);   // ACTIVE / ENDED 에서만 true
+// 쓰기
+import { joinAction, leaveAction, submitCrewVoice,
+         postChatMessage, deleteChatMessage, completeAction } from '@/lib/mutations';
+
+// 표시
+import { QuotaProgress } from '@/components/action/QuotaProgress';
+import { describeResult, describeResultCount, meetsGender } from '@/lib/utils/quota';
+import { uploadImage } from '@/lib/upload';   // 자동 리사이즈 포함
 ```
 
-`getChatPosts`가 돌려주는 것:
+---
 
-```ts
-{
-  id, content, createdAt, deletedAt,
-  author: { id, nickname },
-  isMine: boolean,
-  replies: [ { ...같은 모양 } ],
-}
-```
+## 완료 기준
 
-**삭제된 글은 `content`가 이미 `'삭제된 글입니다.'`로 바뀌어 있습니다.** 그냥 그리면 되고, `deletedAt`이 있으면 회색으로 흐리게 처리하세요.
-
-### 쓰기
-
-```tsx
-import { postChatMessage, deleteChatMessage } from '@/lib/mutations';
-
-// 원글
-await postChatMessage(supabase, actionId, text);
-// 댓글
-await postChatMessage(supabase, actionId, text, parentPostId);
-// 삭제
-if (!confirm('삭제할까요? 이 글에 달린 댓글도 함께 사라집니다.')) return;
-await deleteChatMessage(supabase, messageId);
-
-router.refresh();
-```
-
-### 상태별 동작
-
-| 액션 상태 | 읽기 | 쓰기 |
-|---|---|---|
-| ACTIVE / ENDED | ✅ | ✅ |
-| COMPLETED / CANCELLED | ✅ | ❌ 입력창 숨기고 "종료된 액션이라 새 글을 쓸 수 없어요" |
-| 나간 사람 | ❌ 접근 불가 | ❌ |
-
-RLS가 서버에서 막지만, **입력창을 미리 숨기는 게 친절합니다.**
-
-### 안전장치 (명세서 요구사항)
-
-- 공백만 있는 글 차단 → `mutations`가 이미 처리
-- 1000자 제한 → `mutations`가 이미 처리
-- **전송 버튼 중복 클릭 방지** → 직접 처리해야 합니다
-
-```tsx
-const [sending, setSending] = useState(false);
-async function send() {
-  if (sending) return;
-  setSending(true);
-  await postChatMessage(...);
-  setSending(false);
-}
-<button disabled={sending || !text.trim()}>전송</button>
-```
-
-- **HTML을 코드로 실행하지 않기** → React가 기본으로 처리합니다.
-  단 `dangerouslySetInnerHTML`을 **절대 쓰지 마세요.**
-
-### 완료 기준
-
-- [ ] 원글과 댓글이 계층으로 보인다
-- [ ] 댓글에 다시 댓글을 달 수 없다
-- [ ] 본인 글에만 삭제 버튼이 보인다
+- [ ] `npm run build` 통과
+- [ ] 모집 방식 3종이 각각 다르게 표시된다
+- [ ] 마감된 항목·성별이 안 맞는 항목은 체크가 안 되고 이유가 보인다
+- [ ] 물품만 수량 입력이 나오고 사람은 안 나온다
+- [ ] **정원이 찬 항목을 신청하면 서버 메시지가 그대로 보이고 숫자가 갱신된다**
+- [ ] 대댓글을 달 수 없다
 - [ ] 원글을 지우면 댓글도 함께 "삭제된 글입니다"가 된다
-- [ ] COMPLETED 액션에서는 입력창이 없다
 - [ ] 전송 버튼을 빠르게 두 번 눌러도 글이 하나만 올라간다
 - [ ] `<script>alert(1)</script>` 를 쓰면 글자로 보인다 (실행되면 안 됨)
-
----
-
-## 4주차 — 결과 작성 (Owner)
-
-**주소:** `/action/[id]/result/write`
-**파일:** `app/action/[id]/result/write/page.tsx`
-
-### 접근 조건
-
-- **Owner만**, 액션이 **ENDED** 상태일 때
-
-```tsx
-if (!action.isOwner) notFound();
-if (action.status !== 'ENDED') redirect(`/action/${id}/result`);
-```
-
-### 화면
-
-```
-── 자동 집계 ──   ← 수정 불가, 보여주기만
-  일반 Crew    15명   최소 10명 → 최소 인원을 충족했습니다.
-  요리 담당    3명 / 3명 → 모집 인원을 충족했습니다.
-  분유        64통   최소 100통 → 최소 인원에 36통 모자랐습니다.
-
-── 이렇게 마무리했어요 ──
-  [텍스트 입력]
-
-── 결과 사진 ──   ★ 최소 1장, 최대 5장 (필수)
-  [+] [+] [+]
-
-── Owner's Voice ──
-  [텍스트 입력]
-
-[결과 공개하기]
-```
-
-집계 문장은 함수를 쓰세요.
-
-```tsx
-import { describeResult, describeResultCount } from '@/lib/utils/quota';
-
-describeResultCount(item, item.currentCount)   // "15명" 또는 "3명 / 3명"
-describeResult(item, item.currentCount)        // "최소 인원을 충족했습니다."
-```
-
-### 이미지 업로드
-
-```tsx
-const path = `${actionId}/${crypto.randomUUID()}.${ext}`;
-const { error } = await supabase.storage.from('result-images').upload(path, file);
-if (error) { alert('사진 업로드에 실패했어요.'); return; }
-
-const { data: { publicUrl } } = supabase.storage.from('result-images').getPublicUrl(path);
-urls.push(publicUrl);
-```
-
-**업로드 성공을 확인한 URL만 DB에 저장하세요.** 실패했는데 URL부터 저장하면 깨진 이미지가 남습니다.
-
-파일 검사: JPEG/PNG/WebP만, 5MB 이하 (`UPLOAD` 상수 참고)
-
-### 저장 → 공개
-
-```tsx
-// 1) 결과 저장 (사진 1~5장 필수 — DB CHECK가 막습니다)
-await supabase.from('action_results').insert({
-  action_id: actionId, content, image_urls: urls, owner_voice: ownerVoice,
-});
-
-// 2) 공개
-const res = await completeAction(supabase, actionId);
-if (!res.ok) { alert(res.message); return; }
-```
-
-`completeAction`이 상태를 COMPLETED로 바꾸고 **참여자 전원에게 알림을 보냅니다.** 따로 만들 필요 없습니다.
-
-### 완료 기준
-
-- [ ] Owner가 아니면 못 들어간다
-- [ ] 집계 숫자와 문장이 실제 참여 데이터와 맞다
-- [ ] 사진 없이 저장하면 막힌다
-- [ ] 6장째는 추가가 안 된다
-- [ ] 공개 후 상태가 COMPLETED가 되고 참여자에게 알림이 간다
-
----
-
-## 5주차 — 결과 보기 · 소감 작성
-
-### 결과 보기 — `/action/[id]/result`
-
-**비회원도 볼 수 있습니다.**
-
-```tsx
-import { getActionResult } from '@/lib/queries/participations';
-const result = await getActionResult(supabase, id);
-if (!result) return <p>아직 결과가 등록되지 않았어요.</p>;
-```
-
-```
-── 이렇게 마무리했어요 ──
-  자동 집계 (항목별)
-  결과 내용 + 사진
-
-── Owner's Voice ──
-  "..."   @olive
-
-── Crew Voice (5) ──
-  (S) sarah  "..."
-  (J) jason  "..."
-```
-
-### 소감 작성 — `/action/[id]/voice`
-
-**접근 조건:** 참여자이고 상태가 `AFTER_ACTION`일 때
-
-```tsx
-import { submitCrewVoice } from '@/lib/mutations';
-
-const res = await submitCrewVoice(supabase, actionId, content);
-if (!res.ok) { setError(res.message); return; }
-router.push(`/action/${actionId}/result`);
-```
-
-- **10자 이상 1000자 이하**
-- 저장과 동시에 참여 상태가 `ACTUALLY_PARTICIPATED`로 바뀝니다 — **한 트랜잭션이라 따로 처리할 필요 없습니다**
-- 이때부터 MY의 "참여 액션 수"에 카운트됩니다
-
-입력 중 글자 수를 보여주세요.
-
-```tsx
-<p className="text-xs text-neutral-400">{content.length} / 1000</p>
-{content.length < 10 && content.length > 0 && (
-  <p className="text-xs text-red-600">10자 이상 작성해주세요.</p>
-)}
-```
-
-### 완료 기준
-
-- [ ] 결과를 비회원도 볼 수 있다
-- [ ] 소감이 목록에 바로 반영된다
-- [ ] 9자로 저장하면 막힌다
-- [ ] 소감 작성 후 MY의 참여 수가 1 늘어난다
+- [ ] 참여하지 않은 계정은 게시판에 못 들어간다
+- [ ] 결과 사진 없이 저장하면 막힌다
+- [ ] 소감 작성 후 MY 참여 수가 1 늘어난다
 - [ ] 같은 액션에 소감을 두 번 쓸 수 없다
-- [ ] 참여하지 않은 사람은 소감 화면에 못 들어간다
+
+---
+
+---
+
+# AI에게 시킬 때
+
+**아래를 그대로 복사해서 앞에 붙이고, 원하는 작업을 이어서 쓰세요.**
+
+```
+## 프로젝트
+
+GOOD — 봉사·나눔 활동(=액션)을 만들고 참여하고 결과를 나누는 모바일 웹.
+Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-4o-mini
+
+## 내 담당
+
+참여 → 활동 → 결과 → 소감 흐름 전체.
+app/action/[id]/ 하위 (join · welcome · crew · chat · result · voice)
+components/action/ (JoinForm · ChatBoard · ResultWriteForm · VoiceForm)
+
+화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
+
+## 반드시 지킬 것
+
+1. params 는 Promise 다. 반드시 await 한다.
+   const { id } = await params;
+
+2. 데이터 읽기는 lib/queries/ 의 함수, 쓰기는 lib/mutations.ts 의 함수만 쓴다.
+   화면에서 supabase.from(...) 이나 supabase.rpc(...) 를 직접 호출하지 않는다.
+   필요한 함수가 없으면 새로 만들지 말고 "없다"고 알려준다.
+
+3. 쓰기 함수는 { ok: true, data } 또는 { ok: false, message } 를 돌려준다.
+   message 는 그대로 사용자에게 보여주면 되는 한국어다. try/catch 를 쓰지 않는다.
+   joinAction · leaveAction · submitCrewVoice · postChatMessage ·
+   deleteChatMessage · completeAction
+
+4. 정원·성별 검증의 최종 판단은 서버(join_action)가 한다.
+   화면의 disabled 는 미리 알려주기 위한 것일 뿐이다.
+   서버가 거절하면 res.message 를 그대로 보여주고 router.refresh() 로 숫자를 갱신한다.
+   "화면에 1자리 남음이니 신청을 허용한다" 같은 판단을 클라이언트에서 하지 않는다.
+
+5. 모집 수량 표시는 lib/utils/quota.ts 의 함수를 쓴다. 숫자를 직접 조합하지 않는다.
+   getQuotaState · describeTarget · describeResult · describeResultCount · meetsGender
+   최소 인원형(MINIMUM)에는 퍼센트를 쓰지 않는다.
+   정해진 인원형(RANGE)은 최소를 넘기면 분모가 min 에서 max 로 바뀐다.
+   사람 항목은 수량이 항상 1이고, 물품만 수량을 입력받는다.
+
+6. 게시판은 원글 + 댓글 1단계다. 대댓글을 만들지 않는다 (DB 트리거가 막는다).
+   삭제는 soft delete 다. 원글을 지우면 딸린 댓글도 함께 삭제 처리된다.
+   getChatPosts() 가 삭제된 글의 content 를 이미 '삭제된 글입니다.' 로 바꿔서 준다.
+   전송 버튼 중복 클릭을 막는다 (busy 상태로 disabled).
+   dangerouslySetInnerHTML 을 절대 쓰지 않는다.
+
+7. 소감 저장은 submitCrewVoice() 하나로 끝난다.
+   참여 상태 변경이 그 안에서 함께 일어나므로 화면에서 따로 바꾸지 않는다.
+
+8. 결과는 사진이 최소 1장 필수다. 결과를 먼저 저장하고 그다음 completeAction() 을 부른다.
+   순서를 바꾸면 "결과를 먼저 작성해주세요" 로 거절된다.
+
+9. 날짜 표시는 lib/utils/date.ts 를 쓴다.
+   formatDate · formatDateShort · formatTime · formatActivityPeriod · formatRelative
+
+10. 이미 있는 공통 컴포넌트를 쓴다. 비슷한 것을 새로 만들지 않는다.
+    Button Badge Chip EmptyState Toast Avatar ActionCard ImageUploader
+    QuotaProgress Header BottomNav
+
+11. lib/ 과 components/ui/ 는 다섯 명이 함께 쓰는 공유 구역이다.
+    수정하지 말고 "수정이 필요하다"고 알려준다.
+    components/action/ 안의 내 담당 파일은 고쳐도 된다.
+
+12. 서버 컴포넌트가 기본이다. 'use client' 는 훅·이벤트가 필요할 때만 쓴다.
+
+13. 목록 화면에는 빈 상태(EmptyState)를 반드시 넣는다.
+    권한이 없어 못 보는 화면은 빈 목록이 아니라 이유를 알려준다.
+    (예: 게시판 — "참여한 사람만 볼 수 있어요")
+
+14. 사용자에게 보이는 문구와 코드 주석은 한국어로 쓴다.
+    되돌릴 수 없는 동작(나가기·삭제)에는 확인 창을 넣는다.
+
+15. 새 파일·새 쿼리·새 상수를 만들기 전에, 이미 있는 것을 먼저 찾아 쓴다.
+
+## 오늘 할 일
+
+(여기에 원하는 작업을 적으세요. 예시)
+components/action/ChatBoard.tsx 에서 댓글 입력창이 열렸을 때
+다른 글의 댓글창을 열면 이전 것이 닫히도록 고쳐줘.
+그리고 글이 20개 넘을 때 스크롤 위치가 어색하지 않은지 봐줘.
+```
