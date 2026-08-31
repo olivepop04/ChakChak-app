@@ -18,7 +18,14 @@ import type {
   ActionDetailData,
   ActionItemWithProgress,
 } from '@/lib/types/view';
-import type { Category, ActionStatus } from '@/lib/constants';
+import type {
+  Category,
+  ActionStatus,
+  ItemType,
+  TargetType,
+  GenderRequirement,
+  ParticipationStatus,
+} from '@/lib/constants';
 
 type DB = SupabaseClient<Database>;
 
@@ -86,11 +93,14 @@ async function loadSocial(
     .select('action_id, like_count, save_count, crew_count')
     .in('action_id', actionIds);
 
+  // 뷰는 NOT NULL 정보를 잃어버려서 생성된 타입이 전부 nullable 이다.
+  // 실제로는 항상 값이 있지만, 타입을 맞추기 위해 걸러내고 기본값을 준다.
   for (const r of countRows ?? []) {
+    if (!r.action_id) continue;
     counts.set(r.action_id, {
-      like: r.like_count,
-      save: r.save_count,
-      crew: r.crew_count,
+      like: r.like_count ?? 0,
+      save: r.save_count ?? 0,
+      crew: r.crew_count ?? 0,
     });
   }
 
@@ -211,23 +221,27 @@ export async function getActionItems(
     ]),
   );
 
+  // 뷰 컬럼은 전부 nullable 로 생성되지만, 원본 action_items 가 NOT NULL 이라
+  // 실제로 비어 있을 수 없다. id 없는 행만 걸러내고 나머지는 기본값을 채운다.
   return (progress ?? [])
+    .filter((p) => p.action_item_id !== null)
     .map((p) => {
-      const c = conditions.get(p.action_item_id);
+      const itemId = p.action_item_id as string;
+      const c = conditions.get(itemId);
       return {
-        id: p.action_item_id,
-        type: p.type,
-        name: p.name,
-        target_type: p.target_type,
-        min_required: p.min_required,
+        id: itemId,
+        type: (p.type ?? 'PERSON') as ItemType,
+        name: p.name ?? '',
+        target_type: (p.target_type ?? 'MINIMUM') as TargetType,
+        min_required: p.min_required ?? 1,
         max_allowed: p.max_allowed,
-        unit: p.unit,
-        gender_requirement: p.gender_requirement,
+        unit: p.unit ?? '명',
+        gender_requirement: (p.gender_requirement ?? 'ANY') as GenderRequirement,
         conditionName: c?.name ?? null,
         conditionDesc: c?.desc ?? null,
-        currentCount: p.current_count,
-        isFull: p.is_full,
-        isMinMet: p.is_min_met,
+        currentCount: p.current_count ?? 0,
+        isFull: p.is_full ?? false,
+        isMinMet: p.is_min_met ?? false,
         _order: c?.order ?? 0,
       };
     })
@@ -282,7 +296,9 @@ export async function getActionDetail(
             .maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
-    myParticipation = part?.status ?? null;
+    // DB CHECK 제약이 4가지 값만 허용하므로 안전한 단언이다.
+    // (생성된 타입은 CHECK 를 모르기 때문에 그냥 string 이다)
+    myParticipation = (part?.status as ParticipationStatus | undefined) ?? null;
     followingOwner = !!follow;
   }
 

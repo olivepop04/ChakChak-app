@@ -24,3 +24,6 @@ next-env.d.ts
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Supabase CLI 작업 파일
+supabase/.temp/

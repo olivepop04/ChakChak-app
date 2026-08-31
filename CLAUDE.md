@@ -45,6 +45,14 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
 **5. 진행률은 뷰에서 읽으세요** — `action_item_progress`. 카드마다 합계 쿼리를 돌리면 피드에서 쿼리가 수십 번 나갑니다. (`lib/queries/`가 이미 그렇게 하고 있습니다)
 
+**6. 뷰에서 온 값은 타입이 전부 `| null`입니다** — Postgres가 뷰의 NOT NULL 여부를 보장하지 못해서, 원본이 NOT NULL이어도 생성된 타입은 nullable이 됩니다. 실제로 비는 일은 없지만 타입 검사는 통과해야 하니 `?? 기본값`으로 받으세요. 이미 `lib/queries/`에서 처리했으니 화면에서는 신경 쓰지 않아도 됩니다.
+
+**7. DB 타입 이름은 `lib/types/db.ts`에서 가져오세요** — `database.ts`는 자동 생성 파일이라 스키마를 바꿀 때마다 통째로 덮어써집니다. 손으로 아무것도 적지 마세요.
+
+```ts
+import type { ActionRow, ProfileRow } from '@/lib/types/db';
+```
+
 ---
 
 ## 데이터 다루는 법 (가장 중요)

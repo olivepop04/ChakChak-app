@@ -1,255 +1,950 @@
-/**
- * DB 타입.
- *
- * 지금은 손으로 적어 둔 것이다. Supabase 프로젝트를 만들고 스키마를 올린 뒤에는
- * 아래 명령으로 자동 생성한 내용으로 교체할 것. 손으로 고치지 말 것.
- *
- *   npx supabase gen types typescript --project-id <ID> > lib/types/database.ts
- *
- * 스키마를 바꾸면 이 파일도 다시 생성해야 한다.
- */
-import type {
-  Category,
-  ActionStatus,
-  ParticipationStatus,
-  Gender,
-  GenderRequirement,
-  ItemType,
-  TargetType,
-  NotificationType,
-} from '@/lib/constants';
-
-export type Profile = {
-  id: string;
-  name: string;
-  nickname: string;
-  gender: Gender;
-  bio: string | null;
-  categories: string[];
-  available_times: string[];
-  regions: string[];
-  terms_agreed_at: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export type Action = {
-  id: string;
-  owner_id: string;
-  title: string;
-  description: string | null;
-  category: Category;
-  image_urls: string[];
-  thumbnail_index: number;
-  address: string | null;
-  notice: string | null;
-  status: ActionStatus;
-  cancel_reason: string | null;
-  recruit_end_at: string | null;
-  activity_start_at: string | null;
-  activity_end_at: string | null;
-  review_feedback: unknown | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type ActionItem = {
-  id: string;
-  action_id: string;
-  type: ItemType;
-  name: string;
-  target_type: TargetType;
-  min_required: number;
-  max_allowed: number | null;
-  unit: string;
-  gender_requirement: GenderRequirement;
-  condition_name: string | null;
-  condition_desc: string | null;
-  sort_order: number;
-  created_at: string;
-}
-
-export type Participation = {
-  id: string;
-  action_id: string;
-  user_id: string;
-  status: ParticipationStatus;
-  left_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type ParticipationItem = {
-  id: string;
-  participation_id: string;
-  action_item_id: string;
-  quantity: number;
-  created_at: string;
-}
-
-export type ActionResult = {
-  id: string;
-  action_id: string;
-  content: string | null;
-  image_urls: string[];
-  owner_voice: string | null;
-  created_at: string;
-}
-
-export type CrewVoice = {
-  id: string;
-  action_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-}
-
-export type ChatMessage = {
-  id: string;
-  action_id: string;
-  user_id: string;
-  parent_id: string | null;
-  content: string;
-  deleted_at: string | null;
-  created_at: string;
-}
-
-export type Notification = {
-  id: string;
-  user_id: string;
-  type: NotificationType;
-  action_id: string | null;
-  event_key: string;
-  is_read: boolean;
-  created_at: string;
-}
-
-export type ActionAiMetadata = {
-  action_id: string;
-  categories: string[];
-  activity_types: string[];
-  target_groups: string[];
-  participation_modes: string[];
-  skills: string[];
-  keywords: string[];
-  difficulty: string | null;
-  ai_model: string;
-  prompt_version: string;
-  generated_at: string;
-  owner_confirmed: boolean;
-}
-
-/** 뷰 — 항목별 진행 상황 (LEFT 참여 제외) */
-export type ActionItemProgress = {
-  action_item_id: string;
-  action_id: string;
-  type: ItemType;
-  name: string;
-  target_type: TargetType;
-  min_required: number;
-  max_allowed: number | null;
-  unit: string;
-  gender_requirement: GenderRequirement;
-  current_count: number;
-  is_full: boolean;
-  is_min_met: boolean;
-}
-
-/** 뷰 — 좋아요/저장/참여 수. 개인정보 없이 숫자만. */
-export type ActionSocialCounts = {
-  action_id: string;
-  like_count: number;
-  save_count: number;
-  crew_count: number;
-}
-
-/**
- * supabase-js 는 각 테이블에 Relationships 필드가 있어야 타입을 추론한다.
- * 빠뜨리면 조회 결과가 전부 never 가 되어 컴파일이 깨진다.
- * (자동 생성본으로 교체하면 이 헬퍼는 사라진다)
- */
-type Row<T> = {
-  Row: T;
-  Insert: Partial<T>;
-  Update: Partial<T>;
-  Relationships: [];
-};
-
-type ViewRow<T> = { Row: T; Relationships: [] };
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
-      profiles: Row<Profile>;
-      actions: Row<Action>;
-      action_items: Row<ActionItem>;
-      participations: Row<Participation>;
-      participation_items: Row<ParticipationItem>;
-      action_results: Row<ActionResult>;
-      crew_voices: Row<CrewVoice>;
-      chat_messages: Row<ChatMessage>;
-      notifications: Row<Notification>;
-      action_ai_metadata: Row<ActionAiMetadata>;
-      follows: Row<{
-        id: string;
-        follower_id: string;
-        following_id: string;
-        created_at: string;
-      }>;
-      saves: Row<{
-        id: string;
-        user_id: string;
-        action_id: string;
-        created_at: string;
-      }>;
-      likes: Row<{
-        id: string;
-        user_id: string;
-        action_id: string;
-        created_at: string;
-      }>;
-      ai_runs: Row<{
-        id: string;
-        user_id: string | null;
-        action_id: string | null;
-        agent_type: 'REVIEW' | 'CLASSIFY' | 'DISCOVER' | 'TRENDS';
-        prompt_version: string;
-        model: string;
-        output_json: unknown;
-        status: 'SUCCESS' | 'SCHEMA_FAIL' | 'API_FAIL' | 'RETRY_OK';
-        error_code: string | null;
-        latency_ms: number | null;
-        created_at: string;
-      }>;
-    };
+      action_ai_metadata: {
+        Row: {
+          action_id: string
+          activity_types: string[]
+          ai_model: string
+          categories: string[]
+          difficulty: string | null
+          generated_at: string
+          keywords: string[]
+          owner_confirmed: boolean
+          participation_modes: string[]
+          prompt_version: string
+          skills: string[]
+          target_groups: string[]
+        }
+        Insert: {
+          action_id: string
+          activity_types?: string[]
+          ai_model: string
+          categories?: string[]
+          difficulty?: string | null
+          generated_at?: string
+          keywords?: string[]
+          owner_confirmed?: boolean
+          participation_modes?: string[]
+          prompt_version: string
+          skills?: string[]
+          target_groups?: string[]
+        }
+        Update: {
+          action_id?: string
+          activity_types?: string[]
+          ai_model?: string
+          categories?: string[]
+          difficulty?: string | null
+          generated_at?: string
+          keywords?: string[]
+          owner_confirmed?: boolean
+          participation_modes?: string[]
+          prompt_version?: string
+          skills?: string[]
+          target_groups?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_ai_metadata_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: true
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "action_ai_metadata_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: true
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      action_items: {
+        Row: {
+          action_id: string
+          condition_desc: string | null
+          condition_name: string | null
+          created_at: string
+          gender_requirement: string
+          id: string
+          max_allowed: number | null
+          min_required: number
+          name: string
+          sort_order: number
+          target_type: string
+          type: string
+          unit: string
+        }
+        Insert: {
+          action_id: string
+          condition_desc?: string | null
+          condition_name?: string | null
+          created_at?: string
+          gender_requirement?: string
+          id?: string
+          max_allowed?: number | null
+          min_required: number
+          name: string
+          sort_order?: number
+          target_type: string
+          type: string
+          unit: string
+        }
+        Update: {
+          action_id?: string
+          condition_desc?: string | null
+          condition_name?: string | null
+          created_at?: string
+          gender_requirement?: string
+          id?: string
+          max_allowed?: number | null
+          min_required?: number
+          name?: string
+          sort_order?: number
+          target_type?: string
+          type?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_items_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "action_items_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      action_results: {
+        Row: {
+          action_id: string
+          content: string | null
+          created_at: string
+          id: string
+          image_urls: string[]
+          owner_voice: string | null
+        }
+        Insert: {
+          action_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_urls?: string[]
+          owner_voice?: string | null
+        }
+        Update: {
+          action_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_urls?: string[]
+          owner_voice?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_results_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: true
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "action_results_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: true
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      actions: {
+        Row: {
+          activity_end_at: string | null
+          activity_start_at: string | null
+          address: string | null
+          cancel_reason: string | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_urls: string[]
+          notice: string | null
+          owner_id: string
+          recruit_end_at: string | null
+          review_feedback: Json | null
+          status: string
+          thumbnail_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activity_end_at?: string | null
+          activity_start_at?: string | null
+          address?: string | null
+          cancel_reason?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[]
+          notice?: string | null
+          owner_id: string
+          recruit_end_at?: string | null
+          review_feedback?: Json | null
+          status?: string
+          thumbnail_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activity_end_at?: string | null
+          activity_start_at?: string | null
+          address?: string | null
+          cancel_reason?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[]
+          notice?: string | null
+          owner_id?: string
+          recruit_end_at?: string | null
+          review_feedback?: Json | null
+          status?: string
+          thumbnail_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actions_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_runs: {
+        Row: {
+          action_id: string | null
+          agent_type: string
+          created_at: string
+          error_code: string | null
+          id: string
+          latency_ms: number | null
+          model: string
+          output_json: Json | null
+          prompt_version: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          action_id?: string | null
+          agent_type: string
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          latency_ms?: number | null
+          model: string
+          output_json?: Json | null
+          prompt_version: string
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          action_id?: string | null
+          agent_type?: string
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          latency_ms?: number | null
+          model?: string
+          output_json?: Json | null
+          prompt_version?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_runs_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "ai_runs_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_runs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          action_id: string
+          content: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          parent_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          content: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          parent_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          content?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          parent_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "chat_messages_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crew_voices: {
+        Row: {
+          action_id: string
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_voices_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "crew_voices_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_voices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      likes: {
+        Row: {
+          action_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "likes_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          action_id: string | null
+          created_at: string
+          event_key: string
+          id: string
+          is_read: boolean
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_id?: string | null
+          created_at?: string
+          event_key: string
+          id?: string
+          is_read?: boolean
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_id?: string | null
+          created_at?: string
+          event_key?: string
+          id?: string
+          is_read?: boolean
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "notifications_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participation_items: {
+        Row: {
+          action_item_id: string
+          created_at: string
+          id: string
+          participation_id: string
+          quantity: number
+        }
+        Insert: {
+          action_item_id: string
+          created_at?: string
+          id?: string
+          participation_id: string
+          quantity: number
+        }
+        Update: {
+          action_item_id?: string
+          created_at?: string
+          id?: string
+          participation_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participation_items_action_item_id_fkey"
+            columns: ["action_item_id"]
+            isOneToOne: false
+            referencedRelation: "action_item_progress"
+            referencedColumns: ["action_item_id"]
+          },
+          {
+            foreignKeyName: "participation_items_action_item_id_fkey"
+            columns: ["action_item_id"]
+            isOneToOne: false
+            referencedRelation: "action_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participation_items_participation_id_fkey"
+            columns: ["participation_id"]
+            isOneToOne: false
+            referencedRelation: "participations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participations: {
+        Row: {
+          action_id: string
+          created_at: string
+          id: string
+          left_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          created_at?: string
+          id?: string
+          left_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          created_at?: string
+          id?: string
+          left_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participations_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "participations_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          available_times: string[]
+          bio: string | null
+          categories: string[]
+          created_at: string
+          gender: string
+          id: string
+          name: string
+          nickname: string
+          regions: string[]
+          terms_agreed_at: string
+          updated_at: string
+        }
+        Insert: {
+          available_times?: string[]
+          bio?: string | null
+          categories?: string[]
+          created_at?: string
+          gender: string
+          id: string
+          name: string
+          nickname: string
+          regions?: string[]
+          terms_agreed_at?: string
+          updated_at?: string
+        }
+        Update: {
+          available_times?: string[]
+          bio?: string | null
+          categories?: string[]
+          created_at?: string
+          gender?: string
+          id?: string
+          name?: string
+          nickname?: string
+          regions?: string[]
+          terms_agreed_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saves: {
+        Row: {
+          action_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saves_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "saves_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
     Views: {
-      action_item_progress: ViewRow<ActionItemProgress>;
-      action_social_counts: ViewRow<ActionSocialCounts>;
-    };
+      action_item_progress: {
+        Row: {
+          action_id: string | null
+          action_item_id: string | null
+          current_count: number | null
+          gender_requirement: string | null
+          is_full: boolean | null
+          is_min_met: boolean | null
+          max_allowed: number | null
+          min_required: number | null
+          name: string | null
+          target_type: string | null
+          type: string | null
+          unit: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_items_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_social_counts"
+            referencedColumns: ["action_id"]
+          },
+          {
+            foreignKeyName: "action_items_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      action_social_counts: {
+        Row: {
+          action_id: string | null
+          crew_count: number | null
+          like_count: number | null
+          save_count: number | null
+        }
+        Insert: {
+          action_id?: string | null
+          crew_count?: never
+          like_count?: never
+          save_count?: never
+        }
+        Update: {
+          action_id?: string | null
+          crew_count?: never
+          like_count?: never
+          save_count?: never
+        }
+        Relationships: []
+      }
+    }
     Functions: {
-      join_action: {
-        Args: { p_action_id: string; p_items: unknown };
-        Returns: string;
-      };
-      leave_action: { Args: { p_action_id: string }; Returns: undefined };
-      submit_crew_voice: {
-        Args: { p_action_id: string; p_content: string };
-        Returns: undefined;
-      };
-      delete_chat_message: { Args: { p_message_id: string }; Returns: undefined };
-      publish_action: { Args: { p_action_id: string }; Returns: undefined };
-      complete_action: { Args: { p_action_id: string }; Returns: undefined };
+      action_status: { Args: { a: string }; Returns: string }
       cancel_action: {
-        Args: { p_action_id: string; p_reason: string };
-        Returns: undefined;
-      };
-      sync_action_status: { Args: { p_action_id: string }; Returns: string };
+        Args: { p_action_id: string; p_reason: string }
+        Returns: undefined
+      }
+      complete_action: { Args: { p_action_id: string }; Returns: undefined }
+      delete_chat_message: {
+        Args: { p_message_id: string }
+        Returns: undefined
+      }
+      is_action_crew: { Args: { a: string }; Returns: boolean }
+      is_action_member: { Args: { a: string }; Returns: boolean }
+      is_action_owner: { Args: { a: string }; Returns: boolean }
+      is_action_public: { Args: { a: string }; Returns: boolean }
+      join_action: {
+        Args: { p_action_id: string; p_items: Json }
+        Returns: string
+      }
+      leave_action: { Args: { p_action_id: string }; Returns: undefined }
       notify_invite: {
-        Args: { p_action_id: string; p_target: string };
-        Returns: undefined;
-      };
-    };
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
-  };
+        Args: { p_action_id: string; p_target: string }
+        Returns: undefined
+      }
+      publish_action: { Args: { p_action_id: string }; Returns: undefined }
+      submit_crew_voice: {
+        Args: { p_action_id: string; p_content: string }
+        Returns: undefined
+      }
+      sync_action_status: { Args: { p_action_id: string }; Returns: string }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
