@@ -172,10 +172,14 @@ export async function getActionFeed(
 ): Promise<ActionCardData[]> {
   const { viewerId = null, limit = 20, category } = opts;
 
+  // 활동이 이미 끝난 액션은 피드에서 뺍니다.
+  // 상태(ENDED) 전환은 누군가 그 액션을 열어야 일어나기 때문에,
+  // 그때까지 DB 상으로는 ACTIVE 로 남아 있습니다.
   let q = supabase
     .from('actions')
     .select(ACTION_COLUMNS)
     .eq('status', 'ACTIVE')
+    .gt('activity_end_at', new Date().toISOString())
     .order('activity_start_at', { ascending: true })
     .limit(limit);
 

@@ -1,0 +1,181 @@
+/**
+ * 결과 작성 (Owner 전용).
+ *
+ * 집계 숫자는 자동으로 계산된 값이라 수정할 수 없습니다.
+ * Owner 가 채우는 건 추가 내용 · 사진 · Owner's Voice 세 가지입니다.
+ *
+ * ★ 사진은 최소 1장이 필수입니다 (DB CHECK 로도 막혀 있습니다).
+ * ★ "결과 공개하기" 를 누르면 completeAction 이 상태를 COMPLETED 로 바꾸고
+ *   참여자 전원에게 알림을 보냅니다. 알림은 따로 만들 필요가 없습니다.
+ */
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { completeAction } from '@/lib/mutations';
+import { ImageUploader } from '@/components/ui/ImageUploader';
+import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
+import { describeResult, describeResultCount } from '@/lib/utils/quota';
+import { UPLOAD } from '@/lib/constants';
+import type { ActionItemWithProgress } from '@/lib/types/view';
+
+export function ResultWriteForm({
+  actionId,
+  items,
+  initial,
+}: {
+  actionId: string;
+  items: ActionItemWithProgress[];
+  initial: { content: string; imageUrls: string[]; ownerVoice: string } | null;
+}) {
+  const router = useRouter();
+  const toast = useToast();
+
+  const [content, setContent] = useState(initial?.content ?? '');
+  const [imageUrls, setImageUrls] = useState<string[]>(initial?.imageUrls ?? []);
+  const [ownerVoice, setOwnerVoice] = useState(initial?.ownerVoice ?? '');
+  const [busy, setBusy] = useState(false);
+
+  async function handlePublish() {
+    if (busy) return;
+
+    if (imageUrls.length < UPLOAD.RESULT_IMAGE_MIN) {
+      toast('결과 사진을 최소 1장 올려주세요.', 'error');
+      return;
+    }
+
+    setBusy(true);
+    const supabase = createClient();
+
+    // 결과를 먼저 저장하고, 그 다음에 상태를 바꿉니다.
+    // completeAction 이 "결과가 없으면" 거절하기 때문에 순서가 중요합니다.
+    const { error } = await supabase.from('action_results').upsert(
+      {
+        action_id: actionId,
+        content: content.trim() || null,
+        image_urls: imageUrls,
+        owner_voice: ownerVoice.trim() || null,
+      },
+      { onConflict: 'action_id' },
+    );
+
+    if (error) {
+      toast('결과 저장에 실패했어요.', 'error');
+      setBusy(false);
+      return;
+    }
+
+    const res = await completeAction(supabase, actionId);
+    if (!res.ok) {
+      toast(res.message, 'error');
+      setBusy(false);
+      return;
+    }
+
+    toast('결과를 공개했어요. 참여자에게 알림이 갔어요.', 'success');
+    router.push(`/action/${actionId}/result`);
+    router.refresh();
+  }
+
+  return (
+    <div className="flex flex-col gap-6 px-5 pb-32 pt-5">
+      {/* 자동 집계 — 수정 불가 */}
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-[15px] font-bold text-neutral-900">자동 집계</h2>
+          <p className="mt-0.5 text-[12px] text-neutral-500">
+            참여 기록으로 자동 계산된 값이에요. 수정할 수 없어요.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-xl bg-neutral-50 p-4">
+          {items.length === 0 ? (
+            <p className="text-[13px] text-neutral-400">모집 항목이 없어요.</p>
+          ) : (
+            items.map((item) => (
+              <div key={item.id} className="flex flex-col gap-0.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-semibold text-neutral-900">
+                    {item.name}
+                  </span>
+                  <span className="text-sm font-bold tabular-nums text-neutral-900">
+                    {describeResultCount(item, item.currentCount)}
+                  </span>
+                </div>
+                <p
+                  className={`text-[12px] ${
+                    item.isMinMet ? 'text-emerald-700' : 'text-neutral-500'
+                  }`}
+                >
+                  {describeResult(item, item.currentCount)}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      {/* 결과 내용 */}
+      <label className="flex flex-col gap-1.5">
+        <span className="text-[13px] font-medium text-neutral-700">
+          이렇게 마무리했어요
+        </span>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={6}
+          placeholder="어떤 활동을 했는지, 어떤 변화가 있었는지 적어주세요."
+          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+        />
+      </label>
+
+      {/* 결과 사진 */}
+      <div className="flex flex-col gap-2">
+        <span className="text-[13px] font-medium text-neutral-700">
+          결과 사진 <span className="text-red-500">*</span>
+        </span>
+        <ImageUploader
+          bucket="result-images"
+          actionId={actionId}
+          max={UPLOAD.RESULT_IMAGE_MAX}
+          urls={imageUrls}
+          onChange={setImageUrls}
+        />
+        <p className="text-[11px] text-neutral-400">
+          최소 {UPLOAD.RESULT_IMAGE_MIN}장, 최대 {UPLOAD.RESULT_IMAGE_MAX}장이에요.
+        </p>
+      </div>
+
+      {/* Owner's Voice */}
+      <label className="flex flex-col gap-1.5">
+        <span className="text-[13px] font-medium text-neutral-700">
+          Owner&apos;s Voice
+        </span>
+        <textarea
+          value={ownerVoice}
+          onChange={(e) => setOwnerVoice(e.target.value)}
+          rows={4}
+          placeholder="함께해준 크루들에게 남기고 싶은 말을 적어주세요."
+          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+        />
+      </label>
+
+      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+        <Button
+          type="button"
+          size="lg"
+          fullWidth
+          loading={busy}
+          onClick={handlePublish}
+        >
+          결과 공개하기
+        </Button>
+        <p className="mt-2 text-center text-[11px] text-neutral-400">
+          공개하면 참여한 크루들에게 알림이 가고, 소감을 남길 수 있게 돼요.
+        </p>
+      </div>
+    </div>
+  );
+}

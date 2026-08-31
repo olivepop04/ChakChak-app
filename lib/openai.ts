@@ -85,12 +85,22 @@ export async function callStructuredAI<S extends z.ZodTypeAny>(
   let status: 'SUCCESS' | 'SCHEMA_FAIL' | 'API_FAIL' | 'RETRY_OK' = 'API_FAIL';
 
   // 1회 재시도
+  /*
+   * OpenAI 는 response_format 이 json_object 일 때
+   * 프롬프트 어딘가에 "json" 이라는 낱말이 없으면 400 을 돌려줍니다.
+   * 한국어로만 쓰다 보면 빠뜨리기 쉬워서 여기서 한 번 더 챙깁니다.
+   * (실제로 추천 이유 프롬프트에서 이 문제로 API_FAIL 이 났습니다)
+   */
+  const safeSystem = /json/i.test(system)
+    ? system
+    : `${system}\n\n반드시 JSON 형식으로만 답하세요.`;
+
   for (let attempt = 0; attempt <= 1; attempt++) {
     try {
       const res = await getClient().chat.completions.create({
         model: AI_MODEL,
         messages: [
-          { role: 'system', content: system },
+          { role: 'system', content: safeSystem },
           { role: 'user', content: user },
         ],
         temperature,
