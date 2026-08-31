@@ -53,6 +53,28 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 import type { ActionRow, ProfileRow } from '@/lib/types/db';
 ```
 
+**8. 여러 행을 한 번에 insert할 때 DB 기본값이 안 먹습니다** — PostgREST가 컬럼 목록을 하나로 합쳐서, 어떤 행에만 없는 키를 "생략"이 아니라 **명시적 NULL**로 보냅니다. `DEFAULT`가 적용되지 않아 NOT NULL 위반이 납니다.
+
+```ts
+// ❌ 두 번째 행의 gender_requirement 가 NULL 로 전송되어 실패
+await supabase.from('action_items').insert([
+  { name: 'A', gender_requirement: 'MALE', ... },
+  { name: 'B', ... },
+]);
+```
+
+여러 행을 넣을 때는 **모든 컬럼을 빠짐없이 채우세요.** 모집 항목은 `saveActionItems()`가 이미 처리합니다.
+
+---
+
+## 스키마를 바꿨다면
+
+```bash
+npm run verify:db
+```
+
+권한·정원·성별 제한이 실제로 막히는지 31가지를 확인합니다. 로컬에서만 돌아가고, 테스트 계정과 액션을 만들었다가 끝나면 지웁니다.
+
 ---
 
 ## 데이터 다루는 법 (가장 중요)

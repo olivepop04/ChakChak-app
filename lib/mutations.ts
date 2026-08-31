@@ -147,6 +147,72 @@ export async function cancelAction(
   return { ok: true, data: undefined };
 }
 
+export interface ActionItemInput {
+  type: 'PERSON' | 'GOODS';
+  name: string;
+  /** RANGE = 정해진 인원(min~max), MINIMUM = 최소 인원만(max 없음) */
+  targetType: 'RANGE' | 'MINIMUM';
+  minRequired: number;
+  /** RANGE 면 필수, MINIMUM 이면 넣지 말 것 */
+  maxAllowed?: number | null;
+  /** 물품은 '통','개' 등. 사람은 자동으로 '명' */
+  unit?: string;
+  genderRequirement?: 'MALE' | 'FEMALE' | 'ANY';
+  conditionName?: string | null;
+  conditionDesc?: string | null;
+}
+
+/**
+ * 모집 항목 저장 (기존 항목을 지우고 새로 씁니다).
+ *
+ * ★ action_items 를 직접 .insert() 하지 마세요.
+ *
+ * PostgREST 는 여러 행을 한 번에 넣을 때 컬럼 목록을 하나로 합칩니다.
+ * 그래서 어떤 행에만 없는 키는 "생략" 이 아니라 명시적 NULL 로 전송되고,
+ * DB 의 DEFAULT 값이 적용되지 않아 NOT NULL 위반으로 실패합니다.
+ * (실제로 gender_requirement 에서 이 문제가 났습니다)
+ *
+ * 이 함수는 모든 컬럼을 빠짐없이 채워서 그 문제를 막습니다.
+ */
+export async function saveActionItems(
+  supabase: DB,
+  actionId: string,
+  items: ActionItemInput[],
+): Promise<Result> {
+  if (items.length === 0)
+    return { ok: false, message: '모집 항목을 하나 이상 추가해주세요.' };
+
+  for (const it of items) {
+    if (it.targetType === 'RANGE' && (it.maxAllowed ?? null) === null)
+      return { ok: false, message: `「${it.name}」의 최대 인원을 입력해주세요.` };
+    if (it.targetType === 'RANGE' && (it.maxAllowed as number) < it.minRequired)
+      return { ok: false, message: `「${it.name}」의 최대 인원이 최소보다 작습니다.` };
+  }
+
+  await supabase.from('action_items').delete().eq('action_id', actionId);
+
+  // 모든 컬럼을 명시적으로 채운다 (위 주석 참고)
+  const rows = items.map((it, i) => ({
+    action_id: actionId,
+    type: it.type,
+    name: it.name,
+    target_type: it.targetType,
+    min_required: it.minRequired,
+    max_allowed: it.targetType === 'MINIMUM' ? null : (it.maxAllowed ?? null),
+    unit: it.type === 'PERSON' ? '명' : (it.unit || '개'),
+    gender_requirement:
+      it.type === 'GOODS' ? 'ANY' : (it.genderRequirement ?? 'ANY'),
+    condition_name: it.conditionName ?? null,
+    condition_desc: it.conditionDesc ?? null,
+    sort_order: i,
+  }));
+
+  const { error } = await supabase.from('action_items').insert(rows);
+  if (error)
+    return { ok: false, message: toMessage(error, '모집 항목 저장에 실패했어요.') };
+  return { ok: true, data: undefined };
+}
+
 /** DRAFT 삭제. 공개된 적 없는 것만 지울 수 있다. */
 export async function deleteDraft(
   supabase: DB,
