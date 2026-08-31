@@ -11,7 +11,7 @@
     "verify:db": "node --env-file=.env.local scripts/verify-db.mjs"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.5.2",
+    "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.48.1",
     "next": "^15.1.6",
     "openai": "^4.80.0",

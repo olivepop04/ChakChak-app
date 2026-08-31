@@ -15,6 +15,9 @@ const config: Config = {
         // Mobile-first. The app is a mobile web app; cap the shell width.
         app: '480px',
       },
+      height: {
+        13: '3.25rem',
+      },
     },
   },
   plugins: [],
