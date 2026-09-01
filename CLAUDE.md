@@ -132,8 +132,10 @@ const res = await joinAction(supabase, actionId, items);
 if (!res.ok) { setError(res.message); return; }
 ```
 
-`joinAction` · `leaveAction` · `submitCrewVoice` · `postChatMessage` · `deleteChatMessage` ·
-`publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
+`joinAction` · `leaveAction` · `leaveActionWithReason` · `submitCrewVoice` ·
+`postChatMessage` · `deleteChatMessage` ·
+`saveActionDraft` · `saveActionItems` · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
+`updateProfile` · `isNicknameTaken` · `updateNotifySettings` ·
 `toggleLike` · `toggleSave` · `toggleFollow` · `shareToUser` · `markNotificationRead`
 
 **필요한 함수가 없으면 직접 추가하지 말고 민호에게 요청하세요.** `lib/`은 공유 구역입니다.

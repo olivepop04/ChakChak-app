@@ -28,7 +28,7 @@ git checkout feature/개발B-join
 
 ---
 
-## 알아둬야 할 규칙 5개
+## 알아둬야 할 규칙 6개
 
 ### ① 화면에서 본 숫자를 믿고 신청을 허용하면 안 됩니다
 
@@ -65,7 +65,35 @@ git checkout feature/개발B-join
 
 DB CHECK 로도 막혀 있습니다. 그리고 **결과를 먼저 저장하고 그다음에 상태를 바꿔야** 합니다. `completeAction()` 이 "결과가 없으면" 거절하기 때문입니다.
 
-### ⑤ 액션 공개는 2단계입니다
+### ⑤ 액션 저장·나가기는 준비된 함수를 부르세요
+
+민호가 만들어 뒀습니다. 직접 `insert` / `update` 하지 마세요.
+
+```tsx
+// 액션 초안 저장 — 제목만 있어도 저장됩니다 (자동 임시저장용)
+const res = await saveActionDraft(supabase, {
+  title, category, address, placeName,          // placeName = "신라목욕탕"
+  recruitEndAt, activityStartAt, activityEndAt,
+}, actionId);                                    // actionId 없으면 새로 만듭니다
+if (!res.ok) { toast(res.message, 'error'); return; }
+const id = res.data;                             // 새로 만든 액션의 id
+```
+
+**날짜 앞뒤 검사(F14)가 이 함수 안에 들어 있습니다.** 마감이 활동 시작보다 뒤면
+`"모집 마감은 활동 시작보다 앞서야 해요…"` 를 돌려줍니다. 화면에서 따로 검사하지 마세요.
+
+```tsx
+// 사유 남기고 나가기 — 세 가지가 한 번에, 순서까지 보장됩니다
+const res = await leaveActionWithReason(supabase, actionId, reason);
+//   ① 사유를 게시판에 (LEFT_NOTICE 딱지가 붙습니다)
+//   ② 참여 상태 LEFT
+//   ③ 호스트에게 알림 (사유 포함)
+```
+
+**사유는 5자 이상 필수**입니다. 한 번 올리면 본인도 못 지우니, 보내기 전에 확인 창을 띄워주세요.
+게시판에서는 `post.kind === 'LEFT_NOTICE'` 로 구분해 "참여 취소" 표시를 붙이면 됩니다.
+
+### ⑥ 액션 공개는 2단계입니다
 
 만들기 화면의 저장은 DRAFT 까지입니다. 저장 → AI 검수 → **호스트가 최종 공개를 눌러야** ACTIVE 가 됩니다. `publishAction()` 이 이 흐름을 처리하니 화면에서 상태를 직접 바꾸지 마세요.
 
@@ -107,8 +135,15 @@ import { getActionCrew, getActionResult } from '@/lib/queries/participations';
 import { getChatPosts, canWriteChat } from '@/lib/queries/chat';
 
 // 쓰기
-import { joinAction, leaveAction, submitCrewVoice,
+import { joinAction, leaveAction, leaveActionWithReason, submitCrewVoice,
          postChatMessage, deleteChatMessage, completeAction } from '@/lib/mutations';
+
+// 액션 만들기 (새로 이관받은 화면)
+import { saveActionDraft, saveActionItems, publishAction, deleteDraft }
+  from '@/lib/mutations';
+
+// 결과 저장 — 저장한 다음에 completeAction() 을 부릅니다
+import { saveActionResult } from '@/lib/mutations';
 
 // 표시
 import { QuotaProgress } from '@/components/action/QuotaProgress';
@@ -134,6 +169,10 @@ import { uploadImage } from '@/lib/upload';   // 자동 리사이즈 포함
 - [ ] 소감 작성 후 MY 참여 수가 1 늘어난다
 - [ ] 같은 액션에 소감을 두 번 쓸 수 없다
 - [ ] DRAFT 로 저장한 액션을 다시 열어 이어서 수정할 수 있다
+- [ ] 제목만 입력해도 저장되고 사진 칸이 열린다
+- [ ] 마감일을 활동 시작일보다 뒤로 잡으면 한국어 안내가 그 자리에 뜬다
+- [ ] 장소명(예: 신라목욕탕)이 저장되고 상세 화면에 보인다
+- [ ] 사유 없이 나가기를 누르면 막히고, 사유를 쓰면 게시판에 "참여 취소" 로 남는다
 - [ ] AI 검수를 거치지 않고는 공개(ACTIVE)로 바꿀 수 없다
 
 ---
@@ -221,8 +260,9 @@ components/action/ (ActionForm · ItemEditor · JoinForm · ChatBoard · ResultW
 
 3. 쓰기 함수는 { ok: true, data } 또는 { ok: false, message } 를 돌려준다.
    message 는 그대로 사용자에게 보여주면 되는 한국어다. try/catch 를 쓰지 않는다.
-   joinAction · leaveAction · submitCrewVoice · postChatMessage ·
-   deleteChatMessage · completeAction · saveActionItems · publishAction · deleteDraft
+   joinAction · leaveAction · leaveActionWithReason · submitCrewVoice ·
+   postChatMessage · deleteChatMessage · completeAction ·
+   saveActionDraft · saveActionItems · saveActionResult · publishAction · deleteDraft
 
 4. 정원·성별 검증의 최종 판단은 서버(join_action)가 한다.
    화면의 disabled 는 미리 알려주기 위한 것일 뿐이다.
@@ -273,6 +313,17 @@ components/action/ (ActionForm · ItemEditor · JoinForm · ChatBoard · ResultW
     publishAction() 이 처리하니 상태를 직접 바꾸지 않는다.
     모집 항목 저장은 saveActionItems() 만 쓴다 — 여러 행 insert 시
     DB 기본값이 안 먹는 문제를 이 함수가 처리해 둔다.
+
+17. 액션 본문 저장은 saveActionDraft() 만 쓴다.
+    actions 테이블을 직접 insert/update 하지 않는다.
+    날짜 앞뒤 검사(모집 마감 <= 활동 시작 < 활동 종료)가 이 함수 안에 있으므로
+    화면에서 같은 검사를 또 만들지 않는다.
+    장소는 address(주소 검색)와 placeName(호스트가 직접 입력) 두 칸이다.
+
+18. 나가기는 leaveActionWithReason(supabase, actionId, reason) 하나로 끝난다.
+    게시판 글 → 나가기 → 호스트 알림 순서가 함수 안에 고정돼 있다.
+    화면에서 세 가지를 나눠 부르지 않는다. 사유는 5자 이상 필수다.
+    게시판에서 kind === 'LEFT_NOTICE' 인 글은 "참여 취소" 로 구분해 보여준다.
 
 ## 오늘 할 일
 

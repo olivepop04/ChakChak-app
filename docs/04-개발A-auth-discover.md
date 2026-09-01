@@ -28,6 +28,36 @@ git checkout feature/개발A-auth
 
 ---
 
+## 프로필 저장은 준비된 함수로 (2026-09-01 추가)
+
+가입 3단계와 프로필 수정이 지금은 `profiles` 를 직접 고치고 있습니다.
+**아래 함수로 바꿔주세요.** 닉네임 중복·길이 검사가 안에 들어 있습니다.
+
+```tsx
+const res = await updateProfile(supabase, userId, {
+  nickname, bio, categories, regions,
+  timePrefs: [
+    { day: '평일', slots: ['오전'] },
+    { day: '주말', slots: ['저녁', '밤'] },
+  ],
+});
+if (!res.ok) { toast(res.message, 'error'); return; }
+```
+
+> **왜 직접 고치면 안 되나** — `timePrefs` 를 넘기면 이 함수가 **예전 `available_times` 컬럼도 함께**
+> 채웁니다. 추천 점수(`scoring.ts`)가 아직 옛 컬럼을 보고 있어서, 한쪽만 채우면
+> **추천이 조용히 어긋납니다.** 나중에 `scoring.ts` 를 `time_prefs` 로 옮기면 그때 이 변환을 지웁니다.
+
+알림 설정(F25)은 이렇게 저장합니다. **끈 것만** 넘기면 됩니다.
+
+```tsx
+await updateNotifySettings(supabase, userId, ['SCHEDULE', 'VOICE_REQUEST']);
+```
+
+껐다고 표시한 알림은 **DB 트리거가 아예 만들지 않습니다.** 화면에서 거를 필요가 없습니다.
+
+---
+
 ## 알아둬야 할 규칙 3개
 
 ### ① 가입은 3단계 마지막에 한 번만 계정을 만듭니다
@@ -102,6 +132,14 @@ import { getSavedActions, getPublicActionsByOwner, getRecommendCandidates }
 
 // 쓰기
 import { toggleFollow, toggleSave, toggleLike } from '@/lib/mutations';
+
+// 프로필 · 알림 설정 (민호가 만들어 둠 — 직접 update 하지 마세요)
+import { updateProfile, isNicknameTaken, updateNotifySettings }
+  from '@/lib/mutations';
+
+// 참여 가능 시간 2단계
+import { TIME_DAYS, TIME_SLOTS, describeTimePref, type TimePref }
+  from '@/lib/constants';
 
 // 점수
 import { rankActions, fallbackReason } from '@/lib/utils/scoring';
@@ -197,51 +235,65 @@ lib/constants/regions.ts · lib/utils/scoring.ts · components/action/DiscoverCh
 1. params 와 searchParams 는 Promise 다. 반드시 await 한다.
    const { id } = await params;
 
-2. 데이터 읽기는 lib/queries/ 의 함수, 쓰기는 lib/mutations.ts 의 함수만 쓴다.
+2. 프로필 저장은 updateProfile() 을, 알림 설정은 updateNotifySettings() 를 쓴다.
+   profiles 테이블을 직접 update 하지 않는다.
+   참여 가능 시간은 2단계다 — timePrefs: [{ day: '평일', slots: ['오전'] }]
+   상수는 TIME_DAYS · TIME_SLOTS, 표시는 describeTimePref() 를 쓴다.
+
+3. 데이터 읽기는 lib/queries/ 의 함수, 쓰기는 lib/mutations.ts 의 함수만 쓴다.
    화면에서 supabase.from(...) 이나 supabase.rpc(...) 를 직접 호출하지 않는다.
    필요한 함수가 없으면 새로 만들지 말고 "없다"고 알려준다.
    (단, profiles 테이블의 단순 조회·수정은 예외로 직접 해도 된다)
 
-3. 쓰기 함수는 { ok: true, data } 또는 { ok: false, message } 를 돌려준다.
+4. 쓰기 함수는 { ok: true, data } 또는 { ok: false, message } 를 돌려준다.
    message 는 그대로 사용자에게 보여주면 되는 한국어다. try/catch 를 쓰지 않는다.
 
-4. 화면 문구는 lib/constants/index.ts 에서 가져온다. 문자열을 직접 적지 않는다.
+5. 화면 문구는 lib/constants/index.ts 에서 가져온다. 문자열을 직접 적지 않는다.
    CATEGORIES(8종) · AVAILABLE_TIMES(6종) · GENDER_LABEL · LIMITS · UPLOAD
 
-5. 회원가입은 3단계 마지막에 한 번만 supabase.auth.signUp 을 부른다.
+6. 회원가입은 3단계 마지막에 한 번만 supabase.auth.signUp 을 부른다.
    profiles 에 직접 insert 하지 않는다. signUp 의 options.data 에
    { name, nickname, gender } 를 넣으면 DB 트리거가 profiles 를 만든다.
    나머지 값(categories, available_times, regions)은 가입 직후 update 로 채운다.
 
-6. 타인 프로필에는 "참여 예정" 액션을 절대 노출하지 않는다.
+7. 타인 프로필에는 "참여 예정" 액션을 절대 노출하지 않는다.
    getParticipatedActions() 가 완료된 것만 돌려주므로 그 함수를 쓴다.
    실명(name)보다 닉네임을 주 표기로 쓴다.
 
-7. Discover 는 자유 대화가 아니라 정해진 질문 3개다.
-   추천 순위는 코드(lib/utils/scoring.ts)가 계산한다. AI 에게 순위를 맡기지 않는다.
-   AI 는 필터 JSON 생성과 추천 이유 문장 작성만 한다. LLM 이 SQL 을 만들지 않는다.
-   AI 호출이 실패해도 추천 카드는 나와야 한다.
+8. Discover 는 AI 가 대화를 이끈다 (2026-09-01 개편 · F36).
+   프로필에 이미 있는 것(카테고리·지역·시간)은 다시 묻지 않는다.
+   신규 회원에게는 성향 질문 2~3개만, 활동 이력이 있으면 지난 활동을 요약해
+   AI 가 먼저 말을 건다.
+   최대 3번 주고받고 반드시 후보를 보여준다. 무한히 질문하지 않는다.
+   후보가 0개면 조건을 하나씩 풀면서 "지역을 넓혀봤어요" 라고 알려준다.
 
-8. 날짜 표시는 lib/utils/date.ts 를 쓴다.
+   ★ 후보 선정과 점수는 코드(getRecommendCandidates + scoring.ts)가 한다.
+     AI 에게 순위를 맡기지 않는다. AI 가 고르면 마감된 액션을 추천하거나
+     없는 액션을 지어낼 수 있고, 같은 조건에서 매번 답이 달라져 검증할 수 없다.
+     AI 는 대화로 조건을 뽑는 일과 이유 문장을 쓰는 일만 한다.
+   AI 호출이 실패해도 추천 카드는 나와야 한다.
+   프롬프트를 고치면 promptVersion 을 반드시 올린다. 예전 버전 로그는 지우지 않는다.
+
+9. 날짜 표시는 lib/utils/date.ts 를 쓴다.
    formatDate · formatDateShort · formatTime · formatActivityPeriod · formatRelative
 
-9. 이미 있는 공통 컴포넌트를 쓴다. 비슷한 것을 새로 만들지 않는다.
+10. 이미 있는 공통 컴포넌트를 쓴다. 비슷한 것을 새로 만들지 않는다.
    Button Badge Chip ChipGroup EmptyState Toast Avatar ActionCard
    RegionPicker UserList LogoutButton ProfileEditForm
    ToggleButtons(LikeButton SaveButton FollowButton) Header BottomNav
 
-10. lib/ 과 components/ui/ 는 다섯 명이 함께 쓰는 공유 구역이다.
+11. lib/ 과 components/ui/ 는 다섯 명이 함께 쓰는 공유 구역이다.
     lib/constants/regions.ts 와 lib/utils/scoring.ts 는 내 담당이라 고쳐도 된다.
     그 밖의 lib/ 파일은 수정하지 말고 "수정이 필요하다"고 알려준다.
 
-11. 서버 컴포넌트가 기본이다. 'use client' 는 훅·이벤트가 필요할 때만 쓴다.
+12. 서버 컴포넌트가 기본이다. 'use client' 는 훅·이벤트가 필요할 때만 쓴다.
 
-12. 목록 화면에는 빈 상태(EmptyState)를 반드시 넣는다. 다음 행동 버튼을 함께 준다.
+13. 목록 화면에는 빈 상태(EmptyState)를 반드시 넣는다. 다음 행동 버튼을 함께 준다.
 
-13. 사용자에게 보이는 문구와 코드 주석은 한국어로 쓴다.
+14. 사용자에게 보이는 문구와 코드 주석은 한국어로 쓴다.
     로그인 후에는 router.refresh() 를 부른다. 안 부르면 화면이 로그아웃 상태로 보인다.
 
-14. 새 파일·새 쿼리·새 상수를 만들기 전에, 이미 있는 것을 먼저 찾아 쓴다.
+15. 새 파일·새 쿼리·새 상수를 만들기 전에, 이미 있는 것을 먼저 찾아 쓴다.
 
 ## 오늘 할 일
 
