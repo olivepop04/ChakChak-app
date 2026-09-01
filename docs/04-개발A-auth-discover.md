@@ -307,13 +307,15 @@ lib/constants/regions.ts · lib/utils/scoring.ts · components/action/DiscoverCh
 3. 데이터 읽기는 lib/queries/ 의 함수, 쓰기는 lib/mutations.ts 의 함수만 쓴다.
    화면에서 supabase.from(...) 이나 supabase.rpc(...) 를 직접 호출하지 않는다.
    필요한 함수가 없으면 새로 만들지 말고 "없다"고 알려준다.
-   (단, profiles 테이블의 단순 조회·수정은 예외로 직접 해도 된다)
+   profiles 도 예외가 아니다 — 저장은 updateProfile() 하나만 쓴다.
+   (직접 update 하면 available_times 동기화가 빠져 추천 점수가 조용히 어긋난다)
 
 4. 쓰기 함수는 { ok: true, data } 또는 { ok: false, message } 를 돌려준다.
    message 는 그대로 사용자에게 보여주면 되는 한국어다. try/catch 를 쓰지 않는다.
 
 5. 화면 문구는 lib/constants/index.ts 에서 가져온다. 문자열을 직접 적지 않는다.
-   CATEGORIES(8종) · AVAILABLE_TIMES(6종) · GENDER_LABEL · LIMITS · UPLOAD
+   CATEGORIES(8종) · TIME_DAYS · TIME_SLOTS · GENDER_LABEL · LIMITS · UPLOAD
+   (AVAILABLE_TIMES 는 폐기 예정이다. 새 화면에서 쓰지 않는다)
 
 6. 회원가입은 3단계 마지막에 한 번만 supabase.auth.signUp 을 부른다.
    profiles 에 직접 insert 하지 않는다. signUp 의 options.data 에

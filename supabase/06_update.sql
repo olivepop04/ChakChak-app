@@ -7,10 +7,11 @@
 -- SQL Editor 에 통째로 붙여넣고 실행하세요.
 --
 -- ⚠️ 단독 재실행 금지
---    이 파일이 만든 notifications_type_check 를 08_update.sql 이 덮어씁니다.
---    이 파일만 다시 돌리면 08 이 추가한 SHORTFALL 종류가 사라지고,
---    모집 미달 알림이 "violates check constraint" 로 실패합니다.
---    다시 돌려야 하면 06 → 07 → 08 을 순서대로 돌리세요.
+--    이 파일이 만든 것 중 두 가지를 뒤 파일이 덮어씁니다.
+--      · notifications_type_check      → 08 이 SHORTFALL 을 추가
+--      · leave_action_with_reason()    → 09 가 시간 검사를 추가
+--    이 파일만 다시 돌리면 그 수정들이 사라집니다.
+--    다시 돌려야 하면 06 → 07 → 08 → 09 를 순서대로 돌리세요.
 --
 -- 들어 있는 것
 --   ① 알림 켜고 끄기 (F25)

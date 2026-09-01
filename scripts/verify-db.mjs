@@ -591,6 +591,50 @@ try {
 
   await admin.from('actions').delete().eq('id', lcAct.id);
 
+  // ── 14. 활동이 시작된 뒤에는 나갈 수 없다 (09 · lazy 전환의 빈틈) ──
+  //    활동이 이미 끝났는데 아무도 액션을 안 열면
+  //    상태가 ACTIVE·BEFORE_ACTION 으로 남는다. 그 틈에도 못 나가야 한다.
+  console.log('\n[14] 활동이 지났는데 상태 전환 전이면 나갈 수 있는가');
+
+  const { data: gapAct } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 지나간 활동', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    status: 'ACTIVE',
+    recruit_end_at:    new Date(now - 3 * 86400000).toISOString(),
+    activity_start_at: new Date(now - 2 * 86400000).toISOString(),
+    activity_end_at:   new Date(now - 1 * 86400000).toISOString(),
+  }).select('id').single();
+  const { data: gapItem } = await admin.from('action_items').insert({
+    action_id: gapAct.id, type: 'PERSON', name: '참가자', target_type: 'MINIMUM',
+    min_required: 1, max_allowed: null, unit: '명', gender_requirement: 'ANY', sort_order: 1,
+  }).select('id').single();
+  const { data: gapPart } = await admin.from('participations')
+    .insert({ action_id: gapAct.id, user_id: uidB, status: 'BEFORE_ACTION' })
+    .select('id').single();
+  await admin.from('participation_items')
+    .insert({ participation_id: gapPart.id, action_item_id: gapItem.id, quantity: 1 });
+
+  const rGap1 = await cB.rpc('leave_action_with_reason', {
+    p_action_id: gapAct.id, p_reason: '활동이 끝났는데 나가봅니다. 막혀야 합니다.',
+  });
+  rGap1.error
+    ? ok('사유 나가기: 활동 시작 후 거절', rGap1.error.message.slice(0, 28))
+    : no('활동이 끝났는데 사유 나가기 성공 !! — 09_update.sql 을 실행했는가');
+
+  const rGap2 = await cB.rpc('leave_action', { p_action_id: gapAct.id });
+  rGap2.error
+    ? ok('일반 나가기: 활동 시작 후 거절')
+    : no('활동이 끝났는데 나가기 성공 !! — 09_update.sql 을 실행했는가');
+
+  const { count: gapNotice } = await admin.from('chat_messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('action_id', gapAct.id).eq('kind', 'LEFT_NOTICE');
+  gapNotice === 0
+    ? ok('끝난 활동 게시판에 사유 글이 안 올라감')
+    : no('거절됐는데 게시판에 글이 남음 !!', String(gapNotice));
+
+  await admin.from('actions').delete().eq('id', gapAct.id);
+
 
 } catch (e) {
   no('예외 발생', e.message);
