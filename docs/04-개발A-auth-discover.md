@@ -56,6 +56,23 @@ await updateNotifySettings(supabase, userId, ['SCHEDULE', 'VOICE_REQUEST']);
 
 껐다고 표시한 알림은 **DB 트리거가 아예 만들지 않습니다.** 화면에서 거를 필요가 없습니다.
 
+**현재 값을 보여줄 때**는 `getProfile()` 이 그대로 줍니다. 직접 조회하지 마세요.
+
+```tsx
+const me = await getProfile(supabase, userId, userId);
+me.timePrefs;   // [{ day: '평일', slots: ['오전'] }]  — 체크박스 초기값
+me.notifyOff;   // ['SCHEDULE']                        — 스위치 초기값
+```
+
+> ⚠️ **관심 카테고리에 "전체"를 넣을 때 주의**(F15)
+> 추천 점수(`scoring.ts`)는 `내 관심 카테고리에 이 액션의 카테고리가 있는가` 로 비교합니다.
+> "전체" 를 그대로 저장하면 어떤 액션과도 안 맞아서 **관심 분야 30점이 항상 0점**이 됩니다.
+> 에러가 안 나서 알아채기 어렵습니다.
+>
+> 두 방법 중 하나로 하세요.
+> - 화면에서 "전체" 를 누르면 **8개를 전부 선택**한 것으로 저장 (권장 — 점수 계산을 안 건드림)
+> - 또는 `scoring.ts` 에서 `categories` 가 비었거나 "전체" 를 포함하면 30점을 주도록 고치기
+
 ---
 
 ## 알아둬야 할 규칙 3개
@@ -206,6 +223,13 @@ import { rankActions, fallbackReason } from '@/lib/utils/scoring';
 4. **최대 3번 주고받고 반드시 후보를 보여준다** — 안 그러면 시연 중 AI가 질문만 계속하는 사고가 납니다
 5. **후보 선정은 코드가** (`getRecommendCandidates` + `scoring.ts`) — AI는 조건 뽑기와 이유 쓰기만
 6. 후보가 0개면 **조건을 하나씩 풀면서** "지역을 넓혀봤어요"라고 알려줍니다
+
+**대화 내용은 어디에 두나** — 최대 3번이라 **화면 상태(useState)로 충분합니다.**
+새 테이블을 만들지 마세요. 새로고침하면 처음부터 다시 하는 게 오히려 자연스럽습니다.
+지난 활동 요약은 **매번 서버에서 새로 계산**하면 됩니다 (`getParticipatedActions`).
+
+**AI 호출은 `app/api/ai/discover/route.ts` 에서만** 하세요. `lib/openai.ts` 를
+클라이언트 컴포넌트에서 import 하면 `server-only` 때문에 빌드가 실패합니다.
 
 ⚠️ **지금 버전을 지우지 마세요.** 발표에서 "이렇게 개선했다"를 나란히 보여줄 증거입니다.
 프롬프트를 고치면 `promptVersion` 을 반드시 올리세요.

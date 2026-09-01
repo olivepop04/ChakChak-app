@@ -9,9 +9,12 @@ import type { Database } from '@/lib/types/database';
 import type {
   JoinedActionData,
   UserSummary,
+  CrewMember,
+  CrewItem,
+  CrewItemGroup,
   ActionResultData,
 } from '@/lib/types/view';
-import type { ParticipationStatus } from '@/lib/constants';
+import type { ParticipationStatus, ItemType } from '@/lib/constants';
 import { getActionItems, pickThumbnail } from '@/lib/queries/actions';
 
 type DB = SupabaseClient<Database>;
@@ -158,7 +161,7 @@ export async function getActionCrew(
   supabase: DB,
   actionId: string,
   viewerId: string | null,
-): Promise<{ owner: UserSummary | null; crew: UserSummary[] }> {
+): Promise<{ owner: UserSummary | null; crew: CrewMember[] }> {
   const { data: action } = await supabase
     .from('actions')
     .select('owner_id')
@@ -167,7 +170,7 @@ export async function getActionCrew(
 
   const { data: parts } = await supabase
     .from('participations')
-    .select('user_id')
+    .select('id, user_id')
     .eq('action_id', actionId)
     .neq('status', 'LEFT');
 
@@ -175,15 +178,99 @@ export async function getActionCrew(
   const allIds = action?.owner_id ? [action.owner_id, ...crewIds] : crewIds;
   if (allIds.length === 0) return { owner: null, crew: [] };
 
+  // 누가 어느 항목에 참여했는지. 항목별 보기(F45)에 필요합니다.
+  const partIds = (parts ?? []).map((p) => p.id);
+  const { data: rows } = partIds.length
+    ? await supabase
+        .from('participation_items')
+        .select(
+          `participation_id, quantity,
+           item:action_items!participation_items_action_item_id_fkey
+             ( id, name, unit, type )`,
+        )
+        .in('participation_id', partIds)
+    : { data: [] };
+
+  type ItemRow = {
+    participation_id: string;
+    quantity: number;
+    item: { id: string; name: string; unit: string; type: ItemType } | null;
+  };
+  const itemsByPart = new Map<string, CrewItem[]>();
+  for (const r of (rows ?? []) as unknown as ItemRow[]) {
+    if (!r.item) continue;
+    const list = itemsByPart.get(r.participation_id) ?? [];
+    list.push({
+      itemId: r.item.id,
+      name: r.item.name,
+      quantity: r.quantity,
+      unit: r.item.unit,
+      type: r.item.type,
+    });
+    itemsByPart.set(r.participation_id, list);
+  }
+
   const summaries = await getUserSummaries(supabase, allIds, viewerId);
   const map = new Map(summaries.map((s) => [s.id, s]));
 
+  const crew: CrewMember[] = [];
+  for (const p of parts ?? []) {
+    const base = map.get(p.user_id);
+    if (!base) continue;
+    const items = itemsByPart.get(p.id) ?? [];
+    crew.push({ ...base, items, selection: describeSelection(items) });
+  }
+
   return {
     owner: action?.owner_id ? (map.get(action.owner_id) ?? null) : null,
-    crew: crewIds
-      .map((id) => map.get(id))
-      .filter((x): x is UserSummary => x !== undefined),
+    crew,
   };
+}
+
+/** 참여 내용을 한 줄로: "산책 도우미 · 사료 10포" */
+function describeSelection(items: CrewItem[]): string {
+  return items
+    .map((i) => (i.type === 'PERSON' ? i.name : `${i.name} ${i.quantity}${i.unit}`))
+    .join(' · ');
+}
+
+/**
+ * 크루를 "항목별" 로 다시 묶는다 (F45).
+ *
+ * 사람 기준 목록을 항목 기준으로 뒤집습니다.
+ * 활동이 여러 날이면 항목을 "1일차 배식팀" 처럼 날짜로 나누게 되는데,
+ * 그때 "1일차에 누가 오나" 를 이 함수로 볼 수 있습니다.
+ *
+ *   const { crew } = await getActionCrew(...);
+ *   const groups = groupCrewByItem(crew);
+ *   // [{ itemId, name, unit, type, total, members: [...] }, ...]
+ *
+ * 순서는 액션의 모집 항목 순서가 아니라 사람들이 고른 순서입니다.
+ * 항목 순서대로 보여주려면 getActionItems() 의 순서에 맞춰 정렬하세요.
+ */
+export function groupCrewByItem(crew: CrewMember[]): CrewItemGroup[] {
+  const groups = new Map<string, CrewItemGroup>();
+
+  for (const person of crew) {
+    for (const item of person.items) {
+      let g = groups.get(item.itemId);
+      if (!g) {
+        g = {
+          itemId: item.itemId,
+          name: item.name,
+          unit: item.unit,
+          type: item.type,
+          total: 0,
+          members: [],
+        };
+        groups.set(item.itemId, g);
+      }
+      g.total += item.quantity;
+      g.members.push({ person, quantity: item.quantity });
+    }
+  }
+
+  return [...groups.values()];
 }
 
 /**
