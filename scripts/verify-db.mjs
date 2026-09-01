@@ -392,6 +392,78 @@ try {
   rTwice.error ? ok('이미 나간 사람은 거절됨')
                : no('중복 나가기가 허용됨');
 
+  // ── 12. 참여 항목 가시성 (F45 · 07_update.sql) ────────────
+  console.log('\n[12] 누가 어느 항목에 오는지 — 크루·호스트·외부인');
+
+  // 사람 항목 2종 + 물품 1종 을 새로 만들어 세 명을 각각 참여시킨다
+  const { data: f45Items } = await admin.from('action_items').insert([
+    { action_id: act.id, type: 'PERSON', name: '1일차 배식팀', target_type: 'RANGE',
+      min_required: 1, max_allowed: 4, unit: '명', gender_requirement: 'ANY', sort_order: 11 },
+    { action_id: act.id, type: 'GOODS', name: '쌀', target_type: 'MINIMUM',
+      min_required: 20, max_allowed: null, unit: 'kg', gender_requirement: 'ANY', sort_order: 12 },
+  ]).select('id, name');
+  const f45 = Object.fromEntries((f45Items ?? []).map(i => [i.name, i.id]));
+
+  // uidB 는 이미 참여 중이므로 새 계정을 둘 만든다
+  const emailD = `test-crew1-${stamp}@example.com`;
+  const emailE = `test-out-${stamp}@example.com`;
+  await makeUser(emailD, `crew1${stamp}`.slice(0, 20), 'MALE');
+  await makeUser(emailE, `out${stamp}`.slice(0, 20), 'MALE');
+  const cD = await asUser(emailD);
+  const cE = await asUser(emailE);
+
+  const rJoinD = await cD.rpc('join_action', {
+    p_action_id: act.id,
+    p_items: [
+      { action_item_id: f45['1일차 배식팀'], quantity: 1 },
+      { action_item_id: f45['쌀'], quantity: 10 },
+    ],
+  });
+
+  if (rJoinD.error) {
+    no('F45 준비: 참여 실패', rJoinD.error.message.slice(0, 50));
+  } else {
+    ok('사람 항목 + 물품 항목에 동시 참여');
+
+    // 같은 크루(uidB)가 볼 때
+    const { data: asCrew } = await cB.from('participation_items')
+      .select(`quantity, item:action_items!participation_items_action_item_id_fkey ( name, type )`)
+      .in('participation_id',
+        (await admin.from('participations').select('id')
+          .eq('action_id', act.id)).data.map(r => r.id));
+
+    const crewNames = (asCrew ?? []).map(r => r.item?.name).filter(Boolean);
+    const crewSeesPerson = crewNames.includes('1일차 배식팀');
+    const crewSeesGoods = crewNames.includes('쌀')
+      && (asCrew ?? []).filter(r => r.item?.name === '쌀').length > 0;
+
+    crewSeesPerson ? ok('크루가 남의 사람 항목을 봄 (F45 동작)')
+                   : no('크루가 사람 항목을 못 봄 — 07_update.sql 을 실행했는가');
+
+    // 남이 낸 물품은 안 보여야 한다 (본인 것만 보임)
+    const { data: goodsRows } = await cB.from('participation_items')
+      .select(`quantity, participation:participations!inner ( user_id ),
+               item:action_items!participation_items_action_item_id_fkey ( name, type )`)
+      .eq('action_item_id', f45['쌀']);
+    const othersGoods = (goodsRows ?? []).filter(r => r.participation?.user_id !== uidB);
+    othersGoods.length === 0
+      ? ok('남이 낸 물품 수량은 안 보임 (의도대로)')
+      : no('물품 수량이 노출됨 !!', `${othersGoods.length}건`);
+
+    // 호스트는 전부 본다
+    const { data: asOwner } = await cA.from('participation_items')
+      .select(`quantity, item:action_items!participation_items_action_item_id_fkey ( name )`)
+      .eq('action_item_id', f45['쌀']);
+    (asOwner ?? []).length > 0 ? ok('호스트는 물품까지 봄')
+                               : no('호스트가 물품을 못 봄 !!');
+
+    // 참여 안 한 사람은 명단 자체를 못 본다
+    const { data: asOut } = await cE.from('participations')
+      .select('id').eq('action_id', act.id);
+    (asOut ?? []).length === 0 ? ok('미참여자는 참여자 명단을 못 봄')
+                               : no('명단이 노출됨 !!', `${asOut.length}건`);
+  }
+
 
 } catch (e) {
   no('예외 발생', e.message);
