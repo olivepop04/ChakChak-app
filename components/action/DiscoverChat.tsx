@@ -135,7 +135,7 @@ export function DiscoverChat({ nickname }: { nickname: string }) {
       {loading && (
         <Bubble>
           <span className="inline-flex items-center gap-2">
-            GOOD AI가 액션을 살펴보고 있어요
+            착착 AI가 액션을 살펴보고 있어요
             <span className="inline-flex gap-0.5">
               <Dot /> <Dot /> <Dot />
             </span>

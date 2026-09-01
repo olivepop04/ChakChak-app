@@ -106,7 +106,7 @@ export function ItemEditor({
                       : 'bg-white text-neutral-600'
                   }`}
                 >
-                  {t === 'PERSON' ? '사람' : '물품'}
+                  {t === 'PERSON' ? '인원' : '물품'}
                 </button>
               ))}
             </div>

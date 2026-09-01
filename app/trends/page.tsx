@@ -45,7 +45,7 @@ export default async function TrendsPage() {
       <div className="flex flex-col gap-5 px-5 py-5">
         <div>
           <h1 className="text-[20px] font-bold tracking-tight text-neutral-900">
-            지금 GOOD에서는
+            지금 착착에서는
           </h1>
           <p className="mt-1 text-[13px] text-neutral-500">
             사람들이 어떤 좋은 일을 하고 있는지 모아봤어요.

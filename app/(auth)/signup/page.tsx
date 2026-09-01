@@ -365,7 +365,7 @@ export default function SignUpPage() {
             loading={busy}
             onClick={handleSignUp}
           >
-            GOOD 시작하기
+            착착 시작하기
           </Button>
         )}
       </div>
