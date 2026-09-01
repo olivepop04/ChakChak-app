@@ -138,6 +138,7 @@ function toCard(
     address: raw.address,
     status: raw.status,
     activityStartAt: raw.activity_start_at,
+    recruitEndAt: raw.recruit_end_at,
     owner: raw.owner
       ? { id: raw.owner.id, nickname: raw.owner.nickname }
       : { id: '', nickname: '알 수 없음' },
@@ -166,29 +167,78 @@ async function buildCards(
 // ─────────────────────────────────────────────────────────────
 // Home 피드 — 담당: 디자이너
 // ─────────────────────────────────────────────────────────────
+/**
+ * 피드 정렬 (2026-09-01 합의 · F27)
+ *
+ *   DEADLINE  마감 임박 순. 같은 날 마감이면 인기 높은 쪽이 위로
+ *   POPULAR   인기 순.      같은 인기면 마감 임박한 쪽이 위로
+ *
+ * 인기 점수 = 좋아요 + 저장 × 1.5
+ * 저장은 "나중에 하겠다" 는 뜻이라 좋아요보다 무겁게 봅니다.
+ */
+export type FeedSort = 'DEADLINE' | 'POPULAR';
+
+/** 인기 점수. 화면에서 직접 계산하지 말고 이 규칙만 쓰세요 */
+export function popularityScore(card: {
+  likeCount: number;
+  saveCount: number;
+}): number {
+  return card.likeCount + card.saveCount * 1.5;
+}
+
+/** 마감 시각을 정렬용 숫자로. 마감일이 없는 액션은 맨 뒤로 */
+function deadlineKey(iso: string | null): number {
+  return iso ? new Date(iso).getTime() : Number.MAX_SAFE_INTEGER;
+}
+
 export async function getActionFeed(
   supabase: DB,
-  opts: { viewerId?: string | null; limit?: number; category?: Category } = {},
+  opts: {
+    viewerId?: string | null;
+    limit?: number;
+    category?: Category;
+    sort?: FeedSort;
+  } = {},
 ): Promise<ActionCardData[]> {
-  const { viewerId = null, limit = 20, category } = opts;
+  const { viewerId = null, limit = 20, category, sort = 'DEADLINE' } = opts;
 
   // 활동이 이미 끝난 액션은 피드에서 뺍니다.
   // 상태(ENDED) 전환은 누군가 그 액션을 열어야 일어나기 때문에,
   // 그때까지 DB 상으로는 ACTIVE 로 남아 있습니다.
+  //
+  // 인기 점수는 DB 가 아니라 뷰에서 따로 가져오기 때문에 SQL 로 정렬할 수 없습니다.
+  // 그래서 마감 임박 순으로 넉넉히 받아온 뒤 여기서 다시 줄을 세웁니다.
+  // (limit 만큼만 받아오면 인기순일 때 뒤쪽에 있는 인기 액션을 놓칩니다)
+  const fetchCount = Math.min(limit * 3, 90);
+
   let q = supabase
     .from('actions')
     .select(ACTION_COLUMNS)
     .eq('status', 'ACTIVE')
     .gt('activity_end_at', new Date().toISOString())
-    .order('activity_start_at', { ascending: true })
-    .limit(limit);
+    .order('recruit_end_at', { ascending: true, nullsFirst: false })
+    .limit(fetchCount);
 
   if (category) q = q.eq('category', category);
 
   const { data, error } = await q;
   if (error) throw error;
 
-  return buildCards(supabase, (data ?? []) as unknown as RawAction[], viewerId);
+  const cards = await buildCards(
+    supabase,
+    (data ?? []) as unknown as RawAction[],
+    viewerId,
+  );
+
+  cards.sort((a, b) => {
+    const byDeadline = deadlineKey(a.recruitEndAt) - deadlineKey(b.recruitEndAt);
+    const byPopular = popularityScore(b) - popularityScore(a);
+    return sort === 'POPULAR'
+      ? byPopular || byDeadline
+      : byDeadline || byPopular;
+  });
+
+  return cards.slice(0, limit);
 }
 
 // ─────────────────────────────────────────────────────────────
