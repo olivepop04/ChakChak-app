@@ -13,7 +13,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { completeAction } from '@/lib/mutations';
+import { saveActionResult, completeAction } from '@/lib/mutations';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -51,18 +51,15 @@ export function ResultWriteForm({
 
     // 결과를 먼저 저장하고, 그 다음에 상태를 바꿉니다.
     // completeAction 이 "결과가 없으면" 거절하기 때문에 순서가 중요합니다.
-    const { error } = await supabase.from('action_results').upsert(
-      {
-        action_id: actionId,
-        content: content.trim() || null,
-        image_urls: imageUrls,
-        owner_voice: ownerVoice.trim() || null,
-      },
-      { onConflict: 'action_id' },
-    );
+    // 사진 장수 검사는 saveActionResult 안에 있습니다.
+    const saved = await saveActionResult(supabase, actionId, {
+      content,
+      imageUrls,
+      ownerVoice,
+    });
 
-    if (error) {
-      toast('결과 저장에 실패했어요.', 'error');
+    if (!saved.ok) {
+      toast(saved.message, 'error');
       setBusy(false);
       return;
     }

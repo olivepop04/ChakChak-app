@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getMyJoinedActions } from '@/lib/queries/participations';
+import { syncHostNotifications } from '@/lib/notifications/lazy';
 import { getMyCreatedActions } from '@/lib/queries/actions';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -161,6 +162,10 @@ export default async function ActivityPage({
     for (const a of stale ?? []) {
       await supabase.rpc('sync_action_status', { p_action_id: a.id });
     }
+
+    // 모집이 마감됐는데 인원이 모자란 액션을 호스트에게 알립니다 (F37).
+    // 알림 화면을 안 열고 여기만 봐도 상황을 알 수 있어야 합니다.
+    await syncHostNotifications(user.id);
   }
 
   const joined = isCreated ? [] : await getMyJoinedActions(supabase, user.id);

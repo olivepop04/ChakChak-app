@@ -190,24 +190,20 @@ import { uploadImage } from '@/lib/upload';   // 자동 리사이즈 포함
 
 ### 액션 만들기 6종 (`components/action/ActionForm.tsx` 중심)
 
-**F00 — 직접 호출을 공용 함수로 교체 (1시간, 다른 작업보다 먼저)**
-제 담당 컴포넌트 두 곳이 아직 `supabase` 를 직접 부르고 있습니다.
-팀 규칙 위반이기도 하지만, 더 큰 문제는 **검사를 건너뛴다**는 점입니다.
-
-| 파일 | 지금 | 바꿀 것 |
-|---|---|---|
-| `components/action/ActionForm.tsx` | `supabase.from('actions').insert/update` | `saveActionDraft()` |
-| `components/action/ResultWriteForm.tsx` | `supabase.from('action_results').upsert` | `saveActionResult()` |
-
-`saveActionDraft` 에는 **날짜 앞뒤 검사(F14)** 가, `saveActionResult` 에는
-**사진 장수 검사** 가 들어 있습니다. 직접 호출하면 그게 전부 빠집니다.
-**F14·F32 를 하기 전에 이것부터** 하시면 나머지가 훨씬 쉬워집니다.
+> ### ✅ F00 — 공용 함수 교체는 민호가 끝냈습니다 (안 하셔도 됩니다)
+>
+> `ActionForm.tsx` 와 `ResultWriteForm.tsx` 가 `supabase` 를 직접 부르던 것을
+> `saveActionDraft()` · `saveActionResult()` 로 바꿔뒀습니다.
+> **화면 전체에서 직접 쓰기가 0곳**이 됐습니다.
+>
+> 덕분에 **날짜 앞뒤 검사(F14)와 사진 장수 검사가 이미 돌고 있습니다.**
+> 저장이 거절되면 `res.message` 에 한국어 문구가 담겨 옵니다.
 
 **F11 — 검수 결과를 팝업으로 (1시간)**
 지금은 하단의 "생성" 버튼과 검수 결과의 "공개" 버튼이 동시에 보여 헷갈립니다.
 검수 결과를 **팝업으로** 띄우고, **팝업 안에서만 "액션 공개하기"** 를 누르게 바꿉니다.
 
-**F14 — 날짜 순서 안내 (30분) — 검사는 이미 되어 있습니다**
+**F14 — 날짜 순서 안내 (30분) — 검사도 배선도 끝났습니다**
 마감일이 활동 시작일보다 늦거나 활동 종료가 시작보다 앞이면, 예전에는 저장이 **조용히 실패**했습니다.
 지금은 `saveActionDraft()` 가 저장 전에 검사해서 한국어 메시지를 돌려줍니다.
 
@@ -231,19 +227,25 @@ import { uploadImage } from '@/lib/upload';   // 자동 리사이즈 포함
 주소는 **다음 우편번호 검색**(무료, 키 불필요)으로 고르고,
 그 아래 **장소명 칸**("신라목욕탕")을 새로 만들어 직접 입력받습니다.
 
-> **DB·조회·타입은 이미 준비돼 있습니다.** 화면에서 `action.placeName` 을 그냥 쓰면 됩니다.
-> 다만 **폼 쪽은 아직 비어 있어서 네 곳을 같이 손대야** 합니다.
-> 하나라도 빠지면 입력해도 저장이 안 되거나, 저장했는데 다시 열면 사라집니다.
+> ### ✅ 배선은 민호가 끝냈습니다 — **입력칸 하나만** 만들면 됩니다
 >
-> | 파일 | 무엇 |
-> |---|---|
-> | `components/action/ActionForm.tsx` | `ActionFormInitial` 에 `placeName` 추가 |
-> | 〃 | `useState` 와 입력칸 추가 |
-> | 〃 | 저장할 때 `placeName` 을 함께 넘기기 |
-> | `app/action/create/page.tsx` | `EMPTY` 와 `initial` 에 `placeName` 추가 |
+> `ActionFormInitial` · `EMPTY` · `initial` · 저장 전달까지 전부 연결돼 있고,
+> `placeName` state 도 이미 있습니다. 실측으로 왕복까지 확인했습니다
+> (저장 → 다시 열기 → 상세 화면).
 >
-> ⚠️ **`saveActionDraft` 는 부분 저장을 지원하지 않습니다.** 넘기지 않은 칸은 `null` 로
-> 덮어씁니다. 그래서 `initial` 에서 안 읽어오면 저장할 때마다 장소명이 지워집니다.
+> **하실 일은 두 가지입니다.**
+>
+> ```tsx
+> // components/action/ActionForm.tsx — 주소 칸 아래에
+> <input
+>   value={placeName}
+>   onChange={(e) => setPlaceName(e.target.value)}
+>   placeholder="예) 신라목욕탕"
+> />
+> ```
+>
+> 그리고 **주소 칸에 다음 우편번호 검색**을 붙이는 것(무료·키 불필요).
+> 그게 F32 의 전부입니다.
 
 ### 참여·게시판 쪽
 

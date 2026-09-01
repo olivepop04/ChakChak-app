@@ -12,8 +12,12 @@ import {
   AVAILABLE_TIMES,
   GENDER_LABEL,
   LIMITS,
+  toTimePrefs,
   type Gender,
+  type TimePref,
+  type NotificationType,
 } from '@/lib/constants';
+import { updateProfile } from '@/lib/mutations';
 
 interface Initial {
   name: string;
@@ -21,7 +25,12 @@ interface Initial {
   gender: Gender;
   bio: string;
   categories: string[];
+  /** @deprecated timePrefs 로 옮기는 중입니다. 추천 점수가 아직 이 값을 씁니다 */
   availableTimes: string[];
+  /** 참여 가능 시간 2단계 (F38). [{ day: '평일', slots: ['오전'] }] */
+  timePrefs: TimePref[];
+  /** 사용자가 끈 알림 종류. 빈 배열이면 전부 받습니다 (F25) */
+  notifyOff: NotificationType[];
   regions: string[];
 }
 
@@ -61,33 +70,19 @@ export function ProfileEditForm({
     setBusy(true);
     const supabase = createClient();
 
-    // 닉네임을 바꿨다면 중복 확인
-    if (nick !== initial.nickname) {
-      const { data: taken } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('nickname', nick)
-        .maybeSingle();
-      if (taken) {
-        toast('이미 사용 중인 닉네임이에요.', 'error');
-        setBusy(false);
-        return;
-      }
-    }
+    // 저장은 공용 함수로 합니다. 닉네임 중복·길이 검사가 이 안에 들어 있고,
+    // timePrefs 를 넘기면 옛 available_times 도 함께 채워집니다.
+    // (추천 점수가 아직 옛 컬럼을 봐서, 한쪽만 채우면 추천이 조용히 어긋납니다)
+    const res = await updateProfile(supabase, userId, {
+      nickname: nick,
+      bio,
+      categories,
+      regions,
+      timePrefs: toTimePrefs(times),
+    });
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        nickname: nick,
-        bio: bio.trim() || null,
-        categories,
-        available_times: times,
-        regions,
-      })
-      .eq('id', userId);
-
-    if (error) {
-      toast('저장에 실패했어요.', 'error');
+    if (!res.ok) {
+      toast(res.message, 'error');
       setBusy(false);
       return;
     }

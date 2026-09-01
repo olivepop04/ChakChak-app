@@ -14,7 +14,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { saveActionItems, publishAction, type ActionItemInput } from '@/lib/mutations';
+import {
+  saveActionDraft,
+  saveActionItems,
+  publishAction,
+  type ActionItemInput,
+} from '@/lib/mutations';
 import { ItemEditor } from '@/components/action/ItemEditor';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
@@ -43,6 +48,8 @@ export interface ActionFormInitial {
   imageUrls: string[];
   thumbnailIndex: number;
   address: string;
+  /** 장소 이름. 호스트가 직접 입력. 예) 신라목욕탕 (F32) */
+  placeName: string;
   notice: string;
   recruitEndAt: string | null;
   activityStartAt: string | null;
@@ -64,6 +71,8 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const [category, setCategory] = useState<Category>(initial.category);
   const [imageUrls, setImageUrls] = useState(initial.imageUrls);
   const [thumbnailIndex, setThumbnailIndex] = useState(initial.thumbnailIndex);
+  // F32 — 입력칸은 개발 B 가 만듭니다. 배선은 되어 있으니 setPlaceName 만 연결하면 됩니다.
+  const [placeName, setPlaceName] = useState(initial.placeName);
   const [address, setAddress] = useState(initial.address);
   const [notice, setNotice] = useState(initial.notice);
   const [recruitEnd, setRecruitEnd] = useState(toLocalInput(initial.recruitEndAt));
@@ -94,38 +103,33 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       return null;
     }
 
-    const payload = {
-      title: title.trim(),
-      description: description.trim() || null,
-      category,
-      image_urls: imageUrls,
-      thumbnail_index: Math.min(thumbnailIndex, Math.max(imageUrls.length - 1, 0)),
-      address: address.trim() || null,
-      notice: notice.trim() || null,
-      recruit_end_at: toISO(recruitEnd),
-      activity_start_at: toISO(activityStart),
-      activity_end_at: toISO(activityEnd),
-    };
+    // 저장은 공용 함수로 합니다. 날짜 앞뒤 검사(F14)가 이 안에 들어 있어서
+    // 화면에서 같은 검사를 또 만들 필요가 없습니다. 메시지는 그대로 보여주면 됩니다.
+    const saved = await saveActionDraft(
+      supabase,
+      {
+        title,
+        description,
+        category,
+        imageUrls,
+        thumbnailIndex,
+        address,
+        placeName,
+        notice,
+        recruitEndAt: toISO(recruitEnd),
+        activityStartAt: toISO(activityStart),
+        activityEndAt: toISO(activityEnd),
+      },
+      actionId,
+    );
 
-    let id = actionId;
+    if (!saved.ok) {
+      toast(saved.message, 'error');
+      return null;
+    }
 
-    if (id) {
-      const { error } = await supabase.from('actions').update(payload).eq('id', id);
-      if (error) {
-        toast('저장에 실패했어요.', 'error');
-        return null;
-      }
-    } else {
-      const { data, error } = await supabase
-        .from('actions')
-        .insert({ ...payload, owner_id: user.id, status: 'DRAFT' })
-        .select('id')
-        .single();
-      if (error || !data) {
-        toast('저장에 실패했어요.', 'error');
-        return null;
-      }
-      id = data.id;
+    const id = saved.data;
+    if (!actionId) {
       setActionId(id);
       // 주소에 id 를 남겨 두면 새로고침해도 이어서 작성할 수 있습니다
       window.history.replaceState(null, '', `/action/create?id=${id}`);

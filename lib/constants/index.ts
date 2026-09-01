@@ -49,6 +49,32 @@ export interface TimePref {
   slots: TimeSlot[];
 }
 
+/**
+ * 옛 available_times(6종 한 줄) 를 2단계 구조로 바꿉니다.
+ *
+ * F38 화면이 나오기 전까지 가입·프로필 수정이 아직 옛 형식으로 값을 모읍니다.
+ * 그대로 저장하면 time_prefs 가 비어서, 나중에 F38 화면을 만들어도
+ * 기존 회원의 설정이 안 보입니다. 그래서 저장할 때 여기서 변환합니다.
+ *
+ * F38 이 완성되면 화면이 TimePref 를 직접 만들게 되므로 이 함수는 필요 없어집니다.
+ */
+export function toTimePrefs(availableTimes: string[]): TimePref[] {
+  const days = availableTimes.filter(
+    (t): t is '평일' | '주말' => t === '평일' || t === '주말',
+  );
+  const anyDay = days.length === 0 || availableTimes.includes('시간이 생길 때마다');
+
+  const slots = availableTimes.filter((t): t is TimeSlot =>
+    (['오전', '오후', '저녁', '밤'] as string[]).includes(t),
+  );
+  const picked: TimeSlot[] = slots.length > 0 ? slots : ['상관없음'];
+
+  return (anyDay ? (['상관없음'] as TimeDay[]) : days).map((day) => ({
+    day,
+    slots: picked,
+  }));
+}
+
 /** "평일 오전" · "주말 저녁&밤" · "언제든 좋아요" */
 export function describeTimePref(pref: TimePref): string {
   const anyDay = pref.day === '상관없음';

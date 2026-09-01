@@ -173,19 +173,13 @@ const PROMPT_VERSION = 'trends-v2';   // → 'trends-v3'
 
 미달 여부는 `getActionItems()` 의 `isMinMet` 으로 알 수 있습니다.
 
-> **알림을 만드는 함수를 한 줄 불러주셔야 합니다.**
-> 지금은 `/notifications` 를 열 때만 만들어져서, 호스트가 Activity 만 보면 알림이 안 생깁니다.
+> ### ✅ 알림 생성은 민호가 연결해 뒀습니다
 >
-> ```tsx
-> // app/activity/page.tsx — "내가 만든" 탭에서
-> import { syncHostNotifications } from '@/lib/notifications/lazy';
+> `app/activity/page.tsx` 의 "내가 만든" 탭에서 `syncHostNotifications()` 를
+> 이미 부르고 있습니다. **조장님은 화면만 만들면 됩니다.**
 >
-> if (isCreated) {
->   await syncHostNotifications(user.id);
-> }
-> ```
->
-> 서버 컴포넌트에서만 됩니다. 여러 번 불러도 같은 알림이 두 번 쌓이지 않습니다.
+> 미달 상황을 확인하려면 `getActionItems()` 의 `isMinMet` 을 보세요.
+> 알림 자체는 `/activity` 나 `/notifications` 중 어디를 열어도 만들어집니다.
 
 ### 이제 해도 됩니다 (민호 작업 완료됨)
 

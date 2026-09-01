@@ -227,25 +227,24 @@ await updateNotifySettings(supabase, userId, ['SCHEDULE', 'VOICE_REQUEST']);
 
 ### 이제 해도 됩니다 (DB 변경 완료됨)
 
-> ### 🚧 F38·F25 를 하기 전에 — 프로필 수정 화면이 새 값을 안 읽습니다
+> ### ✅ F38·F25 배선은 민호가 끝냈습니다 — **화면만** 만들면 됩니다
 >
-> `app/my/edit/page.tsx` 가 `getProfile()` 을 쓰지 않고 `profiles` 를 직접 조회합니다.
-> 그래서 **`time_prefs` 와 `notify_off` 를 아예 안 가져옵니다.**
->
-> 화면을 아무리 잘 만들어도 **초기값이 항상 비어 보이고**, 저장하면 기존 설정이 덮어써집니다.
-> 원인을 모르면 한참 헤맵니다.
->
-> **먼저 이렇게 바꾸세요.**
+> `app/my/edit/page.tsx` 가 이제 `getProfile()` 을 씁니다.
+> `ProfileEditForm` 의 `Initial` 에도 `timePrefs` · `notifyOff` 가 들어가 있어서,
+> **props 로 이미 내려옵니다.**
 >
 > ```tsx
-> // app/my/edit/page.tsx
-> import { getProfile } from '@/lib/queries/profiles';
->
-> const me = await getProfile(supabase, user.id, user.id);
-> // me.timePrefs · me.notifyOff · me.categories · me.regions · me.bio
+> // components/ui/ProfileEditForm.tsx 안에서 바로 쓸 수 있습니다
+> initial.timePrefs   // [{ day: '주말', slots: ['오후'] }]
+> initial.notifyOff   // ['SCHEDULE']  — 꺼둔 알림
 > ```
 >
-> `ProfileEditForm` 의 `Initial` 타입에도 `timePrefs` · `notifyOff` 를 추가해야 합니다.
+> 저장도 `updateProfile()` 로 이미 바뀌어 있습니다. 지금은 옛 형식을
+> `toTimePrefs()` 로 변환해 넘기고 있는데, **F38 화면을 만들면 그 변환을 지우고
+> 2단계 입력값을 직접 넘기면** 됩니다.
+>
+> ⚠️ `ProfileEditForm` 은 **디자이너 구역**(`components/ui/`)입니다.
+> 고치기 전에 디자이너에게 한마디 해주세요.
 
 **F38 — 참여 가능 시간 2단계 (반나절)**
 가입·프로필 수정에서: ① 평일/주말/상관없음 중 하나 → ② 오전/오후/저녁/밤/상관없음 복수 선택.
