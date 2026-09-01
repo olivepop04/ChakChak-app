@@ -45,6 +45,18 @@ const USERS = [
   { nick: '수아', gender: 'FEMALE', bio: '작은 일이라도 꾸준히 하려고 해요.' },
 ];
 
+/** 카테고리별 장소 이름 접미사. 시드를 그럴듯하게 만들기 위한 것뿐입니다 */
+const PLACE_SUFFIX = {
+  '동물': '동물보호센터',
+  '환경': '환경센터',
+  '지역사회': '구민회관',
+  '아동·청소년': '아동센터',
+  '노인': '경로당',
+  '장애': '복지관',
+  '교육': '평생학습관',
+  '기타': '문화센터',
+};
+
 const IMG = {
   animal: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1200',
   dog: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1200',
@@ -237,7 +249,13 @@ async function seed() {
       .update({
         bio: u.bio,
         categories: ['동물', '환경', '지역사회'].slice(0, (i % 3) + 1),
+        // 참여 가능 시간은 2단계 구조(time_prefs)로 옮기는 중입니다.
+        // 추천 점수(scoring.ts)가 아직 옛 컬럼을 봐서 둘 다 채웁니다.
         available_times: i % 2 === 0 ? ['주말', '오후'] : ['평일', '저녁'],
+        time_prefs:
+          i % 2 === 0
+            ? [{ day: '주말', slots: ['오후'] }]
+            : [{ day: '평일', slots: ['저녁'] }],
         regions: ['서울특별시 성동구', '서울특별시 마포구', '부산광역시 해운대구'].slice(
           0,
           (i % 2) + 1,
@@ -259,6 +277,11 @@ async function seed() {
     const owner = users[idx % users.length];
     if (!owner) continue;
 
+    // 주소의 시·군·구를 따서 그럴듯한 장소 이름을 만듭니다.
+    // 조장님이 실제 상호로 바꾸셔도 됩니다.
+    const gu = (address.split(' ')[1] ?? '우리동네').replace(/[시군구]$/, '');
+    const placeName = `${gu}${PLACE_SUFFIX[category] ?? '나눔터'}`;
+
     const activityStart = new Date(now + whenDay * DAY);
     activityStart.setHours(14, 0, 0, 0);
     const activityEnd = new Date(activityStart.getTime() + 3 * 3600000);
@@ -274,6 +297,9 @@ async function seed() {
         image_urls: [image],
         thumbnail_index: 0,
         address,
+        // 장소 이름은 호스트가 직접 적는 칸입니다 (F32).
+        // 주소만으로는 "어디로 가면 되는지" 를 알 수 없어서 따로 둡니다.
+        place_name: placeName,
         notice: '편한 옷차림으로 와주세요. 물과 간식은 준비되어 있습니다.',
         status,
         cancel_reason:
@@ -311,6 +337,33 @@ async function seed() {
       .from('action_items')
       .insert(itemRows)
       .select('id, type, min_required, max_allowed, gender_requirement');
+
+    // AI 색인 — 실제로는 공개할 때 /api/ai/classify 가 만듭니다.
+    // 시드는 그 흐름을 안 거치므로 여기서 직접 넣습니다.
+    // 이게 없으면 Discover 추천에서 "참여 방식" 15점이 항상 0점이 됩니다.
+    const hasGoods = (created ?? []).some((it) => it.type === 'GOODS');
+    const hasPerson = (created ?? []).some((it) => it.type === 'PERSON');
+    const modes = [];
+    if (hasPerson) modes.push('시간을 내서', '직접 행동으로');
+    if (hasGoods) modes.push('물건으로');
+    if (category === '교육' || category === '아동·청소년') modes.push('내 재능으로');
+
+    await admin.from('action_ai_metadata').upsert(
+      {
+        action_id: action.id,
+        categories: [category],
+        activity_types: [category],
+        target_groups: [category],
+        participation_modes: modes,
+        skills: [],
+        keywords: title.split(' ').slice(0, 3),
+        difficulty: '쉬움',
+        ai_model: 'seed',
+        prompt_version: 'seed-v1',
+        owner_confirmed: true,
+      },
+      { onConflict: 'action_id' },
+    );
 
     // 참여자 — 액션마다 다른 인원이 참여하도록
     const joinerCount = Math.min(2 + (idx % 4), users.length - 1);

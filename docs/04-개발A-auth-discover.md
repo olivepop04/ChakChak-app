@@ -207,6 +207,20 @@ import { rankActions, fallbackReason } from '@/lib/utils/scoring';
 **F23 — 저장한 액션 접기 (1시간)**
 `/my/saved` 목록을 최신 2개 + "+ 더보기"로.
 
+**F25 — 알림 설정 화면 (1시간)**
+MY 화면에 알림을 켜고 끄는 스위치를 답니다. **함수와 데이터는 준비돼 있습니다.**
+
+```tsx
+const me = await getProfile(supabase, userId, userId);
+me.notifyOff;   // ['SCHEDULE'] — 꺼둔 것 목록
+
+await updateNotifySettings(supabase, userId, ['SCHEDULE', 'VOICE_REQUEST']);
+```
+
+알림은 **8종**입니다. `NOTIFICATION_TYPES` 를 목록으로 쓰고,
+이름은 `NOTIFICATION_TEMPLATE[type].title` 을 쓰면 됩니다.
+껐다고 표시한 알림은 **DB 트리거가 아예 만들지 않으니** 화면에서 거를 필요가 없습니다.
+
 **F28 — 비회원 유도 문구 (1시간)**
 로그인 안 한 사람이 찜·추천을 누르면 바로 로그인 화면으로 던지지 말고,
 **"로그인하고 나에게 맞는 활동을 추천받아 보세요"** 안내를 먼저 보여줍니다.

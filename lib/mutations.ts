@@ -158,6 +158,40 @@ export async function saveActionDraft(
   return { ok: true, data: data.id };
 }
 
+/**
+ * 공개한 액션의 소개·안내사항만 고칩니다 (F41).
+ *
+ * ★ 공개된 액션에는 saveActionDraft() 를 쓰지 마세요.
+ *
+ *   saveActionDraft 는 제목·날짜·장소까지 전부 보냅니다. 그런데 DB 트리거가
+ *   "공개 뒤에는 소개·안내만" 을 강제하면서 값이 하나라도 다르면 거절합니다.
+ *   화면의 날짜 입력칸(datetime-local)은 초를 버리기 때문에, 저장된 값을
+ *   읽어서 그대로 되돌려 보내도 밀리초가 달라 막힙니다.
+ *
+ *   이 함수는 소개·안내 두 칸만 보내므로 그 문제가 없습니다.
+ *
+ * 작성 중(DRAFT)인 액션은 saveActionDraft() 로 무엇이든 고칠 수 있습니다.
+ */
+export async function updateActionText(
+  supabase: DB,
+  actionId: string,
+  input: { description?: string | null; notice?: string | null },
+): Promise<Result> {
+  const patch: Database['public']['Tables']['actions']['Update'] = {};
+  if (input.description !== undefined)
+    patch.description = input.description?.trim() || null;
+  if (input.notice !== undefined) patch.notice = input.notice?.trim() || null;
+
+  if (Object.keys(patch).length === 0) return { ok: true, data: undefined };
+
+  const { error } = await supabase
+    .from('actions')
+    .update(patch)
+    .eq('id', actionId);
+  if (error) return { ok: false, message: toMessage(error, '저장에 실패했어요.') };
+  return { ok: true, data: undefined };
+}
+
 export interface ActionResultInput {
   content?: string | null;
   /** 결과 사진. 최소 1장 필수 */

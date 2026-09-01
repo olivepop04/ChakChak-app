@@ -259,6 +259,16 @@ if (!res.ok) { toast(res.message, 'error'); return; }
 소감이 20개 넘으면 결과 사진까지 내려가기 전에 지칩니다.
 파일: `app/action/[id]/result/page.tsx`
 
+**F41 — 공개한 액션의 소개·안내 수정 (반나절)**
+호스트가 공개 뒤에도 소개글과 안내사항은 고칠 수 있게 합니다. 제목·날짜·장소는 잠깁니다.
+
+> ⚠️ **`saveActionDraft()` 를 쓰면 안 됩니다.** 제목·날짜까지 전부 보내는데,
+> DB 가 "공개 뒤엔 소개·안내만" 을 강제해서 거절합니다. 날짜 입력칸이 초를 버리는 탓에
+> **저장된 값을 그대로 되돌려 보내도 막힙니다.**
+>
+> 대신 **`updateActionText(supabase, actionId, { description, notice })`** 를 쓰세요.
+> 두 칸만 보내므로 안전합니다. 호스트에게만 보여주세요(`action.isOwner`).
+
 **F43 — 참여 완료 화면의 "HOME으로 가기" 버튼 삭제 (10분)**
 파일: `app/action/[id]/welcome/page.tsx`
 

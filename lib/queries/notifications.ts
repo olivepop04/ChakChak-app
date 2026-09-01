@@ -60,6 +60,12 @@ export const NOTIFICATION_TEMPLATE: Record<
     cta: '모집 현황 보기',
     href: (id) => `/action/${id}`,
   },
+  SHORTFALL: {
+    icon: '📉',
+    title: '모집이 마감됐는데 인원이 조금 모자라요',
+    cta: '진행할지 정하기',
+    href: (id) => `/activity?tab=created&focus=${id}`,
+  },
 };
 
 export async function getNotifications(
