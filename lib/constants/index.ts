@@ -20,6 +20,11 @@ export const CATEGORIES = [
 export type Category = (typeof CATEGORIES)[number];
 
 // ── 참여 가능 시간 ────────────────────────────────────────────────
+/**
+ * @deprecated 2026-09-01 개편으로 TIME_DAYS + TIME_SLOTS 2단계 구조로 옮깁니다.
+ * 추천 점수(lib/utils/scoring.ts)가 아직 이 값을 써서 남겨둡니다.
+ * 개발 A 가 가입 화면과 점수 계산을 함께 옮긴 뒤에 지웁니다.
+ */
 export const AVAILABLE_TIMES = [
   '평일',
   '주말',
@@ -29,6 +34,30 @@ export const AVAILABLE_TIMES = [
   '시간이 생길 때마다',
 ] as const;
 export type AvailableTime = (typeof AVAILABLE_TIMES)[number];
+
+// ── 참여 가능 시간 2단계 ───────────────────────────────────────────
+// ① 요일을 하나 고르고  ② 시간대를 여러 개 고릅니다.
+// profiles.time_prefs 에 [{ day, slots }] 형태로 쌓입니다.
+export const TIME_DAYS = ['평일', '주말', '상관없음'] as const;
+export type TimeDay = (typeof TIME_DAYS)[number];
+
+export const TIME_SLOTS = ['오전', '오후', '저녁', '밤', '상관없음'] as const;
+export type TimeSlot = (typeof TIME_SLOTS)[number];
+
+export interface TimePref {
+  day: TimeDay;
+  slots: TimeSlot[];
+}
+
+/** "평일 오전" · "주말 저녁&밤" · "언제든 좋아요" */
+export function describeTimePref(pref: TimePref): string {
+  const anyDay = pref.day === '상관없음';
+  const anySlot = pref.slots.length === 0 || pref.slots.includes('상관없음');
+  if (anyDay && anySlot) return '언제든 좋아요';
+  if (anySlot) return `${pref.day} 언제든`;
+  const slots = pref.slots.join('&');
+  return anyDay ? `요일 상관없이 ${slots}` : `${pref.day} ${slots}`;
+}
 
 // ── 성별 ─────────────────────────────────────────────────────────
 export const GENDERS = ['MALE', 'FEMALE'] as const;
@@ -106,7 +135,7 @@ export const UNIT_SUGGESTIONS = [
 
 export const PERSON_UNIT = '명';
 
-// ── 알림 6종 ──────────────────────────────────────────────────────
+// ── 알림 7종 ──────────────────────────────────────────────────────
 export const NOTIFICATION_TYPES = [
   'SCHEDULE',
   'RESULT_REQUEST',
@@ -114,6 +143,7 @@ export const NOTIFICATION_TYPES = [
   'VOICE_REQUEST',
   'CANCELLED',
   'INVITED',
+  'LEFT_CREW',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

@@ -28,6 +28,8 @@ export interface ActionCardData {
   address: string | null;
   status: ActionStatus;
   activityStartAt: string | null;
+  /** 모집 마감 시각. "마감 임박" 표시와 정렬에 씁니다 */
+  recruitEndAt: string | null;
   owner: { id: string; nickname: string };
   likeCount: number;
   saveCount: number;

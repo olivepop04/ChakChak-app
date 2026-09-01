@@ -54,6 +54,12 @@ export const NOTIFICATION_TEMPLATE: Record<
     cta: '초대 확인하기',
     href: (id) => `/action/${id}`,
   },
+  LEFT_CREW: {
+    icon: '👋',
+    title: '크루 한 분이 참여를 취소했어요',
+    cta: '모집 현황 보기',
+    href: (id) => `/action/${id}`,
+  },
 };
 
 export async function getNotifications(
