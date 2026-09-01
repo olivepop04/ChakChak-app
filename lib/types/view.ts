@@ -120,11 +120,15 @@ export interface ProfileData extends UserSummary {
 }
 
 /** 게시판 원글 + 댓글 */
+/** NORMAL 은 보통 글, LEFT_NOTICE 는 참여를 취소하며 남긴 사유 */
+export type ChatKind = 'NORMAL' | 'LEFT_NOTICE';
+
 export interface ChatPost {
   id: string;
   content: string;
   createdAt: string;
   deletedAt: string | null;
+  kind: ChatKind;
   author: { id: string; nickname: string };
   isMine: boolean;
   replies: ChatReply[];
@@ -135,6 +139,7 @@ export interface ChatReply {
   content: string;
   createdAt: string;
   deletedAt: string | null;
+  kind: ChatKind;
   author: { id: string; nickname: string };
   isMine: boolean;
 }
@@ -145,6 +150,8 @@ export interface NotificationData {
   type: NotificationType;
   actionId: string | null;
   actionTitle: string | null;
+  /** 알림마다 다른 문장. 예) 나가기 사유. 없으면 템플릿 문구만 보여줍니다 */
+  body: string | null;
   isRead: boolean;
   createdAt: string;
 }

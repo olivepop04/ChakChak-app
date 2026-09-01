@@ -112,6 +112,13 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
                           「{n.actionTitle}」
                         </span>
                       )}
+
+                      {/* 나가기 사유처럼 알림마다 다른 문장이 있으면 한 줄 더 */}
+                      {n.body && (
+                        <span className="mt-0.5 block truncate text-[12px] italic text-neutral-400">
+                          &ldquo;{n.body}&rdquo;
+                        </span>
+                      )}
                     </span>
 
                     <span className="shrink-0 text-[11px] tabular-nums text-neutral-400">

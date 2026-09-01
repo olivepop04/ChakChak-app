@@ -307,6 +307,92 @@ try {
   (chatAsAnon?.length ?? 0) === 0 ? ok('비회원은 게시판을 볼 수 없음')
                                   : no('게시판이 공개됨 !!');
 
+  // ── 11. 2026-09-01 개편분 ─────────────────────────────────
+  console.log('\n[11] 개편분 — 알림 끄기 · 수정 잠금 · 나가기 사유');
+
+  // 알림 켜고 끄기 (F25) — 끈 종류는 아예 안 쌓여야 한다
+  await admin.from('profiles').update({ notify_off: ['SCHEDULE'] }).eq('id', uidB);
+  const kMuted = `V_MUTED:${stamp}`;
+  await admin.from('notifications').insert({
+    user_id: uidB, type: 'SCHEDULE', action_id: act.id, event_key: kMuted,
+  });
+  const { count: mutedCnt } = await admin.from('notifications')
+    .select('*', { count: 'exact', head: true }).eq('event_key', kMuted);
+  mutedCnt === 0 ? ok('끈 알림은 만들어지지 않음 (F25)')
+                 : no('끈 알림이 쌓임 !!', String(mutedCnt));
+
+  const kOn = `V_ON:${stamp}`;
+  await admin.from('notifications').insert({
+    user_id: uidB, type: 'INVITED', action_id: act.id, event_key: kOn,
+  });
+  const { count: onCnt } = await admin.from('notifications')
+    .select('*', { count: 'exact', head: true }).eq('event_key', kOn);
+  onCnt === 1 ? ok('안 끈 알림은 정상 저장')
+              : no('안 끈 알림이 막힘 !!');
+  await admin.from('profiles').update({ notify_off: [] }).eq('id', uidB);
+
+  // 공개된 액션 수정 잠금 (F41)
+  const { error: lockErr } = await cA.from('actions')
+    .update({ title: '제목을 몰래 바꿔본다' }).eq('id', act.id);
+  lockErr ? ok('공개 후 제목 변경 거절됨 (F41)', lockErr.message.slice(0, 40))
+          : no('공개된 액션의 제목이 바뀜 !!');
+
+  const { error: dateErr } = await cA.from('actions')
+    .update({ activity_start_at: new Date(now + 99 * 86400000).toISOString() })
+    .eq('id', act.id);
+  dateErr ? ok('공개 후 날짜 변경 거절됨 (F41)')
+          : no('공개된 액션의 날짜가 바뀜 !!');
+
+  const { error: descErr } = await cA.from('actions')
+    .update({ description: '소개는 고칠 수 있어야 한다', notice: '안내사항도' })
+    .eq('id', act.id);
+  descErr ? no('소개·안내사항 수정이 막힘', descErr.message.slice(0, 40))
+          : ok('소개·안내사항은 수정 가능 (F41)');
+
+  // 나가기 + 사유 (F40)
+  const rShort = await cC.rpc('leave_action_with_reason', {
+    p_action_id: act.id, p_reason: '짧음',
+  });
+  rShort.error ? ok('짧은 사유는 거절됨 (F40)', rShort.error.message.slice(0, 32))
+               : no('5자 미만 사유가 통과됨');
+
+  const { count: beforeChat } = await admin.from('chat_messages')
+    .select('*', { count: 'exact', head: true }).eq('action_id', act.id);
+
+  const rLeave = await cC.rpc('leave_action_with_reason', {
+    p_action_id: act.id,
+    p_reason: '갑자기 출장이 잡혀서 참여가 어렵게 됐습니다. 죄송합니다.',
+  });
+  if (rLeave.error) {
+    no('사유 남기고 나가기 실패', rLeave.error.message.slice(0, 60));
+  } else {
+    ok('사유 남기고 나가기 성공 (F40)');
+
+    const { data: notice } = await admin.from('chat_messages')
+      .select('kind, content, user_id').eq('action_id', act.id).eq('kind', 'LEFT_NOTICE');
+    (notice?.length ?? 0) === 1
+      ? ok('사유가 게시판에 LEFT_NOTICE 로 남음')
+      : no('게시판에 사유가 없음', `${notice?.length ?? 0}건 · 이전 ${beforeChat}건`);
+
+    const { data: pRow } = await admin.from('participations')
+      .select('status').eq('action_id', act.id).eq('user_id', uidC).maybeSingle();
+    pRow?.status === 'LEFT' ? ok('참여 상태가 LEFT 로 바뀜')
+                            : no('상태가 안 바뀜', String(pRow?.status));
+
+    const { data: notif } = await admin.from('notifications')
+      .select('type, body, user_id').eq('action_id', act.id).eq('type', 'LEFT_CREW');
+    const mine = (notif ?? []).find(n => n.user_id === uidA);
+    mine ? ok('호스트에게 알림 + 사유 전달됨', String(mine.body).slice(0, 22) + '…')
+         : no('호스트 알림이 없음');
+  }
+
+  const rTwice = await cC.rpc('leave_action_with_reason', {
+    p_action_id: act.id, p_reason: '이미 나갔는데 또 나가본다',
+  });
+  rTwice.error ? ok('이미 나간 사람은 거절됨')
+               : no('중복 나가기가 허용됨');
+
+
 } catch (e) {
   no('예외 발생', e.message);
 } finally {

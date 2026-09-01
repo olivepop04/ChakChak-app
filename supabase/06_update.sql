@@ -256,30 +256,34 @@ BEGIN
     RAISE EXCEPTION '나가는 이유는 1000자까지 적을 수 있어요.';
   END IF;
 
-  SELECT owner_id, status INTO v_owner, v_status
-  FROM actions WHERE id = p_action_id;
-
+  SELECT owner_id INTO v_owner FROM actions WHERE id = p_action_id;
   IF v_owner IS NULL THEN
     RAISE EXCEPTION '없는 액션입니다.';
   END IF;
-  IF v_status <> 'ACTIVE' THEN
-    RAISE EXCEPTION '모집 중인 액션에서만 나갈 수 있어요.';
+
+  -- 나갈 수 있는 조건은 기존 leave_action 과 똑같이 봅니다.
+  -- 활동이 시작된 뒤에 빠지면 집계가 이미 확정된 상태라 뺄 수 없습니다.
+  SELECT status INTO v_status
+  FROM participations WHERE action_id = p_action_id AND user_id = v_uid;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION '참여 내역이 없습니다.';
+  END IF;
+  IF v_status <> 'BEFORE_ACTION' THEN
+    RAISE EXCEPTION '활동이 시작된 뒤에는 나갈 수 없습니다.';
   END IF;
 
-  IF NOT EXISTS (
-    SELECT 1 FROM participations
-    WHERE action_id = p_action_id AND user_id = v_uid AND status <> 'LEFT'
-  ) THEN
-    RAISE EXCEPTION '참여 중인 액션이 아닙니다.';
-  END IF;
-
-  -- ① 사유를 먼저 남긴다 (나가기 전이라 아직 권한이 있다)
+  -- ① 사유를 먼저 남긴다
+  --    화면에서 나눠 부르면 나가는 순간 게시판 권한이 사라져 글이 안 올라갑니다.
+  --    그래서 순서를 함수 안에 고정해 두었습니다.
   INSERT INTO chat_messages (action_id, user_id, content, kind)
   VALUES (p_action_id, v_uid, v_reason, 'LEFT_NOTICE');
 
   -- ② 나가기
+  --    left_at 을 반드시 함께 채웁니다.
+  --    CONSTRAINT left_at_set 이 (status='LEFT') = (left_at IS NOT NULL) 을 강제합니다.
   UPDATE participations
-  SET status = 'LEFT'
+  SET status = 'LEFT', left_at = now()
   WHERE action_id = p_action_id AND user_id = v_uid;
 
   -- ③ 호스트에게 알림 (자기 액션에서 나가는 경우는 제외)

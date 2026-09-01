@@ -69,7 +69,7 @@ export async function getNotifications(
   const { data, error } = await supabase
     .from('notifications')
     .select(
-      `id, type, action_id, is_read, created_at,
+      `id, type, action_id, body, is_read, created_at,
        action:actions!notifications_action_id_fkey ( title )`,
     )
     .eq('user_id', userId)
@@ -82,6 +82,7 @@ export async function getNotifications(
     id: string;
     type: NotificationType;
     action_id: string | null;
+    body: string | null;
     is_read: boolean;
     created_at: string;
     action: { title: string } | null;
@@ -92,6 +93,7 @@ export async function getNotifications(
     type: n.type,
     actionId: n.action_id,
     actionTitle: n.action?.title ?? null,
+    body: n.body,
     isRead: n.is_read,
     createdAt: n.created_at,
   }));

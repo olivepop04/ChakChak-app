@@ -90,6 +90,34 @@ export async function leaveAction(
   return { ok: true, data: undefined };
 }
 
+/**
+ * 사유를 남기고 나가기 (2026-09-01 개편 · F40)
+ *
+ * 한 번 부르면 세 가지가 한꺼번에 일어난다. 중간에 실패하면 전부 되돌아간다.
+ *
+ *   ① 사유를 게시판에 올린다   (아직 크루라서 권한이 있다)
+ *   ② 참여 상태를 LEFT 로
+ *   ③ 호스트에게 알림          (사유가 함께 전달된다)
+ *
+ * ★ 화면에서 이 세 가지를 나눠 부르지 마세요.
+ *   나가고 나면 게시판에 글 쓸 권한이 사라져서, 순서가 틀어지면 글이 안 올라갑니다.
+ *
+ * 사유는 5자 이상 1000자 이하. 서버가 검사하고 한국어 메시지를 돌려줍니다.
+ * 한 번 올린 사유는 본인도 지울 수 없으니, 보내기 전에 확인 창을 띄워주세요.
+ */
+export async function leaveActionWithReason(
+  supabase: DB,
+  actionId: string,
+  reason: string,
+): Promise<Result> {
+  const { error } = await supabase.rpc('leave_action_with_reason', {
+    p_action_id: actionId,
+    p_reason: reason,
+  });
+  if (error) return { ok: false, message: toMessage(error, '나가기에 실패했어요.') };
+  return { ok: true, data: undefined };
+}
+
 /** 소감 작성. 저장과 동시에 참여 상태가 ACTUALLY_PARTICIPATED 로 바뀐다. */
 export async function submitCrewVoice(
   supabase: DB,
