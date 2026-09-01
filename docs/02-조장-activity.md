@@ -143,6 +143,9 @@ const PROMPT_VERSION = 'trends-v2';   // → 'trends-v3'
 ## 이번 개편에서 할 일 (2026-09-01 합의)
 
 > 전체 합의는 [06-개편-합의.md](./06-개편-합의.md). 아래 "첫 작업 제안"보다 이 목록이 실제 과제입니다.
+>
+> **✅ 민호의 준비 작업(문구 교체 · DB 변경 · 공용 함수)은 전부 끝났습니다. 바로 시작하시면 됩니다.**
+> `git pull origin dev` 로 최신을 받고 시작해주세요.
 
 ### 지금 바로 할 수 있는 것
 
@@ -154,7 +157,7 @@ const PROMPT_VERSION = 'trends-v2';   // → 'trends-v3'
 카드 아래쪽에 있던 배지와 **참여 형태 표시(예: 청소담당, 집게 2개)는 삭제**합니다.
 파일: `app/activity/page.tsx`
 
-### 민호가 "시작하세요" 신호를 주면
+### 이제 해도 됩니다 (민호 작업 완료됨)
 
 **시드 데이터 다시 넣기 (10분)**
 스키마가 바뀌므로 `npm run seed` 를 한 번 다시 돌립니다. 여러 번 돌려도 안전합니다.
@@ -181,7 +184,7 @@ const PROMPT_VERSION = 'trends-v2';   // → 'trends-v3'
 ```
 ## 프로젝트
 
-GOOD — 봉사·나눔 활동(=액션)을 만들고 참여하고 결과를 나누는 모바일 웹.
+착착(CHAK CHAK) — 봉사·나눔 활동(=액션)을 만들고 참여하고 결과를 나누는 모바일 웹.
 Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-4o-mini
 
 ## 내 담당
