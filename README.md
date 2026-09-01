@@ -189,7 +189,8 @@ git push -u origin feature/민호-알림화면
 | 조장 — Activity·트렌드·시드 | [docs/02-조장-activity.md](docs/02-조장-activity.md) |
 | 디자이너 — UI·Home·Detail | [docs/03-디자인-ui.md](docs/03-디자인-ui.md) |
 | 개발 A — 가입·프로필·Discover | [docs/04-개발A-auth-discover.md](docs/04-개발A-auth-discover.md) |
-| 개발 B — 참여·게시판·결과 | [docs/05-개발B-join-result.md](docs/05-개발B-join-result.md) |
+| 개발 B — 만들기·참여·게시판·결과 | [docs/05-개발B-join-result.md](docs/05-개발B-join-result.md) |
+| **이번 개편 (전원 필독)** | [docs/06-개편-합의.md](docs/06-개편-합의.md) — 2026-09-01 합의와 작업 순서 |
 
 그리고 [CLAUDE.md](./CLAUDE.md)에 팀 규칙과 결정 사항이 정리돼 있습니다. **AI에게 코드를 짜달라고 할 때도 이 파일을 같이 읽히면** 결과가 훨씬 일관됩니다.
 
