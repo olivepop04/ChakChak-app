@@ -157,6 +157,10 @@ const PROMPT_VERSION = 'trends-v2';   // → 'trends-v3'
 카드 아래쪽에 있던 배지와 **참여 형태 표시(예: 청소담당, 집게 2개)는 삭제**합니다.
 파일: `app/activity/page.tsx`
 
+> 📁 **알려드립니다** — `ActivityButtons.tsx` 안에 있던 **나가기 버튼이 별도 파일로 빠졌습니다**
+> (`components/action/LeaveButton.tsx`, 개발 B 담당). 나가기 사유 남기기(F40)가 개발 B 과업이라
+> 조장님 파일을 건드리지 않도록 분리했습니다. **화면 동작은 그대로**입니다.
+
 ### 이제 해도 됩니다 (민호 작업 완료됨)
 
 **시드 데이터 다시 넣기 (10분)**

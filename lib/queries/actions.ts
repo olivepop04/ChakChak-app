@@ -32,7 +32,7 @@ type DB = SupabaseClient<Database>;
 /** 카드/상세에 공통으로 필요한 컬럼 */
 const ACTION_COLUMNS = `
   id, title, description, category, image_urls, thumbnail_index,
-  address, notice, status, cancel_reason,
+  address, place_name, notice, status, cancel_reason,
   recruit_end_at, activity_start_at, activity_end_at,
   owner:profiles!actions_owner_id_fkey ( id, nickname, bio )
 `;
@@ -45,6 +45,7 @@ interface RawAction {
   image_urls: string[];
   thumbnail_index: number;
   address: string | null;
+  place_name: string | null;
   notice: string | null;
   status: ActionStatus;
   cancel_reason: string | null;
@@ -136,6 +137,7 @@ function toCard(
     category: raw.category,
     thumbnailUrl: pickThumbnail(raw.image_urls, raw.thumbnail_index),
     address: raw.address,
+    placeName: raw.place_name,
     status: raw.status,
     activityStartAt: raw.activity_start_at,
     recruitEndAt: raw.recruit_end_at,
@@ -366,6 +368,7 @@ export async function getActionDetail(
     imageUrls: raw.image_urls ?? [],
     thumbnailIndex: raw.thumbnail_index,
     address: raw.address,
+    placeName: raw.place_name,
     notice: raw.notice,
     status: raw.status,
     cancelReason: raw.cancel_reason,

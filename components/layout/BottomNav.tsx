@@ -26,13 +26,16 @@ function isActive(pathname: string, href: string) {
 /**
  * 하단 탭을 숨기는 화면들.
  * 집중해서 무언가를 작성·진행하는 중에는 탭이 방해가 됩니다.
+ *
+ * ⚠️ /welcome(참여 완료)은 2026-09-01 합의(F02)로 목록에서 뺐습니다.
+ *    거기서 하단 탭이 보여야 "HOME으로 가기" 버튼을 지울 수 있습니다(F43).
+ *    다시 넣으면 참여 완료 화면에서 홈으로 갈 방법이 사라집니다.
  */
 const HIDDEN = [
   '/login',
   '/signup',
   '/action/create',
   '/join',
-  '/welcome',
   '/chat',
   '/voice',
   '/result/write',

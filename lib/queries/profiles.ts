@@ -9,7 +9,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
 import type { ProfileData, UserSummary, ActionCardData } from '@/lib/types/view';
-import type { TimePref, NotificationType } from '@/lib/constants';
+import type { TimePref, NotificationType, ActionStatus } from '@/lib/constants';
 import { getUserSummaries } from '@/lib/queries/participations';
 import { pickThumbnail } from '@/lib/queries/actions';
 
@@ -88,7 +88,7 @@ export async function getParticipatedActions(
     .from('actions')
     .select(
       `id, title, description, category, image_urls, thumbnail_index,
-       address, status, activity_start_at,
+       address, place_name, status, activity_start_at, recruit_end_at,
        owner:profiles!actions_owner_id_fkey ( id, nickname )`,
     )
     .in('id', ids)
@@ -104,6 +104,8 @@ export async function getParticipatedActions(
     image_urls: string[];
     thumbnail_index: number;
     address: string | null;
+    place_name: string | null;
+    recruit_end_at: string | null;
     status: string;
     activity_start_at: string | null;
     owner: { id: string; nickname: string } | null;
@@ -116,8 +118,10 @@ export async function getParticipatedActions(
     category: a.category,
     thumbnailUrl: pickThumbnail(a.image_urls, a.thumbnail_index),
     address: a.address,
-    status: a.status,
+    placeName: a.place_name,
+    status: a.status as ActionStatus,
     activityStartAt: a.activity_start_at,
+    recruitEndAt: a.recruit_end_at,
     owner: a.owner ?? { id: '', nickname: '알 수 없음' },
     likeCount: 0,
     saveCount: 0,

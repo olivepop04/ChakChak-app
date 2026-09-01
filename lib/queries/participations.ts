@@ -1,7 +1,7 @@
 /**
  * 참여 · 크루 · 결과 조회.
  *
- * ★ 참여 "생성" 은 여기 없다. join_action RPC 를 부를 것. (lib/actions/mutations.ts)
+ * ★ 참여 "생성" 은 여기 없다. joinAction() 을 부를 것. (lib/mutations.ts)
  *   여기 있는 건 조회 전용이다.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -14,7 +14,7 @@ import type {
   CrewItemGroup,
   ActionResultData,
 } from '@/lib/types/view';
-import type { ParticipationStatus, ItemType } from '@/lib/constants';
+import type { ParticipationStatus, ItemType, ActionStatus } from '@/lib/constants';
 import { getActionItems, pickThumbnail } from '@/lib/queries/actions';
 
 type DB = SupabaseClient<Database>;
@@ -51,7 +51,7 @@ export async function getMyJoinedActions(
       .from('actions')
       .select(
         `id, title, description, category, image_urls, thumbnail_index,
-         address, status, activity_start_at,
+         address, place_name, status, activity_start_at, recruit_end_at,
          owner:profiles!actions_owner_id_fkey ( id, nickname )`,
       )
       .in('id', actionIds),
@@ -94,6 +94,8 @@ export async function getMyJoinedActions(
     image_urls: string[];
     thumbnail_index: number;
     address: string | null;
+    place_name: string | null;
+    recruit_end_at: string | null;
     status: string;
     activity_start_at: string | null;
     owner: { id: string; nickname: string } | null;
@@ -137,8 +139,10 @@ export async function getMyJoinedActions(
         category: a.category,
         thumbnailUrl: pickThumbnail(a.image_urls, a.thumbnail_index),
         address: a.address,
-        status: a.status,
+        placeName: a.place_name,
+        status: a.status as ActionStatus,
         activityStartAt: a.activity_start_at,
+        recruitEndAt: a.recruit_end_at,
         owner: a.owner ?? { id: '', nickname: '알 수 없음' },
         likeCount: c?.like_count ?? 0,
         saveCount: c?.save_count ?? 0,
@@ -148,7 +152,7 @@ export async function getMyJoinedActions(
         participationStatus: p.status as ParticipationStatus,
         mySelection: (selectionMap.get(p.id) ?? []).join(' · '),
         hasVoice: votedSet.has(a.id),
-      } as JoinedActionData;
+      };
     })
     .filter((x): x is JoinedActionData => x !== null);
 }

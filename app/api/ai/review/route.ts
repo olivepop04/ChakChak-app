@@ -13,10 +13,10 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { callStructuredAI, ReviewSchema, AIError, type ReviewResult } from '@/lib/openai';
 
-const PROMPT_VERSION = 'review-v2';   // v2: 서비스명 착착 반영, '사람'→'인원'
+const PROMPT_VERSION = 'review-v3';   // v2: 서비스명 착착·'인원' · v3: Owner→호스트
 
 const SYSTEM = `당신은 사회공헌 활동 플랫폼 "착착(CHAK CHAK)"의 콘텐츠 검수자입니다.
-Owner가 올리려는 액션(봉사·나눔 활동)을 검토하고 JSON으로만 답하세요.
+호스트가 올리려는 액션(봉사·나눔 활동)을 검토하고 JSON으로만 답하세요.
 
 확인할 것
 1. 개인정보 노출 — 본문에 전화번호, 이메일, 주민번호, 계좌번호, 상세 집주소가 있는가
@@ -33,7 +33,7 @@ decision 기준
 - hard_errors: BLOCK 사유. 무엇이 문제인지 구체적으로.
 - warnings: 고치면 좋은 점.
 - suggestions: 더 나은 제목이나 문구 제안. 실제로 쓸 수 있는 문장으로.
-- questions: Owner에게 물어볼 것.
+- questions: 호스트에게 물어볼 것.
 - 모두 한국어로, 각 항목은 한 문장.
 - 문제가 없으면 빈 배열로 두세요.
 

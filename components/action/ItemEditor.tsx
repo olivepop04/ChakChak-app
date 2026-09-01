@@ -279,7 +279,7 @@ export function ItemEditor({
           size="sm"
           onClick={() => onChange([...items, emptyPerson()])}
         >
-          ＋ 사람
+          ＋ 인원
         </Button>
         <Button
           type="button"
