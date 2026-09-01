@@ -11,7 +11,7 @@
 ```
 ## 프로젝트
 
-GOOD — 봉사·나눔 활동(=액션)을 만들고 참여하고 결과를 나누는 모바일 웹.
+착착(CHAK CHAK) — 봉사·나눔 활동(=액션)을 만들고 참여하고 결과를 나누는 모바일 웹.
 Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-4o-mini
 
 ## 반드시 지킬 것

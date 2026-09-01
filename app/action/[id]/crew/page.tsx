@@ -27,7 +27,7 @@ function CrewRow({ person, isOwner }: { person: UserSummary; isOwner?: boolean }
           )}
         </p>
         <p className="text-[12px] text-neutral-500">
-          {person.participatedCount}개 참여 · {person.ledCount}개 호스트
+          참여 {person.participatedCount}개 · 호스트 {person.ledCount}개
         </p>
       </div>
       <Link

@@ -23,7 +23,7 @@ export function UserList({
               @{u.nickname}
             </p>
             <p className="text-[12px] text-neutral-500">
-              {u.participatedCount}개 참여 · {u.ledCount}개 호스트
+              참여 {u.participatedCount}개 · 호스트 {u.ledCount}개
             </p>
           </div>
           {action ? (

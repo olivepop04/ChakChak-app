@@ -32,7 +32,7 @@ git checkout feature/개발B-join
 
 ### ① 화면에서 본 숫자를 믿고 신청을 허용하면 안 됩니다
 
-동시에 두 사람이 마지막 한 자리를 신청하면 **둘 다 화면에는 "1자리 남음"으로 보입니다.**
+동시에 두 사람이 마지막 한 자리를 신청하면 **둘 다 화면에는 "1명 더 함께할 수 있어요"로 보입니다.**
 
 그래서 최종 판단은 서버(`join_action`)가 합니다. 항목 행을 잠그고 순서대로 처리해서, 두 번째 사람은 이렇게 거절됩니다.
 
@@ -182,8 +182,11 @@ import { uploadImage } from '@/lib/upload';   // 자동 리사이즈 포함
 
 ## 이번 개편에서 할 일 (2026-09-01 합의)
 
-> 전체 합의는 [06-개편-합의.md](./06-개편-합의.md). **민호의 문구·스키마 작업이 끝난 뒤 시작**해주세요.
+> 전체 합의는 [06-개편-합의.md](./06-개편-합의.md).
 > 이번에 **액션 만들기 화면을 이관받아서** 제 할 일이 거기 몰려 있습니다.
+>
+> **✅ 민호의 준비 작업(문구 교체 · DB 변경 · 공용 함수)은 전부 끝났습니다. 바로 시작하시면 됩니다.**
+> `git pull origin dev` 로 최신을 받고 시작해주세요.
 
 ### 액션 만들기 6종 (`components/action/ActionForm.tsx` 중심)
 
@@ -294,7 +297,7 @@ const groups = groupCrewByItem(crew);
 ```
 ## 프로젝트
 
-GOOD — 봉사·나눔 활동(=액션)을 만들고 참여하고 결과를 나누는 모바일 웹.
+착착(CHAK CHAK) — 봉사·나눔 활동(=액션)을 만들고 참여하고 결과를 나누는 모바일 웹.
 Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-4o-mini
 
 ## 내 담당
@@ -323,7 +326,7 @@ components/action/ (ActionForm · ItemEditor · JoinForm · ChatBoard · ResultW
 4. 정원·성별 검증의 최종 판단은 서버(join_action)가 한다.
    화면의 disabled 는 미리 알려주기 위한 것일 뿐이다.
    서버가 거절하면 res.message 를 그대로 보여주고 router.refresh() 로 숫자를 갱신한다.
-   "화면에 1자리 남음이니 신청을 허용한다" 같은 판단을 클라이언트에서 하지 않는다.
+   "화면에 자리가 남았으니 신청을 허용한다" 같은 판단을 클라이언트에서 하지 않는다.
 
 5. 모집 수량 표시는 lib/utils/quota.ts 의 함수를 쓴다. 숫자를 직접 조합하지 않는다.
    getQuotaState · describeTarget · describeResult · describeResultCount · meetsGender
