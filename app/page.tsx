@@ -41,7 +41,7 @@ export default async function HomePage({
       {/* 헤더 */}
       <header className="flex items-center justify-between px-5 pb-3 pt-6">
         <div>
-          <p className="text-xl font-bold tracking-tight text-neutral-900">GOOD</p>
+          <p className="text-xl font-bold tracking-tight text-neutral-900">착착</p>
           <p className="mt-0.5 text-[13px] text-neutral-500">
             오늘 함께할 수 있는 좋은 일
           </p>

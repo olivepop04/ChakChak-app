@@ -23,11 +23,15 @@ export function formatDateShort(iso: string | null): string {
   return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
 
-/** 14:00 */
+/**
+ * 09:00 · 14:00 — 24시간제로 통일합니다 (2026-09-01 합의).
+ * 시(hour)에도 0을 채웁니다. 예전에는 "9:00" 과 "14:00" 이 섞여 보였습니다.
+ */
 export function formatTime(iso: string | null): string {
   if (!iso) return '';
   const d = new Date(iso);
-  return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /** 8월 30일 (토) 14:00–17:00 */

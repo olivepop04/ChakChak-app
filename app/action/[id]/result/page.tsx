@@ -71,7 +71,7 @@ export default async function ResultPage({
         <EmptyState
           icon="📝"
           title="아직 결과가 등록되지 않았어요"
-          description="활동이 끝나면 리더가 결과를 정리해 올려요."
+          description="활동이 끝나면 호스트가 결과를 정리해 올려요."
           action={{ label: '액션 보러 가기', href: `/action/${id}` }}
         />
       </main>

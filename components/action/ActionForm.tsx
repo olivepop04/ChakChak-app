@@ -6,7 +6,7 @@
  *   그래서 "저장" 을 한 번 눌러 DRAFT 를 만든 뒤에 사진 칸이 열립니다.
  *
  * ★ 공개 흐름
- *   [공개하기] → 코드 검사 + AI 검수 → 결과를 보여줌 → Owner 가 [최종 공개]
+ *   [액션 생성하기] → 코드 검사 + AI 검수 → 결과를 보여줌 → 호스트가 [액션 공개하기]
  *   AI 가 PASS 해도 자동으로 공개되지 않습니다. 사람이 마지막에 결정합니다.
  */
 'use client';
@@ -368,7 +368,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           onClick={handleReview}
           loading={busy}
         >
-          공개하기
+          액션 생성하기
         </Button>
       </div>
     </div>
@@ -442,12 +442,12 @@ function ReviewPanel({
 
       {!blocked && (
         <Button type="button" onClick={onPublish} loading={busy} fullWidth>
-          최종 공개하기
+          액션 공개하기
         </Button>
       )}
       {blocked && (
         <p className="text-[12px] text-red-700">
-          위 내용을 고치고 다시 &ldquo;공개하기&rdquo;를 눌러주세요.
+          위 내용을 고치고 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
         </p>
       )}
     </div>

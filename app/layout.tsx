@@ -4,7 +4,7 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { BottomNav } from '@/components/layout/BottomNav';
 
 export const metadata: Metadata = {
-  title: 'GOOD',
+  title: '착착',
   description: '좋은 일을 찾고, 함께하고, 다시 나누는 곳',
 };
 

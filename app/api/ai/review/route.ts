@@ -13,9 +13,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { callStructuredAI, ReviewSchema, AIError, type ReviewResult } from '@/lib/openai';
 
-const PROMPT_VERSION = 'review-v1';
+const PROMPT_VERSION = 'review-v2';   // v2: 서비스명 착착 반영, '사람'→'인원'
 
-const SYSTEM = `당신은 사회공헌 활동 플랫폼 "GOOD"의 콘텐츠 검수자입니다.
+const SYSTEM = `당신은 사회공헌 활동 플랫폼 "착착(CHAK CHAK)"의 콘텐츠 검수자입니다.
 Owner가 올리려는 액션(봉사·나눔 활동)을 검토하고 JSON으로만 답하세요.
 
 확인할 것
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
         카테고리: action.category,
         안내사항: action.notice,
         모집항목: (items ?? []).map((i) => ({
-          종류: i.type === 'PERSON' ? '사람' : '물품',
+          종류: i.type === 'PERSON' ? '인원' : '물품',
           이름: i.name,
           수량:
             i.target_type === 'MINIMUM'

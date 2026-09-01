@@ -22,7 +22,7 @@ function CrewRow({ person, isOwner }: { person: UserSummary; isOwner?: boolean }
           @{person.nickname}
           {isOwner && (
             <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
-              리더
+              호스트
             </span>
           )}
         </p>
@@ -75,7 +75,7 @@ export default async function CrewPage({
       {owner && (
         <section>
           <h2 className="px-5 pb-1 pt-2 text-[12px] font-semibold tracking-wide text-neutral-400">
-            리더
+            호스트
           </h2>
           <ul className="divide-y divide-neutral-100 border-y border-neutral-100">
             <CrewRow person={owner} isOwner />

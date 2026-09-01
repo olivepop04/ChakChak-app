@@ -81,7 +81,7 @@ export function SharePanel({
       <section className="flex flex-col gap-3">
         <div>
           <h2 className="text-[15px] font-bold text-neutral-900">
-            GOOD 친구에게 보내기
+            착착 친구에게 보내기
           </h2>
           <p className="mt-0.5 text-[12px] text-neutral-500">
             닉네임으로 찾을 수 있어요. 보내면 상대방 알림에 도착해요.
@@ -135,7 +135,7 @@ export function SharePanel({
         <div>
           <h2 className="text-[15px] font-bold text-neutral-900">링크로 공유하기</h2>
           <p className="mt-0.5 text-[12px] text-neutral-500">
-            GOOD 회원이 아니어도 이 링크로 액션을 볼 수 있어요.
+            착착 회원이 아니어도 이 링크로 액션을 볼 수 있어요.
           </p>
         </div>
 

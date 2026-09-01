@@ -39,7 +39,7 @@ export default async function FollowingPage({
         <EmptyState
           icon="👋"
           title="아직 팔로우한 사람이 없어요"
-          description="액션 상세에서 리더를 팔로우해보세요."
+          description="액션 상세에서 호스트를 팔로우해보세요."
           action={{ label: '액션 찾아보기', href: '/discover' }}
         />
       ) : (
