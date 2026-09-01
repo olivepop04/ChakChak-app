@@ -150,7 +150,7 @@ if (!res.ok) { setError(res.message); return; }
 
 `joinAction` · `leaveAction` · `leaveActionWithReason` · `submitCrewVoice` ·
 `postChatMessage` · `deleteChatMessage` ·
-`saveActionDraft` · `saveActionItems` · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
+`saveActionDraft` · `updateActionText` · `saveActionItems` · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
 `updateProfile` · `isNicknameTaken` · `updateNotifySettings` ·
 `toggleLike` · `toggleSave` · `toggleFollow` · `shareToUser` · `markNotificationRead`
 

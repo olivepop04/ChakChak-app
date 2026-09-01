@@ -464,6 +464,133 @@ try {
                                : no('명단이 노출됨 !!', `${asOut.length}건`);
   }
 
+  // ── 13. 액션 생애주기 (공개 → 종료 → 결과 → 소감) ────────
+  //    이 구간은 그동안 검사가 없었습니다. 상태 전환 함수 5종을 한 번에 봅니다.
+  console.log('\n[13] 공개 → 종료 → 결과 → 소감 흐름');
+
+  const { data: lcAct } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 생애주기', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    place_name: '검증센터', status: 'DRAFT',
+    recruit_end_at:    new Date(now + 1 * 86400000).toISOString(),
+    activity_start_at: new Date(now + 2 * 86400000).toISOString(),
+    activity_end_at:   new Date(now + 2 * 86400000 + 3600000).toISOString(),
+  }).select('id').single();
+
+  const { data: lcItems } = await admin.from('action_items').insert([{
+    action_id: lcAct.id, type: 'PERSON', name: '참가자', target_type: 'RANGE',
+    min_required: 1, max_allowed: 3, unit: '명', gender_requirement: 'ANY', sort_order: 1,
+  }]).select('id');
+
+  // 1) 공개
+  const rPub = await cA.rpc('publish_action', { p_action_id: lcAct.id });
+  rPub.error ? no('publish_action 실패', rPub.error.message.slice(0, 50))
+             : ok('publish_action → ACTIVE');
+
+  // 남이 남의 액션을 공개할 수 없어야 한다
+  const rPubOther = await cB.rpc('publish_action', { p_action_id: lcAct.id });
+  rPubOther.error ? ok('남의 액션은 공개할 수 없음')
+                  : no('남이 공개할 수 있음 !!');
+
+  // 2) 참여
+  const rJoinLc = await cB.rpc('join_action', {
+    p_action_id: lcAct.id,
+    p_items: [{ action_item_id: lcItems[0].id, quantity: 1 }],
+  });
+  rJoinLc.error ? no('생애주기 참여 실패', rJoinLc.error.message.slice(0, 50))
+                : ok('크루 참여');
+
+  // 3) 활동이 끝나기 전에는 결과를 공개할 수 없어야 한다
+  const rEarly = await cA.rpc('complete_action', { p_action_id: lcAct.id });
+  rEarly.error ? ok('활동 전에는 결과 공개 불가', rEarly.error.message.slice(0, 32))
+               : no('활동 전에 완료됨 !!');
+
+  // 4) 시간을 지나가게 한다 — 트리거가 막으므로 DRAFT 로 잠깐 되돌린다
+  //    (lock_published_action 은 공개된 액션의 날짜 변경을 막습니다)
+  await admin.from('actions').update({ status: 'DRAFT' }).eq('id', lcAct.id);
+  await admin.from('actions').update({
+    recruit_end_at:    new Date(now - 3 * 86400000).toISOString(),
+    activity_start_at: new Date(now - 2 * 86400000).toISOString(),
+    activity_end_at:   new Date(now - 1 * 86400000).toISOString(),
+  }).eq('id', lcAct.id);
+  await admin.from('actions').update({ status: 'ACTIVE' }).eq('id', lcAct.id);
+
+  const rSync = await admin.rpc('sync_action_status', { p_action_id: lcAct.id });
+  const { data: afterSync } = await admin.from('actions')
+    .select('status').eq('id', lcAct.id).single();
+  afterSync?.status === 'ENDED'
+    ? ok('활동 종료 시각이 지나면 ENDED 로 전환')
+    : no('ENDED 전환 안 됨', String(afterSync?.status));
+
+  const { count: reqCount } = await admin.from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('action_id', lcAct.id).eq('type', 'RESULT_REQUEST');
+  reqCount === 1 ? ok('호스트에게 결과 작성 요청 알림')
+                 : no('RESULT_REQUEST 없음', String(reqCount));
+
+  // 5) 결과 없이 완료하려 하면 막혀야 한다
+  const rNoResult = await cA.rpc('complete_action', { p_action_id: lcAct.id });
+  rNoResult.error ? ok('결과 없이는 완료 불가', rNoResult.error.message.slice(0, 32))
+                  : no('결과 없이 완료됨 !!');
+
+  // 6) 결과 저장 → 완료
+  const { error: resErr } = await cA.from('action_results').upsert({
+    action_id: lcAct.id, content: '잘 마쳤습니다.',
+    image_urls: ['https://example.com/r.jpg'], owner_voice: '고맙습니다',
+  }, { onConflict: 'action_id' });
+  resErr ? no('결과 저장 실패', resErr.message.slice(0, 50)) : ok('결과 저장');
+
+  const rDone = await cA.rpc('complete_action', { p_action_id: lcAct.id });
+  rDone.error ? no('complete_action 실패', rDone.error.message.slice(0, 50))
+              : ok('complete_action → COMPLETED');
+
+  const { count: pubCount } = await admin.from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('action_id', lcAct.id).eq('type', 'RESULT_PUBLISHED');
+  pubCount >= 1 ? ok('크루에게 결과 공개 알림')
+                : no('RESULT_PUBLISHED 없음', String(pubCount));
+
+  // 7) 소감 — 저장과 상태 전환이 한 트랜잭션인가
+  const rShortVoice = await cB.rpc('submit_crew_voice', {
+    p_action_id: lcAct.id, p_content: '짧음',
+  });
+  rShortVoice.error ? ok('너무 짧은 소감은 거절')
+                    : no('10자 미만 소감이 통과됨');
+
+  const rVoice = await cB.rpc('submit_crew_voice', {
+    p_action_id: lcAct.id, p_content: '처음이라 걱정했는데 정말 좋았습니다. 또 참여하고 싶어요.',
+  });
+  rVoice.error ? no('소감 저장 실패', rVoice.error.message.slice(0, 50))
+               : ok('소감 저장');
+
+  const { data: lcPart } = await admin.from('participations')
+    .select('status').eq('action_id', lcAct.id).eq('user_id', uidB).maybeSingle();
+  lcPart?.status === 'ACTUALLY_PARTICIPATED'
+    ? ok('소감을 쓰면 참여 상태가 함께 바뀜 (한 트랜잭션)')
+    : no('상태가 안 바뀜', String(lcPart?.status));
+
+  const rTwiceVoice = await cB.rpc('submit_crew_voice', {
+    p_action_id: lcAct.id, p_content: '같은 액션에 두 번째 소감을 써봅니다.',
+  });
+  rTwiceVoice.error ? ok('같은 액션에 소감을 두 번 쓸 수 없음')
+                    : no('소감 중복 작성이 허용됨');
+
+  // 8) 좋아요 · 저장 · 팔로우
+  const { error: likeErr } = await cB.from('likes')
+    .insert({ action_id: lcAct.id, user_id: uidB });
+  likeErr ? no('좋아요 실패', likeErr.message.slice(0, 40)) : ok('좋아요');
+  const { error: saveErr } = await cB.from('saves')
+    .insert({ action_id: lcAct.id, user_id: uidB });
+  saveErr ? no('저장 실패', saveErr.message.slice(0, 40)) : ok('저장');
+
+  const { data: socialRow } = await admin.from('action_social_counts')
+    .select('like_count, save_count').eq('action_id', lcAct.id).maybeSingle();
+  socialRow?.like_count === 1 && socialRow?.save_count === 1
+    ? ok('좋아요·저장 수가 뷰에 반영됨')
+    : no('집계 이상', JSON.stringify(socialRow));
+
+  await admin.from('actions').delete().eq('id', lcAct.id);
+
 
 } catch (e) {
   no('예외 발생', e.message);

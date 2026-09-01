@@ -135,7 +135,7 @@ export const UNIT_SUGGESTIONS = [
 
 export const PERSON_UNIT = '명';
 
-// ── 알림 7종 ──────────────────────────────────────────────────────
+// ── 알림 8종 ──────────────────────────────────────────────────────
 export const NOTIFICATION_TYPES = [
   'SCHEDULE',
   'RESULT_REQUEST',
@@ -144,6 +144,7 @@ export const NOTIFICATION_TYPES = [
   'CANCELLED',
   'INVITED',
   'LEFT_CREW',
+  'SHORTFALL',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
