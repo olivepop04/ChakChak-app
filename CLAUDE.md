@@ -41,6 +41,21 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
 **3. 데이터가 빈 배열로만 나온다면 RLS입니다** — 에러가 안 나고 조용히 빈 결과가 옵니다. `supabase/02_rls.sql`에서 해당 테이블 정책을 확인하세요.
 
+**자주 걸리는 것만 표로 적어둡니다.** 실제로 확인한 결과입니다.
+
+| 무엇 | 비회원 | 로그인·미참여 | 참여한 크루 | 호스트 |
+|---|---|---|---|---|
+| 액션 내용 (ACTIVE 이상) | ✅ | ✅ | ✅ | ✅ |
+| 참여 **수** (`crewCount`) | ✅ | ✅ | ✅ | ✅ |
+| 참여자 **명단** | ❌ | ❌ | ✅ | ✅ |
+| 각자 고른 **사람 항목** | ❌ | ❌ | ✅ | ✅ |
+| 각자 고른 **물품 수량** | ❌ | ❌ | ❌ | ✅ |
+| 게시판 | ❌ | ❌ | ✅ | ✅ |
+
+**"명단은 안 보여도 숫자는 보인다"** 를 기억하세요. 비회원에게 참여 현황을 보여줘야 하면
+`crewCount` 를 쓰면 됩니다. 물품 수량을 크루끼리 숨긴 이유는 누가 얼마나 냈는지
+서로 비교하게 되기 때문입니다 (`supabase/07_update.sql`).
+
 **4. 데이터는 공용 함수로만** — 아래 5번 참고.
 
 **5. 진행률은 뷰에서 읽으세요** — `action_item_progress`. 카드마다 합계 쿼리를 돌리면 피드에서 쿼리가 수십 번 나갑니다. (`lib/queries/`가 이미 그렇게 하고 있습니다)
@@ -116,7 +131,8 @@ npm run seed
 | `getPublicActionsByOwner` | 남이 만든 공개 액션 |
 | `getParticipatedActions` | 남이 참여한 **완료된** 액션 |
 | `getRecommendCandidates` | 추천 후보 (제외 규칙 적용됨) |
-| `getActionCrew` | The Crew 목록 |
+| `getActionCrew` | The Crew 목록 (각자 참여한 항목 포함) |
+| `groupCrewByItem` | 크루를 항목별로 묶기 — "1일차에 누가 오나" |
 | `getActionResult` | 결과 + 소감 |
 | `getChatPosts` | 게시판 (원글 + 댓글) |
 | `getProfile` / `getFollowers` / `getFollowing` / `searchUsers` | 프로필·팔로우 |

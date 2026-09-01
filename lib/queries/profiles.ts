@@ -9,6 +9,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
 import type { ProfileData, UserSummary, ActionCardData } from '@/lib/types/view';
+import type { TimePref, NotificationType } from '@/lib/constants';
 import { getUserSummaries } from '@/lib/queries/participations';
 import { pickThumbnail } from '@/lib/queries/actions';
 
@@ -22,7 +23,7 @@ export async function getProfile(
   const { data: p, error } = await supabase
     .from('profiles')
     .select(
-      'id, name, nickname, bio, categories, available_times, regions',
+      'id, name, nickname, bio, categories, available_times, time_prefs, notify_off, regions',
     )
     .eq('id', userId)
     .maybeSingle();
@@ -52,6 +53,9 @@ export async function getProfile(
     bio: p.bio,
     categories: p.categories ?? [],
     availableTimes: p.available_times ?? [],
+    // 참여 가능 시간 2단계 (F38). 아직 안 옮긴 사람은 빈 배열이다.
+    timePrefs: (p.time_prefs ?? []) as unknown as TimePref[],
+    notifyOff: (p.notify_off ?? []) as NotificationType[],
     regions: p.regions ?? [],
     participatedCount: s?.participatedCount ?? 0,
     ledCount: s?.ledCount ?? 0,
