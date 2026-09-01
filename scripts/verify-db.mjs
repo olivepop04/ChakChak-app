@@ -1,5 +1,5 @@
 /**
- * GOOD MVP — DB 동작 검증
+ * 착착(CHAK CHAK) — DB 동작 검증
  *
  *   npm run verify:db
  *

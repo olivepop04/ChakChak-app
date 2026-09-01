@@ -1,5 +1,5 @@
 -- =============================================================
--- GOOD MVP — 스키마
+-- 착착(CHAK CHAK) — 스키마
 -- 실행 순서: 01_schema.sql → 02_rls.sql → 03_functions.sql → 04_seed.sql
 -- Supabase 대시보드 → SQL Editor 에 통째로 붙여넣고 실행
 --

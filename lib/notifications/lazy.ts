@@ -121,7 +121,11 @@ export async function syncLazyNotifications(userId: string): Promise<void> {
  *
  * 위 syncLazyNotifications 는 "내가 참여한" 액션을 보지만
  * 이건 "내가 만든" 액션을 봅니다. 그래서 함수를 따로 뒀습니다.
- * Activity(내가 만든 탭)와 알림 화면에서 부르세요.
+ *
+ * 지금 부르는 곳: app/notifications/page.tsx (민호)
+ * 부르면 좋은 곳: app/activity/page.tsx 의 "내가 만든" 탭 (조장 · F37)
+ *   호스트가 알림 화면을 안 열고 Activity 만 봐도 미달 상황을 알 수 있습니다.
+ *   조장님이 F37 화면을 만들 때 추가해주세요.
  *
  * ★ 서버에서만 부르세요.
  */

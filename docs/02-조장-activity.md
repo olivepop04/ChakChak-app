@@ -173,6 +173,20 @@ const PROMPT_VERSION = 'trends-v2';   // → 'trends-v3'
 
 미달 여부는 `getActionItems()` 의 `isMinMet` 으로 알 수 있습니다.
 
+> **알림을 만드는 함수를 한 줄 불러주셔야 합니다.**
+> 지금은 `/notifications` 를 열 때만 만들어져서, 호스트가 Activity 만 보면 알림이 안 생깁니다.
+>
+> ```tsx
+> // app/activity/page.tsx — "내가 만든" 탭에서
+> import { syncHostNotifications } from '@/lib/notifications/lazy';
+>
+> if (isCreated) {
+>   await syncHostNotifications(user.id);
+> }
+> ```
+>
+> 서버 컴포넌트에서만 됩니다. 여러 번 불러도 같은 알림이 두 번 쌓이지 않습니다.
+
 ### 이제 해도 됩니다 (민호 작업 완료됨)
 
 **시드 데이터 다시 넣기 (10분)**
@@ -219,7 +233,8 @@ lib/queries/stats.ts · scripts/seed.mjs · components/action/ActivityButtons.ts
 2. 데이터 읽기는 lib/queries/ 의 함수, 쓰기는 lib/mutations.ts 의 함수만 쓴다.
    화면에서 supabase.from(...) 을 직접 호출하지 않는다.
    getMyJoinedActions · getMyCreatedActions · getTrendStats
-   leaveAction · deleteDraft · cancelAction
+   deleteDraft · cancelAction
+   (나가기 버튼은 components/action/LeaveButton.tsx 로 빠졌다. 개발 B 담당이다)
 
 3. 쓰기 함수는 { ok: true, data } 또는 { ok: false, message } 를 돌려준다.
    message 는 그대로 사용자에게 보여주면 되는 한국어다. try/catch 를 쓰지 않는다.
