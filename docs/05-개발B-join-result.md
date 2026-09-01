@@ -1,4 +1,4 @@
-# 개발 B — 참여 · 게시판 · 결과
+# 개발 B — 만들기 · 참여 · 게시판 · 결과
 
 > **이 문서 하나만 AI에게 줘도 됩니다.** 필요한 제약이 아래에 다 들어 있습니다.
 > 팀 공통 작업 규칙(브랜치·PR)은 [00-공통규칙.md](./00-공통규칙.md)에 있습니다.
@@ -11,10 +11,13 @@ git checkout feature/개발B-join
 
 ## 지금 상태
 
-**전부 동작합니다.** 참여 → 활동 → 결과 → 소감이 하나로 이어지는 흐름 전체가 제 담당입니다.
+**전부 동작합니다.** 만들기 → 참여 → 활동 → 결과 → 소감, 액션의 처음부터 끝까지가 제 담당입니다.
+
+> **새로 이관받음 (2026-09-01):** 액션 만들기 화면. 민호가 만들어 이미 동작하고, 이제 제가 주인입니다.
 
 | 화면 | 주소 | 파일 |
 |---|---|---|
+| **액션 만들기** | `/action/create` | `app/action/create/page.tsx` + `components/action/ActionForm.tsx` · `ItemEditor.tsx` |
 | 참여하기 | `/action/[id]/join` | `app/action/[id]/join/page.tsx` + `components/action/JoinForm.tsx` |
 | 참여 완료 | `/action/[id]/welcome` | `app/action/[id]/welcome/page.tsx` |
 | 함께하는 사람들 | `/action/[id]/crew` | `app/action/[id]/crew/page.tsx` |
@@ -25,7 +28,7 @@ git checkout feature/개발B-join
 
 ---
 
-## 알아둬야 할 규칙 4개
+## 알아둬야 할 규칙 5개
 
 ### ① 화면에서 본 숫자를 믿고 신청을 허용하면 안 됩니다
 
@@ -62,6 +65,12 @@ git checkout feature/개발B-join
 
 DB CHECK 로도 막혀 있습니다. 그리고 **결과를 먼저 저장하고 그다음에 상태를 바꿔야** 합니다. `completeAction()` 이 "결과가 없으면" 거절하기 때문입니다.
 
+### ⑤ 액션 공개는 2단계입니다
+
+만들기 화면의 저장은 DRAFT 까지입니다. 저장 → AI 검수 → **호스트가 최종 공개를 눌러야** ACTIVE 가 됩니다. `publishAction()` 이 이 흐름을 처리하니 화면에서 상태를 직접 바꾸지 마세요.
+
+모집 항목 저장은 **반드시 `saveActionItems()`** 를 쓰세요. 여러 행을 한 번에 insert 하면 DB 기본값이 안 먹는 문제가 있는데, 이 함수가 모든 컬럼을 채워서 피해 갑니다.
+
 ---
 
 ## 첫 작업 제안
@@ -79,7 +88,11 @@ DB CHECK 로도 막혀 있습니다. 그리고 **결과를 먼저 저장하고 �
 
 댓글 입력창이 열리고 닫히는 흐름, 삭제 확인 문구, 글이 많을 때의 스크롤을 봐주세요.
 
-### ③ 결과 화면 (반나절)
+### ③ 만들기 → 참여가 한 흐름인지 보기 (반나절)
+
+직접 액션을 하나 만들어 끝까지 가보세요. 만들기에서 모집 항목을 이렇게 넣으면 참여 화면에 어떻게 보이는지 몸으로 익히는 게, 앞으로 이 화면에 붙는 작업들(버튼 이름 · 검수 팝업 · 날짜 검사 · 자동 임시저장 · 종료일 체크박스 · 장소명 칸)의 기반이 됩니다.
+
+### ④ 결과 화면 (반나절)
 
 `/action/[id]/result` 는 **비회원도 볼 수 있는 화면**입니다. 활동의 마지막을 보여주는 곳이라 발표에서도 쓰입니다.
 
@@ -120,6 +133,8 @@ import { uploadImage } from '@/lib/upload';   // 자동 리사이즈 포함
 - [ ] 결과 사진 없이 저장하면 막힌다
 - [ ] 소감 작성 후 MY 참여 수가 1 늘어난다
 - [ ] 같은 액션에 소감을 두 번 쓸 수 없다
+- [ ] DRAFT 로 저장한 액션을 다시 열어 이어서 수정할 수 있다
+- [ ] AI 검수를 거치지 않고는 공개(ACTIVE)로 바꿀 수 없다
 
 ---
 
@@ -137,9 +152,9 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
 
 ## 내 담당
 
-참여 → 활동 → 결과 → 소감 흐름 전체.
-app/action/[id]/ 하위 (join · welcome · crew · chat · result · voice)
-components/action/ (JoinForm · ChatBoard · ResultWriteForm · VoiceForm)
+액션의 처음부터 끝까지 — 만들기 → 참여 → 활동 → 결과 → 소감.
+app/action/create/ · app/action/[id]/ 하위 (join · welcome · crew · chat · result · voice)
+components/action/ (ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm)
 
 화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
 
@@ -155,7 +170,7 @@ components/action/ (JoinForm · ChatBoard · ResultWriteForm · VoiceForm)
 3. 쓰기 함수는 { ok: true, data } 또는 { ok: false, message } 를 돌려준다.
    message 는 그대로 사용자에게 보여주면 되는 한국어다. try/catch 를 쓰지 않는다.
    joinAction · leaveAction · submitCrewVoice · postChatMessage ·
-   deleteChatMessage · completeAction
+   deleteChatMessage · completeAction · saveActionItems · publishAction · deleteDraft
 
 4. 정원·성별 검증의 최종 판단은 서버(join_action)가 한다.
    화면의 disabled 는 미리 알려주기 위한 것일 뿐이다.
@@ -201,6 +216,11 @@ components/action/ (JoinForm · ChatBoard · ResultWriteForm · VoiceForm)
     되돌릴 수 없는 동작(나가기·삭제)에는 확인 창을 넣는다.
 
 15. 새 파일·새 쿼리·새 상수를 만들기 전에, 이미 있는 것을 먼저 찾아 쓴다.
+
+16. 액션 공개는 2단계다. 저장(DRAFT) → AI 검수 → 호스트가 최종 공개해야 ACTIVE.
+    publishAction() 이 처리하니 상태를 직접 바꾸지 않는다.
+    모집 항목 저장은 saveActionItems() 만 쓴다 — 여러 행 insert 시
+    DB 기본값이 안 먹는 문제를 이 함수가 처리해 둔다.
 
 ## 오늘 할 일
 

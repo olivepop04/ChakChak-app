@@ -396,9 +396,11 @@ Supabase 대시보드 → **SQL Editor**에서 순서대로 실행합니다.
 | 1 | `supabase/01_schema.sql` | 테이블 15개 · 뷰 · 트리거 |
 | 2 | `supabase/02_rls.sql` | 권한 정책 전체 · 파일 저장소 |
 | 3 | `supabase/03_functions.sql` | 참여·소감·상태 전환 함수 |
-| 4 | `supabase/04_seed.sql` | 시연용 데이터 |
+| 4 | `supabase/05_fixes.sql` | 권한 보완 (AI 분류 저장) |
 
 한 파일씩 통째로 붙여넣고 실행하세요. 나눠서 하면 어디까지 적용됐는지 알 수 없게 됩니다.
+
+> `04_seed.sql` 은 실행하지 않습니다 — 시연 데이터는 SQL이 아니라 `npm run seed` 로 넣습니다.
 
 실행 후 타입 파일을 자동 생성본으로 교체합니다.
 

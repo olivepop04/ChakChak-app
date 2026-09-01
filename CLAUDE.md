@@ -189,15 +189,30 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 브랜치 충돌은 여러 명이 같은 파일을 건드릴 때 납니다. 아래를 지키면 거의 안 납니다.
 
-| 담당 | 폴더 |
+| 담당 | 구역 |
 |---|---|
-| 민호 (통합) | `lib/`, `middleware.ts`, `supabase/`, `app/api/notifications/` |
-| 조장 | `app/activity/`, `app/api/ai/trends/`, `supabase/04_seed.sql` |
-| 디자이너 | `components/ui/`, `components/layout/`, `app/page.tsx`, `app/action/[id]/page.tsx`, `tailwind.config.ts` |
-| 개발 A | `app/(auth)/`, `app/my/`, `app/user/`, `app/discover/`, `app/api/ai/discover/` |
-| 개발 B | `app/action/[id]/` 하위(join·chat·crew·result·voice), `app/api/chat/` |
+| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` |
+| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · `lib/queries/stats.ts` |
+| 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` |
+| 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · `app/discover/` · `app/api/ai/discover/` · `lib/constants/regions.ts` · `lib/utils/scoring.ts` |
+| 개발 B | `app/action/create/` · `app/action/[id]/` 하위 (join · welcome · crew · chat · result · voice) |
 
-**`components/ui/`와 `lib/`은 유일한 공유 구역입니다.** 여기를 고칠 때는 먼저 말해주세요.
+`components/action/` 은 **파일 단위로 담당**이 있습니다.
+
+| 파일 | 담당 |
+|---|---|
+| ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm | 개발 B |
+| ActivityButtons | 조장 |
+| DiscoverChat | 개발 A |
+| SharePanel | 민호 |
+| ActionGallery · AddressBox | 디자이너 |
+| QuotaProgress | **공유** — 상세(디자이너)와 참여(개발 B)가 같이 씁니다. 고치기 전에 말하기 |
+
+**`components/ui/`와 `lib/`은 공유 구역입니다.** 고칠 때는 먼저 말해주세요.
+예외 — 위 표에 적힌 `lib/` 파일 3개(`stats.ts` · `regions.ts` · `scoring.ts`)는 각 담당이 바로 고쳐도 됩니다.
+
+> **담당이 바뀌면 세 곳을 같이 고칩니다** — 이 표, 다른 쪽 표(CLAUDE.md ↔ docs/00-공통규칙.md), 그리고 해당 역할 문서(docs/01~05).
+> 한 곳만 고치면 파일마다 답이 달라집니다. 2026-09-01에 실제로 그런 혼선이 있었습니다.
 
 ---
 

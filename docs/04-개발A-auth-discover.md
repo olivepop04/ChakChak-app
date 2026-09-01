@@ -24,7 +24,7 @@ git checkout feature/개발A-auth
 | 팔로워·팔로잉 | `/user/[id]/followers` `/following` | 같은 폴더 | 동작함 |
 | **Discover 추천** | `/discover` | `app/discover/page.tsx` + `app/api/ai/discover/route.ts` | 동작함 |
 
-같이 맡는 파일: `lib/constants/regions.ts` (지역 목록) · `lib/utils/scoring.ts` (추천 점수)
+같이 맡는 파일: `lib/constants/regions.ts` (지역 목록) · `lib/utils/scoring.ts` (추천 점수) · `components/action/DiscoverChat.tsx` (Discover 대화 UI)
 
 ---
 
@@ -140,7 +140,7 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
 
 가입·로그인·프로필·Discover 추천.
 app/(auth)/ · app/my/ · app/user/ · app/discover/ · app/api/ai/discover/
-lib/constants/regions.ts · lib/utils/scoring.ts
+lib/constants/regions.ts · lib/utils/scoring.ts · components/action/DiscoverChat.tsx
 
 화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
 
