@@ -227,6 +227,26 @@ await updateNotifySettings(supabase, userId, ['SCHEDULE', 'VOICE_REQUEST']);
 
 ### 이제 해도 됩니다 (DB 변경 완료됨)
 
+> ### 🚧 F38·F25 를 하기 전에 — 프로필 수정 화면이 새 값을 안 읽습니다
+>
+> `app/my/edit/page.tsx` 가 `getProfile()` 을 쓰지 않고 `profiles` 를 직접 조회합니다.
+> 그래서 **`time_prefs` 와 `notify_off` 를 아예 안 가져옵니다.**
+>
+> 화면을 아무리 잘 만들어도 **초기값이 항상 비어 보이고**, 저장하면 기존 설정이 덮어써집니다.
+> 원인을 모르면 한참 헤맵니다.
+>
+> **먼저 이렇게 바꾸세요.**
+>
+> ```tsx
+> // app/my/edit/page.tsx
+> import { getProfile } from '@/lib/queries/profiles';
+>
+> const me = await getProfile(supabase, user.id, user.id);
+> // me.timePrefs · me.notifyOff · me.categories · me.regions · me.bio
+> ```
+>
+> `ProfileEditForm` 의 `Initial` 타입에도 `timePrefs` · `notifyOff` 를 추가해야 합니다.
+
 **F38 — 참여 가능 시간 2단계 (반나절)**
 가입·프로필 수정에서: ① 평일/주말/상관없음 중 하나 → ② 오전/오후/저녁/밤/상관없음 복수 선택.
 "+선호시간 추가"로 조합을 여러 개 넣고, 선택한 결과를 "평일 오전, 주말 저녁&밤"처럼 보여줍니다.
@@ -298,7 +318,9 @@ lib/constants/regions.ts · lib/utils/scoring.ts · components/action/DiscoverCh
 6. 회원가입은 3단계 마지막에 한 번만 supabase.auth.signUp 을 부른다.
    profiles 에 직접 insert 하지 않는다. signUp 의 options.data 에
    { name, nickname, gender } 를 넣으면 DB 트리거가 profiles 를 만든다.
-   나머지 값(categories, available_times, regions)은 가입 직후 update 로 채운다.
+   나머지 값은 가입 직후 updateProfile() 로 채운다. profiles 를 직접 update 하지 않는다.
+   updateProfile(supabase, userId, { categories, regions, timePrefs })
+   timePrefs 를 넘기면 옛 available_times 컬럼도 함께 채워진다 (추천 점수가 아직 그걸 본다).
 
 7. 타인 프로필에는 "참여 예정" 액션을 절대 노출하지 않는다.
    getParticipatedActions() 가 완료된 것만 돌려주므로 그 함수를 쓴다.

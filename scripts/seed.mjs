@@ -1,5 +1,5 @@
 /**
- * GOOD MVP — 시연용 데이터 만들기
+ * 착착(CHAK CHAK) — 시연용 데이터 만들기
  *
  *   npm run seed          데이터 생성 (여러 번 돌려도 안전 — 지우고 새로 넣습니다)
  *   npm run seed:clean    시드 데이터만 제거
