@@ -224,6 +224,10 @@ import { uploadImage } from '@/lib/upload';   // 자동 리사이즈 포함
 참여 안 한 사람에게도 버튼은 보여주되, 누르면 **"참여 신청을 한 사람만 볼 수 있어요"** 팝업.
 
 **F40 — 나가기 사유 (반나절) — 함수 하나로 끝납니다**
+
+> 📁 **버튼 위치**: `components/action/LeaveButton.tsx` (**개발 B 담당**)
+> 원래 조장 파일(`ActivityButtons.tsx`) 안에 있었는데, 이 과업이 개발 B 몫이라
+> 민호가 파일을 분리했습니다. **조장 파일은 건드리지 않아도 됩니다.**
 나가기 창에서 **사유를 필수로** 받고, 이 함수 하나만 부르면 됩니다.
 
 ```tsx
@@ -256,7 +260,12 @@ if (!res.ok) { toast(res.message, 'error'); return; }
 파일: `app/action/[id]/result/page.tsx`
 
 **F43 — 참여 완료 화면의 "HOME으로 가기" 버튼 삭제 (10분)**
-하단 탭에 HOME이 이미 있어서 중복입니다. 파일: `app/action/[id]/welcome/page.tsx`
+파일: `app/action/[id]/welcome/page.tsx`
+
+> ✅ **선행 작업은 끝났습니다.** 원래 이 화면은 하단 탭이 숨겨져 있어서,
+> 버튼만 지우면 **홈으로 갈 방법이 사라지는 상태**였습니다.
+> 민호가 `BottomNav` 에서 이 화면을 숨김 목록에서 뺐으니(F02) 이제 안전하게 지우면 됩니다.
+> 지우기 전에 화면 아래에 탭이 실제로 보이는지 한 번만 확인해주세요.
 
 **F45 — The Crew 항목별 보기 (반나절)**
 "1일차에 누가 오나" 를 볼 수 있게 합니다. 파일: `app/action/[id]/crew/page.tsx`

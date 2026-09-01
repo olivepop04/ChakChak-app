@@ -197,7 +197,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 | DRAFT 삭제 | 행을 실제로 삭제 |
 | 크루챗 삭제 | 본인 글만 soft delete. **원글을 지우면 댓글도 함께 삭제** |
 | 알림 | 6종 확정. 팔로우 알림 없음 |
-| AI 검수 | PASS / REVISE / BLOCK 3단계. **Owner가 공개 버튼을 눌러야 ACTIVE** |
+| AI 검수 | PASS / REVISE / BLOCK 3단계. **호스트가 공개 버튼을 눌러야 ACTIVE** |
 | 타인 프로필 | 통계 유지 + 참여 목록은 완료된 것만 + 닉네임 주 표기 |
 | Discover 거리 | km 계산 안 함. 시·군·구 단위 매칭까지만 |
 
@@ -219,7 +219,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 | 파일 | 담당 |
 |---|---|
-| ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm | 개발 B |
+| ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm · **LeaveButton** | 개발 B |
 | ActivityButtons | 조장 |
 | DiscoverChat | 개발 A |
 | SharePanel | 민호 |

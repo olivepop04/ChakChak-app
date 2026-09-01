@@ -27,6 +27,8 @@ export interface ActionCardData {
   /** 대표 이미지 1장. 없으면 null → 컴포넌트가 대체 표시를 그린다 */
   thumbnailUrl: string | null;
   address: string | null;
+  /** 장소 이름. 호스트가 직접 입력. 예) 신라목욕탕 */
+  placeName: string | null;
   status: ActionStatus;
   activityStartAt: string | null;
   /** 모집 마감 시각. "마감 임박" 표시와 정렬에 씁니다 */
@@ -66,6 +68,8 @@ export interface ActionDetailData {
   imageUrls: string[];
   thumbnailIndex: number;
   address: string | null;
+  /** 장소 이름. 호스트가 직접 입력. 예) 신라목욕탕 */
+  placeName: string | null;
   notice: string | null;
   status: ActionStatus;
   cancelReason: string | null;

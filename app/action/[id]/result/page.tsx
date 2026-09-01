@@ -146,11 +146,11 @@ export default async function ResultPage({
           </div>
         )}
 
-        {/* Owner's Voice */}
+        {/* 호스트의 한마디 */}
         {result.ownerVoice && (
           <section className="flex flex-col gap-2 rounded-xl bg-neutral-900 p-5 text-white">
             <h2 className="text-[12px] font-semibold tracking-wide text-white/60">
-              OWNER&apos;S VOICE
+              호스트의 한마디
             </h2>
             <p className="whitespace-pre-wrap text-[14px] leading-relaxed">
               {result.ownerVoice}

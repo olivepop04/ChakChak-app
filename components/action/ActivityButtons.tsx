@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { leaveAction, deleteDraft, cancelAction } from '@/lib/mutations';
+import { deleteDraft, cancelAction } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
 
 const btn =
@@ -16,39 +16,13 @@ const btn =
 const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 const danger = `${btn} border border-red-200 bg-red-50 text-red-600`;
 
-/** 참여 취소 */
-export function LeaveButton({ actionId }: { actionId: string }) {
-  const router = useRouter();
-  const toast = useToast();
-  const [busy, setBusy] = useState(false);
+/**
+ * 참여 취소 버튼은 components/action/LeaveButton.tsx 로 옮겼습니다 (개발 B 담당).
+ * F40(나가기 사유)이 개발 B 과업이라 조장 파일을 안 건드려도 되게 분리했습니다.
+ * 기존에 이 파일에서 가져다 쓰던 곳이 안 깨지도록 여기서 다시 내보냅니다.
+ */
+export { LeaveButton } from '@/components/action/LeaveButton';
 
-  async function handle() {
-    if (busy) return;
-    if (
-      !confirm(
-        '참여를 취소할까요?\n모집 인원에서 빠지고, 크루 게시판에도 들어갈 수 없게 됩니다.',
-      )
-    )
-      return;
-
-    setBusy(true);
-    const res = await leaveAction(createClient(), actionId);
-    if (!res.ok) toast(res.message, 'error');
-    else {
-      toast('참여를 취소했어요.');
-      router.refresh();
-    }
-    setBusy(false);
-  }
-
-  return (
-    <button type="button" onClick={handle} disabled={busy} className={danger}>
-      나가기
-    </button>
-  );
-}
-
-/** DRAFT 삭제 — 공개된 적 없는 것만 */
 export function DeleteDraftButton({ actionId }: { actionId: string }) {
   const router = useRouter();
   const toast = useToast();

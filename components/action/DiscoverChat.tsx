@@ -201,7 +201,7 @@ function Bubble({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex gap-2">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-bold text-white">
-        G
+        착
       </span>
       <p className="max-w-[80%] rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2.5 text-[14px] leading-relaxed text-neutral-800">
         {children}

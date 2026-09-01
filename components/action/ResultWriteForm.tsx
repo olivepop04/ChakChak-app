@@ -2,7 +2,7 @@
  * 결과 작성 (Owner 전용).
  *
  * 집계 숫자는 자동으로 계산된 값이라 수정할 수 없습니다.
- * Owner 가 채우는 건 추가 내용 · 사진 · Owner's Voice 세 가지입니다.
+ * 호스트가 채우는 건 추가 내용 · 사진 · 호스트의 한마디 세 가지입니다.
  *
  * ★ 사진은 최소 1장이 필수입니다 (DB CHECK 로도 막혀 있습니다).
  * ★ "결과 공개하기" 를 누르면 completeAction 이 상태를 COMPLETED 로 바꾸고
@@ -148,10 +148,10 @@ export function ResultWriteForm({
         </p>
       </div>
 
-      {/* Owner's Voice */}
+      {/* 호스트의 한마디 */}
       <label className="flex flex-col gap-1.5">
         <span className="text-[13px] font-medium text-neutral-700">
-          Owner&apos;s Voice
+          호스트의 한마디
         </span>
         <textarea
           value={ownerVoice}
