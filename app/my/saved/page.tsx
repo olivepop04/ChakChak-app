@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getSavedActions } from '@/lib/queries/actions';
-import { ActionCard } from '@/components/ui/ActionCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Header } from '@/components/layout/Header';
+import { SavedActionList } from './SavedActionList';
 
 export default async function SavedPage() {
   const supabase = await createClient();
@@ -26,11 +26,7 @@ export default async function SavedPage() {
           action={{ label: '액션 찾아보기', href: '/discover' }}
         />
       ) : (
-        <div className="flex flex-col gap-4 px-5 py-5">
-          {saved.map((a) => (
-            <ActionCard key={a.id} action={a} showStatus />
-          ))}
-        </div>
+        <SavedActionList actions={saved} />
       )}
     </main>
   );
