@@ -18,6 +18,7 @@ import {
   DeleteDraftButton,
   CancelActionButton,
 } from '@/components/action/ActivityButtons';
+import { getShortfallActionIds } from '@/lib/queries/stats';
 import { cn } from '@/lib/utils/cn';
 import type { JoinedActionData, ActionCardData } from '@/lib/types/view';
 
@@ -29,18 +30,69 @@ const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 /** 참여 상태별 버튼 (팀 합의 표 그대로) */
 function JoinedFooter({ item }: { item: JoinedActionData }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <ParticipationBadge status={item.participationStatus} />
-        {item.mySelection && (
-          <span className="truncate text-[11px] text-neutral-500">
-            {item.mySelection}
-          </span>
-        )}
-      </div>
+    <div className="flex flex-wrap gap-1.5">
+      {item.participationStatus === 'BEFORE_ACTION' && (
+        <>
+          <Link href={`/action/${item.id}`} className={secondary}>
+            액션 보기
+          </Link>
+          <Link href={`/action/${item.id}/chat`} className={secondary}>
+            CREW CHAT
+          </Link>
+          <LeaveButton actionId={item.id} />
+        </>
+      )}
+
+      {item.participationStatus === 'AFTER_ACTION' && (
+        <>
+          <Link href={`/action/${item.id}/result`} className={secondary}>
+            결과 보기
+          </Link>
+          <Link href={`/action/${item.id}/voice`} className={primary}>
+            소감 남기기
+          </Link>
+        </>
+      )}
+
+      {item.participationStatus === 'ACTUALLY_PARTICIPATED' && (
+        <Link href={`/action/${item.id}/result`} className={secondary}>
+          결과 보기
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/** 액션 상태별 버튼 (모집 미달 안내 F37 포함) */
+function CreatedFooter({
+  item,
+  isShortfall = false,
+}: {
+  item: ActionCardData;
+  isShortfall?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-2.5">
+      {isShortfall && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] leading-relaxed text-amber-800">
+          <p className="font-semibold text-amber-900">⚠️ 모집 인원 미달 (마감됨)</p>
+          <p className="mt-0.5 text-[11px] text-amber-700">
+            최소 모집 수량을 채우지 못했습니다. 그대로 계속 진행하시거나 아래 [취소하기] 버튼으로 액션을 취소해 주세요.
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-1.5">
-        {item.participationStatus === 'BEFORE_ACTION' && (
+        {item.status === 'DRAFT' && (
+          <>
+            <Link href={`/action/create?id=${item.id}`} className={primary}>
+              계속 작성하기
+            </Link>
+            <DeleteDraftButton actionId={item.id} />
+          </>
+        )}
+
+        {item.status === 'ACTIVE' && (
           <>
             <Link href={`/action/${item.id}`} className={secondary}>
               액션 보기
@@ -48,83 +100,38 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
             <Link href={`/action/${item.id}/chat`} className={secondary}>
               CREW CHAT
             </Link>
-            <LeaveButton actionId={item.id} />
+            <CancelActionButton actionId={item.id} />
           </>
         )}
 
-        {item.participationStatus === 'AFTER_ACTION' && (
+        {item.status === 'ENDED' && (
           <>
+            <Link href={`/action/${item.id}/chat`} className={secondary}>
+              CREW CHAT
+            </Link>
+            <Link href={`/action/${item.id}/result/write`} className={primary}>
+              결과 작성
+            </Link>
+          </>
+        )}
+
+        {item.status === 'COMPLETED' && (
+          <>
+            <Link href={`/action/${item.id}/chat`} className={secondary}>
+              CREW CHAT
+            </Link>
             <Link href={`/action/${item.id}/result`} className={secondary}>
               결과 보기
             </Link>
-            <Link href={`/action/${item.id}/voice`} className={primary}>
-              소감 남기기
-            </Link>
           </>
         )}
 
-        {item.participationStatus === 'ACTUALLY_PARTICIPATED' && (
-          <Link href={`/action/${item.id}/result`} className={secondary}>
-            결과 보기
+        {item.status === 'CANCELLED' && (
+          <Link href={`/action/${item.id}`} className={secondary}>
+            취소 사유 보기
           </Link>
         )}
       </div>
-    </div>
-  );
-}
-
-/** 액션 상태별 버튼 */
-function CreatedFooter({ item }: { item: ActionCardData }) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {item.status === 'DRAFT' && (
-        <>
-          <Link href={`/action/create?id=${item.id}`} className={primary}>
-            계속 작성하기
-          </Link>
-          <DeleteDraftButton actionId={item.id} />
-        </>
-      )}
-
-      {item.status === 'ACTIVE' && (
-        <>
-          <Link href={`/action/${item.id}/chat`} className={secondary}>
-            CREW CHAT
-          </Link>
-          <Link href={`/action/${item.id}`} className={secondary}>
-            액션 보기
-          </Link>
-          <CancelActionButton actionId={item.id} />
-        </>
-      )}
-
-      {item.status === 'ENDED' && (
-        <>
-          <Link href={`/action/${item.id}/chat`} className={secondary}>
-            CREW CHAT
-          </Link>
-          <Link href={`/action/${item.id}/result/write`} className={primary}>
-            결과 작성
-          </Link>
-        </>
-      )}
-
-      {item.status === 'COMPLETED' && (
-        <>
-          <Link href={`/action/${item.id}/chat`} className={secondary}>
-            CREW CHAT
-          </Link>
-          <Link href={`/action/${item.id}/result`} className={secondary}>
-            결과 보기
-          </Link>
-        </>
-      )}
-
-      {item.status === 'CANCELLED' && (
-        <Link href={`/action/${item.id}`} className={secondary}>
-          취소 사유 보기
-        </Link>
-      )}
     </div>
   );
 }
@@ -171,6 +178,21 @@ export default async function ActivityPage({
   const joined = isCreated ? [] : await getMyJoinedActions(supabase, user.id);
   const created = isCreated ? await getMyCreatedActions(supabase, user.id) : [];
 
+  const expiredActiveIds = isCreated
+    ? created
+        .filter(
+          (a) =>
+            a.status === 'ACTIVE' &&
+            a.recruitEndAt &&
+            new Date(a.recruitEndAt) < new Date(),
+        )
+        .map((a) => a.id)
+    : [];
+
+  const shortfallIds = isCreated
+    ? await getShortfallActionIds(supabase, expiredActiveIds)
+    : new Set<string>();
+
   return (
     <main className="pb-24">
       <header className="px-5 pb-3 pt-6">
@@ -216,7 +238,12 @@ export default async function ActivityPage({
                 key={a.id}
                 action={a}
                 showStatus
-                footer={<CreatedFooter item={a} />}
+                footer={
+                  <CreatedFooter
+                    item={a}
+                    isShortfall={shortfallIds.has(a.id)}
+                  />
+                }
               />
             ))}
           </div>
@@ -231,7 +258,15 @@ export default async function ActivityPage({
       ) : (
         <div className="flex flex-col gap-4 px-5 py-5">
           {joined.map((a) => (
-            <ActionCard key={a.id} action={a} footer={<JoinedFooter item={a} />} />
+            <div key={a.id} className="relative">
+              <ActionCard action={a} footer={<JoinedFooter item={a} />} />
+              <div className="pointer-events-none absolute right-3 top-3 z-10">
+                <ParticipationBadge
+                  status={a.participationStatus}
+                  className="rounded-md border border-neutral-200/60 px-2.5 py-1 text-[12px] font-bold shadow-md"
+                />
+              </div>
+            </div>
           ))}
         </div>
       )}

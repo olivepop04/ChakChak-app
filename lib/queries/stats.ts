@@ -159,3 +159,26 @@ export async function getTrendStats(supabase: DB): Promise<TrendStats> {
       .map(([region, count]) => ({ region, count })),
   };
 }
+
+/**
+ * 모집 마감이 지났는데 최소 인원/수량을 못 채운 액션 ID 목록 (F37).
+ */
+export async function getShortfallActionIds(
+  supabase: DB,
+  actionIds: string[],
+): Promise<Set<string>> {
+  if (actionIds.length === 0) return new Set();
+
+  const { data: progress } = await supabase
+    .from('action_item_progress')
+    .select('action_id, is_min_met')
+    .in('action_id', actionIds);
+
+  const set = new Set<string>();
+  for (const row of progress ?? []) {
+    if (row.action_id && row.is_min_met === false) {
+      set.add(row.action_id);
+    }
+  }
+  return set;
+}
