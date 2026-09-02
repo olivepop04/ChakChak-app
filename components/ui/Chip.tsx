@@ -16,19 +16,21 @@ export function Chip({
   onClick,
   children,
   className,
+  as: Component = 'button',
 }: {
   selected?: boolean;
   onClick?: () => void;
   children: React.ReactNode;
   className?: string;
+  as?: 'button' | 'span';
 }) {
   return (
-    <button
-      type="button"
+    <Component
+      type={Component === 'button' ? 'button' : undefined}
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors',
+        'inline-flex items-center justify-center rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors',
         selected
           ? 'border-neutral-900 bg-neutral-900 text-white'
           : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50',
@@ -36,7 +38,7 @@ export function Chip({
       )}
     >
       {children}
-    </button>
+    </Component>
   );
 }
 

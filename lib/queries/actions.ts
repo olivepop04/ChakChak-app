@@ -168,9 +168,14 @@ async function buildCards(
 // ─────────────────────────────────────────────────────────────
 export async function getActionFeed(
   supabase: DB,
-  opts: { viewerId?: string | null; limit?: number; category?: Category } = {},
+  opts: {
+    viewerId?: string | null;
+    limit?: number;
+    category?: Category;
+    sort?: 'DEADLINE' | 'POPULAR';
+  } = {},
 ): Promise<ActionCardData[]> {
-  const { viewerId = null, limit = 20, category } = opts;
+  const { viewerId = null, limit = 20, category, sort = 'DEADLINE' } = opts;
 
   // 활동이 이미 끝난 액션은 피드에서 뺍니다.
   // 상태(ENDED) 전환은 누군가 그 액션을 열어야 일어나기 때문에,
@@ -179,16 +184,36 @@ export async function getActionFeed(
     .from('actions')
     .select(ACTION_COLUMNS)
     .eq('status', 'ACTIVE')
-    .gt('activity_end_at', new Date().toISOString())
-    .order('activity_start_at', { ascending: true })
-    .limit(limit);
+    .gt('activity_end_at', new Date().toISOString());
 
   if (category) q = q.eq('category', category);
+
+  if (sort === 'DEADLINE') {
+    q = q.order('activity_start_at', { ascending: true });
+  } else {
+    q = q.order('created_at', { ascending: false });
+  }
+
+  q = q.limit(limit);
 
   const { data, error } = await q;
   if (error) throw error;
 
-  return buildCards(supabase, (data ?? []) as unknown as RawAction[], viewerId);
+  const cards = await buildCards(
+    supabase,
+    (data ?? []) as unknown as RawAction[],
+    viewerId,
+  );
+
+  if (sort === 'POPULAR') {
+    cards.sort((a, b) => {
+      const scoreA = a.likeCount + a.saveCount * 2 + a.crewCount * 3;
+      const scoreB = b.likeCount + b.saveCount * 2 + b.crewCount * 3;
+      return scoreB - scoreA;
+    });
+  }
+
+  return cards;
 }
 
 // ─────────────────────────────────────────────────────────────

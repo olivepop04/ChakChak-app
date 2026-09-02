@@ -16,9 +16,9 @@ import { CATEGORIES, type Category } from '@/lib/constants';
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; sort?: string }>;
 }) {
-  const { category } = await searchParams;
+  const { category, sort } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -32,9 +32,28 @@ export default async function HomePage({
     viewerId: user?.id ?? null,
     limit: 30,
     category: selected,
+    sort: sort === 'POPULAR' ? 'POPULAR' : 'DEADLINE',
   });
 
   const unread = user ? await getUnreadCount(supabase, user.id) : 0;
+
+  const currentSort = sort === 'POPULAR' ? 'POPULAR' : 'DEADLINE';
+
+  const makeCategoryUrl = (c?: string) => {
+    const p = new URLSearchParams();
+    if (c) p.set('category', c);
+    if (currentSort === 'POPULAR') p.set('sort', 'POPULAR');
+    const q = p.toString();
+    return q ? `/?${q}` : '/';
+  };
+
+  const makeSortUrl = (s: 'DEADLINE' | 'POPULAR') => {
+    const p = new URLSearchParams();
+    if (selected) p.set('category', selected);
+    if (s === 'POPULAR') p.set('sort', 'POPULAR');
+    const q = p.toString();
+    return q ? `/?${q}` : '/';
+  };
 
   return (
     <main className="pb-24">
@@ -70,16 +89,38 @@ export default async function HomePage({
         )}
       </header>
 
-      {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다 */}
-      <div className="flex gap-2 overflow-x-auto px-5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <Link href="/" scroll={false}>
-          <Chip selected={!selected}>전체</Chip>
-        </Link>
-        {CATEGORIES.map((c) => (
-          <Link key={c} href={`/?category=${encodeURIComponent(c)}`} scroll={false}>
-            <Chip selected={selected === c}>{c}</Chip>
+      {/* 필터 영역 (카테고리 + 정렬) */}
+      <div className="flex flex-col gap-3 px-5 pb-4">
+        {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다 */}
+        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <Link href={makeCategoryUrl(undefined)} scroll={false}>
+            <Chip selected={!selected} as="span">
+              전체
+            </Chip>
           </Link>
-        ))}
+          {CATEGORIES.map((c) => (
+            <Link key={c} href={makeCategoryUrl(c)} scroll={false}>
+              <Chip selected={selected === c} as="span">
+                {c}
+              </Chip>
+            </Link>
+          ))}
+        </div>
+
+        {/* 정렬 필터 칩 */}
+        <div className="flex items-center gap-2 border-t border-neutral-100 pt-3">
+          <span className="mr-1 text-xs font-semibold text-neutral-400">정렬</span>
+          <Link href={makeSortUrl('DEADLINE')} scroll={false}>
+            <Chip selected={currentSort === 'DEADLINE'} as="span">
+              마감 임박
+            </Chip>
+          </Link>
+          <Link href={makeSortUrl('POPULAR')} scroll={false}>
+            <Chip selected={currentSort === 'POPULAR'} as="span">
+              인기순
+            </Chip>
+          </Link>
+        </div>
       </div>
 
       {/* 피드 */}
