@@ -1,44 +1,22 @@
 /**
- * Discover — AI 챗 형태의 액션 탐색.
+ * Discover — AI가 최대 3개의 성향 질문을 이끄는 액션 탐색.
  *
- * ★ 자유 대화가 아닙니다. 정해진 질문 3개를 순서대로 물어봅니다.
- *   자유 입력을 받으면 무슨 답이 올지 몰라 검증할 수 없고,
- *   AI 비용도 통제되지 않습니다.
- *
- * 검색과 순위는 서버의 코드가 하고, AI 는 의도 해석과 추천 이유만 씁니다.
+ * AI는 질문과 조건 해석, 추천 이유만 담당합니다.
+ * 실제 후보 제외·완화·점수·순위는 서버 코드가 결정합니다.
  */
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { CATEGORIES } from '@/lib/constants';
 import type { ActionCardData } from '@/lib/types/view';
 
-const QUESTIONS = [
-  {
-    key: 'participationMode' as const,
-    ask: '이번에는 어떤 방식으로 함께하고 싶어요?',
-    options: ['시간을 내서', '물건으로', '직접 행동으로', '내 재능으로'],
-  },
-  {
-    key: 'category' as const,
-    ask: '어떤 분야의 액션을 찾아볼까요?',
-    options: [...CATEGORIES],
-  },
-  {
-    key: 'range' as const,
-    ask: '마지막으로, 이동할 수 있는 범위를 알려주세요.',
-    options: ['우리 동네', '가까운 지역', '어디든 좋아요'],
-  },
-];
-
-const RANGE_VALUE: Record<string, string> = {
-  '우리 동네': 'near',
-  '가까운 지역': 'city',
-  '어디든 좋아요': 'any',
-};
+interface ChatMessage {
+  role: 'assistant' | 'user';
+  content: string;
+}
 
 interface Recommendation {
   action: ActionCardData;
@@ -46,96 +24,169 @@ interface Recommendation {
   reason: string;
 }
 
-export function DiscoverChat({ nickname }: { nickname: string }) {
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
+interface DiscoverResponse {
+  done?: boolean;
+  reply?: string;
+  options?: string[];
+  relaxation?: string[];
+  items?: Recommendation[];
+  error?: string;
+}
+
+export function DiscoverChat({
+  nickname,
+  authenticated = true,
+}: {
+  nickname: string;
+  authenticated?: boolean;
+}) {
+  const started = useRef(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [options, setOptions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(authenticated);
   const [items, setItems] = useState<Recommendation[] | null>(null);
+  const [relaxation, setRelaxation] = useState<string[]>([]);
   const [error, setError] = useState('');
 
-  async function choose(value: string) {
-    const q = QUESTIONS[step];
-    const stored = q.key === 'range' ? RANGE_VALUE[value] : value;
-    const next = { ...answers, [q.key]: stored, [`${q.key}Label`]: value };
-    setAnswers(next);
+  useEffect(() => {
+    if (!authenticated || started.current) return;
+    started.current = true;
+    void requestNext([]);
+  }, [authenticated]);
 
-    if (step < QUESTIONS.length - 1) {
-      setStep(step + 1);
-      return;
-    }
-
-    // 마지막 답 → 추천 요청
+  async function requestNext(nextMessages: ChatMessage[]) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/ai/discover', {
+      const response = await fetch('/api/ai/discover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          participationMode: next.participationMode,
-          category: next.category,
-          range: next.range,
-        }),
+        body: JSON.stringify({ messages: nextMessages }),
       });
-      const data = await res.json();
-      if (data.error) setError(data.error);
-      else setItems(data.items ?? []);
+      const data = (await response.json()) as DiscoverResponse;
+      if (!response.ok || data.error) {
+        setError(data.error ?? '추천 대화를 시작하지 못했어요.');
+        return;
+      }
+
+      const withReply = data.reply
+        ? [
+            ...nextMessages,
+            { role: 'assistant' as const, content: data.reply },
+          ]
+        : nextMessages;
+      setMessages(withReply);
+      setOptions(data.options ?? []);
+      setRelaxation(data.relaxation ?? []);
+      if (data.done) setItems(data.items ?? []);
     } catch {
       setError('추천을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  }
+
+  function choose(value: string) {
+    if (loading) return;
+    const nextMessages: ChatMessage[] = [
+      ...messages,
+      { role: 'user', content: value },
+    ];
+    setMessages(nextMessages);
+    setOptions([]);
+    void requestNext(nextMessages);
   }
 
   function restart() {
-    setStep(0);
-    setAnswers({});
+    setMessages([]);
+    setOptions([]);
     setItems(null);
+    setRelaxation([]);
     setError('');
+    void requestNext([]);
   }
+
+  if (!authenticated) {
+    return (
+      <div className="flex flex-col gap-5 px-5 pb-24 pt-6">
+        <Bubble>
+          로그인하고 나에게 맞는 활동을 추천받아 보세요.
+          <br />내 관심 분야와 가능한 시간을 다시 묻지 않고 바로 시작할게요.
+        </Bubble>
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5">
+          <p className="text-[14px] font-semibold text-neutral-900">
+            로그인하면 이런 점이 좋아요
+          </p>
+          <ul className="mt-3 flex flex-col gap-2 text-[13px] leading-relaxed text-neutral-600">
+            <li>· 내 지역과 가능한 시간에 맞춰 추천해요.</li>
+            <li>· 이미 참여한 액션과 내가 만든 액션은 자동으로 빼요.</li>
+            <li>· 최대 3개의 짧은 질문 뒤에 후보를 꼭 보여줘요.</li>
+          </ul>
+          <Link
+            href="/login?next=/discover"
+            className="mt-5 flex h-12 items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-semibold text-white"
+          >
+            로그인하고 추천받기
+          </Link>
+          <Link
+            href="/signup"
+            className="mt-2 flex h-11 items-center justify-center rounded-xl border border-neutral-300 text-[13px] font-semibold text-neutral-700"
+          >
+            처음이라면 가입하기
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const answeredCount = messages.filter(
+    (message) => message.role === 'user',
+  ).length;
 
   return (
     <div className="flex flex-col gap-4 px-5 pb-24 pt-4">
-      {/* 인사 */}
-      <Bubble>
-        안녕하세요, <b className="font-semibold">{nickname}</b>님 😊
-        <br />몇 가지만 답해주면 지금의 당신에게 어울리는 액션을 찾아드릴게요.
-      </Bubble>
+      <div className="flex items-center justify-between">
+        <p className="text-[12px] text-neutral-500">
+          <b className="font-semibold text-neutral-800">{nickname}</b>님 맞춤 대화
+        </p>
+        {items === null && (
+          <span className="text-[11px] tabular-nums text-neutral-400">
+            {answeredCount} / 3
+          </span>
+        )}
+      </div>
 
-      {/* 지나온 질문과 답 — 답을 다 하면 마지막 질문까지 보여줍니다 */}
-      {QUESTIONS.slice(0, items || loading ? QUESTIONS.length : step).map((q) => (
-        <div key={q.key} className="flex flex-col gap-2">
-          <Bubble>{q.ask}</Bubble>
-          <div className="flex justify-end">
-            <span className="rounded-2xl rounded-br-sm bg-neutral-900 px-4 py-2.5 text-[14px] text-white">
-              {answers[`${q.key}Label`]}
+      {messages.map((message, index) =>
+        message.role === 'assistant' ? (
+          <Bubble key={`${message.role}-${index}`}>{message.content}</Bubble>
+        ) : (
+          <div key={`${message.role}-${index}`} className="flex justify-end">
+            <span className="max-w-[80%] rounded-2xl rounded-br-sm bg-neutral-900 px-4 py-2.5 text-[14px] leading-relaxed text-white">
+              {message.content}
             </span>
           </div>
-        </div>
-      ))}
+        ),
+      )}
 
-      {/* 현재 질문 */}
-      {!items && !loading && step < QUESTIONS.length && (
-        <div className="flex flex-col gap-3">
-          <Bubble>{QUESTIONS[step].ask}</Bubble>
-          <div className="flex flex-wrap justify-end gap-2">
-            {QUESTIONS[step].options.map((o) => (
-              <button
-                key={o}
-                type="button"
-                onClick={() => choose(o)}
-                className="rounded-full border border-neutral-900 px-4 py-2 text-[13px] font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
-              >
-                {o}
-              </button>
-            ))}
-          </div>
+      {!loading && items === null && options.length > 0 && (
+        <div className="flex flex-wrap justify-end gap-2">
+          {options.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => choose(option)}
+              className="rounded-full border border-neutral-900 px-4 py-2 text-[13px] font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
+            >
+              {option}
+            </button>
+          ))}
         </div>
       )}
 
       {loading && (
         <Bubble>
           <span className="inline-flex items-center gap-2">
-            착착 AI가 액션을 살펴보고 있어요
+            착착 AI가 다음 말을 고르고 있어요
             <span className="inline-flex gap-0.5">
               <Dot /> <Dot /> <Dot />
             </span>
@@ -144,52 +195,44 @@ export function DiscoverChat({ nickname }: { nickname: string }) {
       )}
 
       {error && (
-        <p className="rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600">
-          {error}
-        </p>
+        <div className="flex flex-col gap-3 rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600">
+          <p>{error}</p>
+          <Button variant="secondary" size="sm" onClick={restart}>
+            다시 시도
+          </Button>
+        </div>
       )}
 
-      {/* 결과 */}
       {items && (
         <div className="flex flex-col gap-4">
-          {items.length === 0 ? (
-            <>
-              <Bubble>
-                조건에 맞는 액션을 찾지 못했어요.
-                <br />
-                조건을 바꿔서 다시 찾아볼까요?
-              </Bubble>
-              <EmptyState
-                icon="🔍"
-                title="지금은 열린 액션이 적어요"
-                description="직접 액션을 만들어 사람을 모아볼 수도 있어요."
-                action={{ label: '액션 만들기', href: '/action/create' }}
-              />
-            </>
-          ) : (
-            <>
-              <Bubble>
-                찾았어요! 😊
-                <br />
-                <b className="font-semibold">{nickname}</b>님에게 어울리는 액션{' '}
-                {items.length}개예요.
-              </Bubble>
+          {relaxation.length > 0 && (
+            <p className="rounded-xl bg-violet-50 px-4 py-3 text-[12px] leading-relaxed text-violet-700">
+              {relaxation.join(' ')} 조건을 넓힌 사실을 숨기지 않고 알려드려요.
+            </p>
+          )}
 
-              <div className="flex flex-col gap-4">
-                {items.map((it) => (
-                  <div key={it.action.id} className="flex flex-col gap-1.5">
-                    <ActionCard action={it.action} />
-                    <p className="px-1 text-[12px] leading-relaxed text-neutral-500">
-                      ✦ {it.reason}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </>
+          {items.length === 0 ? (
+            <EmptyState
+              icon="🔍"
+              title="지금 추천할 수 있는 액션이 없어요"
+              description="마감 전이고 아직 참여하지 않은 액션이 생기면 다시 추천해드릴게요."
+              action={{ label: '직접 액션 만들기', href: '/action/create' }}
+            />
+          ) : (
+            <div className="flex flex-col gap-4">
+              {items.map((item) => (
+                <div key={item.action.id} className="flex flex-col gap-1.5">
+                  <ActionCard action={item.action} />
+                  <p className="px-1 text-[12px] leading-relaxed text-neutral-500">
+                    ✦ {item.reason}
+                  </p>
+                </div>
+              ))}
+            </div>
           )}
 
           <Button variant="secondary" fullWidth onClick={restart}>
-            조건을 바꿔서 다시 찾기
+            다시 추천받기
           </Button>
         </div>
       )}

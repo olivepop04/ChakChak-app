@@ -1,7 +1,7 @@
 /**
  * 가입 (3단계).
  *
- *   1단계  이메일 · 비밀번호 · 약관 동의 2개
+ *   1단계  이메일 · 비밀번호 · 자기소개(선택) · 약관 동의 2개
  *   2단계  이름 · 닉네임 · 성별
  *   3단계  관심 카테고리 · 참여 가능 시간 · 활동 지역
  *
@@ -21,16 +21,18 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
-import { updateProfile } from '@/lib/mutations';
+import { TimePreferenceEditor } from '@/app/my/_components/TimePreferenceEditor';
+import { isNicknameTaken, updateProfile } from '@/lib/mutations';
 import {
   CATEGORIES,
-  AVAILABLE_TIMES,
   GENDER_LABEL,
   GENDERS,
   LIMITS,
+  type TimePref,
   type Gender,
-  toTimePrefs,
 } from '@/lib/constants';
+
+const CATEGORY_OPTIONS = ['전체', ...CATEGORIES] as const;
 
 const inputClass =
   'h-12 rounded-xl border border-neutral-300 px-4 text-[15px] outline-none focus:border-neutral-900';
@@ -44,6 +46,7 @@ export default function SignUpPage() {
   // 1단계
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [bio, setBio] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
 
@@ -54,8 +57,23 @@ export default function SignUpPage() {
 
   // 3단계
   const [categories, setCategories] = useState<string[]>([]);
-  const [times, setTimes] = useState<string[]>([]);
+  const [timePrefs, setTimePrefs] = useState<TimePref[]>([
+    { day: '상관없음', slots: ['상관없음'] },
+  ]);
   const [regions, setRegions] = useState<string[]>([]);
+
+  function toggleCategory(value: (typeof CATEGORY_OPTIONS)[number]) {
+    if (value === '전체') {
+      setCategories((current) => (current.includes('전체') ? [] : ['전체']));
+      return;
+    }
+    setCategories((current) =>
+      toggleInArray(
+        current.filter((category) => category !== '전체'),
+        value,
+      ),
+    );
+  }
 
   // ── 1단계 검증 ────────────────────────────────────────────
   function nextFromStep1() {
@@ -80,11 +98,7 @@ export default function SignUpPage() {
     if (!gender) return setError('성별을 선택해주세요.');
 
     setBusy(true);
-    const { data: taken } = await createClient()
-      .from('profiles')
-      .select('id')
-      .eq('nickname', nick)
-      .maybeSingle();
+    const taken = await isNicknameTaken(createClient(), nick);
     setBusy(false);
 
     if (taken) return setError('이미 사용 중인 닉네임이에요.');
@@ -94,6 +108,13 @@ export default function SignUpPage() {
   // ── 3단계: 계정 생성 ──────────────────────────────────────
   async function handleSignUp() {
     setError('');
+    if (
+      timePrefs.length === 0 ||
+      timePrefs.some((preference) => preference.slots.length === 0)
+    ) {
+      setError('참여 가능한 요일과 시간대를 하나 이상 선택해주세요.');
+      return;
+    }
     setBusy(true);
     const supabase = createClient();
 
@@ -125,9 +146,10 @@ export default function SignUpPage() {
       // 공용 함수로 저장합니다. timePrefs 를 넘기면 옛 available_times 도
       // 함께 채워져서, 나중에 F38 화면이 생겨도 이 회원의 설정이 보입니다.
       await updateProfile(supabase, user.id, {
+        bio,
         categories,
         regions,
-        timePrefs: toTimePrefs(times),
+        timePrefs,
       });
     }
 
@@ -185,6 +207,19 @@ export default function SignUpPage() {
                 className={inputClass}
               />
               <span className="text-[11px] text-neutral-400">6자 이상</span>
+            </label>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[13px] font-medium text-neutral-700">
+                자기소개 <span className="font-normal text-neutral-400">(선택)</span>
+              </span>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={3}
+                placeholder="어떤 활동에 관심이 있는지 짧게 알려주세요."
+                className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+              />
             </label>
 
             <div className="mt-2 flex flex-col gap-2">
@@ -293,9 +328,9 @@ export default function SignUpPage() {
                 관심 카테고리
               </span>
               <ChipGroup
-                options={CATEGORIES}
-                selected={categories as (typeof CATEGORIES)[number][]}
-                onToggle={(v) => setCategories(toggleInArray(categories, v))}
+                options={CATEGORY_OPTIONS}
+                selected={categories as (typeof CATEGORY_OPTIONS)[number][]}
+                onToggle={toggleCategory}
               />
             </div>
 
@@ -303,11 +338,7 @@ export default function SignUpPage() {
               <span className="text-[13px] font-medium text-neutral-700">
                 보통 언제 참여할 수 있나요?
               </span>
-              <ChipGroup
-                options={AVAILABLE_TIMES}
-                selected={times as (typeof AVAILABLE_TIMES)[number][]}
-                onToggle={(v) => setTimes(toggleInArray(times, v))}
-              />
+              <TimePreferenceEditor value={timePrefs} onChange={setTimePrefs} />
             </div>
 
             <div className="flex flex-col gap-2.5">

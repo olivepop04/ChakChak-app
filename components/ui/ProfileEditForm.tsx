@@ -7,17 +7,20 @@ import { Button } from '@/components/ui/Button';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
 import { useToast } from '@/components/ui/Toast';
+import { TimePreferenceEditor } from '@/app/my/_components/TimePreferenceEditor';
 import {
   CATEGORIES,
-  AVAILABLE_TIMES,
   GENDER_LABEL,
   LIMITS,
-  toTimePrefs,
+  NOTIFICATION_TYPES,
   type Gender,
   type TimePref,
   type NotificationType,
 } from '@/lib/constants';
-import { updateProfile } from '@/lib/mutations';
+import { NOTIFICATION_TEMPLATE } from '@/lib/queries/notifications';
+import { updateNotifySettings, updateProfile } from '@/lib/mutations';
+
+const CATEGORY_OPTIONS = ['전체', ...CATEGORIES] as const;
 
 interface Initial {
   name: string;
@@ -51,9 +54,37 @@ export function ProfileEditForm({
   const [nickname, setNickname] = useState(initial.nickname);
   const [bio, setBio] = useState(initial.bio);
   const [categories, setCategories] = useState(initial.categories);
-  const [times, setTimes] = useState(initial.availableTimes);
+  const [timePrefs, setTimePrefs] = useState<TimePref[]>(
+    initial.timePrefs.length > 0
+      ? initial.timePrefs
+      : [{ day: '상관없음', slots: ['상관없음'] }],
+  );
+  const [notifyOff, setNotifyOff] = useState<NotificationType[]>(
+    initial.notifyOff,
+  );
   const [regions, setRegions] = useState(initial.regions);
   const [busy, setBusy] = useState(false);
+
+  function toggleCategory(value: (typeof CATEGORY_OPTIONS)[number]) {
+    if (value === '전체') {
+      setCategories((current) => (current.includes('전체') ? [] : ['전체']));
+      return;
+    }
+    setCategories((current) =>
+      toggleInArray(
+        current.filter((category) => category !== '전체'),
+        value,
+      ),
+    );
+  }
+
+  function toggleNotification(type: NotificationType) {
+    setNotifyOff((current) =>
+      current.includes(type)
+        ? current.filter((item) => item !== type)
+        : [...current, type],
+    );
+  }
 
   async function handleSave() {
     if (busy) return;
@@ -64,6 +95,14 @@ export function ProfileEditForm({
         `닉네임은 ${LIMITS.NICKNAME_MIN}~${LIMITS.NICKNAME_MAX}자로 입력해주세요.`,
         'error',
       );
+      return;
+    }
+
+    if (
+      timePrefs.length === 0 ||
+      timePrefs.some((preference) => preference.slots.length === 0)
+    ) {
+      toast('참여 가능한 요일과 시간대를 하나 이상 선택해주세요.', 'error');
       return;
     }
 
@@ -78,11 +117,22 @@ export function ProfileEditForm({
       bio,
       categories,
       regions,
-      timePrefs: toTimePrefs(times),
+      timePrefs,
     });
 
     if (!res.ok) {
       toast(res.message, 'error');
+      setBusy(false);
+      return;
+    }
+
+    const notifyResult = await updateNotifySettings(
+      supabase,
+      userId,
+      notifyOff,
+    );
+    if (!notifyResult.ok) {
+      toast(notifyResult.message, 'error');
       setBusy(false);
       return;
     }
@@ -138,25 +188,68 @@ export function ProfileEditForm({
       <div className="flex flex-col gap-2.5">
         <span className={label}>관심 카테고리</span>
         <ChipGroup
-          options={CATEGORIES}
-          selected={categories as (typeof CATEGORIES)[number][]}
-          onToggle={(v) => setCategories(toggleInArray(categories, v))}
+          options={CATEGORY_OPTIONS}
+          selected={categories as (typeof CATEGORY_OPTIONS)[number][]}
+          onToggle={toggleCategory}
         />
       </div>
 
       <div className="flex flex-col gap-2.5">
         <span className={label}>보통 언제 참여할 수 있나요?</span>
-        <ChipGroup
-          options={AVAILABLE_TIMES}
-          selected={times as (typeof AVAILABLE_TIMES)[number][]}
-          onToggle={(v) => setTimes(toggleInArray(times, v))}
-        />
+        <TimePreferenceEditor value={timePrefs} onChange={setTimePrefs} />
       </div>
 
       <div className="flex flex-col gap-2.5">
         <span className={label}>활동 가능 지역</span>
         <RegionPicker value={regions} onChange={setRegions} />
       </div>
+
+      <section id="notification-settings" className="flex flex-col gap-3 pt-2">
+        <div>
+          <h2 className="text-[15px] font-bold text-neutral-900">알림 설정</h2>
+          <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">
+            끈 알림은 새로 만들어지지 않습니다. 이미 받은 알림은 그대로 남아요.
+          </p>
+        </div>
+
+        <div className="divide-y divide-neutral-100 overflow-hidden rounded-2xl border border-neutral-200">
+          {NOTIFICATION_TYPES.map((type) => {
+            const enabled = !notifyOff.includes(type);
+            const template = NOTIFICATION_TEMPLATE[type];
+            return (
+              <div
+                key={type}
+                className="flex items-center justify-between gap-4 bg-white px-4 py-3.5"
+              >
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-neutral-800">
+                    <span className="mr-2" aria-hidden="true">
+                      {template.icon}
+                    </span>
+                    {template.title}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={enabled}
+                  aria-label={`${template.title} 알림 ${enabled ? '끄기' : '켜기'}`}
+                  onClick={() => toggleNotification(type)}
+                  className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+                    enabled ? 'bg-neutral-900' : 'bg-neutral-300'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                      enabled ? 'left-6' : 'left-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
         <Button size="lg" fullWidth loading={busy} onClick={handleSave}>

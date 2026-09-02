@@ -16,10 +16,14 @@
  */
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 import { isWeekend } from '@/lib/utils/date';
+import type { TimePref, TimeSlot } from '@/lib/constants';
 import type { ActionCardData } from '@/lib/types/view';
 
 export interface ScoringProfile {
   categories: string[];
+  /** 새 2단계 참여 가능 시간. 있으면 이 값을 우선 사용합니다. */
+  timePrefs: TimePref[];
+  /** 아직 time_prefs 가 없는 기존 회원을 위한 이전 값 */
   availableTimes: string[];
   regions: string[];
   /** 내가 팔로우하는 사람들의 id */
@@ -45,6 +49,39 @@ export interface ScoredAction {
 /** 액션의 참여 방식을 대략 추정합니다 (AI 색인이 없을 때의 대비책) */
 function guessMode(action: ActionCardData): string {
   return action.category === '환경' ? '직접 행동으로' : '시간을 내서';
+}
+
+function getTimeSlot(iso: string | null): TimeSlot | null {
+  if (!iso) return null;
+  const hour = new Date(iso).getHours();
+  if (hour >= 5 && hour < 12) return '오전';
+  if (hour >= 12 && hour < 18) return '오후';
+  if (hour >= 18 && hour < 22) return '저녁';
+  return '밤';
+}
+
+function matchesTimePreference(
+  action: ActionCardData,
+  preferences: TimePref[],
+): { matched: boolean; label: string } {
+  if (!action.activityStartAt || preferences.length === 0) {
+    return { matched: false, label: '' };
+  }
+
+  const day = isWeekend(action.activityStartAt) ? '주말' : '평일';
+  const slot = getTimeSlot(action.activityStartAt);
+  const found = preferences.find((preference) => {
+    const dayMatches = preference.day === '상관없음' || preference.day === day;
+    const slotMatches =
+      preference.slots.length === 0 ||
+      preference.slots.includes('상관없음') ||
+      (slot !== null && preference.slots.includes(slot));
+    return dayMatches && slotMatches;
+  });
+
+  if (!found) return { matched: false, label: '' };
+  const label = slot ? `${day} ${slot} 활동` : `${day} 활동`;
+  return { matched: true, label };
 }
 
 export function scoreAction(
@@ -78,15 +115,18 @@ export function scoreAction(
     matched.push('가까운 지역');
   }
 
-  // 3) 참여 가능 요일 — 활동 시작일의 요일로 판단합니다
+  // 3) 참여 가능 요일·시간대 — 새 2단계 설정을 우선 사용합니다.
+  // 아직 time_prefs 가 비어 있는 기존 회원만 available_times 로 보완합니다.
+  const timeMatch = matchesTimePreference(action, profile.timePrefs);
   const weekend = isWeekend(action.activityStartAt);
-  if (
-    (weekend && profile.availableTimes.includes('주말')) ||
-    (!weekend && profile.availableTimes.includes('평일')) ||
-    profile.availableTimes.includes('시간이 생길 때마다')
-  ) {
+  const legacyTimeMatch =
+    profile.timePrefs.length === 0 &&
+    ((weekend && profile.availableTimes.includes('주말')) ||
+      (!weekend && profile.availableTimes.includes('평일')) ||
+      profile.availableTimes.includes('시간이 생길 때마다'));
+  if (timeMatch.matched || legacyTimeMatch) {
     score += 20;
-    matched.push(weekend ? '주말 활동' : '평일 활동');
+    matched.push(timeMatch.label || (weekend ? '주말 활동' : '평일 활동'));
   }
 
   // 4) 참여 방식

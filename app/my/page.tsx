@@ -88,8 +88,16 @@ export default async function MyPage() {
 
       {/* 통계 */}
       <section className="mx-5 flex rounded-xl border border-neutral-200">
-        <Stat value={profile.participatedCount} label="참여 액션" />
-        <Stat value={profile.ledCount} label="호스트한 액션" />
+        <Stat
+          value={profile.participatedCount}
+          label="참여 액션"
+          href="/activity"
+        />
+        <Stat
+          value={profile.ledCount}
+          label="호스트한 액션"
+          href="/activity?tab=created"
+        />
         <Stat
           value={profile.followerCount}
           label="팔로워"
@@ -161,6 +169,13 @@ export default async function MyPage() {
             className="flex items-center justify-between px-5 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
           >
             저장한 액션
+            <span className="text-neutral-300">›</span>
+          </Link>
+          <Link
+            href="/my/edit#notification-settings"
+            className="flex items-center justify-between px-5 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
+          >
+            알림 설정
             <span className="text-neutral-300">›</span>
           </Link>
           <LogoutButton />

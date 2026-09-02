@@ -10,7 +10,6 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/queries/profiles';
 import { Header } from '@/components/layout/Header';
 import { ProfileEditForm } from '@/components/ui/ProfileEditForm';
-import type { Gender } from '@/lib/constants';
 
 export default async function ProfileEditPage() {
   const supabase = await createClient();
@@ -24,13 +23,6 @@ export default async function ProfileEditPage() {
   const profile = await getProfile(supabase, user.id, user.id);
   if (!profile) redirect('/login');
 
-  // 성별은 화면에 표시만 하고 바꿀 수 없습니다. ProfileData 에는 없어서 따로 읽습니다.
-  const { data: g } = await supabase
-    .from('profiles')
-    .select('gender')
-    .eq('id', user.id)
-    .maybeSingle();
-
   return (
     <main>
       <Header title="프로필 수정" back backHref="/my" sticky />
@@ -39,7 +31,7 @@ export default async function ProfileEditPage() {
         initial={{
           name: profile.name,
           nickname: profile.nickname,
-          gender: (g?.gender ?? 'MALE') as Gender,
+          gender: profile.gender,
           bio: profile.bio ?? '',
           categories: profile.categories,
           availableTimes: profile.availableTimes,
