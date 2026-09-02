@@ -45,12 +45,16 @@ export default async function ActionDetailPage({
   const cta = (() => {
     if (action.status === 'CANCELLED')
       return { label: '취소된 액션이에요', disabled: true } as const;
+    if (action.status === 'COMPLETED')
+      return { label: '결과 보기', href: `/action/${id}/result` } as const;
     if (action.isOwner)
       return { label: '내가 만든 액션', href: '/activity?tab=created' } as const;
     if (action.myParticipation && action.myParticipation !== 'LEFT')
-      return { label: 'CREW CHAT으로 가기', href: `/action/${id}/chat` } as const;
-    if (action.status === 'COMPLETED')
-      return { label: '결과 보기', href: `/action/${id}/result` } as const;
+      return {
+        label: 'CREW CHAT으로 가기',
+        href: `/action/${id}/chat`,
+        isCrewChat: true,
+      } as const;
     if (action.status === 'ENDED')
       return { label: '활동이 끝났어요', disabled: true } as const;
     if (action.recruitClosed)
@@ -61,7 +65,7 @@ export default async function ActionDetailPage({
   })();
 
   return (
-    <main className="pb-32">
+    <main className="pb-40">
       <Header
         back
         backHref="/"
@@ -210,13 +214,33 @@ export default async function ActionDetailPage({
       </div>
 
       {/* 하단 고정 버튼 */}
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-14 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
         {'href' in cta && cta.href ? (
           <Link
             href={cta.href}
-            className="flex h-13 w-full items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-semibold text-white"
+            className={
+              'isCrewChat' in cta && cta.isCrewChat
+                ? 'flex h-14 w-full items-center justify-center rounded-xl bg-neutral-900 text-base font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
+                : 'flex h-13 w-full items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-semibold text-white'
+            }
           >
-            {cta.label}
+            {'isCrewChat' in cta && cta.isCrewChat && (
+              <svg
+                className="mr-2.5 h-5 w-5 flex-none"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+            )}
+            <span>{cta.label}</span>
           </Link>
         ) : (
           <button

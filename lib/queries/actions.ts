@@ -4,9 +4,9 @@
  * ★ 화면에서 supabase.from('actions')... 를 직접 쓰지 말고 여기 함수를 부르세요.
  *
  * 직접 쓰면 이런 실수가 납니다:
- *  - 나간 사람(LEFT)을 집계에서 빼는 걸 잊는다
- *  - 카드마다 합계 쿼리를 돌려서 피드에서 쿼리가 수십 번 나간다
- *  - status 필터를 빠뜨려서 DRAFT 가 남에게 보인다
+ *   - 나간 사람(LEFT)을 집계에서 빼는 걸 잊는다
+ *   - 카드마다 합계 쿼리를 돌려서 피드에서 쿼리가 수십 번 나간다
+ *   - status 필터를 빠뜨려서 DRAFT 가 남에게 보인다
  *
  * 새 조회가 필요하면 여기에 함수를 추가하고 팀에 알려주세요.
  * (이 파일은 공유 구역입니다. 고치기 전에 말해주세요.)
@@ -223,6 +223,14 @@ export async function getActionFeed(
 
   if (category) q = q.eq('category', category);
 
+  if (sort === 'DEADLINE') {
+    q = q.order('activity_start_at', { ascending: true });
+  } else {
+    q = q.order('created_at', { ascending: false });
+  }
+
+  q = q.limit(limit);
+
   const { data, error } = await q;
   if (error) throw error;
 
@@ -345,11 +353,11 @@ export async function getActionDetail(
         .maybeSingle(),
       raw.owner
         ? supabase
-            .from('follows')
-            .select('id')
-            .eq('follower_id', viewerId)
-            .eq('following_id', raw.owner.id)
-            .maybeSingle()
+          .from('follows')
+          .select('id')
+          .eq('follower_id', viewerId)
+          .eq('following_id', raw.owner.id)
+          .maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
     // DB CHECK 제약이 4가지 값만 허용하므로 안전한 단언이다.
