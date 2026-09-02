@@ -192,6 +192,7 @@ export type Database = {
           image_urls: string[]
           notice: string | null
           owner_id: string
+          place_name: string | null
           recruit_end_at: string | null
           review_feedback: Json | null
           status: string
@@ -211,6 +212,7 @@ export type Database = {
           image_urls?: string[]
           notice?: string | null
           owner_id: string
+          place_name?: string | null
           recruit_end_at?: string | null
           review_feedback?: Json | null
           status?: string
@@ -230,6 +232,7 @@ export type Database = {
           image_urls?: string[]
           notice?: string | null
           owner_id?: string
+          place_name?: string | null
           recruit_end_at?: string | null
           review_feedback?: Json | null
           status?: string
@@ -318,6 +321,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
+          kind: string
           parent_id: string | null
           user_id: string
         }
@@ -327,6 +331,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          kind?: string
           parent_id?: string | null
           user_id: string
         }
@@ -336,6 +341,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          kind?: string
           parent_id?: string | null
           user_id?: string
         }
@@ -498,6 +504,7 @@ export type Database = {
       notifications: {
         Row: {
           action_id: string | null
+          body: string | null
           created_at: string
           event_key: string
           id: string
@@ -507,6 +514,7 @@ export type Database = {
         }
         Insert: {
           action_id?: string | null
+          body?: string | null
           created_at?: string
           event_key: string
           id?: string
@@ -516,6 +524,7 @@ export type Database = {
         }
         Update: {
           action_id?: string | null
+          body?: string | null
           created_at?: string
           event_key?: string
           id?: string
@@ -655,8 +664,10 @@ export type Database = {
           id: string
           name: string
           nickname: string
+          notify_off: string[]
           regions: string[]
           terms_agreed_at: string
+          time_prefs: Json
           updated_at: string
         }
         Insert: {
@@ -668,8 +679,10 @@ export type Database = {
           id: string
           name: string
           nickname: string
+          notify_off?: string[]
           regions?: string[]
           terms_agreed_at?: string
+          time_prefs?: Json
           updated_at?: string
         }
         Update: {
@@ -681,8 +694,10 @@ export type Database = {
           id?: string
           name?: string
           nickname?: string
+          notify_off?: string[]
           regions?: string[]
           terms_agreed_at?: string
+          time_prefs?: Json
           updated_at?: string
         }
         Relationships: []
@@ -806,6 +821,10 @@ export type Database = {
         Returns: string
       }
       leave_action: { Args: { p_action_id: string }; Returns: undefined }
+      leave_action_with_reason: {
+        Args: { p_action_id: string; p_reason: string }
+        Returns: undefined
+      }
       notify_invite: {
         Args: { p_action_id: string; p_target: string }
         Returns: undefined

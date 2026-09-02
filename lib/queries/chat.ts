@@ -7,7 +7,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
-import type { ChatPost, ChatReply } from '@/lib/types/view';
+import type { ChatPost, ChatReply, ChatKind } from '@/lib/types/view';
 
 type DB = SupabaseClient<Database>;
 
@@ -17,6 +17,7 @@ interface RawMessage {
   content: string;
   deleted_at: string | null;
   created_at: string;
+  kind: string | null;
   author: { id: string; nickname: string } | null;
 }
 
@@ -29,7 +30,7 @@ export async function getChatPosts(
   const { data, error } = await supabase
     .from('chat_messages')
     .select(
-      `id, parent_id, content, deleted_at, created_at,
+      `id, parent_id, content, deleted_at, created_at, kind,
        author:profiles!chat_messages_user_id_fkey ( id, nickname )`,
     )
     .eq('action_id', actionId)
@@ -47,6 +48,7 @@ export async function getChatPosts(
       content: r.deleted_at ? '삭제된 글입니다.' : r.content,
       createdAt: r.created_at,
       deletedAt: r.deleted_at,
+      kind: (r.kind ?? 'NORMAL') as ChatKind,
       author: r.author ?? { id: '', nickname: '알 수 없음' },
       isMine: !!viewerId && r.author?.id === viewerId,
     };

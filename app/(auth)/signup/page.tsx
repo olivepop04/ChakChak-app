@@ -21,6 +21,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
+import { updateProfile } from '@/lib/mutations';
 import {
   CATEGORIES,
   AVAILABLE_TIMES,
@@ -28,6 +29,7 @@ import {
   GENDERS,
   LIMITS,
   type Gender,
+  toTimePrefs,
 } from '@/lib/constants';
 
 const inputClass =
@@ -120,14 +122,13 @@ export default function SignUpPage() {
     } = await supabase.auth.getUser();
 
     if (user) {
-      await supabase
-        .from('profiles')
-        .update({
-          categories,
-          available_times: times,
-          regions,
-        })
-        .eq('id', user.id);
+      // 공용 함수로 저장합니다. timePrefs 를 넘기면 옛 available_times 도
+      // 함께 채워져서, 나중에 F38 화면이 생겨도 이 회원의 설정이 보입니다.
+      await updateProfile(supabase, user.id, {
+        categories,
+        regions,
+        timePrefs: toTimePrefs(times),
+      });
     }
 
     router.push('/');
@@ -365,7 +366,7 @@ export default function SignUpPage() {
             loading={busy}
             onClick={handleSignUp}
           >
-            GOOD 시작하기
+            착착 시작하기
           </Button>
         )}
       </div>

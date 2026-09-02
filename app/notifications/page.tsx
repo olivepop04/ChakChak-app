@@ -8,7 +8,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getNotifications } from '@/lib/queries/notifications';
-import { syncLazyNotifications } from '@/lib/notifications/lazy';
+import { syncLazyNotifications, syncHostNotifications } from '@/lib/notifications/lazy';
 import { NotificationList } from '@/components/ui/NotificationList';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Header } from '@/components/layout/Header';
@@ -20,8 +20,13 @@ export default async function NotificationsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/notifications');
 
-  // 일정 임박 · 소감 재요청 알림을 이 시점에 만듭니다 (lazy)
-  await syncLazyNotifications(user.id);
+  // 시간 조건으로 생기는 알림을 이 시점에 만듭니다 (lazy)
+  //   참여자용: 일정 임박 · 소감 재요청
+  //   호스트용: 모집 미달 (F37)
+  await Promise.all([
+    syncLazyNotifications(user.id),
+    syncHostNotifications(user.id),
+  ]);
 
   const items = await getNotifications(supabase, user.id);
 

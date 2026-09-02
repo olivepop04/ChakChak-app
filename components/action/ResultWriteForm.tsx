@@ -2,7 +2,7 @@
  * 결과 작성 (Owner 전용).
  *
  * 집계 숫자는 자동으로 계산된 값이라 수정할 수 없습니다.
- * Owner 가 채우는 건 추가 내용 · 사진 · Owner's Voice 세 가지입니다.
+ * 호스트가 채우는 건 추가 내용 · 사진 · 호스트의 한마디 세 가지입니다.
  *
  * ★ 사진은 최소 1장이 필수입니다 (DB CHECK 로도 막혀 있습니다).
  * ★ "결과 공개하기" 를 누르면 completeAction 이 상태를 COMPLETED 로 바꾸고
@@ -13,7 +13,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { completeAction } from '@/lib/mutations';
+import { saveActionResult, completeAction } from '@/lib/mutations';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -51,18 +51,15 @@ export function ResultWriteForm({
 
     // 결과를 먼저 저장하고, 그 다음에 상태를 바꿉니다.
     // completeAction 이 "결과가 없으면" 거절하기 때문에 순서가 중요합니다.
-    const { error } = await supabase.from('action_results').upsert(
-      {
-        action_id: actionId,
-        content: content.trim() || null,
-        image_urls: imageUrls,
-        owner_voice: ownerVoice.trim() || null,
-      },
-      { onConflict: 'action_id' },
-    );
+    // 사진 장수 검사는 saveActionResult 안에 있습니다.
+    const saved = await saveActionResult(supabase, actionId, {
+      content,
+      imageUrls,
+      ownerVoice,
+    });
 
-    if (error) {
-      toast('결과 저장에 실패했어요.', 'error');
+    if (!saved.ok) {
+      toast(saved.message, 'error');
       setBusy(false);
       return;
     }
@@ -148,10 +145,10 @@ export function ResultWriteForm({
         </p>
       </div>
 
-      {/* Owner's Voice */}
+      {/* 호스트의 한마디 */}
       <label className="flex flex-col gap-1.5">
         <span className="text-[13px] font-medium text-neutral-700">
-          Owner&apos;s Voice
+          호스트의 한마디
         </span>
         <textarea
           value={ownerVoice}

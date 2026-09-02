@@ -89,7 +89,7 @@ export default async function MyPage() {
       {/* 통계 */}
       <section className="mx-5 flex rounded-xl border border-neutral-200">
         <Stat value={profile.participatedCount} label="참여 액션" />
-        <Stat value={profile.ledCount} label="리드한 액션" />
+        <Stat value={profile.ledCount} label="호스트한 액션" />
         <Stat
           value={profile.followerCount}
           label="팔로워"

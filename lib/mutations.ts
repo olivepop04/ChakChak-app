@@ -15,6 +15,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
+import { LIMITS, UPLOAD, type NotificationType } from '@/lib/constants';
 
 type DB = SupabaseClient<Database>;
 
@@ -44,6 +45,302 @@ function toMessage(error: { message?: string } | null, fallback: string) {
   if (cleaned.includes('permission') || cleaned.includes('policy'))
     return '권한이 없습니다.';
   return fallback;
+}
+
+// ═════════════════════════════════════════════════════════════
+// 액션 초안 저장  — 담당: 개발 B
+// ═════════════════════════════════════════════════════════════
+
+export interface ActionDraftInput {
+  title: string;
+  description?: string | null;
+  category: string;
+  imageUrls?: string[];
+  thumbnailIndex?: number;
+  /** 주소 검색으로 고른 값. 예) 서울특별시 강동구 … */
+  address?: string | null;
+  /** 호스트가 직접 적는 장소 이름. 예) 신라목욕탕 */
+  placeName?: string | null;
+  notice?: string | null;
+  recruitEndAt?: string | null;
+  activityStartAt?: string | null;
+  activityEndAt?: string | null;
+}
+
+/**
+ * 액션 초안 저장. 없으면 만들고(DRAFT), 있으면 덮어씁니다.
+ *
+ * ★ 화면에서 actions 를 직접 insert/update 하지 마세요.
+ *
+ * 두 가지를 대신 처리합니다.
+ *
+ *  1. 날짜 앞뒤 검사 (F14)
+ *     DB 에도 같은 규칙이 있지만, DB 가 거절하면 영어 메시지만 나옵니다.
+ *     여기서 먼저 걸러서 한국어로 알려줍니다.
+ *
+ *  2. 장소명(place_name) 같은 새 컬럼을 빠뜨리지 않게
+ *
+ * 제목만 채워도 저장됩니다. 자동 임시저장(F30·F33)에 쓰세요 —
+ * 액션이 먼저 만들어져야 사진 업로드 칸이 열립니다.
+ *
+ * 공개된 액션은 소개·안내사항만 바뀝니다. 나머지를 건드리면
+ * DB 트리거가 한국어 메시지로 거절합니다 (F41).
+ */
+export async function saveActionDraft(
+  supabase: DB,
+  input: ActionDraftInput,
+  actionId?: string | null,
+): Promise<Result<string>> {
+  const title = input.title.trim();
+  if (!title) return { ok: false, message: '제목을 입력해주세요.' };
+
+  const recruitEnd = input.recruitEndAt ?? null;
+  const start = input.activityStartAt ?? null;
+  const end = input.activityEndAt ?? null;
+
+  // 날짜 앞뒤가 맞는지 (F14)
+  if (start && end && new Date(start) >= new Date(end)) {
+    return {
+      ok: false,
+      message:
+        '활동 종료는 활동 시작보다 뒤여야 해요. 종료 시각을 다시 확인해주세요.',
+    };
+  }
+  if (recruitEnd && start && new Date(recruitEnd) > new Date(start)) {
+    return {
+      ok: false,
+      message:
+        '모집 마감은 활동 시작보다 앞서야 해요. 마감일을 활동 시작일 이전으로 바꿔주세요.',
+    };
+  }
+
+  const images = input.imageUrls ?? [];
+  const payload = {
+    title,
+    description: input.description?.trim() || null,
+    category: input.category,
+    image_urls: images,
+    thumbnail_index: Math.min(
+      input.thumbnailIndex ?? 0,
+      Math.max(images.length - 1, 0),
+    ),
+    address: input.address?.trim() || null,
+    place_name: input.placeName?.trim() || null,
+    notice: input.notice?.trim() || null,
+    recruit_end_at: recruitEnd,
+    activity_start_at: start,
+    activity_end_at: end,
+  };
+
+  if (actionId) {
+    const { error } = await supabase
+      .from('actions')
+      .update(payload)
+      .eq('id', actionId);
+    if (error)
+      return { ok: false, message: toMessage(error, '저장에 실패했어요.') };
+    return { ok: true, data: actionId };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: '로그인이 필요해요.' };
+
+  const { data, error } = await supabase
+    .from('actions')
+    .insert({ ...payload, owner_id: user.id, status: 'DRAFT' })
+    .select('id')
+    .single();
+
+  if (error || !data)
+    return { ok: false, message: toMessage(error, '저장에 실패했어요.') };
+  return { ok: true, data: data.id };
+}
+
+/**
+ * 공개한 액션의 소개·안내사항만 고칩니다 (F41).
+ *
+ * ★ 공개된 액션에는 saveActionDraft() 를 쓰지 마세요.
+ *
+ *   saveActionDraft 는 제목·날짜·장소까지 전부 보냅니다. 그런데 DB 트리거가
+ *   "공개 뒤에는 소개·안내만" 을 강제하면서 값이 하나라도 다르면 거절합니다.
+ *   화면의 날짜 입력칸(datetime-local)은 초를 버리기 때문에, 저장된 값을
+ *   읽어서 그대로 되돌려 보내도 밀리초가 달라 막힙니다.
+ *
+ *   이 함수는 소개·안내 두 칸만 보내므로 그 문제가 없습니다.
+ *
+ * 작성 중(DRAFT)인 액션은 saveActionDraft() 로 무엇이든 고칠 수 있습니다.
+ */
+export async function updateActionText(
+  supabase: DB,
+  actionId: string,
+  input: { description?: string | null; notice?: string | null },
+): Promise<Result> {
+  const patch: Database['public']['Tables']['actions']['Update'] = {};
+  if (input.description !== undefined)
+    patch.description = input.description?.trim() || null;
+  if (input.notice !== undefined) patch.notice = input.notice?.trim() || null;
+
+  if (Object.keys(patch).length === 0) return { ok: true, data: undefined };
+
+  const { error } = await supabase
+    .from('actions')
+    .update(patch)
+    .eq('id', actionId);
+  if (error) return { ok: false, message: toMessage(error, '저장에 실패했어요.') };
+  return { ok: true, data: undefined };
+}
+
+export interface ActionResultInput {
+  content?: string | null;
+  /** 결과 사진. 최소 1장 필수 */
+  imageUrls: string[];
+  /** 호스트가 남기는 한마디 */
+  ownerVoice?: string | null;
+}
+
+/**
+ * 결과 저장 (있으면 덮어씁니다).
+ *
+ * ★ 저장한 다음에 completeAction() 을 부르세요. 순서를 바꾸면
+ *   "결과를 먼저 작성해주세요" 로 거절됩니다.
+ *
+ * 사진 최소 1장은 DB CHECK 로도 막혀 있지만, 여기서 먼저 걸러
+ * 한국어로 알려줍니다.
+ */
+export async function saveActionResult(
+  supabase: DB,
+  actionId: string,
+  input: ActionResultInput,
+): Promise<Result> {
+  if (input.imageUrls.length < UPLOAD.RESULT_IMAGE_MIN)
+    return {
+      ok: false,
+      message: `결과 사진을 최소 ${UPLOAD.RESULT_IMAGE_MIN}장 올려주세요. 활동을 보여주는 사진이 있어야 크루들이 결과를 확인할 수 있어요.`,
+    };
+  if (input.imageUrls.length > UPLOAD.RESULT_IMAGE_MAX)
+    return {
+      ok: false,
+      message: `결과 사진은 최대 ${UPLOAD.RESULT_IMAGE_MAX}장까지 올릴 수 있어요.`,
+    };
+
+  const { error } = await supabase.from('action_results').upsert(
+    {
+      action_id: actionId,
+      content: input.content?.trim() || null,
+      image_urls: input.imageUrls,
+      owner_voice: input.ownerVoice?.trim() || null,
+    },
+    { onConflict: 'action_id' },
+  );
+  if (error)
+    return { ok: false, message: toMessage(error, '결과 저장에 실패했어요.') };
+  return { ok: true, data: undefined };
+}
+
+// ═════════════════════════════════════════════════════════════
+// 프로필 · 알림 설정  — 담당: 개발 A
+// ═════════════════════════════════════════════════════════════
+
+/** 닉네임이 이미 쓰이고 있는가. 본인 것은 제외한다 */
+export async function isNicknameTaken(
+  supabase: DB,
+  nickname: string,
+  exceptUserId?: string,
+): Promise<boolean> {
+  let q = supabase.from('profiles').select('id').eq('nickname', nickname.trim());
+  if (exceptUserId) q = q.neq('id', exceptUserId);
+  const { data } = await q.maybeSingle();
+  return !!data;
+}
+
+export interface ProfileInput {
+  nickname?: string;
+  bio?: string | null;
+  categories?: string[];
+  regions?: string[];
+  /** 참여 가능 시간 2단계 (F38). [{ day: '평일', slots: ['오전'] }] */
+  timePrefs?: { day: string; slots: string[] }[];
+}
+
+/**
+ * 프로필 저장 (가입 3단계 · 프로필 수정 공용).
+ *
+ * ★ 화면에서 profiles 를 직접 update 하지 마세요.
+ *
+ * timePrefs 를 넘기면 예전 available_times 도 함께 채웁니다.
+ * 추천 점수(lib/utils/scoring.ts)가 아직 옛 컬럼을 보고 있어서,
+ * 둘 중 하나만 채우면 추천이 조용히 어긋납니다.
+ * scoring.ts 를 time_prefs 로 옮긴 뒤에 이 변환을 지우세요.
+ */
+export async function updateProfile(
+  supabase: DB,
+  userId: string,
+  input: ProfileInput,
+): Promise<Result> {
+  // 생성된 Update 타입을 그대로 씁니다.
+  // Record<string, unknown> 로 두면 supabase-js 가 "정의되지 않은 컬럼"으로 보고 거절합니다.
+  const patch: Database['public']['Tables']['profiles']['Update'] = {};
+
+  if (input.nickname !== undefined) {
+    const nick = input.nickname.trim();
+    if (nick.length < LIMITS.NICKNAME_MIN || nick.length > LIMITS.NICKNAME_MAX)
+      return {
+        ok: false,
+        message: `닉네임은 ${LIMITS.NICKNAME_MIN}~${LIMITS.NICKNAME_MAX}자로 입력해주세요.`,
+      };
+    if (await isNicknameTaken(supabase, nick, userId))
+      return { ok: false, message: '이미 사용 중인 닉네임이에요.' };
+    patch.nickname = nick;
+  }
+
+  if (input.bio !== undefined) patch.bio = input.bio?.trim() || null;
+  if (input.categories !== undefined) patch.categories = input.categories;
+  if (input.regions !== undefined) patch.regions = input.regions;
+
+  if (input.timePrefs !== undefined) {
+    patch.time_prefs = input.timePrefs;
+    // 옛 컬럼도 같이 채운다 (추천 점수가 아직 이걸 본다)
+    const flat = new Set<string>();
+    for (const p of input.timePrefs) {
+      if (p.day && p.day !== '상관없음') flat.add(p.day);
+      for (const s of p.slots) if (s && s !== '상관없음') flat.add(s);
+    }
+    patch.available_times = [...flat];
+  }
+
+  if (Object.keys(patch).length === 0) return { ok: true, data: undefined };
+
+  const { error } = await supabase
+    .from('profiles')
+    .update(patch)
+    .eq('id', userId);
+  if (error) return { ok: false, message: toMessage(error, '저장에 실패했어요.') };
+  return { ok: true, data: undefined };
+}
+
+/**
+ * 알림 켜고 끄기 (F25).
+ *
+ * 끈 종류만 넘기세요. 빈 배열이면 전부 받습니다.
+ * 껐다고 표시된 알림은 DB 트리거가 아예 만들지 않습니다.
+ */
+export async function updateNotifySettings(
+  supabase: DB,
+  userId: string,
+  turnedOff: NotificationType[],
+): Promise<Result> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ notify_off: turnedOff })
+    .eq('id', userId);
+  if (error)
+    return {
+      ok: false,
+      message: toMessage(error, '알림 설정을 저장하지 못했어요.'),
+    };
+  return { ok: true, data: undefined };
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -85,6 +382,34 @@ export async function leaveAction(
 ): Promise<Result> {
   const { error } = await supabase.rpc('leave_action', {
     p_action_id: actionId,
+  });
+  if (error) return { ok: false, message: toMessage(error, '나가기에 실패했어요.') };
+  return { ok: true, data: undefined };
+}
+
+/**
+ * 사유를 남기고 나가기 (2026-09-01 개편 · F40)
+ *
+ * 한 번 부르면 세 가지가 한꺼번에 일어난다. 중간에 실패하면 전부 되돌아간다.
+ *
+ *   ① 사유를 게시판에 올린다   (아직 크루라서 권한이 있다)
+ *   ② 참여 상태를 LEFT 로
+ *   ③ 호스트에게 알림          (사유가 함께 전달된다)
+ *
+ * ★ 화면에서 이 세 가지를 나눠 부르지 마세요.
+ *   나가고 나면 게시판에 글 쓸 권한이 사라져서, 순서가 틀어지면 글이 안 올라갑니다.
+ *
+ * 사유는 5자 이상 1000자 이하. 서버가 검사하고 한국어 메시지를 돌려줍니다.
+ * 한 번 올린 사유는 본인도 지울 수 없으니, 보내기 전에 확인 창을 띄워주세요.
+ */
+export async function leaveActionWithReason(
+  supabase: DB,
+  actionId: string,
+  reason: string,
+): Promise<Result> {
+  const { error } = await supabase.rpc('leave_action_with_reason', {
+    p_action_id: actionId,
+    p_reason: reason,
   });
   if (error) return { ok: false, message: toMessage(error, '나가기에 실패했어요.') };
   return { ok: true, data: undefined };

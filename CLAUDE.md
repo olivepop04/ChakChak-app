@@ -1,4 +1,4 @@
-# GOOD MVP — 개발 규칙
+# 착착(CHAK CHAK) MVP — 개발 규칙
 
 이 파일은 Claude Code와 팀원 모두가 읽는 기준 문서입니다.
 새로 합의한 내용이 생기면 여기에 먼저 적고 코드를 고칩니다.
@@ -41,6 +41,21 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
 **3. 데이터가 빈 배열로만 나온다면 RLS입니다** — 에러가 안 나고 조용히 빈 결과가 옵니다. `supabase/02_rls.sql`에서 해당 테이블 정책을 확인하세요.
 
+**자주 걸리는 것만 표로 적어둡니다.** 실제로 확인한 결과입니다.
+
+| 무엇 | 비회원 | 로그인·미참여 | 참여한 크루 | 호스트 |
+|---|---|---|---|---|
+| 액션 내용 (ACTIVE 이상) | ✅ | ✅ | ✅ | ✅ |
+| 참여 **수** (`crewCount`) | ✅ | ✅ | ✅ | ✅ |
+| 참여자 **명단** | ❌ | ❌ | ✅ | ✅ |
+| 각자 고른 **사람 항목** | ❌ | ❌ | ✅ | ✅ |
+| 각자 고른 **물품 수량** | ❌ | ❌ | 본인 것만 | ✅ |
+| 게시판 | ❌ | ❌ | ✅ | ✅ |
+
+**"명단은 안 보여도 숫자는 보인다"** 를 기억하세요. 비회원에게 참여 현황을 보여줘야 하면
+`crewCount` 를 쓰면 됩니다. 물품 수량을 크루끼리 숨긴 이유는 누가 얼마나 냈는지
+서로 비교하게 되기 때문입니다 (`supabase/07_update.sql`).
+
 **4. 데이터는 공용 함수로만** — 아래 5번 참고.
 
 **5. 진행률은 뷰에서 읽으세요** — `action_item_progress`. 카드마다 합계 쿼리를 돌리면 피드에서 쿼리가 수십 번 나갑니다. (`lib/queries/`가 이미 그렇게 하고 있습니다)
@@ -73,7 +88,7 @@ await supabase.from('action_items').insert([
 npm run verify:db
 ```
 
-스키마를 바꾼 뒤 돌리세요. 권한·정원·성별 제한이 실제로 막히는지 32가지를 확인합니다. 로컬 전용이고, 테스트 계정을 만들었다가 끝나면 지웁니다.
+스키마를 바꾼 뒤 돌리세요. 권한·정원·성별·생애주기·나가기까지 60가지가 넘는 동작을 실제 계정으로 확인합니다. 로컬 전용이고, 테스트 계정을 만들었다가 끝나면 지웁니다.
 
 ```bash
 npm run seed
@@ -116,7 +131,8 @@ npm run seed
 | `getPublicActionsByOwner` | 남이 만든 공개 액션 |
 | `getParticipatedActions` | 남이 참여한 **완료된** 액션 |
 | `getRecommendCandidates` | 추천 후보 (제외 규칙 적용됨) |
-| `getActionCrew` | The Crew 목록 |
+| `getActionCrew` | The Crew 목록 (각자 참여한 항목 포함) |
+| `groupCrewByItem` | 크루를 항목별로 묶기 — "1일차에 누가 오나" |
 | `getActionResult` | 결과 + 소감 |
 | `getChatPosts` | 게시판 (원글 + 댓글) |
 | `getProfile` / `getFollowers` / `getFollowing` / `searchUsers` | 프로필·팔로우 |
@@ -132,8 +148,10 @@ const res = await joinAction(supabase, actionId, items);
 if (!res.ok) { setError(res.message); return; }
 ```
 
-`joinAction` · `leaveAction` · `submitCrewVoice` · `postChatMessage` · `deleteChatMessage` ·
-`publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
+`joinAction` · `leaveAction` · `leaveActionWithReason` · `submitCrewVoice` ·
+`postChatMessage` · `deleteChatMessage` ·
+`saveActionDraft` · `updateActionText` · `saveActionItems` · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
+`updateProfile` · `isNicknameTaken` · `updateNotifySettings` ·
 `toggleLike` · `toggleSave` · `toggleFollow` · `shareToUser` · `markNotificationRead`
 
 **필요한 함수가 없으면 직접 추가하지 말고 민호에게 요청하세요.** `lib/`은 공유 구역입니다.
@@ -179,7 +197,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 | DRAFT 삭제 | 행을 실제로 삭제 |
 | 크루챗 삭제 | 본인 글만 soft delete. **원글을 지우면 댓글도 함께 삭제** |
 | 알림 | 6종 확정. 팔로우 알림 없음 |
-| AI 검수 | PASS / REVISE / BLOCK 3단계. **Owner가 공개 버튼을 눌러야 ACTIVE** |
+| AI 검수 | PASS / REVISE / BLOCK 3단계. **호스트가 공개 버튼을 눌러야 ACTIVE** |
 | 타인 프로필 | 통계 유지 + 참여 목록은 완료된 것만 + 닉네임 주 표기 |
 | Discover 거리 | km 계산 안 함. 시·군·구 단위 매칭까지만 |
 
@@ -189,15 +207,30 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 브랜치 충돌은 여러 명이 같은 파일을 건드릴 때 납니다. 아래를 지키면 거의 안 납니다.
 
-| 담당 | 폴더 |
+| 담당 | 구역 |
 |---|---|
-| 민호 (통합) | `lib/`, `middleware.ts`, `supabase/`, `app/api/notifications/` |
-| 조장 | `app/activity/`, `app/api/ai/trends/`, `supabase/04_seed.sql` |
-| 디자이너 | `components/ui/`, `components/layout/`, `app/page.tsx`, `app/action/[id]/page.tsx`, `tailwind.config.ts` |
-| 개발 A | `app/(auth)/`, `app/my/`, `app/user/`, `app/discover/`, `app/api/ai/discover/` |
-| 개발 B | `app/action/[id]/` 하위(join·chat·crew·result·voice), `app/api/chat/` |
+| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` |
+| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · `lib/queries/stats.ts` |
+| 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` |
+| 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · `app/discover/` · `app/api/ai/discover/` · `lib/constants/regions.ts` · `lib/utils/scoring.ts` |
+| 개발 B | `app/action/create/` · `app/action/[id]/` 하위 (join · welcome · crew · chat · result · voice) |
 
-**`components/ui/`와 `lib/`은 유일한 공유 구역입니다.** 여기를 고칠 때는 먼저 말해주세요.
+`components/action/` 은 **파일 단위로 담당**이 있습니다.
+
+| 파일 | 담당 |
+|---|---|
+| ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm · **LeaveButton** | 개발 B |
+| ActivityButtons | 조장 |
+| DiscoverChat | 개발 A |
+| SharePanel | 민호 |
+| ActionGallery · AddressBox | 디자이너 |
+| QuotaProgress | **공유** — 상세(디자이너)와 참여(개발 B)가 같이 씁니다. 고치기 전에 말하기 |
+
+**`components/ui/`와 `lib/`은 공유 구역입니다.** 고칠 때는 먼저 말해주세요.
+예외 — 위 표에 적힌 `lib/` 파일 3개(`stats.ts` · `regions.ts` · `scoring.ts`)는 각 담당이 바로 고쳐도 됩니다.
+
+> **담당이 바뀌면 세 곳을 같이 고칩니다** — 이 표, 다른 쪽 표(CLAUDE.md ↔ docs/00-공통규칙.md), 그리고 해당 역할 문서(docs/01~05).
+> 한 곳만 고치면 파일마다 답이 달라집니다. 2026-09-01에 실제로 그런 혼선이 있었습니다.
 
 ---
 

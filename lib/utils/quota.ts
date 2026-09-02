@@ -8,11 +8,16 @@
  *   RANGE        3    5      3~5명
  *   MINIMUM      10   null   최소 10명, 계속 모집
  *
- * 핵심 규칙 두 개:
+ * 핵심 규칙 세 개 (2026-09-01 개편):
  *  1. MINIMUM 형에는 퍼센트를 쓰지 않는다.
  *     15/10 = 150% 는 사용자에게 아무 의미가 없다.
- *  2. RANGE 형에서 최소 인원을 넘기면 분모가 min 에서 max 로 바뀐다.
- *     "2 / 3명" → (3명 도달) → "3 / 5명"
+ *  2. RANGE 형의 분모는 "3~5명" 으로 끝까지 고정이다.
+ *     예전에는 최소를 넘기면 분모가 min→max 로 바뀌었는데,
+ *     숫자가 갑자기 변해서 오히려 헷갈린다는 지적을 받았다.
+ *  3. 변수 뒤에 조사를 붙이지 않는다.
+ *     "40포이 더 필요해요" 같은 오타가 나고, kg·EA·ml 같은
+ *     영문 단위에서는 조사 규칙 자체가 성립하지 않는다.
+ *     그래서 "목표까지 40포 남았어요" 처럼 조사가 안 붙는 문장만 쓴다.
  *
  * 화면에서 이 함수를 거치지 않고 직접 숫자를 조합하지 말 것.
  * 그리고 신청 가능 여부의 최종 판단은 서버(join_action RPC)가 한다.
@@ -32,9 +37,9 @@ export interface QuotaItem {
 }
 
 export interface QuotaState {
-  /** "3 / 5명" 또는 "15명 참여" */
+  /** "3 / 3~5명" 또는 "15명 참여" */
   countLabel: string;
-  /** "최소 인원이 충족되었어요." 같은 안내 한 줄 */
+  /** "목표까지 2명 남았어요" 같은 안내 한 줄 */
   hint: string;
   /** 프로그레스바 채움 비율 0~1. MINIMUM 이 최소를 넘기면 항상 1 */
   ratio: number;
@@ -44,6 +49,11 @@ export interface QuotaState {
   isFull: boolean;
   /** 표시용. 최종 판단은 서버가 한다 */
   canJoin: boolean;
+}
+
+/** 사람이면 "인원", 물품이면 "수량" — 문구가 갈린다 */
+function nounOf(type: ItemType): string {
+  return type === 'PERSON' ? '인원' : '수량';
 }
 
 /** 모집 조건을 한 줄로: "정확히 3명" / "3~5명" / "최소 10명" */
@@ -60,23 +70,18 @@ export function describeTarget(item: QuotaItem): string {
 }
 
 export function getQuotaState(item: QuotaItem, current: number): QuotaState {
-  const { target_type, min_required, max_allowed, unit } = item;
+  const { type, target_type, min_required, max_allowed, unit } = item;
   const isMinMet = current >= min_required;
 
-  // ── 최소 인원형: 퍼센트를 쓰지 않는다 ──────────────────────────
+  // ── 최소 수량형: 퍼센트를 쓰지 않는다 ──────────────────────────
   if (target_type === 'MINIMUM') {
     const remaining = min_required - current;
 
-    let hint: string;
-    if (!isMinMet) {
-      hint = `최소 ${remaining}${unit}이 더 필요해요.`;
-    } else if (current >= min_required * 2) {
-      hint = '함께하는 Crew가 계속 늘고 있어요.';
-    } else if (current > min_required) {
-      hint = '최소 인원이 충족되었어요. 더 많은 Crew가 함께할 수 있어요.';
-    } else {
-      hint = '최소 인원이 충족되었어요.';
-    }
+    const hint = !isMinMet
+      ? `목표까지 ${remaining}${unit} 남았어요`
+      : type === 'PERSON'
+        ? '더 많은 크루가 참여할수록 좋아요'
+        : '더 많은 수량이 모일수록 좋아요';
 
     return {
       countLabel: `${current}${unit} 참여`,
@@ -89,26 +94,32 @@ export function getQuotaState(item: QuotaItem, current: number): QuotaState {
     };
   }
 
-  // ── 정해진 인원형 ──────────────────────────────────────────────
+  // ── 정해진 수량형 ──────────────────────────────────────────────
   const max = max_allowed ?? min_required;
   const isFull = current >= max;
-  // 최소를 넘기기 전에는 분모가 min, 넘기면 max
-  const denominator = isMinMet ? max : min_required;
   const isExact = max === min_required;
 
   let hint: string;
   if (isFull) {
-    hint = isExact ? '모집이 완료되었어요.' : '모집이 완료되었어요.';
+    hint = '모집이 완료됐어요. 다른 방식으로 참여해주세요';
   } else if (isMinMet) {
     const left = max - current;
-    hint = `필요한 최소 인원이 충족되었어요. ${left}자리 남음`;
+    hint =
+      type === 'PERSON'
+        ? `최소 인원을 채웠어요. ${left}${unit} 더 함께할 수 있어요`
+        : `최소 수량을 채웠어요. ${left}${unit} 더 신청할 수 있어요`;
   } else {
     const need = min_required - current;
-    hint = `${need}${unit} 더 필요해요.`;
+    hint = `목표까지 ${need}${unit} 남았어요`;
   }
 
+  // 분모는 "3~5명" 으로 고정. 정확히 N명이면 "3명"
+  const denominator = isExact
+    ? `${min_required}${unit}`
+    : `${min_required}~${max}${unit}`;
+
   return {
-    countLabel: `${current} / ${denominator}${unit}`,
+    countLabel: `${current} / ${denominator}`,
     hint,
     ratio: Math.min(current / max, 1),
     showPercent: true,
@@ -120,29 +131,30 @@ export function getQuotaState(item: QuotaItem, current: number): QuotaState {
 
 /** 결과 화면 문장 */
 export function describeResult(item: QuotaItem, final: number): string {
+  const { type, target_type, min_required, max_allowed, unit } = item;
+  const noun = nounOf(type);
+  const short = min_required - final;
+
+  if (final < min_required) {
+    return `목표까지 ${short}${unit} 모자랐습니다.`;
+  }
+  if (target_type === 'RANGE' && max_allowed === min_required) {
+    return `모집 ${noun}을 충족했습니다.`;
+  }
+  return `최소 ${noun}을 충족했습니다. 최종 ${final}${unit}.`;
+}
+
+/** 결과 화면 상단 숫자: "15명" 또는 "3명 / 3~5명" */
+export function describeResultCount(item: QuotaItem, final: number): string {
   const { target_type, min_required, max_allowed, unit } = item;
 
   if (target_type === 'MINIMUM') {
-    return final >= min_required
-      ? '최소 인원을 충족했습니다.'
-      : `최소 인원에 ${min_required - final}${unit} 모자랐습니다.`;
+    return `${final}${unit}`;
   }
-  if (max_allowed === min_required) {
-    return final >= min_required
-      ? '모집 인원을 충족했습니다.'
-      : `모집 인원에 ${min_required - final}${unit} 모자랐습니다.`;
-  }
-  return final >= min_required
-    ? `최소 인원은 충족했으며, 총 ${final}${unit}이 참여했습니다.`
-    : `최소 인원에 ${min_required - final}${unit} 모자랐습니다.`;
-}
-
-/** 결과 화면 상단 숫자: "15명" 또는 "3명 / 3명" */
-export function describeResultCount(item: QuotaItem, final: number): string {
-  if (item.target_type === 'MINIMUM') {
-    return `${final}${item.unit}`;
-  }
-  return `${final}${item.unit} / ${item.max_allowed}${item.unit}`;
+  const max = max_allowed ?? min_required;
+  const denominator =
+    max === min_required ? `${min_required}${unit}` : `${min_required}~${max}${unit}`;
+  return `${final}${unit} / ${denominator}`;
 }
 
 /**

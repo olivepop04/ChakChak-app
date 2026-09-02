@@ -45,7 +45,7 @@ export function InsightPanel() {
         <span className="text-base" aria-hidden="true">
           ✦
         </span>
-        <h2 className="text-[14px] font-bold">GOOD AI가 읽은 흐름</h2>
+        <h2 className="text-[14px] font-bold">착착 AI가 읽은 흐름</h2>
       </div>
 
       {insights === null && (
@@ -72,7 +72,7 @@ export function InsightPanel() {
       )}
 
       <p className="mt-1 text-[11px] leading-relaxed text-white/40">
-        GOOD 안에 쌓인 활동 기록만 사용합니다. 현재 현황과 변화 패턴을 설명하며,
+        착착 안에 쌓인 활동 기록만 사용합니다. 현재 현황과 변화 패턴을 설명하며,
         미래를 예측하지는 않습니다.
       </p>
     </section>

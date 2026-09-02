@@ -109,3 +109,66 @@ export async function syncLazyNotifications(userId: string): Promise<void> {
     // (예: SERVICE_ROLE_KEY 미설정)
   }
 }
+
+/**
+ * 모집 미달 알림 (F37) — 호스트에게.
+ *
+ * 모집 마감 시각이 지났는데 최소 인원/수량을 못 채운 액션이 있으면 알려줍니다.
+ * 팀 합의대로 **자동으로 취소하지 않습니다.** 호스트가 보고 직접 정합니다.
+ *
+ *   그대로 진행 → 아무것도 안 하면 됩니다
+ *   취소       → cancelAction() 을 부릅니다
+ *
+ * 위 syncLazyNotifications 는 "내가 참여한" 액션을 보지만
+ * 이건 "내가 만든" 액션을 봅니다. 그래서 함수를 따로 뒀습니다.
+ *
+ * 지금 부르는 곳: app/notifications/page.tsx (민호)
+ * 부르면 좋은 곳: app/activity/page.tsx 의 "내가 만든" 탭 (조장 · F37)
+ *   호스트가 알림 화면을 안 열고 Activity 만 봐도 미달 상황을 알 수 있습니다.
+ *   조장님이 F37 화면을 만들 때 추가해주세요.
+ *
+ * ★ 서버에서만 부르세요.
+ */
+export async function syncHostNotifications(userId: string): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const nowIso = new Date().toISOString();
+
+    // 내가 만든 ACTIVE 액션 중 모집 마감이 지난 것
+    const { data: actions } = await admin
+      .from('actions')
+      .select('id')
+      .eq('owner_id', userId)
+      .eq('status', 'ACTIVE')
+      .not('recruit_end_at', 'is', null)
+      .lt('recruit_end_at', nowIso);
+
+    if (!actions || actions.length === 0) return;
+    const ids = actions.map((a) => a.id);
+
+    // 진행률은 뷰에서 읽습니다. 직접 합산하지 마세요.
+    const { data: progress } = await admin
+      .from('action_item_progress')
+      .select('action_id, is_min_met')
+      .in('action_id', ids);
+
+    // 항목이 하나라도 최소를 못 채웠으면 미달로 봅니다
+    const short = new Set<string>();
+    for (const row of progress ?? []) {
+      if (row.action_id && row.is_min_met === false) short.add(row.action_id);
+    }
+    if (short.size === 0) return;
+
+    await admin.from('notifications').upsert(
+      [...short].map((actionId) => ({
+        user_id: userId,
+        type: 'SHORTFALL',
+        action_id: actionId,
+        event_key: `SHORTFALL:${actionId}`,
+      })),
+      { onConflict: 'event_key', ignoreDuplicates: true },
+    );
+  } catch {
+    // 실패해도 화면은 떠야 합니다
+  }
+}

@@ -15,6 +15,7 @@ import type {
   ItemType,
   TargetType,
   NotificationType,
+  TimePref,
 } from '@/lib/constants';
 
 /** 카드에 필요한 최소 정보. Home·Discover·Activity·저장목록이 전부 이걸 쓴다. */
@@ -26,8 +27,12 @@ export interface ActionCardData {
   /** 대표 이미지 1장. 없으면 null → 컴포넌트가 대체 표시를 그린다 */
   thumbnailUrl: string | null;
   address: string | null;
+  /** 장소 이름. 호스트가 직접 입력. 예) 신라목욕탕 */
+  placeName: string | null;
   status: ActionStatus;
   activityStartAt: string | null;
+  /** 모집 마감 시각. "마감 임박" 표시와 정렬에 씁니다 */
+  recruitEndAt: string | null;
   owner: { id: string; nickname: string };
   likeCount: number;
   saveCount: number;
@@ -63,6 +68,8 @@ export interface ActionDetailData {
   imageUrls: string[];
   thumbnailIndex: number;
   address: string | null;
+  /** 장소 이름. 호스트가 직접 입력. 예) 신라목욕탕 */
+  placeName: string | null;
   notice: string | null;
   status: ActionStatus;
   cancelReason: string | null;
@@ -106,23 +113,63 @@ export interface UserSummary {
   followedByMe: boolean;
 }
 
+/** 크루 한 사람이 고른 모집 항목 하나 */
+export interface CrewItem {
+  itemId: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  type: ItemType;
+}
+
+/** The Crew 목록의 한 사람. 무엇에 참여했는지가 함께 옵니다 */
+export interface CrewMember extends UserSummary {
+  /** "산책 도우미 · 사료 10포" — 사람 기준으로 보여줄 때 */
+  selection: string;
+  /** 항목 기준으로 묶을 때 쓰는 원자료 (F45) */
+  items: CrewItem[];
+}
+
+/** groupCrewByItem() 의 결과. 항목 하나와 거기 참여한 사람들 */
+export interface CrewItemGroup {
+  itemId: string;
+  name: string;
+  unit: string;
+  type: ItemType;
+  /** 이 항목에 모인 총 수량. 사람 항목이면 인원수 */
+  total: number;
+  members: { person: CrewMember; quantity: number }[];
+}
+
 /** 타인 프로필 / MY 화면 */
 export interface ProfileData extends UserSummary {
   name: string;
   categories: string[];
+  /**
+   * @deprecated 2026-09-01 개편으로 timePrefs 로 옮기는 중입니다.
+   * 추천 점수(scoring.ts)가 아직 이 값을 써서 남겨둡니다.
+   */
   availableTimes: string[];
+  /** 참여 가능 시간 2단계 (F38). [{ day: '평일', slots: ['오전'] }] */
+  timePrefs: TimePref[];
   regions: string[];
+  /** 사용자가 끈 알림 종류. 빈 배열이면 전부 받습니다 (F25) */
+  notifyOff: NotificationType[];
   followerCount: number;
   followingCount: number;
   isMe: boolean;
 }
 
 /** 게시판 원글 + 댓글 */
+/** NORMAL 은 보통 글, LEFT_NOTICE 는 참여를 취소하며 남긴 사유 */
+export type ChatKind = 'NORMAL' | 'LEFT_NOTICE';
+
 export interface ChatPost {
   id: string;
   content: string;
   createdAt: string;
   deletedAt: string | null;
+  kind: ChatKind;
   author: { id: string; nickname: string };
   isMine: boolean;
   replies: ChatReply[];
@@ -133,6 +180,7 @@ export interface ChatReply {
   content: string;
   createdAt: string;
   deletedAt: string | null;
+  kind: ChatKind;
   author: { id: string; nickname: string };
   isMine: boolean;
 }
@@ -143,6 +191,8 @@ export interface NotificationData {
   type: NotificationType;
   actionId: string | null;
   actionTitle: string | null;
+  /** 알림마다 다른 문장. 예) 나가기 사유. 없으면 템플릿 문구만 보여줍니다 */
+  body: string | null;
   isRead: boolean;
   createdAt: string;
 }

@@ -57,12 +57,17 @@ export function scoreAction(
   const matched: string[] = [];
 
   // 1) 관심 카테고리 — 프로필과 이번 답변 둘 다 봅니다
+  //
+  // '전체' 는 "가리지 않는다" 는 뜻이므로 어떤 카테고리와도 맞는 것으로 봅니다.
+  // 이 방어가 없으면 '전체' 를 고른 사람은 8개 중 어느 것과도 안 맞아
+  // 관심 분야 30점이 영구히 0점이 됩니다. 에러가 안 나서 알아채기 어렵습니다.
   const wanted = new Set(
     [...profile.categories, answers.category].filter(Boolean) as string[],
   );
-  if (wanted.has(action.category)) {
+  const wantsAll = wanted.has('전체');
+  if (wantsAll || wanted.has(action.category)) {
     score += 30;
-    matched.push(`관심 분야(${action.category})`);
+    matched.push(wantsAll ? '관심 분야' : `관심 분야(${action.category})`);
   }
 
   // 2) 활동 가능 지역

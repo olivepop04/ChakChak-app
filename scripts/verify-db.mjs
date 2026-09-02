@@ -1,5 +1,5 @@
 /**
- * GOOD MVP — DB 동작 검증
+ * 착착(CHAK CHAK) — DB 동작 검증
  *
  *   npm run verify:db
  *
@@ -306,6 +306,335 @@ try {
   const { data: chatAsAnon } = await anon.from('chat_messages').select('id').eq('action_id', act.id);
   (chatAsAnon?.length ?? 0) === 0 ? ok('비회원은 게시판을 볼 수 없음')
                                   : no('게시판이 공개됨 !!');
+
+  // ── 11. 2026-09-01 개편분 ─────────────────────────────────
+  console.log('\n[11] 개편분 — 알림 끄기 · 수정 잠금 · 나가기 사유');
+
+  // 알림 켜고 끄기 (F25) — 끈 종류는 아예 안 쌓여야 한다
+  await admin.from('profiles').update({ notify_off: ['SCHEDULE'] }).eq('id', uidB);
+  const kMuted = `V_MUTED:${stamp}`;
+  await admin.from('notifications').insert({
+    user_id: uidB, type: 'SCHEDULE', action_id: act.id, event_key: kMuted,
+  });
+  const { count: mutedCnt } = await admin.from('notifications')
+    .select('*', { count: 'exact', head: true }).eq('event_key', kMuted);
+  mutedCnt === 0 ? ok('끈 알림은 만들어지지 않음 (F25)')
+                 : no('끈 알림이 쌓임 !!', String(mutedCnt));
+
+  const kOn = `V_ON:${stamp}`;
+  await admin.from('notifications').insert({
+    user_id: uidB, type: 'INVITED', action_id: act.id, event_key: kOn,
+  });
+  const { count: onCnt } = await admin.from('notifications')
+    .select('*', { count: 'exact', head: true }).eq('event_key', kOn);
+  onCnt === 1 ? ok('안 끈 알림은 정상 저장')
+              : no('안 끈 알림이 막힘 !!');
+  await admin.from('profiles').update({ notify_off: [] }).eq('id', uidB);
+
+  // 공개된 액션 수정 잠금 (F41)
+  const { error: lockErr } = await cA.from('actions')
+    .update({ title: '제목을 몰래 바꿔본다' }).eq('id', act.id);
+  lockErr ? ok('공개 후 제목 변경 거절됨 (F41)', lockErr.message.slice(0, 40))
+          : no('공개된 액션의 제목이 바뀜 !!');
+
+  const { error: dateErr } = await cA.from('actions')
+    .update({ activity_start_at: new Date(now + 99 * 86400000).toISOString() })
+    .eq('id', act.id);
+  dateErr ? ok('공개 후 날짜 변경 거절됨 (F41)')
+          : no('공개된 액션의 날짜가 바뀜 !!');
+
+  const { error: descErr } = await cA.from('actions')
+    .update({ description: '소개는 고칠 수 있어야 한다', notice: '안내사항도' })
+    .eq('id', act.id);
+  descErr ? no('소개·안내사항 수정이 막힘', descErr.message.slice(0, 40))
+          : ok('소개·안내사항은 수정 가능 (F41)');
+
+  // 나가기 + 사유 (F40)
+  const rShort = await cC.rpc('leave_action_with_reason', {
+    p_action_id: act.id, p_reason: '짧음',
+  });
+  rShort.error ? ok('짧은 사유는 거절됨 (F40)', rShort.error.message.slice(0, 32))
+               : no('5자 미만 사유가 통과됨');
+
+  const { count: beforeChat } = await admin.from('chat_messages')
+    .select('*', { count: 'exact', head: true }).eq('action_id', act.id);
+
+  const rLeave = await cC.rpc('leave_action_with_reason', {
+    p_action_id: act.id,
+    p_reason: '갑자기 출장이 잡혀서 참여가 어렵게 됐습니다. 죄송합니다.',
+  });
+  if (rLeave.error) {
+    no('사유 남기고 나가기 실패', rLeave.error.message.slice(0, 60));
+  } else {
+    ok('사유 남기고 나가기 성공 (F40)');
+
+    const { data: notice } = await admin.from('chat_messages')
+      .select('kind, content, user_id').eq('action_id', act.id).eq('kind', 'LEFT_NOTICE');
+    (notice?.length ?? 0) === 1
+      ? ok('사유가 게시판에 LEFT_NOTICE 로 남음')
+      : no('게시판에 사유가 없음', `${notice?.length ?? 0}건 · 이전 ${beforeChat}건`);
+
+    const { data: pRow } = await admin.from('participations')
+      .select('status').eq('action_id', act.id).eq('user_id', uidC).maybeSingle();
+    pRow?.status === 'LEFT' ? ok('참여 상태가 LEFT 로 바뀜')
+                            : no('상태가 안 바뀜', String(pRow?.status));
+
+    const { data: notif } = await admin.from('notifications')
+      .select('type, body, user_id').eq('action_id', act.id).eq('type', 'LEFT_CREW');
+    const mine = (notif ?? []).find(n => n.user_id === uidA);
+    mine ? ok('호스트에게 알림 + 사유 전달됨', String(mine.body).slice(0, 22) + '…')
+         : no('호스트 알림이 없음');
+  }
+
+  const rTwice = await cC.rpc('leave_action_with_reason', {
+    p_action_id: act.id, p_reason: '이미 나갔는데 또 나가본다',
+  });
+  rTwice.error ? ok('이미 나간 사람은 거절됨')
+               : no('중복 나가기가 허용됨');
+
+  // ── 12. 참여 항목 가시성 (F45 · 07_update.sql) ────────────
+  console.log('\n[12] 누가 어느 항목에 오는지 — 크루·호스트·외부인');
+
+  // 사람 항목 2종 + 물품 1종 을 새로 만들어 세 명을 각각 참여시킨다
+  const { data: f45Items } = await admin.from('action_items').insert([
+    { action_id: act.id, type: 'PERSON', name: '1일차 배식팀', target_type: 'RANGE',
+      min_required: 1, max_allowed: 4, unit: '명', gender_requirement: 'ANY', sort_order: 11 },
+    { action_id: act.id, type: 'GOODS', name: '쌀', target_type: 'MINIMUM',
+      min_required: 20, max_allowed: null, unit: 'kg', gender_requirement: 'ANY', sort_order: 12 },
+  ]).select('id, name');
+  const f45 = Object.fromEntries((f45Items ?? []).map(i => [i.name, i.id]));
+
+  // uidB 는 이미 참여 중이므로 새 계정을 둘 만든다
+  const emailD = `test-crew1-${stamp}@example.com`;
+  const emailE = `test-out-${stamp}@example.com`;
+  await makeUser(emailD, `crew1${stamp}`.slice(0, 20), 'MALE');
+  await makeUser(emailE, `out${stamp}`.slice(0, 20), 'MALE');
+  const cD = await asUser(emailD);
+  const cE = await asUser(emailE);
+
+  const rJoinD = await cD.rpc('join_action', {
+    p_action_id: act.id,
+    p_items: [
+      { action_item_id: f45['1일차 배식팀'], quantity: 1 },
+      { action_item_id: f45['쌀'], quantity: 10 },
+    ],
+  });
+
+  if (rJoinD.error) {
+    no('F45 준비: 참여 실패', rJoinD.error.message.slice(0, 50));
+  } else {
+    ok('사람 항목 + 물품 항목에 동시 참여');
+
+    // 같은 크루(uidB)가 볼 때
+    const { data: asCrew } = await cB.from('participation_items')
+      .select(`quantity, item:action_items!participation_items_action_item_id_fkey ( name, type )`)
+      .in('participation_id',
+        (await admin.from('participations').select('id')
+          .eq('action_id', act.id)).data.map(r => r.id));
+
+    const crewNames = (asCrew ?? []).map(r => r.item?.name).filter(Boolean);
+    const crewSeesPerson = crewNames.includes('1일차 배식팀');
+    const crewSeesGoods = crewNames.includes('쌀')
+      && (asCrew ?? []).filter(r => r.item?.name === '쌀').length > 0;
+
+    crewSeesPerson ? ok('크루가 남의 사람 항목을 봄 (F45 동작)')
+                   : no('크루가 사람 항목을 못 봄 — 07_update.sql 을 실행했는가');
+
+    // 남이 낸 물품은 안 보여야 한다 (본인 것만 보임)
+    const { data: goodsRows } = await cB.from('participation_items')
+      .select(`quantity, participation:participations!inner ( user_id ),
+               item:action_items!participation_items_action_item_id_fkey ( name, type )`)
+      .eq('action_item_id', f45['쌀']);
+    const othersGoods = (goodsRows ?? []).filter(r => r.participation?.user_id !== uidB);
+    othersGoods.length === 0
+      ? ok('남이 낸 물품 수량은 안 보임 (의도대로)')
+      : no('물품 수량이 노출됨 !!', `${othersGoods.length}건`);
+
+    // 호스트는 전부 본다
+    const { data: asOwner } = await cA.from('participation_items')
+      .select(`quantity, item:action_items!participation_items_action_item_id_fkey ( name )`)
+      .eq('action_item_id', f45['쌀']);
+    (asOwner ?? []).length > 0 ? ok('호스트는 물품까지 봄')
+                               : no('호스트가 물품을 못 봄 !!');
+
+    // 참여 안 한 사람은 명단 자체를 못 본다
+    const { data: asOut } = await cE.from('participations')
+      .select('id').eq('action_id', act.id);
+    (asOut ?? []).length === 0 ? ok('미참여자는 참여자 명단을 못 봄')
+                               : no('명단이 노출됨 !!', `${asOut.length}건`);
+  }
+
+  // ── 13. 액션 생애주기 (공개 → 종료 → 결과 → 소감) ────────
+  //    이 구간은 그동안 검사가 없었습니다. 상태 전환 함수 5종을 한 번에 봅니다.
+  console.log('\n[13] 공개 → 종료 → 결과 → 소감 흐름');
+
+  const { data: lcAct } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 생애주기', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    place_name: '검증센터', status: 'DRAFT',
+    recruit_end_at:    new Date(now + 1 * 86400000).toISOString(),
+    activity_start_at: new Date(now + 2 * 86400000).toISOString(),
+    activity_end_at:   new Date(now + 2 * 86400000 + 3600000).toISOString(),
+  }).select('id').single();
+
+  const { data: lcItems } = await admin.from('action_items').insert([{
+    action_id: lcAct.id, type: 'PERSON', name: '참가자', target_type: 'RANGE',
+    min_required: 1, max_allowed: 3, unit: '명', gender_requirement: 'ANY', sort_order: 1,
+  }]).select('id');
+
+  // 1) 공개
+  const rPub = await cA.rpc('publish_action', { p_action_id: lcAct.id });
+  rPub.error ? no('publish_action 실패', rPub.error.message.slice(0, 50))
+             : ok('publish_action → ACTIVE');
+
+  // 남이 남의 액션을 공개할 수 없어야 한다
+  const rPubOther = await cB.rpc('publish_action', { p_action_id: lcAct.id });
+  rPubOther.error ? ok('남의 액션은 공개할 수 없음')
+                  : no('남이 공개할 수 있음 !!');
+
+  // 2) 참여
+  const rJoinLc = await cB.rpc('join_action', {
+    p_action_id: lcAct.id,
+    p_items: [{ action_item_id: lcItems[0].id, quantity: 1 }],
+  });
+  rJoinLc.error ? no('생애주기 참여 실패', rJoinLc.error.message.slice(0, 50))
+                : ok('크루 참여');
+
+  // 3) 활동이 끝나기 전에는 결과를 공개할 수 없어야 한다
+  const rEarly = await cA.rpc('complete_action', { p_action_id: lcAct.id });
+  rEarly.error ? ok('활동 전에는 결과 공개 불가', rEarly.error.message.slice(0, 32))
+               : no('활동 전에 완료됨 !!');
+
+  // 4) 시간을 지나가게 한다 — 트리거가 막으므로 DRAFT 로 잠깐 되돌린다
+  //    (lock_published_action 은 공개된 액션의 날짜 변경을 막습니다)
+  await admin.from('actions').update({ status: 'DRAFT' }).eq('id', lcAct.id);
+  await admin.from('actions').update({
+    recruit_end_at:    new Date(now - 3 * 86400000).toISOString(),
+    activity_start_at: new Date(now - 2 * 86400000).toISOString(),
+    activity_end_at:   new Date(now - 1 * 86400000).toISOString(),
+  }).eq('id', lcAct.id);
+  await admin.from('actions').update({ status: 'ACTIVE' }).eq('id', lcAct.id);
+
+  const rSync = await admin.rpc('sync_action_status', { p_action_id: lcAct.id });
+  const { data: afterSync } = await admin.from('actions')
+    .select('status').eq('id', lcAct.id).single();
+  afterSync?.status === 'ENDED'
+    ? ok('활동 종료 시각이 지나면 ENDED 로 전환')
+    : no('ENDED 전환 안 됨', String(afterSync?.status));
+
+  const { count: reqCount } = await admin.from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('action_id', lcAct.id).eq('type', 'RESULT_REQUEST');
+  reqCount === 1 ? ok('호스트에게 결과 작성 요청 알림')
+                 : no('RESULT_REQUEST 없음', String(reqCount));
+
+  // 5) 결과 없이 완료하려 하면 막혀야 한다
+  const rNoResult = await cA.rpc('complete_action', { p_action_id: lcAct.id });
+  rNoResult.error ? ok('결과 없이는 완료 불가', rNoResult.error.message.slice(0, 32))
+                  : no('결과 없이 완료됨 !!');
+
+  // 6) 결과 저장 → 완료
+  const { error: resErr } = await cA.from('action_results').upsert({
+    action_id: lcAct.id, content: '잘 마쳤습니다.',
+    image_urls: ['https://example.com/r.jpg'], owner_voice: '고맙습니다',
+  }, { onConflict: 'action_id' });
+  resErr ? no('결과 저장 실패', resErr.message.slice(0, 50)) : ok('결과 저장');
+
+  const rDone = await cA.rpc('complete_action', { p_action_id: lcAct.id });
+  rDone.error ? no('complete_action 실패', rDone.error.message.slice(0, 50))
+              : ok('complete_action → COMPLETED');
+
+  const { count: pubCount } = await admin.from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('action_id', lcAct.id).eq('type', 'RESULT_PUBLISHED');
+  pubCount >= 1 ? ok('크루에게 결과 공개 알림')
+                : no('RESULT_PUBLISHED 없음', String(pubCount));
+
+  // 7) 소감 — 저장과 상태 전환이 한 트랜잭션인가
+  const rShortVoice = await cB.rpc('submit_crew_voice', {
+    p_action_id: lcAct.id, p_content: '짧음',
+  });
+  rShortVoice.error ? ok('너무 짧은 소감은 거절')
+                    : no('10자 미만 소감이 통과됨');
+
+  const rVoice = await cB.rpc('submit_crew_voice', {
+    p_action_id: lcAct.id, p_content: '처음이라 걱정했는데 정말 좋았습니다. 또 참여하고 싶어요.',
+  });
+  rVoice.error ? no('소감 저장 실패', rVoice.error.message.slice(0, 50))
+               : ok('소감 저장');
+
+  const { data: lcPart } = await admin.from('participations')
+    .select('status').eq('action_id', lcAct.id).eq('user_id', uidB).maybeSingle();
+  lcPart?.status === 'ACTUALLY_PARTICIPATED'
+    ? ok('소감을 쓰면 참여 상태가 함께 바뀜 (한 트랜잭션)')
+    : no('상태가 안 바뀜', String(lcPart?.status));
+
+  const rTwiceVoice = await cB.rpc('submit_crew_voice', {
+    p_action_id: lcAct.id, p_content: '같은 액션에 두 번째 소감을 써봅니다.',
+  });
+  rTwiceVoice.error ? ok('같은 액션에 소감을 두 번 쓸 수 없음')
+                    : no('소감 중복 작성이 허용됨');
+
+  // 8) 좋아요 · 저장 · 팔로우
+  const { error: likeErr } = await cB.from('likes')
+    .insert({ action_id: lcAct.id, user_id: uidB });
+  likeErr ? no('좋아요 실패', likeErr.message.slice(0, 40)) : ok('좋아요');
+  const { error: saveErr } = await cB.from('saves')
+    .insert({ action_id: lcAct.id, user_id: uidB });
+  saveErr ? no('저장 실패', saveErr.message.slice(0, 40)) : ok('저장');
+
+  const { data: socialRow } = await admin.from('action_social_counts')
+    .select('like_count, save_count').eq('action_id', lcAct.id).maybeSingle();
+  socialRow?.like_count === 1 && socialRow?.save_count === 1
+    ? ok('좋아요·저장 수가 뷰에 반영됨')
+    : no('집계 이상', JSON.stringify(socialRow));
+
+  await admin.from('actions').delete().eq('id', lcAct.id);
+
+  // ── 14. 활동이 시작된 뒤에는 나갈 수 없다 (09 · lazy 전환의 빈틈) ──
+  //    활동이 이미 끝났는데 아무도 액션을 안 열면
+  //    상태가 ACTIVE·BEFORE_ACTION 으로 남는다. 그 틈에도 못 나가야 한다.
+  console.log('\n[14] 활동이 지났는데 상태 전환 전이면 나갈 수 있는가');
+
+  const { data: gapAct } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 지나간 활동', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    status: 'ACTIVE',
+    recruit_end_at:    new Date(now - 3 * 86400000).toISOString(),
+    activity_start_at: new Date(now - 2 * 86400000).toISOString(),
+    activity_end_at:   new Date(now - 1 * 86400000).toISOString(),
+  }).select('id').single();
+  const { data: gapItem } = await admin.from('action_items').insert({
+    action_id: gapAct.id, type: 'PERSON', name: '참가자', target_type: 'MINIMUM',
+    min_required: 1, max_allowed: null, unit: '명', gender_requirement: 'ANY', sort_order: 1,
+  }).select('id').single();
+  const { data: gapPart } = await admin.from('participations')
+    .insert({ action_id: gapAct.id, user_id: uidB, status: 'BEFORE_ACTION' })
+    .select('id').single();
+  await admin.from('participation_items')
+    .insert({ participation_id: gapPart.id, action_item_id: gapItem.id, quantity: 1 });
+
+  const rGap1 = await cB.rpc('leave_action_with_reason', {
+    p_action_id: gapAct.id, p_reason: '활동이 끝났는데 나가봅니다. 막혀야 합니다.',
+  });
+  rGap1.error
+    ? ok('사유 나가기: 활동 시작 후 거절', rGap1.error.message.slice(0, 28))
+    : no('활동이 끝났는데 사유 나가기 성공 !! — 09_update.sql 을 실행했는가');
+
+  const rGap2 = await cB.rpc('leave_action', { p_action_id: gapAct.id });
+  rGap2.error
+    ? ok('일반 나가기: 활동 시작 후 거절')
+    : no('활동이 끝났는데 나가기 성공 !! — 09_update.sql 을 실행했는가');
+
+  const { count: gapNotice } = await admin.from('chat_messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('action_id', gapAct.id).eq('kind', 'LEFT_NOTICE');
+  gapNotice === 0
+    ? ok('끝난 활동 게시판에 사유 글이 안 올라감')
+    : no('거절됐는데 게시판에 글이 남음 !!', String(gapNotice));
+
+  await admin.from('actions').delete().eq('id', gapAct.id);
+
 
 } catch (e) {
   no('예외 발생', e.message);

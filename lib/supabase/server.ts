@@ -57,22 +57,16 @@ export async function getUser() {
   return user;
 }
 
-/** 로그인 + 프로필을 함께 가져온다. */
-export async function getSessionProfile() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { user: null, profile: null };
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  return { user, profile };
-}
+/**
+ * 프로필이 필요하면 lib/queries/profiles.ts 의 getProfile() 을 쓰세요.
+ *
+ * 예전에 여기 getSessionProfile() 이 있었는데 지웠습니다 (2026-09-01).
+ * profiles 를 select(*) 로 통째로 읽어서, "읽기는 lib/queries/ 로" 라는
+ * 팀 규칙과 어긋났고 아무도 쓰지 않고 있었습니다.
+ *
+ *   const me = await getProfile(supabase, user.id, user.id);
+ *   me.timePrefs · me.notifyOff · me.categories · me.regions
+ */
 
 /** RLS 우회. 서버에서만, 꼭 필요할 때만. */
 export function createAdminClient() {

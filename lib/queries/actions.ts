@@ -4,9 +4,9 @@
  * ★ 화면에서 supabase.from('actions')... 를 직접 쓰지 말고 여기 함수를 부르세요.
  *
  * 직접 쓰면 이런 실수가 납니다:
- *  - 나간 사람(LEFT)을 집계에서 빼는 걸 잊는다
- *  - 카드마다 합계 쿼리를 돌려서 피드에서 쿼리가 수십 번 나간다
- *  - status 필터를 빠뜨려서 DRAFT 가 남에게 보인다
+ *   - 나간 사람(LEFT)을 집계에서 빼는 걸 잊는다
+ *   - 카드마다 합계 쿼리를 돌려서 피드에서 쿼리가 수십 번 나간다
+ *   - status 필터를 빠뜨려서 DRAFT 가 남에게 보인다
  *
  * 새 조회가 필요하면 여기에 함수를 추가하고 팀에 알려주세요.
  * (이 파일은 공유 구역입니다. 고치기 전에 말해주세요.)
@@ -32,7 +32,7 @@ type DB = SupabaseClient<Database>;
 /** 카드/상세에 공통으로 필요한 컬럼 */
 const ACTION_COLUMNS = `
   id, title, description, category, image_urls, thumbnail_index,
-  address, notice, status, cancel_reason,
+  address, place_name, notice, status, cancel_reason,
   recruit_end_at, activity_start_at, activity_end_at,
   owner:profiles!actions_owner_id_fkey ( id, nickname, bio )
 `;
@@ -45,6 +45,7 @@ interface RawAction {
   image_urls: string[];
   thumbnail_index: number;
   address: string | null;
+  place_name: string | null;
   notice: string | null;
   status: ActionStatus;
   cancel_reason: string | null;
@@ -136,8 +137,10 @@ function toCard(
     category: raw.category,
     thumbnailUrl: pickThumbnail(raw.image_urls, raw.thumbnail_index),
     address: raw.address,
+    placeName: raw.place_name,
     status: raw.status,
     activityStartAt: raw.activity_start_at,
+    recruitEndAt: raw.recruit_end_at,
     owner: raw.owner
       ? { id: raw.owner.id, nickname: raw.owner.nickname }
       : { id: '', nickname: '알 수 없음' },
@@ -166,13 +169,37 @@ async function buildCards(
 // ─────────────────────────────────────────────────────────────
 // Home 피드 — 담당: 디자이너
 // ─────────────────────────────────────────────────────────────
+/**
+ * 피드 정렬 (2026-09-01 합의 · F27)
+ *
+ *   DEADLINE  마감 임박 순. 같은 날 마감이면 인기 높은 쪽이 위로
+ *   POPULAR   인기 순.      같은 인기면 마감 임박한 쪽이 위로
+ *
+ * 인기 점수 = 좋아요 + 저장 × 1.5
+ * 저장은 "나중에 하겠다" 는 뜻이라 좋아요보다 무겁게 봅니다.
+ */
+export type FeedSort = 'DEADLINE' | 'POPULAR';
+
+/** 인기 점수. 화면에서 직접 계산하지 말고 이 규칙만 쓰세요 */
+export function popularityScore(card: {
+  likeCount: number;
+  saveCount: number;
+}): number {
+  return card.likeCount + card.saveCount * 1.5;
+}
+
+/** 마감 시각을 정렬용 숫자로. 마감일이 없는 액션은 맨 뒤로 */
+function deadlineKey(iso: string | null): number {
+  return iso ? new Date(iso).getTime() : Number.MAX_SAFE_INTEGER;
+}
+
 export async function getActionFeed(
   supabase: DB,
   opts: {
     viewerId?: string | null;
     limit?: number;
     category?: Category;
-    sort?: 'DEADLINE' | 'POPULAR';
+    sort?: FeedSort;
   } = {},
 ): Promise<ActionCardData[]> {
   const { viewerId = null, limit = 20, category, sort = 'DEADLINE' } = opts;
@@ -180,11 +207,19 @@ export async function getActionFeed(
   // 활동이 이미 끝난 액션은 피드에서 뺍니다.
   // 상태(ENDED) 전환은 누군가 그 액션을 열어야 일어나기 때문에,
   // 그때까지 DB 상으로는 ACTIVE 로 남아 있습니다.
+  //
+  // 인기 점수는 DB 가 아니라 뷰에서 따로 가져오기 때문에 SQL 로 정렬할 수 없습니다.
+  // 그래서 마감 임박 순으로 넉넉히 받아온 뒤 여기서 다시 줄을 세웁니다.
+  // (limit 만큼만 받아오면 인기순일 때 뒤쪽에 있는 인기 액션을 놓칩니다)
+  const fetchCount = Math.min(limit * 3, 90);
+
   let q = supabase
     .from('actions')
     .select(ACTION_COLUMNS)
     .eq('status', 'ACTIVE')
-    .gt('activity_end_at', new Date().toISOString());
+    .gt('activity_end_at', new Date().toISOString())
+    .order('recruit_end_at', { ascending: true, nullsFirst: false })
+    .limit(fetchCount);
 
   if (category) q = q.eq('category', category);
 
@@ -205,15 +240,15 @@ export async function getActionFeed(
     viewerId,
   );
 
-  if (sort === 'POPULAR') {
-    cards.sort((a, b) => {
-      const scoreA = a.likeCount + a.saveCount * 2 + a.crewCount * 3;
-      const scoreB = b.likeCount + b.saveCount * 2 + b.crewCount * 3;
-      return scoreB - scoreA;
-    });
-  }
+  cards.sort((a, b) => {
+    const byDeadline = deadlineKey(a.recruitEndAt) - deadlineKey(b.recruitEndAt);
+    const byPopular = popularityScore(b) - popularityScore(a);
+    return sort === 'POPULAR'
+      ? byPopular || byDeadline
+      : byDeadline || byPopular;
+  });
 
-  return cards;
+  return cards.slice(0, limit);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -318,11 +353,11 @@ export async function getActionDetail(
         .maybeSingle(),
       raw.owner
         ? supabase
-            .from('follows')
-            .select('id')
-            .eq('follower_id', viewerId)
-            .eq('following_id', raw.owner.id)
-            .maybeSingle()
+          .from('follows')
+          .select('id')
+          .eq('follower_id', viewerId)
+          .eq('following_id', raw.owner.id)
+          .maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
     // DB CHECK 제약이 4가지 값만 허용하므로 안전한 단언이다.
@@ -341,6 +376,7 @@ export async function getActionDetail(
     imageUrls: raw.image_urls ?? [],
     thumbnailIndex: raw.thumbnail_index,
     address: raw.address,
+    placeName: raw.place_name,
     notice: raw.notice,
     status: raw.status,
     cancelReason: raw.cancel_reason,
