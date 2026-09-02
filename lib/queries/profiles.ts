@@ -8,6 +8,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
+import type { Gender } from '@/lib/constants';
 import type { ProfileData, UserSummary, ActionCardData } from '@/lib/types/view';
 import type { TimePref, NotificationType, ActionStatus } from '@/lib/constants';
 import { getUserSummaries } from '@/lib/queries/participations';
@@ -23,7 +24,7 @@ export async function getProfile(
   const { data: p, error } = await supabase
     .from('profiles')
     .select(
-      'id, name, nickname, bio, categories, available_times, time_prefs, notify_off, regions',
+      'id, name, nickname, gender, bio, categories, available_times, time_prefs, notify_off, regions',
     )
     .eq('id', userId)
     .maybeSingle();
@@ -50,6 +51,7 @@ export async function getProfile(
     id: p.id,
     name: p.name,
     nickname: p.nickname,
+    gender: p.gender as Gender,
     bio: p.bio,
     categories: p.categories ?? [],
     availableTimes: p.available_times ?? [],

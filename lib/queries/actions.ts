@@ -432,7 +432,17 @@ export async function getSavedActions(
     .in('id', ids);
 
   if (ae) throw ae;
-  return buildCards(supabase, (data ?? []) as unknown as RawAction[], userId);
+
+  // in() 은 순서를 보장하지 않는다. 저장한 순서(최신순)로 되돌린다.
+  const cards = await buildCards(
+    supabase,
+    (data ?? []) as unknown as RawAction[],
+    userId,
+  );
+  const rank = new Map(ids.map((id, i) => [id, i]));
+  return cards.sort(
+    (a, b) => (rank.get(a.id) ?? Infinity) - (rank.get(b.id) ?? Infinity),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────

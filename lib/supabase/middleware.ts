@@ -15,9 +15,10 @@ import { NextResponse, type NextRequest } from 'next/server';
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 /** 로그인해야만 들어갈 수 있는 경로 */
+// /discover 는 비회원도 열어서 안내를 보여준다 (F28).
+// 추천을 실제로 돌리는 /api/ai/discover 는 그 안에서 401 을 돌려준다.
 const PROTECTED_PREFIXES = [
   '/action/create',
-  '/discover',
   '/activity',
   '/my',
   '/notifications',

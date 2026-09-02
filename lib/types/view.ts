@@ -10,6 +10,7 @@
 import type {
   ActionStatus,
   Category,
+  Gender,
   ParticipationStatus,
   GenderRequirement,
   ItemType,
@@ -144,6 +145,8 @@ export interface CrewItemGroup {
 /** 타인 프로필 / MY 화면 */
 export interface ProfileData extends UserSummary {
   name: string;
+  /** 가입 시 필수. 바꿀 수 없고 표시만 한다 */
+  gender: Gender;
   categories: string[];
   /**
    * @deprecated 2026-09-01 개편으로 timePrefs 로 옮기는 중입니다.
