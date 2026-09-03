@@ -44,6 +44,12 @@ export default async function ActionDetailPage({
     action.isOwner ||
     !!(action.myParticipation && action.myParticipation !== 'LEFT');
   const showMessageAccessButton = action.isOwner || !canViewChat;
+  const canEditActionText =
+    action.isOwner &&
+    (action.status === 'ACTIVE' ||
+      action.status === 'ENDED' ||
+      action.status === 'COMPLETED' ||
+      action.status === 'CANCELLED');
 
   // ── 하단 버튼을 무엇으로 보여줄지 ──────────────────────────
   // 순서가 중요합니다. 위쪽 조건이 먼저 걸립니다.
@@ -105,6 +111,15 @@ export default async function ActionDetailPage({
           <h1 className="text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
             {action.title}
           </h1>
+
+          {canEditActionText && (
+            <Link
+              href={`/action/${id}/edit`}
+              className="mt-1 inline-flex self-start rounded-lg border border-neutral-200 px-3 py-2 text-[12px] font-semibold text-neutral-700 hover:bg-neutral-50"
+            >
+              소개·안내 수정
+            </Link>
+          )}
         </div>
 
         {/* 취소 사유 */}
