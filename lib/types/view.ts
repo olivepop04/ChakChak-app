@@ -38,6 +38,8 @@ export interface ActionCardData {
   likeCount: number;
   saveCount: number;
   crewCount: number;
+  /** 공유한 횟수 (10). 공유할 때마다 1 씩 늘어납니다 */
+  shareCount: number;
   /** 로그인 사용자 기준. 비로그인이면 false */
   likedByMe: boolean;
   savedByMe: boolean;
@@ -147,6 +149,12 @@ export interface ProfileData extends UserSummary {
   name: string;
   /** 가입 시 필수. 바꿀 수 없고 표시만 한다 */
   gender: Gender;
+  /**
+   * 나눌 수 있는 재능 (10).
+   * null 은 "아직 안 물어봤음", 빈 배열은 "없다고 답함" 입니다.
+   * 둘을 섮으면 재능 없는 사람에게 AI 가 계속 재능을 묻습니다.
+   */
+  skills: string[] | null;
   categories: string[];
   /**
    * @deprecated 2026-09-01 개편으로 timePrefs 로 옮기는 중입니다.

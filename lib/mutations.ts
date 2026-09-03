@@ -262,6 +262,16 @@ export interface ProfileInput {
   regions?: string[];
   /** 참여 가능 시간 2단계 (F38). [{ day: '평일', slots: ['오전'] }] */
   timePrefs?: { day: string; slots: string[] }[];
+  /**
+   * 나눌 수 있는 재능 (10). `SKILLS` 목록에서 고른 값만 넣으세요.
+   *
+   *   넘기지 않음  이번에 안 건드림
+   *   null         "아직 잘 모르겠음" — 나중에 다시 물어봅니다
+   *   []           "재능 없음"        — 다시 묻지 않습니다
+   *
+   * 둘을 섞으면 재능 없는 사람에게 AI 가 계속 재능을 묻습니다.
+   */
+  skills?: string[] | null;
 }
 
 /**
@@ -298,6 +308,13 @@ export async function updateProfile(
   if (input.bio !== undefined) patch.bio = input.bio?.trim() || null;
   if (input.categories !== undefined) patch.categories = input.categories;
   if (input.regions !== undefined) patch.regions = input.regions;
+
+  // 재능 (10). null 과 빈 배열이 다릅니다.
+  //   undefined  이번에 안 건드림 → 컬럼을 그대로 둡니다
+  //   null       "아직 모르겠음"  → 나중에 다시 물어봅니다
+  //   []         "재능 없음"      → 다시 묻지 않습니다
+  // ?? [] 같은 걸 쓰면 이 구분이 사라집니다.
+  if (input.skills !== undefined) patch.skills = input.skills;
 
   if (input.timePrefs !== undefined) {
     patch.time_prefs = input.timePrefs;
@@ -535,6 +552,65 @@ export async function saveActionItems(
   const { error } = await supabase.from('action_items').insert(rows);
   if (error)
     return { ok: false, message: toMessage(error, '모집 항목 저장에 실패했어요.') };
+  return { ok: true, data: undefined };
+}
+
+/**
+ * 공개된 액션에 모집 항목을 **추가만** 합니다 (B8).
+ *
+ * ★ 공개된 액션에 `saveActionItems()` 를 쓰지 마세요.
+ *   그 함수는 "전부 지우고 다시 넣기" 방식이라, 이미 참여한 크루들의
+ *   항목 선택이 한 번에 사라집니다 (participation_items 가 CASCADE 입니다).
+ *   DB 트리거(supabase/10)가 막아주지만, 애초에 이 함수를 쓰세요.
+ *
+ * 기존 항목은 고치거나 지울 수 없습니다. 이미 신청한 사람이 있으니까요.
+ */
+export async function addActionItems(
+  supabase: DB,
+  actionId: string,
+  items: ActionItemInput[],
+): Promise<Result> {
+  if (items.length === 0)
+    return { ok: false, message: '추가할 모집 항목을 하나 이상 입력해주세요.' };
+
+  for (const it of items) {
+    if (!it.name.trim())
+      return { ok: false, message: '모집 항목의 이름을 입력해주세요.' };
+    if (it.targetType === 'RANGE' && (it.maxAllowed ?? null) === null)
+      return { ok: false, message: `「${it.name}」의 최대 인원을 입력해주세요.` };
+    if (it.targetType === 'RANGE' && (it.maxAllowed as number) < it.minRequired)
+      return { ok: false, message: `「${it.name}」의 최대 인원이 최소보다 작습니다.` };
+  }
+
+  // 새 항목이 기존 항목 뒤에 오도록 sort_order 를 이어 붙입니다
+  const { data: last } = await supabase
+    .from('action_items')
+    .select('sort_order')
+    .eq('action_id', actionId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const base = (last?.sort_order ?? -1) + 1;
+
+  // 여러 행을 한 번에 넣을 때는 모든 컬럼을 빠짐없이 채웁니다 (CLAUDE.md 8번)
+  const rows = items.map((it, i) => ({
+    action_id: actionId,
+    type: it.type,
+    name: it.name.trim(),
+    target_type: it.targetType,
+    min_required: it.minRequired,
+    max_allowed: it.targetType === 'MINIMUM' ? null : (it.maxAllowed ?? null),
+    unit: it.type === 'PERSON' ? '명' : (it.unit || '개'),
+    gender_requirement:
+      it.type === 'GOODS' ? 'ANY' : (it.genderRequirement ?? 'ANY'),
+    condition_name: it.conditionName ?? null,
+    condition_desc: it.conditionDesc ?? null,
+    sort_order: base + i,
+  }));
+
+  const { error } = await supabase.from('action_items').insert(rows);
+  if (error)
+    return { ok: false, message: toMessage(error, '모집 항목 추가에 실패했어요.') };
   return { ok: true, data: undefined };
 }
 

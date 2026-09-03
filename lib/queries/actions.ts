@@ -82,7 +82,7 @@ async function loadSocial(
 ) {
   const counts = new Map<
     string,
-    { like: number; save: number; crew: number }
+    { like: number; save: number; crew: number; share: number }
   >();
   const liked = new Set<string>();
   const saved = new Set<string>();
@@ -91,7 +91,7 @@ async function loadSocial(
 
   const { data: countRows } = await supabase
     .from('action_social_counts')
-    .select('action_id, like_count, save_count, crew_count')
+    .select('action_id, like_count, save_count, crew_count, share_count')
     .in('action_id', actionIds);
 
   // 뷰는 NOT NULL 정보를 잃어버려서 생성된 타입이 전부 nullable 이다.
@@ -102,6 +102,7 @@ async function loadSocial(
       like: r.like_count ?? 0,
       save: r.save_count ?? 0,
       crew: r.crew_count ?? 0,
+      share: r.share_count ?? 0,
     });
   }
 
@@ -145,6 +146,7 @@ function toCard(
       ? { id: raw.owner.id, nickname: raw.owner.nickname }
       : { id: '', nickname: '알 수 없음' },
     likeCount: c?.like ?? 0,
+    shareCount: c?.share ?? 0,
     saveCount: c?.save ?? 0,
     crewCount: c?.crew ?? 0,
     likedByMe: social.liked.has(raw.id),

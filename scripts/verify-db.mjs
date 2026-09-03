@@ -636,6 +636,78 @@ try {
   await admin.from('actions').delete().eq('id', gapAct.id);
 
 
+  // ═══════════════════════════════════════════════════════════
+  console.log('\n[15] 재능 · 공유 수 · 모집 항목 잠금 (10)');
+
+  // ── 재능: NULL 과 빈 배열이 구분되는가 ──
+  // 섞이면 "재능 없다고 답한 사람" 에게 AI 가 계속 재능을 묻습니다.
+  const { data: skNew } = await admin
+    .from('profiles').select('skills').eq('id', uidA).single();
+  skNew.skills === null
+    ? ok('새 사용자의 재능은 null (아직 안 물어봄)')
+    : no('새 사용자에게 기본값이 들어감 !! — 컬럼에 DEFAULT 가 있는가', JSON.stringify(skNew.skills));
+
+  await cA.from('profiles').update({ skills: [] }).eq('id', uidA);
+  const { data: skNone } = await admin
+    .from('profiles').select('skills').eq('id', uidA).single();
+  Array.isArray(skNone.skills) && skNone.skills.length === 0
+    ? ok('"재능 없음" 은 빈 배열로 저장됨 (null 과 구분)')
+    : no('빈 배열이 null 로 바뀜 !!', JSON.stringify(skNone.skills));
+
+  await cA.from('profiles').update({ skills: ['사진 촬영'] }).eq('id', uidA);
+  const { data: skSome } = await admin
+    .from('profiles').select('skills').eq('id', uidA).single();
+  skSome.skills?.[0] === '사진 촬영'
+    ? ok('재능이 저장되고 다시 읽힘')
+    : no('재능 저장 실패 !!', JSON.stringify(skSome.skills));
+
+  // ── 공유 수: 공유하면 1 늘어나는가 ──
+  const { data: shBefore } = await admin
+    .from('action_social_counts').select('share_count')
+    .eq('action_id', created.action).single();
+  await cB.rpc('notify_invite', { p_action_id: created.action, p_target: uidA });
+  const { data: shAfter } = await admin
+    .from('action_social_counts').select('share_count')
+    .eq('action_id', created.action).single();
+  (shAfter.share_count ?? 0) === (shBefore.share_count ?? 0) + 1
+    ? ok('공유하면 share_count 가 1 늘어남')
+    : no('공유 수가 안 늘어남 !! — 10_update.sql 을 실행했는가',
+         `${shBefore.share_count} → ${shAfter.share_count}`);
+
+  // 남의 공유 기록은 안 보여야 한다 (likes·saves 와 같은 규칙)
+  const { data: shMine } = await cA.from('shares').select('id');
+  (shMine ?? []).length === 0
+    ? ok('남의 공유 기록은 안 보임')
+    : no('남의 공유 기록이 보임 !!', String(shMine.length));
+
+  // ── 모집 항목 잠금: 공개된 액션은 추가만 ──
+  const { data: pubItem } = await admin.from('action_items')
+    .select('id, name').eq('action_id', created.action).limit(1).single();
+
+  const rItemUpd = await cA.from('action_items')
+    .update({ name: pubItem.name }).eq('id', pubItem.id);
+  rItemUpd.error
+    ? ok('공개된 액션의 항목 수정 거절', rItemUpd.error.message.slice(0, 26))
+    : no('공개된 액션의 항목이 수정됨 !! — 10_update.sql 을 실행했는가');
+
+  await cA.from('action_items').delete().eq('id', pubItem.id);
+  const { count: stillThere } = await admin.from('action_items')
+    .select('*', { count: 'exact', head: true }).eq('id', pubItem.id);
+  stillThere === 1
+    ? ok('공개된 액션의 항목 삭제 거절 — 참여 기록이 지켜짐')
+    : no('공개된 액션의 항목이 삭제됨 !! — 크루의 참여 기록이 함께 날아갑니다');
+
+  const rItemAdd = await cA.from('action_items').insert({
+    action_id: created.action, type: 'GOODS', name: '[검증] 나중에 추가한 물품',
+    target_type: 'MINIMUM', min_required: 1, max_allowed: null, unit: '개',
+    gender_requirement: 'ANY', condition_name: null, condition_desc: null,
+    sort_order: 99,
+  });
+  rItemAdd.error
+    ? no('공개된 액션에 항목 추가가 막힘 !! — 추가는 되어야 합니다', rItemAdd.error.message.slice(0, 40))
+    : ok('공개된 액션에 항목 추가는 허용됨');
+
+
 } catch (e) {
   no('예외 발생', e.message);
 } finally {
