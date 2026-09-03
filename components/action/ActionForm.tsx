@@ -3,7 +3,7 @@
  *
  * ★ 저장 순서에 이유가 있습니다.
  *   이미지 파일 경로가 {action_id}/... 라서 액션이 먼저 있어야 합니다.
- *   그래서 "저장" 을 한 번 눌러 DRAFT 를 만든 뒤에 사진 칸이 열립니다.
+ *   제목 입력이 잠시 멈추면 DRAFT 를 자동으로 만들고 사진 칸을 엽니다.
  *
  * ★ 공개 흐름
  *   [액션 생성하기] → 코드 검사 + AI 검수 → 결과를 보여줌 → 호스트가 [액션 공개하기]
@@ -11,7 +11,7 @@
  */
 'use client';
 
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -20,6 +20,7 @@ import {
   publishAction,
   type ActionItemInput,
 } from '@/lib/mutations';
+import { AddressSearch } from '@/components/action/AddressSearch';
 import { ItemEditor } from '@/components/action/ItemEditor';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
@@ -47,6 +48,15 @@ function moveToSameDate(value: string, activityStart: string): string {
   return startDate && time ? `${startDate}T${time}` : value;
 }
 
+function scrollAndFocus(target: HTMLElement | null) {
+  if (!target) return;
+  const focusTarget = target.matches('input, textarea, button')
+    ? target
+    : target.querySelector<HTMLElement>('input, textarea, button');
+  focusTarget?.focus({ preventScroll: true });
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 export interface ActionFormInitial {
   id: string | null;
   title: string;
@@ -71,6 +81,7 @@ const RECRUIT_END_ERROR =
   '모집 마감은 활동 시작보다 앞서야 해요. 마감일을 활동 시작일 이전으로 바꿔주세요.';
 const ACTIVITY_END_ERROR =
   '활동 종료는 활동 시작보다 뒤여야 해요. 종료 시각을 다시 확인해주세요.';
+const AUTOSAVE_DELAY = 800;
 
 export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const router = useRouter();
@@ -79,6 +90,8 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const initialActivityEnd = toLocalInput(initial.activityEndAt);
 
   const [actionId, setActionId] = useState(initial.id);
+  const actionIdRef = useRef(initial.id);
+  const draftCreationRef = useRef<Promise<string | null> | null>(null);
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
   const [category, setCategory] = useState<Category>(initial.category);
@@ -103,17 +116,65 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     field: 'recruitEnd' | 'activityEnd';
     message: string;
   } | null>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const imageSectionRef = useRef<HTMLDivElement>(null);
+  const itemsSectionRef = useRef<HTMLDivElement>(null);
   const recruitEndRef = useRef<HTMLInputElement>(null);
+  const activityStartRef = useRef<HTMLInputElement>(null);
   const activityEndRef = useRef<HTMLInputElement>(null);
+  const pendingReviewTargetRef = useRef<HTMLElement | null>(null);
 
   const [busy, setBusy] = useState(false);
   const [review, setReview] = useState<ReviewResult | null>(null);
+
+  const ensureDraft = useCallback(
+    async (draftTitle: string): Promise<string | null> => {
+      if (actionIdRef.current) return actionIdRef.current;
+      if (draftCreationRef.current) return draftCreationRef.current;
+
+      const creation = (async () => {
+        const saved = await saveActionDraft(
+          createClient(),
+          { title: draftTitle, category },
+          null,
+        );
+        if (!saved.ok) {
+          toast(saved.message, 'error');
+          return null;
+        }
+
+        actionIdRef.current = saved.data;
+        setActionId(saved.data);
+        window.history.replaceState(null, '', `/action/create?id=${saved.data}`);
+        return saved.data;
+      })();
+
+      draftCreationRef.current = creation;
+      try {
+        return await creation;
+      } finally {
+        if (draftCreationRef.current === creation) draftCreationRef.current = null;
+      }
+    },
+    [category, toast],
+  );
+
+  useEffect(() => {
+    if (actionIdRef.current || !title.trim()) return;
+
+    const timer = window.setTimeout(() => {
+      void ensureDraft(title);
+    }, AUTOSAVE_DELAY);
+
+    return () => window.clearTimeout(timer);
+  }, [ensureDraft, title]);
 
   /**
    * DRAFT 저장. 처음이면 만들고, 있으면 수정합니다.
    * 성공하면 액션 id 를 돌려줍니다.
    */
-  async function saveDraft(): Promise<string | null> {
+  async function saveDraft({ requireItems = false } = {}): Promise<string | null> {
     const supabase = createClient();
     const {
       data: { user },
@@ -124,8 +185,12 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     }
     if (!title.trim()) {
       toast('제목을 입력해주세요.', 'error');
+      scrollAndFocus(titleRef.current);
       return null;
     }
+
+    const currentActionId = actionIdRef.current ?? (await ensureDraft(title));
+    if (!currentActionId) return null;
 
     // 저장은 공용 함수로 합니다. 날짜 앞뒤 검사(F14)가 이 안에 들어 있어서
     // 화면에서 같은 검사를 또 만들 필요가 없습니다. 메시지는 그대로 보여주면 됩니다.
@@ -144,7 +209,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         activityStartAt: toISO(activityStart),
         activityEndAt: toISO(activityEnd),
       },
-      actionId,
+      currentActionId,
     );
 
     if (!saved.ok) {
@@ -162,23 +227,45 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     }
 
     const id = saved.data;
-    if (!actionId) {
-      setActionId(id);
-      // 주소에 id 를 남겨 두면 새로고침해도 이어서 작성할 수 있습니다
-      window.history.replaceState(null, '', `/action/create?id=${id}`);
-    }
 
     // 모집 항목은 전용 함수로 저장합니다.
     // 여러 행을 한 번에 넣을 때 DB 기본값이 적용되지 않는 문제를 이 함수가 막습니다.
-    if (items.length > 0) {
+    if (items.length > 0 || requireItems) {
       const res = await saveActionItems(supabase, id, items);
       if (!res.ok) {
         toast(res.message, 'error');
+        scrollAndFocus(itemsSectionRef.current);
         return null;
       }
     }
 
     return id;
+  }
+
+  function findReviewErrorTarget(messages: string[]): HTMLElement | null {
+    for (const message of messages) {
+      if (message.includes('제목')) return titleRef.current;
+      if (message.includes('모집 마감일과 활동 일시')) {
+        if (!recruitEnd) return recruitEndRef.current;
+        if (!activityStart) return activityStartRef.current;
+        return activityEndRef.current;
+      }
+      if (message.includes('활동 종료') || message.includes('이미 지난 날짜')) {
+        return activityEndRef.current;
+      }
+      if (message.includes('모집 마감')) return recruitEndRef.current;
+      if (message.includes('대표 이미지')) return imageSectionRef.current;
+      if (message.includes('모집 항목')) return itemsSectionRef.current;
+      if (message.includes('본문')) return descriptionRef.current;
+    }
+    return null;
+  }
+
+  function closeReview() {
+    setReview(null);
+    const target = pendingReviewTargetRef.current;
+    pendingReviewTargetRef.current = null;
+    if (target) window.requestAnimationFrame(() => scrollAndFocus(target));
   }
 
   async function handleSave() {
@@ -194,8 +281,9 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     if (busy) return;
     setBusy(true);
     setReview(null);
+    pendingReviewTargetRef.current = null;
 
-    const id = await saveDraft();
+    const id = await saveDraft({ requireItems: true });
     if (!id) {
       setBusy(false);
       return;
@@ -211,6 +299,9 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       if (data.error) {
         toast(data.error, 'error');
       } else {
+        const target = findReviewErrorTarget(data.hard_errors);
+        pendingReviewTargetRef.current = target;
+        target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setReview(data);
       }
     } catch {
@@ -250,6 +341,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       <label className="flex flex-col gap-1.5">
         <span className={label}>제목</span>
         <input
+          ref={titleRef}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="예: 우리 동네 보호소를 함께 도와요"
@@ -282,6 +374,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       <label className="flex flex-col gap-1.5">
         <span className={label}>소개</span>
         <textarea
+          ref={descriptionRef}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={5}
@@ -294,7 +387,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       </label>
 
       {/* 이미지 — 액션이 저장된 뒤에 열립니다 */}
-      <div className="flex flex-col gap-2">
+      <div ref={imageSectionRef} className="flex flex-col gap-2">
         <span className={label}>대표 이미지</span>
         {actionId ? (
           <ImageUploader
@@ -308,15 +401,15 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           />
         ) : (
           <p className="rounded-xl bg-neutral-50 px-4 py-5 text-center text-[13px] text-neutral-500">
-            제목을 적고 아래 <b>저장</b>을 먼저 눌러주세요.
+            제목을 입력하면 잠시 후 사진을 올릴 수 있어요.
             <br />
-            그 다음에 사진을 올릴 수 있어요.
+            저장 버튼을 먼저 누르지 않아도 됩니다.
           </p>
         )}
       </div>
 
       {/* 모집 항목 */}
-      <div className="flex flex-col gap-2">
+      <div ref={itemsSectionRef} className="flex flex-col gap-2">
         <span className={label}>무엇이 필요한가요?</span>
         <ItemEditor items={items} onChange={setItems} />
       </div>
@@ -347,6 +440,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         <label className="flex flex-col gap-1.5">
           <span className="text-[12px] text-neutral-500">활동 시작</span>
           <input
+            ref={activityStartRef}
             type="datetime-local"
             value={activityStart}
             onChange={(e) => {
@@ -409,16 +503,23 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         </p>
       </div>
 
-      {/* 장소 */}
-      <label className="flex flex-col gap-1.5">
-        <span className={label}>장소</span>
-        <input
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="예: 서울특별시 성동구 ○○로 12"
-          className={input}
-        />
-      </label>
+      {/* 주소 · 장소명 */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <span className={label}>주소</span>
+          <AddressSearch value={address} onChange={setAddress} inputClassName={input} />
+        </div>
+
+        <label className="flex flex-col gap-1.5">
+          <span className={label}>장소명</span>
+          <input
+            value={placeName}
+            onChange={(e) => setPlaceName(e.target.value)}
+            placeholder="예) 신라목욕탕"
+            className={input}
+          />
+        </label>
+      </div>
 
       {/* 안내사항 */}
       <label className="flex flex-col gap-1.5">
@@ -459,7 +560,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         <ReviewModal
           review={review}
           onPublish={handlePublish}
-          onClose={() => setReview(null)}
+          onClose={closeReview}
           busy={busy}
         />
       )}
