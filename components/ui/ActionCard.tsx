@@ -188,11 +188,17 @@ export function ActionCard({
           </p>
 
           <div className="mt-1 flex items-center gap-2 border-t border-neutral-100 pt-3">
-            <Avatar name={action.owner.nickname} size="sm" />
-            <span className="flex-1 truncate text-xs text-neutral-600">
-              @{action.owner.nickname}
-            </span>
-            <span className="flex items-center gap-3 text-xs tabular-nums text-neutral-500">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <Avatar name={action.owner.nickname} size="sm" />
+              <span className="truncate text-xs text-neutral-600">
+                @{action.owner.nickname}
+              </span>
+              <span className="shrink-0 text-xs text-neutral-400">·</span>
+              <span className="shrink-0 text-xs text-neutral-500">
+                {action.crewCount ?? 0}명 참여 중
+              </span>
+            </div>
+            <span className="flex items-center gap-3 text-xs tabular-nums text-neutral-500 shrink-0">
               <span>♥ {action.likeCount}</span>
               <span>🔖 {action.saveCount}</span>
               <span>👥 {action.crewCount}</span>
