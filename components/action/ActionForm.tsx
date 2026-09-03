@@ -11,7 +11,7 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -60,6 +60,10 @@ export interface ActionFormInitial {
 const input =
   'h-12 rounded-xl border border-neutral-300 px-4 text-[15px] outline-none focus:border-neutral-900';
 const label = 'text-[13px] font-medium text-neutral-700';
+const RECRUIT_END_ERROR =
+  '모집 마감은 활동 시작보다 앞서야 해요. 마감일을 활동 시작일 이전으로 바꿔주세요.';
+const ACTIVITY_END_ERROR =
+  '활동 종료는 활동 시작보다 뒤여야 해요. 종료 시각을 다시 확인해주세요.';
 
 export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const router = useRouter();
@@ -81,6 +85,12 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   );
   const [activityEnd, setActivityEnd] = useState(toLocalInput(initial.activityEndAt));
   const [items, setItems] = useState<ActionItemInput[]>(initial.items);
+  const [dateError, setDateError] = useState<{
+    field: 'recruitEnd' | 'activityEnd';
+    message: string;
+  } | null>(null);
+  const recruitEndRef = useRef<HTMLInputElement>(null);
+  const activityEndRef = useRef<HTMLInputElement>(null);
 
   const [busy, setBusy] = useState(false);
   const [review, setReview] = useState<ReviewResult | null>(null);
@@ -124,7 +134,16 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     );
 
     if (!saved.ok) {
-      toast(saved.message, 'error');
+      if (saved.message === RECRUIT_END_ERROR || saved.message === ACTIVITY_END_ERROR) {
+        const field = saved.message === RECRUIT_END_ERROR ? 'recruitEnd' : 'activityEnd';
+        const target = field === 'recruitEnd' ? recruitEndRef.current : activityEndRef.current;
+
+        setDateError({ field, message: saved.message });
+        target?.focus({ preventScroll: true });
+        target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        toast(saved.message, 'error');
+      }
       return null;
     }
 
@@ -295,11 +314,20 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         <label className="flex flex-col gap-1.5">
           <span className="text-[12px] text-neutral-500">모집 마감</span>
           <input
+            ref={recruitEndRef}
             type="datetime-local"
             value={recruitEnd}
-            onChange={(e) => setRecruitEnd(e.target.value)}
+            onChange={(e) => {
+              setRecruitEnd(e.target.value);
+              if (dateError?.field === 'recruitEnd') setDateError(null);
+            }}
             className={input}
           />
+          {dateError?.field === 'recruitEnd' && (
+            <span className="text-[12px] text-red-600" role="alert">
+              {dateError.message}
+            </span>
+          )}
         </label>
 
         <label className="flex flex-col gap-1.5">
@@ -307,7 +335,10 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           <input
             type="datetime-local"
             value={activityStart}
-            onChange={(e) => setActivityStart(e.target.value)}
+            onChange={(e) => {
+              setActivityStart(e.target.value);
+              setDateError(null);
+            }}
             className={input}
           />
         </label>
@@ -315,11 +346,20 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         <label className="flex flex-col gap-1.5">
           <span className="text-[12px] text-neutral-500">활동 종료</span>
           <input
+            ref={activityEndRef}
             type="datetime-local"
             value={activityEnd}
-            onChange={(e) => setActivityEnd(e.target.value)}
+            onChange={(e) => {
+              setActivityEnd(e.target.value);
+              if (dateError?.field === 'activityEnd') setDateError(null);
+            }}
             className={input}
           />
+          {dateError?.field === 'activityEnd' && (
+            <span className="text-[12px] text-red-600" role="alert">
+              {dateError.message}
+            </span>
+          )}
         </label>
 
         <p className="text-[11px] text-neutral-400">
