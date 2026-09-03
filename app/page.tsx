@@ -92,15 +92,15 @@ export default async function HomePage({
       {/* 필터 영역 (카테고리 + 정렬) */}
       <div className="flex flex-col gap-3 px-5 pb-4">
         {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다 */}
-        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <Link href={makeCategoryUrl(undefined)} scroll={false}>
-            <Chip selected={!selected} as="span">
+        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-5 px-5 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <Link href={makeCategoryUrl(undefined)} scroll={false} className="shrink-0">
+            <Chip selected={!selected} as="span" className="whitespace-nowrap">
               전체
             </Chip>
           </Link>
           {CATEGORIES.map((c) => (
-            <Link key={c} href={makeCategoryUrl(c)} scroll={false}>
-              <Chip selected={selected === c} as="span">
+            <Link key={c} href={makeCategoryUrl(c)} scroll={false} className="shrink-0">
+              <Chip selected={selected === c} as="span" className="whitespace-nowrap">
                 {c}
               </Chip>
             </Link>

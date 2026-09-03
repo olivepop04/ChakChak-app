@@ -30,7 +30,7 @@ export function Chip({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'inline-flex items-center justify-center rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors',
+        'inline-flex items-center justify-center whitespace-nowrap rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors',
         selected
           ? 'border-neutral-900 bg-neutral-900 text-white'
           : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50',
