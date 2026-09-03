@@ -9,19 +9,21 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getActionDetail } from '@/lib/queries/actions';
+import { getActionCrew } from '@/lib/queries/participations';
 import { QuotaProgress } from '@/components/action/QuotaProgress';
 import { ActionGallery } from '@/components/action/ActionGallery';
 import { AddressBox } from '@/components/action/AddressBox';
 import { MessageAccessButton } from '@/components/action/MessageAccessButton';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusBadge } from '@/components/ui/Badge';
-import { LikeButton, SaveButton, FollowButton } from '@/components/ui/ToggleButtons';
+import { LikeButton, SaveButton, ShareButton, FollowButton } from '@/components/ui/ToggleButtons';
 import { Header } from '@/components/layout/Header';
 import {
   formatActivityPeriod,
   formatDateShort,
   timeUntilDeadline,
 } from '@/lib/utils/date';
+import type { UserSummary, CrewMember } from '@/lib/types/view';
 
 export default async function ActionDetailPage({
   params,
@@ -35,8 +37,34 @@ export default async function ActionDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const action = await getActionDetail(supabase, id, user?.id ?? null);
+  let action = null;
+  try {
+    action = await getActionDetail(supabase, id, user?.id ?? null);
+  } catch {
+    notFound();
+  }
   if (!action) notFound();
+
+  const isCrewMember =
+    action.isOwner ||
+    (!!action.myParticipation && action.myParticipation !== 'LEFT');
+
+  let crewOwner: UserSummary | null = null;
+  let crew: CrewMember[] = [];
+
+  if (isCrewMember) {
+    try {
+      const res = await getActionCrew(supabase, id, user?.id ?? null);
+      crewOwner = res.owner;
+      crew = res.crew;
+    } catch {
+      // Crew 조회 실패 시 기본값 fallback
+    }
+  }
+
+  const displayMembers = isCrewMember
+    ? (crewOwner ? [crewOwner, ...crew] : crew).slice(0, 4)
+    : [];
 
   const deadline = timeUntilDeadline(action.recruitEndAt);
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
@@ -140,26 +168,43 @@ export default async function ActionDetailPage({
 
         {/* 만든 사람 */}
         <div className="flex items-center gap-3">
-          <Link href={`/user/${action.owner.id}`} className="flex items-center gap-3">
-            <Avatar name={action.owner.nickname} />
+          <Link href={`/user/${action.owner?.id ?? ''}`} className="flex items-center gap-3">
+            <Avatar name={action.owner?.nickname ?? '?'} />
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-neutral-900">
-                @{action.owner.nickname}
+                @{action.owner?.nickname ?? '알 수 없음'}
               </span>
-              {action.owner.bio && (
+              {action.owner?.bio && (
                 <span className="line-clamp-1 text-[12px] text-neutral-500">
                   {action.owner.bio}
                 </span>
               )}
             </div>
           </Link>
-          {user && !action.isOwner && (
+          {user && !action.isOwner && action.owner?.id && (
             <FollowButton
               targetUserId={action.owner.id}
               initialFollowing={action.followingOwner}
               className="ml-auto"
             />
           )}
+        </div>
+
+        {/* 상단 버튼 그룹 (좋아요 · 저장 · 공유) */}
+        <div className="flex items-center gap-1 border-y border-neutral-100 py-2">
+          <LikeButton
+            actionId={action.id}
+            initialLiked={action.likedByMe}
+            initialCount={action.likeCount}
+          />
+          <SaveButton
+            actionId={action.id}
+            initialSaved={action.savedByMe}
+            initialCount={action.saveCount}
+          />
+          <ShareButton
+            actionId={action.id}
+          />
         </div>
 
         {/* 소개 */}
@@ -215,22 +260,41 @@ export default async function ActionDetailPage({
           </section>
         )}
 
-        {/* 좋아요 · 저장 */}
-        <div className="flex items-center gap-1 border-t border-neutral-100 pt-4">
-          <LikeButton
-            actionId={action.id}
-            initialLiked={action.likedByMe}
-            initialCount={action.likeCount}
-          />
-          <SaveButton
-            actionId={action.id}
-            initialSaved={action.savedByMe}
-            initialCount={action.saveCount}
-          />
-          <span className="ml-auto text-[13px] text-neutral-500">
-            {action.crewCount}명이 함께해요
-          </span>
-        </div>
+        {/* 함께 하는 사람들 */}
+        <section className="flex flex-col gap-3 pt-2">
+          <h2 className="text-[15px] font-bold text-neutral-900">함께 하는 사람들</h2>
+          <Link
+            href={`/action/${id}/crew`}
+            className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+          >
+            {isCrewMember ? (
+              <div className="flex items-center gap-3">
+                {displayMembers.length > 0 && (
+                  <div className="flex -space-x-2 overflow-hidden">
+                    {displayMembers.map((member, idx) => (
+                      <Avatar
+                        key={member.id || idx}
+                        name={member.nickname ?? '?'}
+                        size="sm"
+                        className="ring-2 ring-white"
+                      />
+                    ))}
+                  </div>
+                )}
+                <span className="text-[14px] font-semibold text-neutral-800">
+                  {action.crewCount}명 참여 중
+                </span>
+              </div>
+            ) : (
+              <span className="text-[14px] font-semibold text-neutral-800">
+                {action.crewCount}명이 함께해요
+              </span>
+            )}
+            <span className="text-[13px] font-medium text-neutral-400">
+              전체보기 ›
+            </span>
+          </Link>
+        </section>
       </div>
 
       {/* 하단 고정 버튼 */}

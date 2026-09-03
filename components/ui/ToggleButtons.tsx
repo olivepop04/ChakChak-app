@@ -250,3 +250,48 @@ export function FollowButton({
     </button>
   );
 }
+
+// ─────────────────────────────────────────────────────────────
+export function ShareButton({
+  actionId,
+  className,
+}: {
+  actionId: string;
+  className?: string;
+}) {
+  const toast = useToast();
+
+  async function handleShare() {
+    const shareUrl =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/action/${actionId}`
+        : '';
+
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast('링크를 복사했어요.', 'success');
+      } else {
+        toast('주소창의 링크를 복사해주세요.', 'error');
+      }
+    } catch {
+      toast('복사에 실패했어요. 주소창의 링크를 직접 복사해주세요.', 'error');
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleShare}
+      aria-label="공유"
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100',
+        className,
+      )}
+    >
+      <span aria-hidden="true">↗</span>
+      <span>공유</span>
+    </button>
+  );
+}
+
