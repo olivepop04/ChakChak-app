@@ -13,18 +13,13 @@ import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { UserSummary } from '@/lib/types/view';
 
-function CrewRow({ person, isOwner }: { person: UserSummary; isOwner?: boolean }) {
+function CrewRow({ person }: { person: UserSummary; isOwner?: boolean }) {
   return (
     <li className="flex items-center gap-3 px-5 py-3.5">
       <Avatar name={person.nickname} />
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
+        <p className="text-sm font-semibold text-neutral-900">
           @{person.nickname}
-          {isOwner && (
-            <span className="rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
-              호스트
-            </span>
-          )}
         </p>
         <p className="text-[12px] text-neutral-500">
           참여 {person.participatedCount}개 · 호스트 {person.ledCount}개
@@ -64,7 +59,7 @@ export default async function CrewPage({
   const groups = groupCrewByItem(crew);
 
   return (
-    <main className="pb-10">
+    <main className="pb-36">
       <Header title="THE CREW" back backHref={`/action/${id}`} sticky />
 
       <div className="px-5 py-5">
@@ -167,6 +162,30 @@ export default async function CrewPage({
           </ul>
         )}
       </section>
+
+      {/* 하단 고정 버튼 */}
+      <div className="fixed inset-x-0 bottom-14 z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
+        <Link
+          href={`/action/${id}/chat`}
+          className="flex h-14 w-full items-center justify-center rounded-xl bg-neutral-900 text-base font-bold text-white shadow-sm transition-colors active:bg-neutral-800"
+        >
+          <svg
+            className="mr-2.5 h-5 w-5 flex-none"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+          <span>함께하는 사람들과 이야기하기</span>
+        </Link>
+      </div>
     </main>
   );
 }
