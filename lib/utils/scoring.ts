@@ -4,12 +4,9 @@
  * ★ 점수는 코드가 계산합니다. AI 는 의도 해석과 추천 이유 설명만 합니다.
  *   AI 에게 순위를 매기게 하면 매번 결과가 달라져서 검증할 수 없습니다.
  *
- * 배점 (합계 100)
- *   관심 카테고리 일치      30
- *   활동 가능 지역 일치      25
- *   참여 가능 요일 일치      20
- *   참여 방식 일치          15
- *   팔로우한 사람의 액션     10
+ * 2026-09-03 회의에서 확정한 V4 최소 범위
+ *   관심 분야 25 · 재능 활용 15 · 지역/이동 20 · 시간 15
+ *   모임 규모 10 · 참여 방식 10 · 팔로우 5 · 분야 선호 ±10
  *
  * 거리(km)는 계산하지 않습니다. 액션에 좌표가 없고, 지오코딩을 붙이면
  * MVP 범위를 넘어섭니다. 시·군·구 이름이 겹치는지로만 봅니다 (팀 합의 D13).
@@ -18,9 +15,16 @@ import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 import { isWeekend } from '@/lib/utils/date';
 import type { TimePref, TimeSlot } from '@/lib/constants';
 import type { ActionCardData } from '@/lib/types/view';
+import {
+  sameProvince,
+  scoreAdaptiveTraits,
+  type AdaptiveScoringAnswers,
+} from '@/lib/utils/discover-ranking';
 
 export interface ScoringProfile {
   categories: string[];
+  skills: string[];
+  historyCategories: string[];
   /** 새 2단계 참여 가능 시간. 있으면 이 값을 우선 사용합니다. */
   timePrefs: TimePref[];
   /** 아직 time_prefs 가 없는 기존 회원을 위한 이전 값 */
@@ -37,6 +41,17 @@ export interface ScoringAnswers {
   category?: string | null;
   /** 'near' | 'city' | 'any' */
   range?: string | null;
+  talentPreference?: AdaptiveScoringAnswers['talentPreference'];
+  groupSizePreference?: AdaptiveScoringAnswers['groupSizePreference'];
+  fieldPreference?: AdaptiveScoringAnswers['fieldPreference'];
+  travelRange?: 'exact' | 'province' | 'any' | null;
+}
+
+export interface ActionScoringMetadata {
+  participationModes: string[];
+  skills: string[];
+  /** 사람 모집 항목의 최대 인원 합계. 최소 모집이면 min_required 합계 */
+  groupSize: number | null;
 }
 
 export interface ScoredAction {
@@ -88,7 +103,11 @@ export function scoreAction(
   action: ActionCardData,
   profile: ScoringProfile,
   answers: ScoringAnswers,
-  aiModes: string[] = [],
+  metadata: ActionScoringMetadata = {
+    participationModes: [],
+    skills: [],
+    groupSize: null,
+  },
 ): ScoredAction {
   let score = 0;
   const matched: string[] = [];
@@ -103,16 +122,24 @@ export function scoreAction(
   );
   const wantsAll = wanted.has('전체');
   if (wantsAll || wanted.has(action.category)) {
-    score += 30;
+    score += 25;
     matched.push(wantsAll ? '관심 분야' : `관심 분야(${action.category})`);
   }
 
   // 2) 활동 가능 지역
-  if (answers.range === 'any' || profile.regions.includes(NATIONWIDE)) {
-    score += 25 * 0.6; // 어디든 좋다면 지역 점수는 절반만 (변별력이 없으므로)
+  const travelRange = answers.travelRange ?? answers.range;
+  if (travelRange === 'any' || profile.regions.includes(NATIONWIDE)) {
+    score += 12;
+    matched.push('지역 상관없음');
   } else if (matchesRegion(action.address, profile.regions)) {
-    score += 25;
+    score += 20;
     matched.push('가까운 지역');
+  } else if (
+    travelRange === 'province' &&
+    sameProvince(action.address, profile.regions)
+  ) {
+    score += 16;
+    matched.push('같은 시·도');
   }
 
   // 3) 참여 가능 요일·시간대 — 새 2단계 설정을 우선 사용합니다.
@@ -125,22 +152,40 @@ export function scoreAction(
       (!weekend && profile.availableTimes.includes('평일')) ||
       profile.availableTimes.includes('시간이 생길 때마다'));
   if (timeMatch.matched || legacyTimeMatch) {
-    score += 20;
+    score += 15;
     matched.push(timeMatch.label || (weekend ? '주말 활동' : '평일 활동'));
   }
 
   // 4) 참여 방식
-  const modes = aiModes.length > 0 ? aiModes : [guessMode(action)];
+  const modes =
+    metadata.participationModes.length > 0
+      ? metadata.participationModes
+      : [guessMode(action)];
   if (answers.participationMode && modes.includes(answers.participationMode)) {
-    score += 15;
+    score += 10;
     matched.push(answers.participationMode);
   }
 
   // 5) 팔로우한 사람이 만든 액션
   if (profile.followingIds.includes(action.owner.id)) {
-    score += 10;
+    score += 5;
     matched.push('팔로우한 사람의 액션');
   }
+
+  const adaptive = scoreAdaptiveTraits({
+    profileSkills: profile.skills,
+    historyCategories: profile.historyCategories,
+    actionCategory: action.category,
+    actionSkills: metadata.skills,
+    actionGroupSize: metadata.groupSize,
+    answers: {
+      talentPreference: answers.talentPreference ?? null,
+      groupSizePreference: answers.groupSizePreference ?? null,
+      fieldPreference: answers.fieldPreference ?? null,
+    },
+  });
+  score += adaptive.score;
+  matched.push(...adaptive.matched);
 
   return { action, score: Math.round(score), matched };
 }
@@ -150,11 +195,13 @@ export function rankActions(
   actions: ActionCardData[],
   profile: ScoringProfile,
   answers: ScoringAnswers,
-  modesByAction: Record<string, string[]> = {},
+  metadataByAction: Record<string, ActionScoringMetadata> = {},
   take = 3,
 ): ScoredAction[] {
   return actions
-    .map((a) => scoreAction(a, profile, answers, modesByAction[a.id] ?? []))
+    .map((a) =>
+      scoreAction(a, profile, answers, metadataByAction[a.id]),
+    )
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       // 점수가 같으면 활동일이 가까운 것을 먼저

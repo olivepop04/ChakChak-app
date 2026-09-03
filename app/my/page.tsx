@@ -140,13 +140,6 @@ export default async function MyPage() {
             알림 설정
             <span className="text-neutral-300">›</span>
           </Link>
-          <Link
-            href="/my/edit"
-            className="flex items-center justify-between px-5 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
-          >
-            비밀번호 변경
-            <span className="text-neutral-300">›</span>
-          </Link>
           <LogoutButton />
         </div>
       </section>

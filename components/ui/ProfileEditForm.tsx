@@ -8,6 +8,7 @@ import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
 import { useToast } from '@/components/ui/Toast';
 import { TimePreferenceEditor } from '@/app/my/_components/TimePreferenceEditor';
+import { TalentPreferenceEditor } from '@/app/my/_components/TalentPreferenceEditor';
 import {
   CATEGORIES,
   GENDER_LABEL,
@@ -27,6 +28,7 @@ interface Initial {
   nickname: string;
   gender: Gender;
   bio: string;
+  skills: string[] | null;
   categories: string[];
   /** @deprecated timePrefs 로 옮기는 중입니다. 추천 점수가 아직 이 값을 씁니다 */
   availableTimes: string[];
@@ -53,6 +55,7 @@ export function ProfileEditForm({
 
   const [nickname, setNickname] = useState(initial.nickname);
   const [bio, setBio] = useState(initial.bio);
+  const [skills, setSkills] = useState<string[] | null>(initial.skills);
   const [categories, setCategories] = useState(initial.categories);
   const [timePrefs, setTimePrefs] = useState<TimePref[]>(
     initial.timePrefs.length > 0
@@ -115,6 +118,7 @@ export function ProfileEditForm({
     const res = await updateProfile(supabase, userId, {
       nickname: nick,
       bio,
+      skills,
       categories,
       regions,
       timePrefs,
@@ -184,6 +188,11 @@ export function ProfileEditForm({
           className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
         />
       </label>
+
+      <div className="flex flex-col gap-2.5">
+        <span className={label}>나눌 수 있는 재능</span>
+        <TalentPreferenceEditor value={skills} onChange={setSkills} />
+      </div>
 
       <div className="flex flex-col gap-2.5">
         <span className={label}>관심 카테고리</span>

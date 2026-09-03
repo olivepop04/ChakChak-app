@@ -14,14 +14,16 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
 import { TimePreferenceEditor } from '@/app/my/_components/TimePreferenceEditor';
+import { TalentPreferenceEditor } from '@/app/my/_components/TalentPreferenceEditor';
+import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
 import { isNicknameTaken, updateProfile } from '@/lib/mutations';
 import {
   CATEGORIES,
@@ -37,8 +39,10 @@ const CATEGORY_OPTIONS = ['전체', ...CATEGORIES] as const;
 const inputClass =
   'h-12 rounded-xl border border-neutral-300 px-4 text-[15px] outline-none focus:border-neutral-900';
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = safeNextPath(searchParams.get('next'));
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -61,6 +65,7 @@ export default function SignUpPage() {
     { day: '상관없음', slots: ['상관없음'] },
   ]);
   const [regions, setRegions] = useState<string[]>([]);
+  const [skills, setSkills] = useState<string[] | null>(null);
 
   function toggleCategory(value: (typeof CATEGORY_OPTIONS)[number]) {
     if (value === '전체') {
@@ -150,10 +155,11 @@ export default function SignUpPage() {
         categories,
         regions,
         timePrefs,
+        skills,
       });
     }
 
-    router.push('/');
+    router.push(next);
     router.refresh();
   }
 
@@ -269,6 +275,9 @@ export default function SignUpPage() {
                 onChange={(e) => setName(e.target.value)}
                 className={inputClass}
               />
+              <span className="text-[11px] text-neutral-400">
+                안전한 활동 참여를 위해 실명 사용을 권장해요.
+              </span>
             </label>
 
             <label className="flex flex-col gap-1.5">
@@ -343,6 +352,14 @@ export default function SignUpPage() {
 
             <div className="flex flex-col gap-2.5">
               <span className="text-[13px] font-medium text-neutral-700">
+                나눌 수 있는 재능이 있으신가요?{' '}
+                <span className="font-normal text-neutral-400">(선택)</span>
+              </span>
+              <TalentPreferenceEditor value={skills} onChange={setSkills} />
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <span className="text-[13px] font-medium text-neutral-700">
                 활동 가능 지역
               </span>
               <RegionPicker value={regions} onChange={setRegions} />
@@ -405,11 +422,22 @@ export default function SignUpPage() {
       {step === 1 && (
         <p className="mt-5 text-center text-[13px] text-neutral-500">
           이미 계정이 있나요?{' '}
-          <Link href="/login" className="font-semibold text-neutral-900 underline">
+          <Link
+            href={withNext('/login', next)}
+            className="font-semibold text-neutral-900 underline"
+          >
             로그인
           </Link>
         </p>
       )}
     </main>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-neutral-400">불러오는 중…</div>}>
+      <SignUpForm />
+    </Suspense>
   );
 }

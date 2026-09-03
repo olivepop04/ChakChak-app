@@ -13,11 +13,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') ?? '/';
+  const next = safeNextPath(searchParams.get('next'));
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -97,7 +98,10 @@ function LoginForm() {
 
       <p className="mt-6 text-center text-[13px] text-neutral-500">
         아직 계정이 없나요?{' '}
-        <Link href="/signup" className="font-semibold text-neutral-900 underline">
+        <Link
+          href={withNext('/signup', next)}
+          className="font-semibold text-neutral-900 underline"
+        >
           가입하기
         </Link>
       </p>

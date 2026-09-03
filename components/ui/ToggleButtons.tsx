@@ -69,27 +69,106 @@ export function LikeButton({
   initialCount: number;
   className?: string;
 }) {
+  const pathname = usePathname();
+  const [checkingAuth, setCheckingAuth] = useState(false);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const { on, count, handle } = useOptimisticToggle(
     initialLiked,
     initialCount,
     (sb, cur) => toggleLike(sb, actionId, cur),
   );
 
+  useEffect(() => {
+    if (!loginPromptOpen) return;
+    function closeWithEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setLoginPromptOpen(false);
+    }
+    document.addEventListener('keydown', closeWithEscape);
+    return () => document.removeEventListener('keydown', closeWithEscape);
+  }, [loginPromptOpen]);
+
+  async function handleLike() {
+    if (checkingAuth) return;
+    setCheckingAuth(true);
+    try {
+      const {
+        data: { user },
+      } = await createClient().auth.getUser();
+      if (!user) {
+        setLoginPromptOpen(true);
+        return;
+      }
+      await handle();
+    } finally {
+      setCheckingAuth(false);
+    }
+  }
+
   return (
-    <button
-      type="button"
-      onClick={handle}
-      aria-pressed={on}
-      aria-label="좋아요"
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors',
-        on ? 'text-rose-600' : 'text-neutral-500 hover:bg-neutral-100',
-        className,
+    <>
+      <button
+        type="button"
+        onClick={handleLike}
+        disabled={checkingAuth}
+        aria-busy={checkingAuth}
+        aria-pressed={on}
+        aria-label="좋아요"
+        className={cn(
+          'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
+          on ? 'text-rose-600' : 'text-neutral-500 hover:bg-neutral-100',
+          className,
+        )}
+      >
+        <span aria-hidden="true">{on ? '♥' : '♡'}</span>
+        <span className="tabular-nums">{count}</span>
+      </button>
+
+      {loginPromptOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-4 sm:items-center"
+          onClick={() => setLoginPromptOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="like-login-title"
+            className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span
+              aria-hidden="true"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-xl"
+            >
+              ♡
+            </span>
+            <h2
+              id="like-login-title"
+              className="mt-4 text-[17px] font-bold text-neutral-900"
+            >
+              로그인하고 관심을 표현해보세요
+            </h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+              로그인하고 나에게 맞는 활동을 추천받아 보세요. 마음에 든
+              액션에는 좋아요도 남길 수 있어요.
+            </p>
+            <Link
+              href={`/login?next=${encodeURIComponent(pathname)}`}
+              autoFocus
+              className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-neutral-900 text-[14px] font-semibold text-white"
+            >
+              로그인하고 계속하기
+            </Link>
+            <button
+              type="button"
+              onClick={() => setLoginPromptOpen(false)}
+              className="mt-2 h-11 w-full rounded-xl text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
+            >
+              다음에 할게요
+            </button>
+          </div>
+        </div>
       )}
-    >
-      <span aria-hidden="true">{on ? '♥' : '♡'}</span>
-      <span className="tabular-nums">{count}</span>
-    </button>
+    </>
   );
 }
 

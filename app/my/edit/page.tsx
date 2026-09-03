@@ -33,6 +33,7 @@ export default async function ProfileEditPage() {
           nickname: profile.nickname,
           gender: profile.gender,
           bio: profile.bio ?? '',
+          skills: profile.skills,
           categories: profile.categories,
           availableTimes: profile.availableTimes,
           timePrefs: profile.timePrefs,

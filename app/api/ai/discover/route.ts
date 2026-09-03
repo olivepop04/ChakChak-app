@@ -3,7 +3,7 @@
  *
  * AI가 하는 일
  *   1) 프로필과 지난 활동을 보고 다음 성향 질문을 고른다
- *   2) 최대 3개의 답에서 허용된 추천 조건만 뽑는다
+ *   2) 부족한 정보만 최대 4번 묻고 허용된 추천 조건만 뽑는다
  *   3) 코드가 고른 후보를 설명하는 이유를 쓴다
  *
  * 코드가 하는 일
@@ -27,13 +27,21 @@ import {
   rankActions,
   fallbackReason,
   type ScoringProfile,
+  type ActionScoringMetadata,
 } from '@/lib/utils/scoring';
-import { CATEGORIES, type Category } from '@/lib/constants';
+import { sameProvince, totalGroupSize } from '@/lib/utils/discover-ranking';
+import {
+  extractAdaptiveAnswers,
+  getRemainingQuestionKeys,
+  shouldRecommendNow,
+  type QuestionKey,
+} from '@/app/api/ai/discover/interview';
+import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 
-const CHAT_PROMPT_VERSION = 'discover-chat-v2';
-const REASON_PROMPT_VERSION = 'discover-reason-v2';
-const MAX_USER_TURNS = 3;
+const CHAT_PROMPT_VERSION = 'discover-chat-v3-adaptive';
+const REASON_PROMPT_VERSION = 'discover-reason-v3-adaptive';
+const MAX_USER_TURNS = 4;
 const PARTICIPATION_MODES = [
   '시간을 내서',
   '물건으로',
@@ -52,7 +60,18 @@ const ChatRequestSchema = z.object({
 
 const ConversationSchema = z.object({
   reply: z.string().trim().min(1).max(180),
-  options: z.array(z.string().trim().min(1).max(40)).max(4).default([]),
+  question_key: z
+    .enum([
+      'skills',
+      'talent_preference',
+      'group_size',
+      'field_preference',
+      'travel_range',
+    ])
+    .nullable()
+    .default(null),
+  enough: z.boolean().default(false),
+  options: z.array(z.string().trim().min(1).max(40)).max(6).default([]),
   categories: z.array(z.string()).default([]),
   participation_mode: z.enum(PARTICIPATION_MODES).nullable().default(null),
 });
@@ -71,10 +90,12 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 추천 대화 �
 
 대화 규칙
 - 프로필에 이미 있는 카테고리, 지역, 참여 가능 시간은 다시 묻지 마세요.
-- 활동 이력이 있으면 첫 질문에서 비슷한 활동과 새로운 활동 중 무엇을 원하는지 물으세요.
-- 활동 이력이 없으면 기분, 몸/머리 사용, 일회성/꾸준함 같은 성향만 물으세요.
+- 서버가 준 남은 질문 중 추천 정확도에 가장 도움이 되는 하나만 question_key로 고르세요.
+- 활동 이력이 있을 때만 기존 분야와 새로운 분야 중 무엇을 원하는지 물으세요.
+- 추상적인 가치관, 뿌듯한 순간, 성격, 일회성/꾸준함은 묻지 마세요.
 - 한 번에 질문은 하나만 하고 선택지는 2~4개만 만드세요.
-- 사용자 답변이 3개가 되면 더 묻지 말고 짧게 추천을 시작한다고 말하며 options는 빈 배열로 주세요.
+- 이미 충분하면 enough를 true로 하고 question_key는 null로 주세요.
+- 최대 질문 수는 코드가 4번으로 제한합니다.
 - 전체 대화에서 추천 조건을 누적해서 뽑으세요.
 - categories는 아래 허용 목록 안에서만 고르세요.
   ${CATEGORIES.join(', ')}
@@ -83,7 +104,7 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 추천 대화 �
 - 액션 이름이나 순위는 만들지 마세요. 실제 후보 선정은 코드가 합니다.
 
 형식
-{"reply":"질문 또는 추천 시작 문장","options":["선택지"],"categories":[],"participation_mode":null}`;
+{"reply":"질문 또는 추천 시작 문장","question_key":"group_size","enough":false,"options":["선택지"],"categories":[],"participation_mode":null}`;
 
 const REASON_SYSTEM = `추천 이유를 친근한 한국어 한 문장으로 쓰고 JSON 형식으로만 답하세요.
 
@@ -95,18 +116,67 @@ const REASON_SYSTEM = `추천 이유를 친근한 한국어 한 문장으로 쓰
 
 형식: {"reasons":[{"actionId":"...","reason":"..."}]}`;
 
+function extractSkillsAnswer(messages: ChatMessage[]): string[] | null {
+  const userText = messages
+    .filter((message) => message.role === 'user')
+    .map((message) => message.content)
+    .join(' ');
+
+  if (userText.includes('재능 없음')) return [];
+  if (userText.includes('아직 모르겠음')) return null;
+
+  const selected = SKILLS.filter((skill) => {
+    const words = skill.split(/[·\s]+/).filter((word) => word.length >= 2);
+    return words.some((word) => userText.includes(word));
+  });
+  return selected.length > 0 ? selected : null;
+}
+
+const QUESTION_OPTIONS: Record<QuestionKey, string[]> = {
+  skills: [
+    '사진·영상·디자인',
+    '글쓰기·SNS 홍보',
+    '요리·운전',
+    '교육·통역',
+    '재능 없음',
+    '아직 모르겠음',
+  ],
+  talent_preference: ['재능을 활용하고 싶어요', '재능과 상관없어요'],
+  group_size: ['10명 이내가 좋아요', '인원이 많아도 괜찮아요'],
+  field_preference: ['비슷한 분야', '새로운 분야', '둘 다 좋아요'],
+  travel_range: ['선택 지역만', '같은 시·도까지', '지역 상관없음'],
+};
+
+function questionReply(
+  key: QuestionKey,
+  historyCategories: Category[],
+): string {
+  if (key === 'skills') {
+    return '프로필에 나눌 수 있는 재능이 아직 없어요. 가장 가까운 항목을 골라주세요.';
+  }
+  if (key === 'talent_preference') {
+    return '이번에는 가진 재능을 활용하는 액션을 우선해서 찾아볼까요?';
+  }
+  if (key === 'group_size') {
+    return '10명 이내의 작은 모임이 편한가요, 인원이 많아도 괜찮은가요?';
+  }
+  if (key === 'field_preference') {
+    const category = historyCategories[0] ?? '이전';
+    return `최근 ${category} 분야에 참여하셨네요. 비슷한 분야를 이어갈까요, 새로운 분야도 찾아볼까요?`;
+  }
+  return '활동 장소는 어느 정도까지 이동할 수 있나요?';
+}
+
 function fallbackConversation({
-  userTurnCount,
-  hasHistory,
   messages,
   historyCategories,
   profileCategories,
+  questionKey,
 }: {
-  userTurnCount: number;
-  hasHistory: boolean;
   messages: ChatMessage[];
   historyCategories: Category[];
   profileCategories: string[];
+  questionKey: QuestionKey | null;
 }): Conversation {
   const userText = messages
     .filter((message) => message.role === 'user')
@@ -138,38 +208,12 @@ function fallbackConversation({
     participationMode = '시간을 내서';
   }
 
-  if (userTurnCount === 0 && hasHistory) {
-    const historyLabel = historyCategories[0] ?? '이전';
+  if (questionKey) {
     return {
-      reply: `지난 ${historyLabel} 활동 기록을 참고했어요. 이번에는 비슷한 활동과 새로운 활동 중 어느 쪽이 끌리세요?`,
-      options: ['비슷한 활동', '새로운 활동'],
-      categories,
-      participation_mode: participationMode,
-    };
-  }
-
-  if (userTurnCount === 0) {
-    return {
-      reply: '오늘은 어떤 느낌의 좋은 일을 하고 싶으세요?',
-      options: ['차분하게 돕기', '활기차게 움직이기', '뿌듯함 느끼기'],
-      categories,
-      participation_mode: participationMode,
-    };
-  }
-
-  if (userTurnCount === 1) {
-    return {
-      reply: '이번에는 몸을 움직이는 일과 재능을 나누는 일 중 무엇이 더 좋아요?',
-      options: ['몸을 움직이고 싶어요', '재능을 나누고 싶어요', '물품으로 돕고 싶어요'],
-      categories,
-      participation_mode: participationMode,
-    };
-  }
-
-  if (userTurnCount === 2) {
-    return {
-      reply: '마지막으로, 한 번 가볍게 해볼까요 아니면 꾸준히 함께할까요?',
-      options: ['한 번 가볍게', '꾸준히 함께', '일정에 맞춰 유연하게'],
+      reply: questionReply(questionKey, historyCategories),
+      question_key: questionKey,
+      enough: false,
+      options: QUESTION_OPTIONS[questionKey],
       categories,
       participation_mode: participationMode,
     };
@@ -177,6 +221,8 @@ function fallbackConversation({
 
   return {
     reply: '좋아요. 지금까지 알려주신 성향을 바탕으로 액션을 골라봤어요.',
+    question_key: null,
+    enough: true,
     options: [],
     categories,
     participation_mode: participationMode,
@@ -230,6 +276,24 @@ export async function POST(request: Request) {
     ...new Set(history.map((action) => action.category)),
   ];
 
+  const userAnswers = messages
+    .filter((message) => message.role === 'user')
+    .map((message) => message.content);
+  const adaptiveAnswers = extractAdaptiveAnswers(userAnswers);
+  const inferredSkills = extractSkillsAnswer(messages);
+  const effectiveSkills = profile.skills === null ? inferredSkills : profile.skills;
+  const skillsAnswered =
+    profile.skills !== null ||
+    inferredSkills !== null ||
+    userAnswers.some((answer) => answer.includes('아직 모르겠음'));
+  const remainingQuestionKeys = getRemainingQuestionKeys({
+    skills: effectiveSkills,
+    skillsAnswered,
+    hasHistory: history.length > 0,
+    answers: adaptiveAnswers,
+  });
+  const fallbackQuestionKey = remainingQuestionKeys[0] ?? null;
+
   let conversation: Conversation;
   try {
     conversation = await callStructuredAI({
@@ -243,12 +307,14 @@ export async function POST(request: Request) {
           관심카테고리: profile.categories,
           활동지역: profile.regions,
           참여가능시간: profile.timePrefs,
+          나눌수있는재능: effectiveSkills,
         },
         지난활동: history.slice(0, 5).map((action) => ({
           제목: action.title,
           카테고리: action.category,
         })),
         사용자답변수: userTurnCount,
+        남은질문: remainingQuestionKeys,
         대화: messages,
       }),
       schema: ConversationSchema,
@@ -256,47 +322,48 @@ export async function POST(request: Request) {
     });
   } catch {
     conversation = fallbackConversation({
-      userTurnCount,
-      hasHistory: history.length > 0,
       messages,
       historyCategories,
       profileCategories: profile.categories,
+      questionKey: fallbackQuestionKey,
     });
   }
 
-  // 시연 때 AI가 과거 활동을 받았는데도 두루뭉술하게 말하는 경우를 막습니다.
-  // 첫 질문에는 실제 참여 카테고리를 최소 하나 포함해, 과거 기록을 썼다는 점이 보이게 합니다.
-  if (
-    userTurnCount === 0 &&
-    historyCategories.length > 0 &&
-    !historyCategories.some((category) => conversation.reply.includes(category))
-  ) {
-    conversation = {
-      ...conversation,
-      reply: `지난 ${historyCategories[0]} 활동 기록을 참고했어요. ${conversation.reply}`,
-    };
-  }
+  const chosenQuestionKey =
+    conversation.question_key &&
+    remainingQuestionKeys.includes(conversation.question_key)
+      ? conversation.question_key
+      : fallbackQuestionKey;
+  const recommendNow = shouldRecommendNow({
+    userTurnCount,
+    enough: conversation.enough,
+    remainingCount: remainingQuestionKeys.length,
+  });
 
-  // AI가 더 묻고 싶어 해도 세 번 답하면 코드가 대화를 끝냅니다.
-  if (userTurnCount < MAX_USER_TURNS) {
+  if (!recommendNow && chosenQuestionKey) {
     const fallback = fallbackConversation({
-      userTurnCount,
-      hasHistory: history.length > 0,
       messages,
       historyCategories,
       profileCategories: profile.categories,
+      questionKey: chosenQuestionKey,
     });
-    const hasUsableOptions = conversation.options.length >= 2;
+    const aiAskedChosenQuestion =
+      conversation.question_key === chosenQuestionKey;
 
     return NextResponse.json({
       done: false,
-      reply: hasUsableOptions ? conversation.reply : fallback.reply,
-      options: hasUsableOptions ? conversation.options : fallback.options,
+      reply: aiAskedChosenQuestion ? conversation.reply : fallback.reply,
+      options: QUESTION_OPTIONS[chosenQuestionKey],
+      questionKey: chosenQuestionKey,
+      answeredCount: userTurnCount,
+      maxQuestions: MAX_USER_TURNS,
     });
   }
 
   const scoringProfile: ScoringProfile = {
     categories: profile.categories,
+    skills: effectiveSkills ?? [],
+    historyCategories,
     timePrefs: profile.timePrefs,
     availableTimes: profile.availableTimes,
     regions: profile.regions,
@@ -304,11 +371,10 @@ export async function POST(request: Request) {
   };
 
   const fallback = fallbackConversation({
-    userTurnCount,
-    hasHistory: history.length > 0,
     messages,
     historyCategories,
     profileCategories: profile.categories,
+    questionKey: null,
   });
   let filterCategories = allowedCategories(conversation.categories);
   if (filterCategories.length === 0) {
@@ -324,12 +390,17 @@ export async function POST(request: Request) {
       : allCandidates;
 
   const hasRegionFilter =
-    profile.regions.length > 0 && !profile.regions.includes(NATIONWIDE);
-  let candidates = hasRegionFilter
-    ? categoryCandidates.filter((action) =>
-        matchesRegion(action.address, profile.regions),
-      )
-    : categoryCandidates;
+    profile.regions.length > 0 &&
+    !profile.regions.includes(NATIONWIDE) &&
+    adaptiveAnswers.travelRange !== 'any';
+  let candidates = categoryCandidates;
+  if (hasRegionFilter) {
+    candidates = categoryCandidates.filter((action) =>
+      adaptiveAnswers.travelRange === 'province'
+        ? sameProvince(action.address, profile.regions)
+        : matchesRegion(action.address, profile.regions),
+    );
+  }
   const relaxation: string[] = [];
 
   if (candidates.length === 0 && hasRegionFilter) {
@@ -352,16 +423,41 @@ export async function POST(request: Request) {
     });
   }
 
-  const modesByAction: Record<string, string[]> = {};
-  const { data: metas } = await supabase
-    .from('action_ai_metadata')
-    .select('action_id, participation_modes')
-    .in(
-      'action_id',
-      candidates.map((candidate) => candidate.id),
-    );
+  const candidateIds = candidates.map((candidate) => candidate.id);
+  const metadataByAction: Record<string, ActionScoringMetadata> = {};
+  const [{ data: metas }, { data: actionItems }] = await Promise.all([
+    supabase
+      .from('action_ai_metadata')
+      .select('action_id, participation_modes, skills')
+      .in('action_id', candidateIds),
+    supabase
+      .from('action_items')
+      .select('action_id, type, min_required, max_allowed')
+      .in('action_id', candidateIds),
+  ]);
+
+  const itemsByAction = new Map<
+    string,
+    Array<{ type: string; min_required: number; max_allowed: number | null }>
+  >();
+  for (const item of actionItems ?? []) {
+    const items = itemsByAction.get(item.action_id) ?? [];
+    items.push(item);
+    itemsByAction.set(item.action_id, items);
+  }
   for (const metadata of metas ?? []) {
-    modesByAction[metadata.action_id] = metadata.participation_modes ?? [];
+    metadataByAction[metadata.action_id] = {
+      participationModes: metadata.participation_modes ?? [],
+      skills: metadata.skills ?? [],
+      groupSize: totalGroupSize(itemsByAction.get(metadata.action_id) ?? []),
+    };
+  }
+  for (const candidateId of candidateIds) {
+    metadataByAction[candidateId] ??= {
+      participationModes: [],
+      skills: [],
+      groupSize: totalGroupSize(itemsByAction.get(candidateId) ?? []),
+    };
   }
 
   const participationMode =
@@ -373,8 +469,12 @@ export async function POST(request: Request) {
       participationMode,
       category: filterCategories.length === 1 ? filterCategories[0] : null,
       range: relaxation.length > 0 ? 'any' : null,
+      talentPreference: adaptiveAnswers.talentPreference ?? null,
+      groupSizePreference: adaptiveAnswers.groupSizePreference ?? null,
+      fieldPreference: adaptiveAnswers.fieldPreference ?? null,
+      travelRange: adaptiveAnswers.travelRange ?? null,
     },
-    modesByAction,
+    metadataByAction,
     3,
   );
 
