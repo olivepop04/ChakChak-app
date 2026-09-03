@@ -9,10 +9,10 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getActionResult } from '@/lib/queries/participations';
 import { Header } from '@/components/layout/Header';
-import { Avatar } from '@/components/ui/Avatar';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { CrewVoiceList } from '@/components/action/CrewVoiceList';
 import { describeResult, describeResultCount } from '@/lib/utils/quota';
-import { formatActivityPeriod, formatRelative } from '@/lib/utils/date';
+import { formatActivityPeriod } from '@/lib/utils/date';
 
 export default async function ResultPage({
   params,
@@ -172,29 +172,7 @@ export default async function ResultPage({
               아직 남겨진 소감이 없어요.
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
-              {result.crewVoices.map((v) => (
-                <li
-                  key={v.id}
-                  className="flex gap-3 rounded-xl border border-neutral-200 p-4"
-                >
-                  <Avatar name={v.author.nickname} size="sm" />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-[13px] font-semibold text-neutral-900">
-                        @{v.author.nickname}
-                      </span>
-                      <span className="text-[11px] text-neutral-400">
-                        {formatRelative(v.createdAt)}
-                      </span>
-                    </div>
-                    <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-neutral-700">
-                      {v.content}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <CrewVoiceList voices={result.crewVoices} />
           )}
         </section>
       </div>

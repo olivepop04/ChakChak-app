@@ -40,6 +40,13 @@ function toISO(local: string): string | null {
   return local ? new Date(local).toISOString() : null;
 }
 
+/** 종료 시각은 유지하고 날짜만 활동 시작일에 맞춥니다. */
+function moveToSameDate(value: string, activityStart: string): string {
+  const [startDate] = activityStart.split('T');
+  const [, time] = value.split('T');
+  return startDate && time ? `${startDate}T${time}` : value;
+}
+
 export interface ActionFormInitial {
   id: string | null;
   title: string;
@@ -68,6 +75,8 @@ const ACTIVITY_END_ERROR =
 export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const router = useRouter();
   const toast = useToast();
+  const initialActivityStart = toLocalInput(initial.activityStartAt);
+  const initialActivityEnd = toLocalInput(initial.activityEndAt);
 
   const [actionId, setActionId] = useState(initial.id);
   const [title, setTitle] = useState(initial.title);
@@ -80,10 +89,15 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const [address, setAddress] = useState(initial.address);
   const [notice, setNotice] = useState(initial.notice);
   const [recruitEnd, setRecruitEnd] = useState(toLocalInput(initial.recruitEndAt));
-  const [activityStart, setActivityStart] = useState(
-    toLocalInput(initial.activityStartAt),
+  const [activityStart, setActivityStart] = useState(initialActivityStart);
+  const [activityEnd, setActivityEnd] = useState(initialActivityEnd);
+  const [isSameDay, setIsSameDay] = useState(
+    initial.id === null ||
+      (!initialActivityStart && !initialActivityEnd) ||
+      (!!initialActivityStart &&
+        !!initialActivityEnd &&
+        initialActivityStart.split('T')[0] === initialActivityEnd.split('T')[0]),
   );
-  const [activityEnd, setActivityEnd] = useState(toLocalInput(initial.activityEndAt));
   const [items, setItems] = useState<ActionItemInput[]>(initial.items);
   const [dateError, setDateError] = useState<{
     field: 'recruitEnd' | 'activityEnd';
@@ -336,21 +350,48 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             type="datetime-local"
             value={activityStart}
             onChange={(e) => {
-              setActivityStart(e.target.value);
+              const nextActivityStart = e.target.value;
+              setActivityStart(nextActivityStart);
+              if (isSameDay) {
+                setActivityEnd((current) => moveToSameDate(current, nextActivityStart));
+              }
               setDateError(null);
             }}
             className={input}
           />
         </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[12px] text-neutral-500">활동 종료</span>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-3">
+            <label htmlFor="activity-end" className="text-[12px] text-neutral-500">
+              활동 종료
+            </label>
+            <label className="flex items-center gap-1.5 text-[12px] text-neutral-600">
+              <input
+                type="checkbox"
+                checked={isSameDay}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setIsSameDay(checked);
+                  if (checked) {
+                    setActivityEnd((current) => moveToSameDate(current, activityStart));
+                    if (dateError?.field === 'activityEnd') setDateError(null);
+                  }
+                }}
+                className="h-4 w-4 rounded border-neutral-300 accent-neutral-900"
+              />
+              시작일과 같음
+            </label>
+          </div>
           <input
+            id="activity-end"
             ref={activityEndRef}
             type="datetime-local"
             value={activityEnd}
             onChange={(e) => {
-              setActivityEnd(e.target.value);
+              setActivityEnd(
+                isSameDay ? moveToSameDate(e.target.value, activityStart) : e.target.value,
+              );
               if (dateError?.field === 'activityEnd') setDateError(null);
             }}
             className={input}
@@ -360,7 +401,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
               {dateError.message}
             </span>
           )}
-        </label>
+        </div>
 
         <p className="text-[11px] text-neutral-400">
           모집 마감은 활동 시작보다 앞서야 해요. 활동 종료 시각이 지나면 자동으로
@@ -391,9 +432,6 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         />
       </label>
 
-      {/* AI 검수 결과 */}
-      {review && <ReviewPanel review={review} onPublish={handlePublish} busy={busy} />}
-
       {/* 하단 고정 버튼 */}
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-app gap-2 border-t border-neutral-200 bg-white p-4">
         <Button
@@ -414,6 +452,61 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         >
           액션 생성하기
         </Button>
+      </div>
+
+      {/* AI 검수 결과 팝업 */}
+      {review && (
+        <ReviewModal
+          review={review}
+          onPublish={handlePublish}
+          onClose={() => setReview(null)}
+          busy={busy}
+        />
+      )}
+    </div>
+  );
+}
+
+/** 이 화면에서만 쓰는 AI 검수 결과 팝업 */
+function ReviewModal({
+  review,
+  onPublish,
+  onClose,
+  busy,
+}: {
+  review: ReviewResult;
+  onPublish: () => void;
+  onClose: () => void;
+  busy: boolean;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !busy) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="review-modal-title"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-4 shadow-xl"
+      >
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 id="review-modal-title" className="text-[16px] font-bold text-neutral-900">
+            AI 검수 결과
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            aria-label="검수 결과 닫기"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-neutral-500 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            ×
+          </button>
+        </div>
+        <ReviewPanel review={review} onPublish={onPublish} busy={busy} />
       </div>
     </div>
   );
