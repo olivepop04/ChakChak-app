@@ -80,6 +80,32 @@ await supabase.from('action_items').insert([
 
 여러 행을 넣을 때는 **모든 컬럼을 빠짐없이 채우세요.** 모집 항목은 `saveActionItems()`가 이미 처리합니다.
 
+**9. 공개된 액션에 `saveActionItems()` 를 부르면 안 됩니다** — 그 함수는 "전부 지우고 다시 넣기" 방식입니다.
+
+`participation_items` 가 `ON DELETE CASCADE` 라, 항목을 지우면 **그 항목을 고른 크루들의 참여 기록이 함께 사라집니다.** 에러도 나지 않습니다.
+
+```ts
+// ❌ 공개된 액션에서 부르면 크루 전원의 항목 선택이 날아갑니다
+await saveActionItems(supabase, actionId, items);
+
+// ✅ 공개 뒤에는 추가만 합니다
+await addActionItems(supabase, actionId, newItems);
+```
+
+DB 트리거(`supabase/10`)가 막아주지만, **애초에 맞는 함수를 쓰세요.**
+DRAFT 는 무엇이든 가능하고, 공개된 뒤에는 수정·삭제가 거절됩니다.
+
+**10. `profiles.skills` 는 `null` 과 빈 배열이 다릅니다**
+
+```
+null      아직 안 물어봤음  → AI 가 물어봐도 됨
+[]        없다고 답함     → 다시 묻지 않음
+['사진']  있음            → 다시 묻지 않음
+```
+
+`?? []` 로 받으면 이 구분이 사라져서, **재능이 없는 사람에게 AI 가 계속 재능을 묻습니다.**
+재능은 자유 입력이 아니라 `lib/constants` 의 `SKILLS` 목록에서 고릅니다.
+
 ---
 
 ## 자주 쓰는 명령
@@ -150,7 +176,7 @@ if (!res.ok) { setError(res.message); return; }
 
 `joinAction` · `leaveAction` · `leaveActionWithReason` · `submitCrewVoice` ·
 `postChatMessage` · `deleteChatMessage` ·
-`saveActionDraft` · `updateActionText` · `saveActionItems` · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
+`saveActionDraft` · `updateActionText` · `saveActionItems` · **`addActionItems`** · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
 `updateProfile` · `isNicknameTaken` · `updateNotifySettings` ·
 `toggleLike` · `toggleSave` · `toggleFollow` · `shareToUser` · `markNotificationRead`
 
