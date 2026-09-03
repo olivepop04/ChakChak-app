@@ -10,12 +10,15 @@
  */
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
+import { LikeButton, SaveButton } from '@/components/ui/ToggleButtons';
 import { ACTION_STATUS_LABEL } from '@/lib/constants';
 import type { ActionCardData } from '@/lib/types/view';
 import { cn } from '@/lib/utils/cn';
 
 interface ActionCardProps {
   action: ActionCardData;
+  /** 카드를 기본 세로형(default)으로 보여줄지, 가로형(horizontal)으로 보여줄지 */
+  variant?: 'default' | 'horizontal';
   /** 카드 우측 하단에 상태 배지를 보여줄지 (Activity 에서 true) */
   showStatus?: boolean;
   /** 카드 아래에 덧붙일 내용. Activity 의 CTA 버튼 등 */
@@ -31,10 +34,112 @@ function formatDate(iso: string | null): string {
 
 export function ActionCard({
   action,
+  variant = 'default',
   showStatus = false,
   footer,
   className,
 }: ActionCardProps) {
+  if (variant === 'horizontal') {
+    return (
+      <article
+        className={cn(
+          'relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md',
+          className,
+        )}
+      >
+        {/* 1. 카드 전체 클릭 시 액션 상세로 이동하는 투명 덮개 링크 */}
+        <Link href={`/action/${action.id}`} className="absolute inset-0">
+          <span className="sr-only">{action.title}</span>
+        </Link>
+
+        {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
+        <div className="relative flex flex-row gap-3 p-3 w-full pointer-events-none">
+          {/* 좌측 썸네일 */}
+          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+            {action.thumbnailUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={action.thumbnailUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-xs text-neutral-400">
+                이미지 없음
+              </div>
+            )}
+            <span className="absolute left-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+              {action.category}
+            </span>
+            {showStatus && (
+              <span className="absolute right-1.5 top-1.5 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-neutral-700">
+                {ACTION_STATUS_LABEL[action.status]}
+              </span>
+            )}
+          </div>
+
+          {/* 우측 정보 */}
+          <div className="flex flex-1 flex-col justify-between min-w-0">
+            <div>
+              <h3 className="truncate text-[15px] font-bold leading-snug text-neutral-900">
+                {action.title}
+              </h3>
+
+              {action.summary && (
+                <p className="mt-0.5 line-clamp-1 text-xs text-neutral-500">
+                  {action.summary}
+                </p>
+              )}
+
+              <p className="mt-1 text-[11px] text-neutral-400">
+                {formatDate(action.activityStartAt)}
+                {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
+              </p>
+            </div>
+
+            {/* 3. 인터랙티브 요소들 (pointer-events-auto) */}
+            <div className="flex items-center justify-between pt-1.5">
+              {/* 작성자 프로필 링크 */}
+              <Link
+                href={`/user/${action.owner?.id}`}
+                className="pointer-events-auto flex items-center gap-1.5 min-w-0 text-xs text-neutral-600 hover:underline"
+              >
+                <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
+                <span className="truncate text-xs text-neutral-600">
+                  @{action.owner?.nickname ?? '호스트'}
+                </span>
+              </Link>
+
+              {/* 액션 버튼 그룹 & 참여자 수 */}
+              <div className="pointer-events-auto flex items-center gap-1 shrink-0">
+                <LikeButton
+                  actionId={action.id}
+                  initialLiked={action.likedByMe}
+                  initialCount={action.likeCount}
+                />
+                <SaveButton
+                  actionId={action.id}
+                  initialSaved={action.savedByMe}
+                  initialCount={action.saveCount}
+                />
+                <span className="whitespace-nowrap pl-0.5 text-xs font-medium text-neutral-500">
+                  {action.crewCount ?? 0}명 참여
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {footer && (
+          <div className="relative border-t border-neutral-100 px-4 py-3 pointer-events-auto">
+            {footer}
+          </div>
+        )}
+      </article>
+    );
+  }
+
+  // 기본 세로형 레이아웃 (variant === 'default')
   return (
     <article
       className={cn(

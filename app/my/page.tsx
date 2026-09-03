@@ -10,8 +10,8 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/queries/profiles';
 import { getSavedActions } from '@/lib/queries/actions';
 import { Avatar } from '@/components/ui/Avatar';
-import { ActionCard } from '@/components/ui/ActionCard';
 import { LogoutButton } from '@/components/ui/LogoutButton';
+import { MySavedSection } from '@/components/my/MySavedSection';
 
 function Stat({
   value,
@@ -95,7 +95,7 @@ export default async function MyPage() {
         />
         <Stat
           value={profile.ledCount}
-          label="호스트한 액션"
+          label="리드한 액션"
           href="/activity?tab=created"
         />
         <Stat
@@ -124,32 +124,8 @@ export default async function MyPage() {
         </section>
       )}
 
-      {/* 저장한 액션 */}
-      <section className="mt-7">
-        <div className="flex items-center justify-between px-5 pb-3">
-          <h2 className="text-[15px] font-bold text-neutral-900">
-            내가 저장한 액션{' '}
-            <span className="text-neutral-400">{saved.length}</span>
-          </h2>
-          {saved.length > 2 && (
-            <Link href="/my/saved" className="text-[12px] text-neutral-500">
-              모두 보기 ›
-            </Link>
-          )}
-        </div>
-
-        {saved.length === 0 ? (
-          <p className="mx-5 rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] text-neutral-400">
-            아직 저장한 액션이 없어요.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-4 px-5">
-            {saved.slice(0, 2).map((a) => (
-              <ActionCard key={a.id} action={a} showStatus />
-            ))}
-          </div>
-        )}
-      </section>
+      {/* 저장한 액션 (초기 2개 세로형 + 더보기 클릭 시 가로형 확방) */}
+      <MySavedSection saved={saved} />
 
       {/* 계정 설정 */}
       <section className="mt-8">
@@ -158,29 +134,32 @@ export default async function MyPage() {
         </h2>
         <div className="divide-y divide-neutral-100 border-y border-neutral-100">
           <Link
-            href="/my/edit"
-            className="flex items-center justify-between px-5 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
-          >
-            프로필 수정
-            <span className="text-neutral-300">›</span>
-          </Link>
-          <Link
-            href="/my/saved"
-            className="flex items-center justify-between px-5 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
-          >
-            저장한 액션
-            <span className="text-neutral-300">›</span>
-          </Link>
-          <Link
             href="/my/edit#notification-settings"
             className="flex items-center justify-between px-5 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
           >
             알림 설정
             <span className="text-neutral-300">›</span>
           </Link>
+          <Link
+            href="/my/edit"
+            className="flex items-center justify-between px-5 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
+          >
+            비밀번호 변경
+            <span className="text-neutral-300">›</span>
+          </Link>
           <LogoutButton />
         </div>
       </section>
+
+      {/* 하단 푸터 */}
+      <footer className="mt-8 flex flex-col items-center justify-center pb-4 text-center">
+        <Link
+          href="/my/edit"
+          className="text-[12px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
+        >
+          약관보기
+        </Link>
+      </footer>
     </main>
   );
 }
