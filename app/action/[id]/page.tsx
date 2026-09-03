@@ -243,7 +243,7 @@ export default async function ActionDetailPage({
             </p>
             {action.recruitEndAt && (
               <p className="text-[12px] text-neutral-500">
-                모집 마감 · {formatDateShort(action.recruitEndAt)}
+                모집 기한 : {formatDateShort(action.recruitEndAt)}
               </p>
             )}
           </div>
