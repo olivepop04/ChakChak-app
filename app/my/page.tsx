@@ -95,7 +95,7 @@ export default async function MyPage() {
         />
         <Stat
           value={profile.ledCount}
-          label="리드한 액션"
+          label="호스트한 액션"
           href="/activity?tab=created"
         />
         <Stat
