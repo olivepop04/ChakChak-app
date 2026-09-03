@@ -73,11 +73,16 @@ npm install
 
 ### 1-4. 환경변수 파일 만들기
 
+민호에게 받은 값을 넣을 파일을 직접 만듭니다.
+
 ```bash
-cp .env.local.example .env.local
+echo NEXT_PUBLIC_SUPABASE_URL= > .env.local
 ```
 
-> PowerShell을 쓴다면 `copy .env.local.example .env.local`
+> 파일 하나를 만드는 것일 뿐입니다. VS Code 에서 새 파일을 `.env.local` 로 만들어도 같습니다.
+>
+> ⚠️ **윈도우는 확장자를 숨깁니다.** 메모장으로 만들면 `.env.local.txt` 가 되기 쉬우니,
+> 탐색기 → 보기 → **"파일 확장명"** 을 켜고 확인하세요.
 
 `.env.local` 파일을 열면 이렇게 생겼습니다.
 
