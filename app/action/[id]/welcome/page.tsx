@@ -36,7 +36,7 @@ export default async function WelcomePage({
   const rest = everyone.length - shown.length;
 
   return (
-    <main className="flex min-h-dvh flex-col px-6 pb-10 pt-20">
+    <main className="flex min-h-dvh flex-col px-6 pb-32 pt-20">
       <div className="flex flex-col items-center text-center">
         <span className="text-5xl" aria-hidden="true">
           🎉
@@ -82,12 +82,27 @@ export default async function WelcomePage({
         좋은 일을 완성해보세요.
       </p>
 
-      <div className="mt-auto flex flex-col gap-2 pt-10">
+      {/* 하단 고정 버튼 (action/[id]/page.tsx의 크루 챗 버튼과 같은 위치 및 간격) */}
+      <div className="fixed inset-x-0 bottom-14 z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
         <Link
           href={`/action/${id}/chat`}
-          className="flex h-13 items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-semibold text-white"
+          className="flex h-14 w-full items-center justify-center rounded-xl bg-neutral-900 text-base font-bold text-white shadow-sm transition-colors active:bg-neutral-800"
         >
-          💬 함께하는 사람들과 이야기하기
+          <svg
+            className="mr-2.5 h-5 w-5 flex-none"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+          <span>함께하는 사람들과 이야기하기</span>
         </Link>
       </div>
     </main>
