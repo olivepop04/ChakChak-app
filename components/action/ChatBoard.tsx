@@ -107,13 +107,18 @@ export function ChatBoard({
                 <Avatar name={post.author.nickname} size="sm" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2">
+                    {post.kind === 'LEFT_NOTICE' && (
+                      <span className="shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
+                        참여 취소
+                      </span>
+                    )}
                     <span className="text-[13px] font-semibold text-neutral-900">
                       @{post.author.nickname}
                     </span>
                     <span className="text-[11px] text-neutral-400">
                       {formatRelative(post.createdAt)}
                     </span>
-                    {post.isMine && !post.deletedAt && (
+                    {post.isMine && !post.deletedAt && post.kind !== 'LEFT_NOTICE' && (
                       <button
                         type="button"
                         onClick={() => handleDelete(post.id, true)}

@@ -12,6 +12,7 @@ import { getActionDetail } from '@/lib/queries/actions';
 import { QuotaProgress } from '@/components/action/QuotaProgress';
 import { ActionGallery } from '@/components/action/ActionGallery';
 import { AddressBox } from '@/components/action/AddressBox';
+import { MessageAccessButton } from '@/components/action/MessageAccessButton';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusBadge } from '@/components/ui/Badge';
 import { LikeButton, SaveButton, FollowButton } from '@/components/ui/ToggleButtons';
@@ -39,6 +40,16 @@ export default async function ActionDetailPage({
 
   const deadline = timeUntilDeadline(action.recruitEndAt);
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
+  const canViewChat =
+    action.isOwner ||
+    !!(action.myParticipation && action.myParticipation !== 'LEFT');
+  const showMessageAccessButton = action.isOwner || !canViewChat;
+  const canEditActionText =
+    action.isOwner &&
+    (action.status === 'ACTIVE' ||
+      action.status === 'ENDED' ||
+      action.status === 'COMPLETED' ||
+      action.status === 'CANCELLED');
 
   // ── 하단 버튼을 무엇으로 보여줄지 ──────────────────────────
   // 순서가 중요합니다. 위쪽 조건이 먼저 걸립니다.
@@ -65,7 +76,7 @@ export default async function ActionDetailPage({
   })();
 
   return (
-    <main className="pb-40">
+    <main className="pb-52">
       <Header
         back
         backHref="/"
@@ -104,6 +115,15 @@ export default async function ActionDetailPage({
           <h1 className="text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
             {action.title}
           </h1>
+
+          {canEditActionText && (
+            <Link
+              href={`/action/${id}/edit`}
+              className="mt-1 inline-flex self-start rounded-lg border border-neutral-200 px-3 py-2 text-[12px] font-semibold text-neutral-700 hover:bg-neutral-50"
+            >
+              소개·안내 수정
+            </Link>
+          )}
         </div>
 
         {/* 취소 사유 */}
@@ -214,7 +234,11 @@ export default async function ActionDetailPage({
       </div>
 
       {/* 하단 고정 버튼 */}
-      <div className="fixed inset-x-0 bottom-14 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      {/* bottom-14 = 하단 탭 위로 띄웁니다. 이 화면은 탭이 보입니다 */}
+      <div className="fixed inset-x-0 bottom-14 z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
+        {showMessageAccessButton && (
+          <MessageAccessButton actionId={action.id} canViewChat={canViewChat} />
+        )}
         {'href' in cta && cta.href ? (
           <Link
             href={cta.href}

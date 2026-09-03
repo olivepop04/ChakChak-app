@@ -89,12 +89,6 @@ export default async function WelcomePage({
         >
           💬 함께하는 사람들과 이야기하기
         </Link>
-        <Link
-          href="/"
-          className="flex h-13 items-center justify-center rounded-xl border border-neutral-300 text-[15px] font-semibold text-neutral-700"
-        >
-          HOME으로 가기
-        </Link>
       </div>
     </main>
   );
