@@ -871,6 +871,10 @@ export type Database = {
         Args: { p_message_id: string }
         Returns: undefined
       }
+      end_action_early: {
+        Args: { p_action_id: string; p_reason: string }
+        Returns: undefined
+      }
       is_action_crew: { Args: { a: string }; Returns: boolean }
       is_action_member: { Args: { a: string }; Returns: boolean }
       is_action_owner: { Args: { a: string }; Returns: boolean }

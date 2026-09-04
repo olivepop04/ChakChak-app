@@ -106,6 +106,18 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 `?? []` 로 받으면 이 구분이 사라져서, **재능이 없는 사람에게 AI 가 계속 재능을 묻습니다.**
 재능은 자유 입력이 아니라 `lib/constants` 의 `SKILLS` 목록에서 고릅니다.
 
+**11. 취소와 조기 종료는 다른 일입니다** — 상태도 카운팅도 다릅니다.
+
+| 언제 | 무엇을 쓰나 | 결과 | 내가 만든 액션에 |
+|---|---|---|---|
+| 활동 시작 **전** | `cancelAction()` | `CANCELLED` | **안 셉니다** |
+| 활동 **중** | `endActionEarly()` | `ENDED` | **셉니다** |
+| 활동 종료 후 | 둘 다 안 됩니다 | — | 결과를 쓰는 길만 남습니다 |
+
+"없던 일이 된 것"과 "하긴 했는데 일찍 끝난 것"을 나누기로 했습니다. 조기 종료는 예정 종료와 똑같이 흘러갑니다 — 크루는 `AFTER_ACTION`이 되고, 소감을 쓰면 참여 완료입니다.
+
+조기 종료 사유는 **크루챗에 공지로 남고 호스트도 지울 수 없습니다** (나가기 사유와 같은 방식). 사유를 보여줄 새 화면이 필요 없습니다.
+
 ---
 
 ## 자주 쓰는 명령
@@ -114,7 +126,7 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 npm run verify:db
 ```
 
-스키마를 바꾼 뒤 돌리세요. 권한·정원·성별·생애주기·나가기까지 60가지가 넘는 동작을 실제 계정으로 확인합니다. 로컬 전용이고, 테스트 계정을 만들었다가 끝나면 지웁니다.
+스키마를 바꾼 뒤 돌리세요. 권한·정원·성별·생애주기·나가기·조기 종료까지 90가지가 넘는 동작을 실제 계정으로 확인합니다. 로컬 전용이고, 테스트 계정을 만들었다가 끝나면 지웁니다.
 
 ```bash
 npm run seed
@@ -182,7 +194,7 @@ if (!res.ok) { setError(res.message); return; }
 
 `joinAction` · `leaveAction` · `leaveActionWithReason` · `submitCrewVoice` ·
 `postChatMessage` · `deleteChatMessage` ·
-`saveActionDraft` · `updateActionText` · `saveActionItems` · **`addActionItems`** · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · `deleteDraft` ·
+`saveActionDraft` · `updateActionText` · `saveActionItems` · **`addActionItems`** · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · **`endActionEarly`** · `deleteDraft` ·
 `updateProfile` · `isNicknameTaken` · `updateNotifySettings` ·
 `toggleLike` · `toggleSave` · `toggleFollow` · `shareToUser` · `markNotificationRead`
 
@@ -226,6 +238,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 | 날짜 | 모집 마감 / 활동 시작 / 활동 종료 **3개 별개 값** |
 | 성별 | 가입 시 필수. **항목별로** 남/여/무관 제한 가능 |
 | 참여 나가기 | 허용. status를 `LEFT`로, 행은 남김. 집계에서 제외 |
+| 취소 · 조기 종료 | **활동 시작 전 = 취소(CANCELLED, 안 셈) · 활동 중 = 조기 종료(ENDED, 셈)**. 2026-09-04 |
 | DRAFT 삭제 | 행을 실제로 삭제 |
 | 크루챗 삭제 | 본인 글만 soft delete. **원글을 지우면 댓글도 함께 삭제** |
 | 알림 | 6종 확정. 팔로우 알림 없음 |
