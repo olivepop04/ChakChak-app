@@ -39,15 +39,11 @@ export function LegalDocumentPage({
     <main className="min-h-dvh bg-white pb-12">
       <header className="sticky top-0 z-20 flex h-14 items-center border-b border-neutral-100 bg-white/95 px-4 backdrop-blur">
         {/*
-          홈으로 보냅니다. 이 화면은 두 곳에서 열립니다 —
-          MY(회원)와 가입 3단계(아직 회원 아님). 어느 한쪽으로 고정하면
-          다른 쪽이 막힙니다. /my 는 로그인이 필요해서 가입 중인 사람이
-          누르면 로그인 화면으로 튕기고, /signup 은 회원이 가입 화면으로 갑니다.
-          홈은 비회원도 볼 수 있어 양쪽 다 됩니다.
+          마이페이지(/my)로 보냅니다.
         */}
         <Link
-          href="/"
-          aria-label="홈으로 돌아가기"
+          href="/my"
+          aria-label="마이페이지로 돌아가기"
           className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-neutral-700 hover:bg-neutral-100"
         >
           ‹
