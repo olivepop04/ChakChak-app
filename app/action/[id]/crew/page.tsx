@@ -146,12 +146,12 @@ export default async function CrewPage({
 
       <section className="mt-6">
         <h2 className="px-5 pb-1 text-[12px] font-semibold tracking-wide text-neutral-400">
-          함께하는 사람들 ({crew.length})
+          함께하는 크루 ({crew.length})
         </h2>
         {crew.length === 0 ? (
           <EmptyState
             icon="👋"
-            title="아직 함께하는 사람이 없어요"
+            title="아직 함께하는 크루가 없어요"
             description="가장 먼저 참여한 사람이 되어보세요."
           />
         ) : (
@@ -183,7 +183,7 @@ export default async function CrewPage({
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
             />
           </svg>
-          <span>함께하는 사람들과 이야기하기</span>
+          <span>함께하는 크루와 이야기하기</span>
         </Link>
       </div>
     </main>

@@ -10,8 +10,8 @@
  */
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
+import { StatusBadge } from '@/components/ui/Badge';
 import { LikeButton, SaveButton } from '@/components/ui/ToggleButtons';
-import { ACTION_STATUS_LABEL } from '@/lib/constants';
 import type { ActionCardData } from '@/lib/types/view';
 import { cn } from '@/lib/utils/cn';
 
@@ -39,6 +39,10 @@ export function ActionCard({
   footer,
   className,
 }: ActionCardProps) {
+  const isRecruitClosed =
+    action.recruitClosed ??
+    (action.recruitEndAt ? new Date(action.recruitEndAt) < new Date() : false);
+
   if (variant === 'horizontal') {
     return (
       <article
@@ -61,7 +65,7 @@ export function ActionCard({
               <img
                 src={action.thumbnailUrl}
                 alt=""
-                className="h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (
               <div className="flex h-full items-center justify-center text-xs text-neutral-400">
@@ -72,9 +76,13 @@ export function ActionCard({
               {action.category}
             </span>
             {showStatus && (
-              <span className="absolute right-1.5 top-1.5 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-neutral-700">
-                {ACTION_STATUS_LABEL[action.status]}
-              </span>
+              <div className="absolute right-1.5 top-1.5 z-10">
+                <StatusBadge
+                  status={action.status}
+                  recruitClosed={isRecruitClosed}
+                  className="bg-white/90 shadow-xs"
+                />
+              </div>
             )}
           </div>
 
@@ -161,13 +169,13 @@ export function ActionCard({
 
       {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
       <div className="relative z-10 flex flex-col pointer-events-none">
-        <div className="relative aspect-[16/10] bg-neutral-100">
+        <div className="relative w-full aspect-[16/10] overflow-hidden bg-neutral-100">
           {action.thumbnailUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={action.thumbnailUrl}
               alt=""
-              className="h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-neutral-400">
@@ -178,9 +186,13 @@ export function ActionCard({
             {action.category}
           </span>
           {showStatus && (
-            <span className="absolute right-3 top-3 rounded bg-white/90 px-2 py-1 text-[11px] font-medium text-neutral-700">
-              {ACTION_STATUS_LABEL[action.status]}
-            </span>
+            <div className="absolute right-3 top-3 z-10">
+              <StatusBadge
+                status={action.status}
+                recruitClosed={isRecruitClosed}
+                className="bg-white/90 shadow-xs"
+              />
+            </div>
           )}
         </div>
 

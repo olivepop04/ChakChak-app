@@ -43,6 +43,8 @@ export interface ActionCardData {
   /** 로그인 사용자 기준. 비로그인이면 false */
   likedByMe: boolean;
   savedByMe: boolean;
+  /** 모집 마감 시각이 지났는지 여부 */
+  recruitClosed?: boolean;
 }
 
 /** 모집 항목 + 현재 진행 상황. QuotaProgress 에 그대로 넘길 수 있다. */

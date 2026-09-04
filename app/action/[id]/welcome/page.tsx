@@ -52,13 +52,13 @@ export default async function WelcomePage({
         </p>
       </div>
 
-      {/* 함께하는 사람들 */}
+      {/* 함께하는 크루 */}
       <Link
         href={`/action/${id}/crew`}
         className="mt-10 flex flex-col gap-3 rounded-2xl border border-neutral-200 p-5 transition-colors hover:bg-neutral-50"
       >
         <p className="text-[13px] font-semibold text-neutral-500">
-          지금 이 액션을 함께하는 사람들
+          지금 이 액션을 함께하는 크루
         </p>
         <div className="flex items-center gap-1.5">
           {shown.map((p) => (
@@ -102,7 +102,7 @@ export default async function WelcomePage({
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
             />
           </svg>
-          <span>함께하는 사람들과 이야기하기</span>
+          <span>함께하는 크루와 이야기하기</span>
         </Link>
       </div>
     </main>

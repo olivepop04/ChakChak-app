@@ -132,7 +132,10 @@ export default async function ActionDetailPage({
             <span className="rounded bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold text-neutral-600">
               {action.category}
             </span>
-            <StatusBadge status={action.status} />
+            <StatusBadge
+              status={action.status}
+              recruitClosed={action.recruitClosed}
+            />
             {deadline && action.status === 'ACTIVE' && (
               <span className="text-[11px] font-medium text-amber-700">
                 모집 {deadline}
@@ -260,17 +263,17 @@ export default async function ActionDetailPage({
           </section>
         )}
 
-        {/* 함께 하는 사람들 */}
+        {/* 함께하는 크루 */}
         <section className="flex flex-col gap-3 pt-2">
-          <h2 className="text-[15px] font-bold text-neutral-900">함께 하는 사람들</h2>
+          <h2 className="text-[15px] font-bold text-neutral-900">함께하는 크루</h2>
           <Link
             href={`/action/${id}/crew`}
             className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
           >
             {isCrewMember ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 {displayMembers.length > 0 && (
-                  <div className="flex -space-x-2 overflow-hidden">
+                  <div className="flex -space-x-2 overflow-hidden shrink-0">
                     {displayMembers.map((member, idx) => (
                       <Avatar
                         key={member.id || idx}
@@ -281,7 +284,7 @@ export default async function ActionDetailPage({
                     ))}
                   </div>
                 )}
-                <span className="text-[14px] font-semibold text-neutral-800">
+                <span className="truncate text-[14px] font-semibold text-neutral-800">
                   {action.crewCount}명 참여 중
                 </span>
               </div>
@@ -290,7 +293,7 @@ export default async function ActionDetailPage({
                 {action.crewCount}명이 함께해요
               </span>
             )}
-            <span className="text-[13px] font-medium text-neutral-400">
+            <span className="shrink-0 text-[13px] font-medium text-neutral-400">
               전체보기 ›
             </span>
           </Link>

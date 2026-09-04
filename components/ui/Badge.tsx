@@ -57,14 +57,20 @@ const ACTION_TONE: Record<ActionStatus, Tone> = {
 
 export function StatusBadge({
   status,
+  recruitClosed = false,
   className,
 }: {
   status: ActionStatus;
+  recruitClosed?: boolean;
   className?: string;
 }) {
+  const isClosed = status === 'ACTIVE' && recruitClosed;
+  const tone = isClosed ? 'neutral' : ACTION_TONE[status];
+  const label = isClosed ? '모집 마감' : ACTION_STATUS_LABEL[status];
+
   return (
-    <Badge tone={ACTION_TONE[status]} className={className}>
-      {ACTION_STATUS_LABEL[status]}
+    <Badge tone={tone} className={className}>
+      {label}
     </Badge>
   );
 }
