@@ -147,9 +147,7 @@ export default async function MyPage() {
       {/* 하단 푸터 */}
       <footer className="mt-8 flex items-center justify-center gap-3 pb-4 text-center">
         <Link
-          href="/terms"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/terms?from=my"
           className="text-[12px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
         >
           이용약관
@@ -158,9 +156,7 @@ export default async function MyPage() {
           ·
         </span>
         <Link
-          href="/privacy"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/privacy?from=my"
           className="text-[12px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
         >
           개인정보 처리방침

@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { LegalDocument } from './legal-documents';
 
 type LegalDocumentPageProps = {
@@ -11,6 +12,63 @@ type LegalDocumentPageProps = {
     label: string;
   };
 };
+
+function LegalHeader() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from');
+
+  let fallbackHref = '/my';
+  if (from === 'signup') {
+    fallbackHref = '/signup';
+  } else if (from === 'my') {
+    fallbackHref = '/my';
+  }
+
+  function handleBack(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      e.preventDefault();
+      router.back();
+    }
+  }
+
+  return (
+    <header className="sticky top-0 z-20 flex h-14 items-center border-b border-neutral-100 bg-white/95 px-4 backdrop-blur">
+      <Link
+        href={fallbackHref}
+        onClick={handleBack}
+        aria-label="이전 페이지로 돌아가기"
+        className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-neutral-700 hover:bg-neutral-100"
+      >
+        ‹
+      </Link>
+      <p className="absolute left-1/2 -translate-x-1/2 text-[15px] font-semibold text-neutral-900">
+        약관 안내
+      </p>
+    </header>
+  );
+}
+
+function OtherDocumentLink({
+  otherDocument,
+}: {
+  otherDocument: LegalDocumentPageProps['otherDocument'];
+}) {
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from');
+  const href = from ? `${otherDocument.href}?from=${from}` : otherDocument.href;
+
+  return (
+    <div className="mx-5 border-t border-neutral-200 pt-6 text-center">
+      <Link
+        href={href}
+        className="text-[13px] font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+      >
+        {otherDocument.label}도 확인하기
+      </Link>
+    </div>
+  );
+}
 
 export function LegalDocumentPage({
   document,
@@ -37,21 +95,24 @@ export function LegalDocumentPage({
 
   return (
     <main className="min-h-dvh bg-white pb-12">
-      <header className="sticky top-0 z-20 flex h-14 items-center border-b border-neutral-100 bg-white/95 px-4 backdrop-blur">
-        {/*
-          마이페이지(/my)로 보냅니다.
-        */}
-        <Link
-          href="/my"
-          aria-label="마이페이지로 돌아가기"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-neutral-700 hover:bg-neutral-100"
-        >
-          ‹
-        </Link>
-        <p className="absolute left-1/2 -translate-x-1/2 text-[15px] font-semibold text-neutral-900">
-          약관 안내
-        </p>
-      </header>
+      <Suspense
+        fallback={
+          <header className="sticky top-0 z-20 flex h-14 items-center border-b border-neutral-100 bg-white/95 px-4 backdrop-blur">
+            <Link
+              href="/my"
+              aria-label="이전 페이지로 돌아가기"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-neutral-700 hover:bg-neutral-100"
+            >
+              ‹
+            </Link>
+            <p className="absolute left-1/2 -translate-x-1/2 text-[15px] font-semibold text-neutral-900">
+              약관 안내
+            </p>
+          </header>
+        }
+      >
+        <LegalHeader />
+      </Suspense>
 
       <article className="px-5 pb-8 pt-8">
         <div className="border-b border-neutral-200 pb-7">
@@ -106,14 +167,20 @@ export function LegalDocumentPage({
         </div>
       </article>
 
-      <div className="mx-5 border-t border-neutral-200 pt-6 text-center">
-        <Link
-          href={otherDocument.href}
-          className="text-[13px] font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
-        >
-          {otherDocument.label}도 확인하기
-        </Link>
-      </div>
+      <Suspense
+        fallback={
+          <div className="mx-5 border-t border-neutral-200 pt-6 text-center">
+            <Link
+              href={otherDocument.href}
+              className="text-[13px] font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+            >
+              {otherDocument.label}도 확인하기
+            </Link>
+          </div>
+        }
+      >
+        <OtherDocumentLink otherDocument={otherDocument} />
+      </Suspense>
 
       {showTopBtn && (
         <button
