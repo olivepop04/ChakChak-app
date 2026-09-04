@@ -253,7 +253,15 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 | QuotaProgress | **공유** — 상세(디자이너)와 참여(개발 B)가 같이 씁니다. 고치기 전에 말하기 |
 
 **`components/ui/`와 `lib/`은 공유 구역입니다.** 고칠 때는 먼저 말해주세요.
-예외 — 위 표에 적힌 `lib/` 파일 3개(`stats.ts` · `regions.ts` · `scoring.ts`)는 각 담당이 바로 고쳐도 됩니다.
+예외 — 위 표에 적힌 `lib/` 파일 4개(`stats.ts` · `regions.ts` · `scoring.ts` · `discover-ranking.ts`)는 각 담당이 바로 고쳐도 됩니다.
+
+`tests/` 는 **누구나 추가**할 수 있습니다. 자기 담당 로직의 테스트를 붙이는 건 언제나 환영입니다.
+
+```bash
+npm test
+```
+
+Node 내장 테스트 러너를 씁니다. **새로 설치할 패키지가 없습니다.**
 
 > **담당이 바뀌면 세 곳을 같이 고칩니다** — 이 표, 다른 쪽 표(CLAUDE.md ↔ docs/00-공통규칙.md), 그리고 해당 역할 문서(docs/01~05).
 > 한 곳만 고치면 파일마다 답이 달라집니다. 2026-09-01에 실제로 그런 혼선이 있었습니다.
