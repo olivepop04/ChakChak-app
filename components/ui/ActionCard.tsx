@@ -48,12 +48,12 @@ export function ActionCard({
         )}
       >
         {/* 1. 카드 전체 클릭 시 액션 상세로 이동하는 투명 덮개 링크 */}
-        <Link href={`/action/${action.id}`} className="absolute inset-0">
+        <Link href={`/action/${action.id}`} className="absolute inset-0 z-0">
           <span className="sr-only">{action.title}</span>
         </Link>
 
         {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
-        <div className="relative flex flex-row gap-3 p-3 w-full pointer-events-none">
+        <div className="relative z-10 flex flex-row gap-3 p-3 w-full pointer-events-none">
           {/* 좌측 썸네일 */}
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
             {action.thumbnailUrl ? (
@@ -97,8 +97,8 @@ export function ActionCard({
               </p>
             </div>
 
-            {/* 3. 인터랙티브 요소들 (pointer-events-auto) */}
-            <div className="flex items-center justify-between pt-1.5">
+            {/* 3. 인터랙티브 요소들 & 통계 4종 */}
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-1.5">
               {/* 작성자 프로필 링크 */}
               <Link
                 href={`/user/${action.owner?.id}`}
@@ -110,20 +110,27 @@ export function ActionCard({
                 </span>
               </Link>
 
-              {/* 액션 버튼 그룹 & 참여자 수 */}
-              <div className="pointer-events-auto flex items-center gap-1 shrink-0">
+              {/* 통계 4종 (좋아요, 공유, 저장, 참여인원) */}
+              <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs text-neutral-500 tabular-nums">
                 <LikeButton
                   actionId={action.id}
                   initialLiked={action.likedByMe}
-                  initialCount={action.likeCount}
+                  initialCount={action.likeCount ?? 0}
+                  className="px-1 py-0.5 text-xs gap-1"
                 />
+                <span className="inline-flex items-center gap-0.5" title="공유 수">
+                  <span aria-hidden="true">↗</span>
+                  <span>{action.shareCount ?? 0}</span>
+                </span>
                 <SaveButton
                   actionId={action.id}
                   initialSaved={action.savedByMe}
-                  initialCount={action.saveCount}
+                  initialCount={action.saveCount ?? 0}
+                  className="px-1 py-0.5 text-xs gap-1"
                 />
-                <span className="whitespace-nowrap pl-0.5 text-xs font-medium text-neutral-500">
-                  {action.crewCount ?? 0}명 참여
+                <span className="inline-flex items-center gap-0.5" title="참여 인원">
+                  <span aria-hidden="true">👥</span>
+                  <span>{action.crewCount ?? 0}</span>
                 </span>
               </div>
             </div>
@@ -131,7 +138,7 @@ export function ActionCard({
         </div>
 
         {footer && (
-          <div className="relative border-t border-neutral-100 px-4 py-3 pointer-events-auto">
+          <div className="relative z-10 border-t border-neutral-100 px-4 py-3 pointer-events-auto">
             {footer}
           </div>
         )}
@@ -143,11 +150,17 @@ export function ActionCard({
   return (
     <article
       className={cn(
-        'overflow-hidden rounded-xl border border-neutral-200 bg-white',
+        'relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md',
         className,
       )}
     >
-      <Link href={`/action/${action.id}`} className="block">
+      {/* 1. 카드 전체 클릭 시 액션 상세로 이동하는 투명 덮개 링크 */}
+      <Link href={`/action/${action.id}`} className="absolute inset-0 z-0">
+        <span className="sr-only">{action.title}</span>
+      </Link>
+
+      {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
+      <div className="relative z-10 flex flex-col pointer-events-none">
         <div className="relative aspect-[16/10] bg-neutral-100">
           {action.thumbnailUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -187,28 +200,50 @@ export function ActionCard({
             {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
           </p>
 
-          <div className="mt-1 flex items-center gap-2 border-t border-neutral-100 pt-3">
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <Avatar name={action.owner.nickname} size="sm" />
+          {/* 3. 인터랙티브 요소들 & 통계 4종 */}
+          <div className="mt-1 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
+            {/* 작성자 프로필 링크 */}
+            <Link
+              href={`/user/${action.owner?.id}`}
+              className="pointer-events-auto flex items-center gap-1.5 min-w-0 flex-1 text-xs text-neutral-600 hover:underline"
+            >
+              <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
               <span className="truncate text-xs text-neutral-600">
-                @{action.owner.nickname}
+                @{action.owner?.nickname ?? '호스트'}
               </span>
-              <span className="shrink-0 text-xs text-neutral-400">·</span>
-              <span className="shrink-0 text-xs text-neutral-500">
-                {action.crewCount ?? 0}명 참여 중
+            </Link>
+
+            {/* 통계 4종 (좋아요, 공유, 저장, 참여인원) */}
+            <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs tabular-nums text-neutral-500">
+              <LikeButton
+                actionId={action.id}
+                initialLiked={action.likedByMe}
+                initialCount={action.likeCount ?? 0}
+                className="px-1 py-0.5 text-xs gap-1"
+              />
+              <span className="inline-flex items-center gap-0.5" title="공유 수">
+                <span aria-hidden="true">↗</span>
+                <span>{action.shareCount ?? 0}</span>
+              </span>
+              <SaveButton
+                actionId={action.id}
+                initialSaved={action.savedByMe}
+                initialCount={action.saveCount ?? 0}
+                className="px-1 py-0.5 text-xs gap-1"
+              />
+              <span className="inline-flex items-center gap-0.5" title="참여 인원">
+                <span aria-hidden="true">👥</span>
+                <span>{action.crewCount ?? 0}</span>
               </span>
             </div>
-            <span className="flex items-center gap-3 text-xs tabular-nums text-neutral-500 shrink-0">
-              <span>♥ {action.likeCount}</span>
-              <span>🔖 {action.saveCount}</span>
-              <span>👥 {action.crewCount}</span>
-            </span>
           </div>
         </div>
-      </Link>
+      </div>
 
       {footer && (
-        <div className="border-t border-neutral-100 px-4 py-3">{footer}</div>
+        <div className="relative z-10 border-t border-neutral-100 px-4 py-3 pointer-events-auto">
+          {footer}
+        </div>
       )}
     </article>
   );
