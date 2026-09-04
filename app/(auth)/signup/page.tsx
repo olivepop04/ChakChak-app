@@ -25,6 +25,7 @@ import { TimePreferenceEditor } from '@/app/my/_components/TimePreferenceEditor'
 import { TalentPreferenceEditor } from '@/app/my/_components/TalentPreferenceEditor';
 import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
 import { isNicknameTaken, updateProfile } from '@/lib/mutations';
+import { getBioValidationError } from '@/lib/utils/profile-validation';
 import {
   CATEGORIES,
   GENDER_LABEL,
@@ -81,13 +82,44 @@ function SignUpForm() {
   }
 
   // ── 1단계 검증 ────────────────────────────────────────────
-  function nextFromStep1() {
+  async function nextFromStep1() {
+    if (busy) return;
     setError('');
     if (!email.includes('@')) return setError('이메일 형식을 확인해주세요.');
     if (password.length < 6) return setError('비밀번호는 6자 이상이어야 해요.');
+    const bioError = getBioValidationError(bio);
+    if (bioError) return setError(bioError);
     if (!agreeTerms || !agreePrivacy)
       return setError('필수 약관에 모두 동의해주세요.');
-    setStep(2);
+
+    setBusy(true);
+    try {
+      const response = await fetch('/api/auth/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const result = (await response.json().catch(() => ({}))) as {
+        taken?: boolean;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setError(
+          result.error ??
+            '이메일을 확인하지 못했어요. 잠시 후 다시 시도해주세요.',
+        );
+        return;
+      }
+      if (result.taken) {
+        setError('이미 가입된 이메일이에요. 로그인해주세요.');
+        return;
+      }
+
+      setStep(2);
+    } finally {
+      setBusy(false);
+    }
   }
 
   // ── 2단계 검증 (닉네임 중복까지) ───────────────────────────
@@ -222,10 +254,14 @@ function SignUpForm() {
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
+                maxLength={LIMITS.BIO_MAX}
                 rows={3}
                 placeholder="어떤 활동에 관심이 있는지 짧게 알려주세요."
                 className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
               />
+              <span className="text-right text-[11px] text-neutral-400">
+                {bio.length}/{LIMITS.BIO_MAX}
+              </span>
             </label>
 
             <div className="mt-2 flex flex-col gap-3">
@@ -413,7 +449,13 @@ function SignUpForm() {
         )}
 
         {step === 1 && (
-          <Button type="button" size="lg" fullWidth onClick={nextFromStep1}>
+          <Button
+            type="button"
+            size="lg"
+            fullWidth
+            loading={busy}
+            onClick={nextFromStep1}
+          >
             다음
           </Button>
         )}

@@ -16,6 +16,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
 import { LIMITS, UPLOAD, type NotificationType } from '@/lib/constants';
+import { getBioValidationError } from '@/lib/utils/profile-validation';
 
 type DB = SupabaseClient<Database>;
 
@@ -305,7 +306,11 @@ export async function updateProfile(
     patch.nickname = nick;
   }
 
-  if (input.bio !== undefined) patch.bio = input.bio?.trim() || null;
+  if (input.bio !== undefined) {
+    const bioError = getBioValidationError(input.bio);
+    if (bioError) return { ok: false, message: bioError };
+    patch.bio = input.bio?.trim() || null;
+  }
   if (input.categories !== undefined) patch.categories = input.categories;
   if (input.regions !== undefined) patch.regions = input.regions;
 
