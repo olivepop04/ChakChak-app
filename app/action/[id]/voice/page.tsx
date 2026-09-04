@@ -80,6 +80,21 @@ export default async function VoicePage({
     );
   }
 
+  // 호스트가 결과를 공개한 뒤에만 소감을 작성할 수 있습니다.
+  if (action.status !== 'COMPLETED') {
+    return (
+      <main>
+        <Header title="소감 남기기" back backHref={`/action/${id}`} />
+        <EmptyState
+          icon="⏳"
+          title="결과가 공개된 뒤에 소감을 남길 수 있어요"
+          description="호스트가 결과를 공개하면 소감 작성이 열려요."
+          action={{ label: '액션 보러 가기', href: `/action/${id}` }}
+        />
+      </main>
+    );
+  }
+
   return (
     <main>
       <Header title="소감 남기기" back backHref={`/action/${id}/result`} sticky />

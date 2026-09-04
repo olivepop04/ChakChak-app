@@ -15,7 +15,7 @@ import { ActionGallery } from '@/components/action/ActionGallery';
 import { AddressBox } from '@/components/action/AddressBox';
 import { MessageAccessButton } from '@/components/action/MessageAccessButton';
 import { Avatar } from '@/components/ui/Avatar';
-import { StatusBadge } from '@/components/ui/Badge';
+import { Badge, StatusBadge } from '@/components/ui/Badge';
 import { LikeButton, SaveButton, ShareButton, FollowButton } from '@/components/ui/ToggleButtons';
 import { Header } from '@/components/layout/Header';
 import {
@@ -132,7 +132,11 @@ export default async function ActionDetailPage({
             <span className="rounded bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold text-neutral-600">
               {action.category}
             </span>
-            <StatusBadge status={action.status} />
+            {action.status === 'ACTIVE' && action.recruitClosed ? (
+              <Badge tone="warn">모집 마감</Badge>
+            ) : (
+              <StatusBadge status={action.status} />
+            )}
             {deadline && action.status === 'ACTIVE' && (
               <span className="text-[11px] font-medium text-amber-700">
                 모집 {deadline}
@@ -247,6 +251,9 @@ export default async function ActionDetailPage({
               </p>
             )}
           </div>
+          {action.placeName && (
+            <p className="text-sm font-semibold text-neutral-900">{action.placeName}</p>
+          )}
           {action.address && <AddressBox address={action.address} />}
         </section>
 

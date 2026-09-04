@@ -34,6 +34,8 @@ export default async function EditActionPage({
     redirect(`/action/create?id=${id}`);
   }
 
+  const canAddActionItems = action.status === 'ACTIVE' && !action.recruitClosed;
+
   return (
     <main>
       <Header title="액션 수정" back backHref={`/action/${id}`} sticky />
@@ -44,7 +46,8 @@ export default async function EditActionPage({
           {action.title}
         </h1>
         <p className="mt-2 text-[12px] leading-relaxed text-neutral-500">
-          공개한 뒤에는 소개와 안내사항을 수정하고 모집 항목을 추가할 수 있어요.
+          소개와 안내사항은 계속 수정할 수 있고, 모집 중에는 새 모집 항목을 추가할 수
+          있어요.
         </p>
       </section>
 
@@ -99,7 +102,16 @@ export default async function EditActionPage({
         )}
       </section>
 
-      <AddActionItemsForm actionId={action.id} />
+      {canAddActionItems ? (
+        <AddActionItemsForm actionId={action.id} />
+      ) : (
+        <section className="border-t border-neutral-100 px-5 pb-28 pt-6">
+          <h2 className="text-[14px] font-bold text-neutral-900">모집 항목 추가</h2>
+          <p className="mt-3 rounded-xl bg-neutral-50 px-4 py-5 text-[13px] leading-relaxed text-neutral-500">
+            모집이 끝난 액션에는 새 모집 항목을 추가할 수 없어요.
+          </p>
+        </section>
+      )}
     </main>
   );
 }
