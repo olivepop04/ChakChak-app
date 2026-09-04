@@ -228,27 +228,49 @@ function SignUpForm() {
               />
             </label>
 
-            <div className="mt-2 flex flex-col gap-2">
-              <label className="flex items-center gap-2.5 text-[13px] text-neutral-700">
-                <input
-                  type="checkbox"
-                  checked={agreeTerms}
-                  onChange={(e) => setAgreeTerms(e.target.checked)}
-                  className="h-4 w-4 accent-neutral-900"
-                />
-                <span className="font-semibold text-neutral-500">[필수]</span>
-                이용약관에 동의합니다.
-              </label>
-              <label className="flex items-center gap-2.5 text-[13px] text-neutral-700">
-                <input
-                  type="checkbox"
-                  checked={agreePrivacy}
-                  onChange={(e) => setAgreePrivacy(e.target.checked)}
-                  className="h-4 w-4 accent-neutral-900"
-                />
-                <span className="font-semibold text-neutral-500">[필수]</span>
-                개인정보 처리방침에 동의합니다.
-              </label>
+            <div className="mt-2 flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <label className="flex min-w-0 items-center gap-2.5 text-[13px] text-neutral-700">
+                  <input
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="h-4 w-4 shrink-0 accent-neutral-900"
+                  />
+                  <span className="font-semibold text-neutral-500">[필수]</span>
+                  <span>이용약관에 동의합니다.</span>
+                </label>
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="이용약관 내용 보기, 새 창"
+                  className="shrink-0 text-[12px] font-semibold text-neutral-500 underline underline-offset-4 hover:text-neutral-900"
+                >
+                  내용 보기<span className="sr-only"> (새 창)</span>
+                </Link>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <label className="flex min-w-0 items-center gap-2.5 text-[13px] text-neutral-700">
+                  <input
+                    type="checkbox"
+                    checked={agreePrivacy}
+                    onChange={(e) => setAgreePrivacy(e.target.checked)}
+                    className="h-4 w-4 shrink-0 accent-neutral-900"
+                  />
+                  <span className="font-semibold text-neutral-500">[필수]</span>
+                  <span>개인정보 처리방침에 동의합니다.</span>
+                </label>
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="개인정보 처리방침 내용 보기, 새 창"
+                  className="shrink-0 text-[12px] font-semibold text-neutral-500 underline underline-offset-4 hover:text-neutral-900"
+                >
+                  내용 보기<span className="sr-only"> (새 창)</span>
+                </Link>
+              </div>
             </div>
           </div>
         </>

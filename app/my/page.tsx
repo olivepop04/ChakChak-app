@@ -145,12 +145,25 @@ export default async function MyPage() {
       </section>
 
       {/* 하단 푸터 */}
-      <footer className="mt-8 flex flex-col items-center justify-center pb-4 text-center">
+      <footer className="mt-8 flex items-center justify-center gap-3 pb-4 text-center">
         <Link
-          href="/my/edit"
+          href="/terms"
+          target="_blank"
+          rel="noopener noreferrer"
           className="text-[12px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
         >
-          약관보기
+          이용약관
+        </Link>
+        <span aria-hidden="true" className="text-[11px] text-neutral-300">
+          ·
+        </span>
+        <Link
+          href="/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[12px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
+        >
+          개인정보 처리방침
         </Link>
       </footer>
     </main>

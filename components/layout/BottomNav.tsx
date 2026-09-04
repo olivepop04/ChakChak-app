@@ -34,6 +34,8 @@ function isActive(pathname: string, href: string) {
 const HIDDEN = [
   '/login',
   '/signup',
+  '/terms',
+  '/privacy',
   '/action/create',
   '/join',
   '/chat',
