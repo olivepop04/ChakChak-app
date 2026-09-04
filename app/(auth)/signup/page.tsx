@@ -14,7 +14,7 @@
  */
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -36,6 +36,7 @@ import {
 } from '@/lib/constants';
 
 const CATEGORY_OPTIONS = ['전체', ...CATEGORIES] as const;
+const DRAFT_KEY = 'chak_signup_draft';
 
 const inputClass =
   'h-12 rounded-xl border border-neutral-300 px-4 text-[15px] outline-none focus:border-neutral-900';
@@ -67,6 +68,78 @@ function SignUpForm() {
   ]);
   const [regions, setRegions] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[] | null>(null);
+
+  const [isRestored, setIsRestored] = useState(false);
+
+  // 마운트 시 임시 저장된 폼 데이터 복원
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const savedData =
+        sessionStorage.getItem(DRAFT_KEY) ||
+        sessionStorage.getItem('signup_draft_data');
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (typeof parsed.step === 'number') setStep(parsed.step);
+        if (typeof parsed.email === 'string') setEmail(parsed.email);
+        if (typeof parsed.password === 'string') setPassword(parsed.password);
+        if (typeof parsed.bio === 'string') setBio(parsed.bio);
+        if (typeof parsed.agreeTerms === 'boolean') setAgreeTerms(parsed.agreeTerms);
+        if (typeof parsed.agreePrivacy === 'boolean') setAgreePrivacy(parsed.agreePrivacy);
+        if (typeof parsed.name === 'string') setName(parsed.name);
+        if (typeof parsed.nickname === 'string') setNickname(parsed.nickname);
+        if (typeof parsed.gender === 'string') setGender(parsed.gender as Gender | '');
+        if (Array.isArray(parsed.categories)) setCategories(parsed.categories);
+        if (Array.isArray(parsed.timePrefs)) setTimePrefs(parsed.timePrefs);
+        if (Array.isArray(parsed.regions)) setRegions(parsed.regions);
+        if (Array.isArray(parsed.skills) || parsed.skills === null) setSkills(parsed.skills);
+      }
+    } catch {
+      // 복원 중 파싱 오류는 무시
+    } finally {
+      setIsRestored(true);
+    }
+  }, []);
+
+  // 폼 입력 변경 시 실시간 임시 저장 (이메일 및 비밀번호 포함 모든 필드)
+  useEffect(() => {
+    if (!isRestored || typeof window === 'undefined') return;
+    try {
+      const draft = {
+        step,
+        email,
+        password,
+        bio,
+        agreeTerms,
+        agreePrivacy,
+        name,
+        nickname,
+        gender,
+        categories,
+        timePrefs,
+        regions,
+        skills,
+      };
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // 저장 중 오류는 무시
+    }
+  }, [
+    isRestored,
+    step,
+    email,
+    password,
+    bio,
+    agreeTerms,
+    agreePrivacy,
+    name,
+    nickname,
+    gender,
+    categories,
+    timePrefs,
+    regions,
+    skills,
+  ]);
 
   function toggleCategory(value: (typeof CATEGORY_OPTIONS)[number]) {
     if (value === '전체') {
@@ -191,6 +264,10 @@ function SignUpForm() {
       });
     }
 
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(DRAFT_KEY);
+    }
+
     router.push(next);
     router.refresh();
   }
@@ -277,13 +354,11 @@ function SignUpForm() {
                   <span>이용약관에 동의합니다.</span>
                 </label>
                 <Link
-                  href="/terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="이용약관 내용 보기, 새 창"
+                  href="/terms?from=signup"
+                  aria-label="이용약관 내용 보기"
                   className="shrink-0 text-[12px] font-semibold text-neutral-500 underline underline-offset-4 hover:text-neutral-900"
                 >
-                  내용 보기<span className="sr-only"> (새 창)</span>
+                  내용 보기
                 </Link>
               </div>
               <div className="flex items-center justify-between gap-3">
@@ -298,13 +373,11 @@ function SignUpForm() {
                   <span>개인정보 처리방침에 동의합니다.</span>
                 </label>
                 <Link
-                  href="/privacy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="개인정보 처리방침 내용 보기, 새 창"
+                  href="/privacy?from=signup"
+                  aria-label="개인정보 처리방침 내용 보기"
                   className="shrink-0 text-[12px] font-semibold text-neutral-500 underline underline-offset-4 hover:text-neutral-900"
                 >
-                  내용 보기<span className="sr-only"> (새 창)</span>
+                  내용 보기
                 </Link>
               </div>
             </div>
