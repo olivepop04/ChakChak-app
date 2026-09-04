@@ -829,6 +829,124 @@ try {
   await admin.from('actions').delete().eq('id', lnAct.id);
 
 
+  // ═══════════════════════════════════════════════════════════
+  console.log('\n[17] 취소는 시작 전까지 · 조기 종료는 활동 중에만 (12)');
+
+  /** 액션 하나 만들고 B 를 참여시킨다. 시각은 호출자가 정한다. */
+  async function makeTimedAction(title, startOffsetMs, endOffsetMs) {
+    const { data: a } = await admin.from('actions').insert({
+      owner_id: uidA, title, description: '자동 검증용',
+      category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+      status: 'ACTIVE',
+      recruit_end_at:    new Date(now - 5 * 86400000).toISOString(),
+      activity_start_at: new Date(now + startOffsetMs).toISOString(),
+      activity_end_at:   new Date(now + endOffsetMs).toISOString(),
+    }).select('id').single();
+    await admin.from('participations')
+      .insert({ action_id: a.id, user_id: uidB, status: 'BEFORE_ACTION' });
+    return a.id;
+  }
+
+  // ── ① 시작 전에는 취소가 된다 ──
+  const upcoming = await makeTimedAction('[검증] 아직 시작 전', 3 * 86400000, 4 * 86400000);
+  const rC1 = await cA.rpc('cancel_action', {
+    p_action_id: upcoming, p_reason: '검증용 취소입니다.',
+  });
+  rC1.error
+    ? no('시작 전인데 취소가 막힘 !!', rC1.error.message.slice(0, 40))
+    : ok('활동 시작 전에는 취소 허용');
+  await admin.from('actions').delete().eq('id', upcoming);
+
+  // ── ② 활동 중에는 취소가 거절된다 ──
+  const running = await makeTimedAction('[검증] 활동 중', -2 * 3600000, 5 * 3600000);
+  const rC2 = await cA.rpc('cancel_action', {
+    p_action_id: running, p_reason: '검증용 취소입니다.',
+  });
+  rC2.error
+    ? ok('활동 시작 뒤 취소 거절', rC2.error.message.slice(0, 26))
+    : no('활동이 시작됐는데 취소됨 !! — 12_update.sql 을 실행했는가');
+
+  // ── ③ 활동 중 조기 종료는 된다 ──
+  const rE1 = await cA.rpc('end_action_early', {
+    p_action_id: running, p_reason: '비가 많이 와서 오늘은 여기까지 합니다.',
+  });
+  rE1.error
+    ? no('활동 중인데 조기 종료가 막힘 !!', rE1.error.message.slice(0, 40))
+    : ok('활동 중 조기 종료 허용');
+
+  // ── ④ 조기 종료 뒤 상태 ──
+  const { data: eeAct } = await admin.from('actions')
+    .select('status').eq('id', running).single();
+  eeAct?.status === 'ENDED'
+    ? ok('조기 종료하면 ENDED 가 됨 — 취소가 아님')
+    : no(`조기 종료했는데 상태가 ${eeAct?.status} !!`);
+
+  const { data: pAfter } = await admin.from('participations')
+    .select('status').eq('action_id', running).eq('user_id', uidB).single();
+  pAfter?.status === 'AFTER_ACTION'
+    ? ok('조기 종료하면 참여자가 AFTER_ACTION — 소감 작성 필요')
+    : no(`참여자 상태가 ${pAfter?.status} !!`);
+
+  // ── ⑤ 사유가 크루챗에 남고, 지울 수 없다 ──
+  const { data: eeMsg } = await admin.from('chat_messages')
+    .select('id, content').eq('action_id', running)
+    .eq('kind', 'EARLY_END_NOTICE').limit(1).maybeSingle();
+  if (!eeMsg) {
+    no('조기 종료 공지가 크루챗에 안 남음 !!');
+  } else {
+    ok('조기 종료 사유가 크루챗에 남음', eeMsg.content.slice(0, 20));
+    const rDel = await cA.rpc('delete_chat_message', { p_message_id: eeMsg.id });
+    rDel.error
+      ? ok('조기 종료 사유는 호스트도 삭제 거절', rDel.error.message.slice(0, 24))
+      : no('조기 종료 사유가 삭제됨 !!');
+  }
+
+  // ── ⑥ 조기 종료된 액션도 "내가 만든 액션" 에 센다 ──
+  const { count: ledCount } = await admin.from('actions')
+    .select('*', { count: 'exact', head: true })
+    .eq('owner_id', uidA).eq('id', running)
+    .in('status', ['ACTIVE', 'ENDED', 'COMPLETED']);
+  ledCount === 1
+    ? ok('조기 종료된 액션도 만든 액션으로 세어짐 — 취소와 다른 점')
+    : no('조기 종료된 액션이 집계에서 빠짐 !!');
+
+  // ── ⑦ 이미 끝난 액션은 조기 종료도, 취소도 안 된다 ──
+  const past = await makeTimedAction('[검증] 이미 끝남', -3 * 86400000, -2 * 86400000);
+  const rE2 = await cA.rpc('end_action_early', {
+    p_action_id: past, p_reason: '이미 끝났는데 종료해봅니다.',
+  });
+  rE2.error
+    ? ok('끝난 활동은 조기 종료 거절', rE2.error.message.slice(0, 26))
+    : no('이미 끝난 활동이 조기 종료됨 !!');
+
+  await admin.from('actions').update({ status: 'ENDED' }).eq('id', past);
+  const rC3 = await cA.rpc('cancel_action', {
+    p_action_id: past, p_reason: '검증용 취소입니다.',
+  });
+  rC3.error
+    ? ok('ENDED 액션 취소 거절 — 결과를 쓰는 길만 남음', rC3.error.message.slice(0, 24))
+    : no('ENDED 액션이 취소됨 !!');
+
+  // ── ⑧ 시작 전에는 조기 종료가 거절된다 ──
+  const notYet = await makeTimedAction('[검증] 시작 전 조기종료', 2 * 86400000, 3 * 86400000);
+  const rE3 = await cA.rpc('end_action_early', {
+    p_action_id: notYet, p_reason: '아직 시작도 안 했는데 종료해봅니다.',
+  });
+  rE3.error
+    ? ok('시작 전 조기 종료 거절 — 취소를 쓰라고 안내', rE3.error.message.slice(0, 26))
+    : no('시작도 안 했는데 조기 종료됨 !!');
+
+  // ── ⑨ 남의 액션은 조기 종료할 수 없다 ──
+  const rE4 = await cB.rpc('end_action_early', {
+    p_action_id: notYet, p_reason: '남의 액션을 종료해봅니다.',
+  });
+  rE4.error
+    ? ok('남의 액션은 조기 종료 거절', rE4.error.message.slice(0, 24))
+    : no('남의 액션이 조기 종료됨 !!');
+
+  await admin.from('actions').delete().in('id', [running, past, notYet]);
+
+
 } catch (e) {
   no('예외 발생', e.message);
 } finally {

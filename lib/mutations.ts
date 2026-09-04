@@ -475,7 +475,12 @@ export async function completeAction(
   return { ok: true, data: undefined };
 }
 
-/** 취소. 사유 5자 이상. 참여자 전원에게 알림이 간다. */
+/**
+ * 취소. 사유 5자 이상. 참여자 전원에게 알림이 간다.
+ *
+ * **활동 시작 전까지만** 됩니다 (12). 활동이 시작됐으면 취소가 아니라
+ * `endActionEarly()` 입니다 — 활동을 했으니 없던 일로 만들면 안 됩니다.
+ */
 export async function cancelAction(
   supabase: DB,
   actionId: string,
@@ -486,6 +491,29 @@ export async function cancelAction(
     p_reason: reason,
   });
   if (error) return { ok: false, message: toMessage(error, '취소에 실패했어요.') };
+  return { ok: true, data: undefined };
+}
+
+/**
+ * 조기 종료. **활동 중에만** 됩니다. 사유 5자 이상 (12).
+ *
+ * 취소와 다릅니다 — 활동은 실제로 있었으므로 액션이 사라지지 않고
+ * `ENDED` 가 됩니다. 그래서 "내가 만든 액션" 에 계속 세어지고,
+ * 크루는 소감을 쓰면 참여 완료가 됩니다. 예정 종료와 흐름이 같습니다.
+ *
+ * 사유는 크루챗에 공지로 남고 **아무도 지울 수 없습니다.**
+ */
+export async function endActionEarly(
+  supabase: DB,
+  actionId: string,
+  reason: string,
+): Promise<Result> {
+  const { error } = await supabase.rpc('end_action_early', {
+    p_action_id: actionId,
+    p_reason: reason,
+  });
+  if (error)
+    return { ok: false, message: toMessage(error, '활동 종료에 실패했어요.') };
   return { ok: true, data: undefined };
 }
 
