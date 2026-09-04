@@ -193,6 +193,7 @@ export const LIMITS = {
   CHAT_MAX: 1000,
   NICKNAME_MIN: 2,
   NICKNAME_MAX: 20,
+  BIO_MAX: 300,
   CANCEL_REASON_MIN: 5,
 } as const;
 

@@ -20,6 +20,7 @@ import {
 } from '@/lib/constants';
 import { NOTIFICATION_TEMPLATE } from '@/lib/queries/notifications';
 import { updateNotifySettings, updateProfile } from '@/lib/mutations';
+import { getBioValidationError } from '@/lib/utils/profile-validation';
 
 const CATEGORY_OPTIONS = ['전체', ...CATEGORIES] as const;
 
@@ -109,6 +110,12 @@ export function ProfileEditForm({
       return;
     }
 
+    const bioError = getBioValidationError(bio);
+    if (bioError) {
+      toast(bioError, 'error');
+      return;
+    }
+
     setBusy(true);
     const supabase = createClient();
 
@@ -183,10 +190,14 @@ export function ProfileEditForm({
         <textarea
           value={bio}
           onChange={(e) => setBio(e.target.value)}
+          maxLength={LIMITS.BIO_MAX}
           rows={3}
           placeholder="어떤 활동에 관심이 있는지 짧게 적어보세요."
           className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
         />
+        <span className="text-right text-[11px] text-neutral-400">
+          {bio.length}/{LIMITS.BIO_MAX}
+        </span>
       </label>
 
       <div className="flex flex-col gap-2.5">
