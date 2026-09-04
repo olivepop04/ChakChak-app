@@ -33,9 +33,6 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
     <div className="flex flex-wrap gap-1.5">
       {item.participationStatus === 'BEFORE_ACTION' && (
         <>
-          <Link href={`/action/${item.id}`} className={secondary}>
-            액션 보기
-          </Link>
           <Link href={`/action/${item.id}/chat`} className={secondary}>
             CREW CHAT
           </Link>
@@ -94,9 +91,6 @@ function CreatedFooter({
 
         {item.status === 'ACTIVE' && (
           <>
-            <Link href={`/action/${item.id}`} className={secondary}>
-              액션 보기
-            </Link>
             <Link href={`/action/${item.id}/chat`} className={secondary}>
               CREW CHAT
             </Link>
