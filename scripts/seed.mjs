@@ -14,6 +14,35 @@
  *   실제 사용자 데이터는 절대 건드리지 않습니다.
  */
 import { createClient } from '@supabase/supabase-js';
+import { createHash } from 'node:crypto';
+
+// ═══════════════════════════════════════════════════════════
+// 시드 데이터의 id 를 매번 같게 만듭니다 (2026-09-04)
+//
+// 전에는 id 를 DB 가 만들었습니다(gen_random_uuid). 그래서 seed 를
+// 다시 돌리면 같은 액션인데 번호가 달라졌고, 화면을 열어둔 채
+// seed 를 돌리면 그 링크가 죽었습니다.
+//
+// 이름에서 번호를 계산하면 언제 돌려도 같은 값이 나옵니다.
+// 표준 UUID v5 방식이라 형식도 그대로고, DB 는 손댈 필요가 없습니다
+// (actions.id 가 DEFAULT 라 값을 주면 그걸 씁니다).
+//
+// ★ 시드 전용 네임스페이스입니다. 실제 사용자가 만든 액션의 번호와
+//   겹칠 확률은 사실상 0 입니다.
+// ═══════════════════════════════════════════════════════════
+const SEED_NAMESPACE = '9f1c0f5e-3a6d-4c8b-9e2a-7d4f1b6c8a03';
+
+function seedUuid(name) {
+  const ns = Buffer.from(SEED_NAMESPACE.replace(/-/g, ''), 'hex');
+  const hash = createHash('sha1')
+    .update(Buffer.concat([ns, Buffer.from(name, 'utf8')]))
+    .digest();
+  const b = Buffer.from(hash.subarray(0, 16));
+  b[6] = (b[6] & 0x0f) | 0x50; // 버전 5
+  b[8] = (b[8] & 0x3f) | 0x80; // 변형
+  const h = b.toString('hex');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -238,12 +267,26 @@ async function seed() {
   const users = [];
   for (const [i, u] of USERS.entries()) {
     const email = `seed${i + 1}${SEED_DOMAIN}`;
-    const { data, error } = await admin.auth.admin.createUser({
+
+    // 계정 번호도 고정합니다. 그래야 /user/[id] 프로필 링크도 안 죽습니다.
+    // Supabase 가 id 지정을 안 받아주는 버전이면 그냥 맡깁니다 — 액션 링크는
+    // 어차피 고정되니, 여기서 멈출 만한 일은 아닙니다.
+    const fixedId = seedUuid(`user:${email}`);
+    let { data, error } = await admin.auth.admin.createUser({
+      id: fixedId,
       email,
       password: PASSWORD,
       email_confirm: true,
       user_metadata: { name: u.nick, nickname: u.nick, gender: u.gender },
     });
+    if (error) {
+      ({ data, error } = await admin.auth.admin.createUser({
+        email,
+        password: PASSWORD,
+        email_confirm: true,
+        user_metadata: { name: u.nick, nickname: u.nick, gender: u.gender },
+      }));
+    }
     if (error) {
       console.error(`  계정 생성 실패 (${email}): ${error.message}`);
       continue;
@@ -294,6 +337,9 @@ async function seed() {
     const { data: action, error } = await admin
       .from('actions')
       .insert({
+        // 순번+제목에서 계산합니다. 제목이 겹쳐도 순번이 달라 안 부딪힙니다.
+        // 목록 순서를 바꾸면 그 뒤 액션의 번호가 바뀌니 참고하세요.
+        id: seedUuid(`action:${idx}:${title}`),
         owner_id: owner.id,
         title,
         description: `${title}. 처음이신 분도 담당자가 함께 안내해드리니 편하게 참여하세요.`,
