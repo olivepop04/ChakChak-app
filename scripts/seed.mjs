@@ -329,9 +329,31 @@ async function seed() {
     const gu = (address.split(' ')[1] ?? '우리동네').replace(/[시군구]$/, '');
     const placeName = `${gu}${PLACE_SUFFIX[category] ?? '나눔터'}`;
 
+    // 항목 이름에 "N일차" 가 있으면 그만큼 여러 날에 걸친 활동입니다 (2026-09-04).
+    //
+    // 전에는 모든 액션이 3시간짜리였습니다. 그래서 "주말 이틀간의 급식 나눔" 이
+    // 항목은 1일차·2일차인데 날짜는 하루뿐이었고, The Crew 의 항목별 참여 현황이
+    // 안 나왔습니다 — 그 칸은 연일 액션에서만 보이거든요(PDF p.6).
+    // 코드가 아니라 데이터가 틀렸던 것이라 여기서 맞춥니다.
+    //
+    // 제목이 아니라 항목에서 읽습니다. 제목의 "이틀" 같은 말은 표현이 제각각이지만
+    // "1일차 배식팀" 같은 항목 이름은 실제로 며칠짜리인지 정확히 알려줍니다.
+    const dayCount = Math.max(
+      1,
+      ...items.map(([name]) => Number(String(name).match(/(\d+)\s*일차/)?.[1] ?? 1)),
+    );
+
     const activityStart = new Date(now + whenDay * DAY);
     activityStart.setHours(14, 0, 0, 0);
-    const activityEnd = new Date(activityStart.getTime() + 3 * 3600000);
+
+    const activityEnd = new Date(activityStart);
+    if (dayCount > 1) {
+      activityEnd.setDate(activityEnd.getDate() + (dayCount - 1));
+      activityEnd.setHours(17, 0, 0, 0);
+    } else {
+      activityEnd.setTime(activityStart.getTime() + 3 * 3600000);
+    }
+
     const recruitEnd = new Date(activityStart.getTime() - DAY);
 
     const { data: action, error } = await admin
