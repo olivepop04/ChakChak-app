@@ -43,6 +43,8 @@ const HIDDEN = [
   '/voice',
   '/result/write',
   '/my/edit',
+  '/terms',
+  '/privacy',
 ];
 
 export function BottomNav() {

@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { LegalDocument } from './legal-documents';
 
@@ -13,12 +16,31 @@ export function LegalDocumentPage({
   document,
   otherDocument,
 }: LegalDocumentPageProps) {
+  const [showTopBtn, setShowTopBtn] = useState(false);
+
+  useEffect(() => {
+    function handleScroll() {
+      if (window.scrollY > 200) {
+        setShowTopBtn(true);
+      } else {
+        setShowTopBtn(false);
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   return (
     <main className="min-h-dvh bg-white pb-12">
       <header className="sticky top-0 z-20 flex h-14 items-center border-b border-neutral-100 bg-white/95 px-4 backdrop-blur">
         <Link
-          href="/signup"
-          aria-label="회원가입으로 돌아가기"
+          href="/my"
+          aria-label="마이페이지로 돌아가기"
           className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-neutral-700 hover:bg-neutral-100"
         >
           ‹
@@ -89,6 +111,17 @@ export function LegalDocumentPage({
           {otherDocument.label}도 확인하기
         </Link>
       </div>
+
+      {showTopBtn && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          aria-label="맨 위로 이동"
+          className="fixed bottom-6 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-lg font-bold text-neutral-700 shadow-lg transition-all active:scale-95 hover:bg-neutral-50"
+        >
+          ↑
+        </button>
+      )}
     </main>
   );
 }
