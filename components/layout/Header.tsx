@@ -14,8 +14,10 @@ interface HeaderProps {
   title?: string;
   /** 뒤로가기 버튼을 보여줄지 */
   back?: boolean;
-  /** 뒤로가기를 눌렀을 때 갈 곳. 없으면 브라우저 뒤로가기 */
+  /** 뒤로가기를 눌렀을 때 갈 곳 (직접 접근 시 대체 경로). 없으면 브라우저 뒤로가기 기본 */
   backHref?: string;
+  /** backHref 의 별칭 (직접 접근 시 대체 경로) */
+  fallbackHref?: string;
   right?: React.ReactNode;
   sticky?: boolean;
   className?: string;
@@ -25,11 +27,21 @@ export function Header({
   title,
   back,
   backHref,
+  fallbackHref,
   right,
   sticky,
   className,
 }: HeaderProps) {
   const router = useRouter();
+
+  const handleBack = () => {
+    const fallback = fallbackHref ?? backHref ?? '/';
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(fallback);
+    }
+  };
 
   return (
     <header
@@ -42,7 +54,7 @@ export function Header({
       {back ? (
         <button
           type="button"
-          onClick={() => (backHref ? router.push(backHref) : router.back())}
+          onClick={handleBack}
           aria-label="뒤로 가기"
           className="flex h-9 w-9 items-center justify-center rounded-lg text-xl text-neutral-700 hover:bg-neutral-100"
         >

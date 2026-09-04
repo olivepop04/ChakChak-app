@@ -88,7 +88,7 @@ export function ChatBoard({
   }
 
   return (
-    <div className="pb-40">
+    <div className="pb-44">
       {posts.length === 0 ? (
         <EmptyState
           icon="💬"
@@ -222,7 +222,7 @@ export function ChatBoard({
       )}
 
       {/* 하단 입력창 */}
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
         {canWrite ? (
           <div className="flex items-end gap-2">
             <textarea
