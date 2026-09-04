@@ -13,6 +13,17 @@ import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { UserSummary } from '@/lib/types/view';
 
+const KOREAN_DATE = new Intl.DateTimeFormat('ko-KR', {
+  timeZone: 'Asia/Seoul',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+function toKoreanDateKey(iso: string | null): string | null {
+  return iso ? KOREAN_DATE.format(new Date(iso)) : null;
+}
+
 function CrewRow({ person }: { person: UserSummary; isOwner?: boolean }) {
   return (
     <li className="flex items-center gap-3 px-5 py-3.5">
@@ -50,13 +61,16 @@ export default async function CrewPage({
 
   const { data: action } = await supabase
     .from('actions')
-    .select('id, title')
+    .select('id, title, activity_start_at, activity_end_at')
     .eq('id', id)
     .maybeSingle();
   if (!action) notFound();
 
   const { owner, crew } = await getActionCrew(supabase, id, user.id);
-  const groups = groupCrewByItem(crew);
+  const personGroups = groupCrewByItem(crew).filter((group) => group.type === 'PERSON');
+  const startDate = toKoreanDateKey(action.activity_start_at);
+  const endDate = toKoreanDateKey(action.activity_end_at);
+  const isMultiDay = startDate !== null && endDate !== null && startDate !== endDate;
 
   return (
     <main className="pb-36">
@@ -67,71 +81,6 @@ export default async function CrewPage({
           {action.title}
         </h1>
       </div>
-
-      <section className="px-5 pb-4">
-        <h2 className="pb-2 text-[12px] font-semibold tracking-wide text-neutral-400">
-          항목별 참여 현황
-        </h2>
-        {groups.length === 0 ? (
-          <p className="rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] leading-relaxed text-neutral-500">
-            아직 확인할 수 있는 항목별 참여 정보가 없어요.
-            <br />
-            물품 참여 정보는 권한에 따라 보이지 않을 수 있어요.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {groups.map((group) => (
-              <div key={group.itemId} className="rounded-xl border border-neutral-200 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                          group.type === 'PERSON'
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}
-                      >
-                        {group.type === 'PERSON' ? '사람' : '물품'}
-                      </span>
-                      <h3 className="truncate text-sm font-semibold text-neutral-900">
-                        {group.name}
-                      </h3>
-                    </div>
-                  </div>
-                  <span className="shrink-0 text-[13px] font-bold tabular-nums text-neutral-700">
-                    총 {group.total}
-                    {group.unit}
-                  </span>
-                </div>
-
-                <ul className="mt-3 flex flex-col gap-2 border-t border-neutral-100 pt-3">
-                  {group.members.map(({ person, quantity }) => (
-                    <li key={person.id} className="flex items-center gap-2.5">
-                      <Avatar name={person.nickname} size="sm" />
-                      <Link
-                        href={`/user/${person.id}`}
-                        className="min-w-0 flex-1 truncate text-[13px] font-semibold text-neutral-800"
-                      >
-                        @{person.nickname}
-                      </Link>
-                      {group.type === 'GOODS' && (
-                        <span className="shrink-0 text-[12px] tabular-nums text-neutral-500">
-                          {quantity}
-                          {group.unit}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-            <p className="text-[11px] leading-relaxed text-neutral-400">
-              물품 참여 정보는 본인과 호스트에게 허용된 범위만 보여요.
-            </p>
-          </div>
-        )}
-      </section>
 
       {owner && (
         <section>
@@ -162,6 +111,56 @@ export default async function CrewPage({
           </ul>
         )}
       </section>
+
+      {isMultiDay && (
+        <section className="px-5 pb-4 pt-6">
+          <h2 className="pb-2 text-[12px] font-semibold tracking-wide text-neutral-400">
+            항목별 참여 현황
+          </h2>
+          {personGroups.length === 0 ? (
+            <p className="rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] leading-relaxed text-neutral-500">
+              아직 확인할 수 있는 항목별 참여 정보가 없어요.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {personGroups.map((group) => (
+                <div key={group.itemId} className="rounded-xl border border-neutral-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="shrink-0 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">
+                          사람
+                        </span>
+                        <h3 className="truncate text-sm font-semibold text-neutral-900">
+                          {group.name}
+                        </h3>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-[13px] font-bold tabular-nums text-neutral-700">
+                      총 {group.total}
+                      {group.unit}
+                    </span>
+                  </div>
+
+                  <ul className="mt-3 flex flex-col gap-2 border-t border-neutral-100 pt-3">
+                    {group.members.map(({ person }) => (
+                      <li key={person.id} className="flex items-center gap-2.5">
+                        <Avatar name={person.nickname} size="sm" />
+                        <Link
+                          href={`/user/${person.id}`}
+                          className="min-w-0 flex-1 truncate text-[13px] font-semibold text-neutral-800"
+                        >
+                          @{person.nickname}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* 하단 고정 버튼 */}
       <div className="fixed inset-x-0 bottom-14 z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">

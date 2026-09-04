@@ -708,6 +708,127 @@ try {
     : ok('공개된 액션에 항목 추가는 허용됨');
 
 
+  // ═══════════════════════════════════════════════════════════
+  console.log('\n[16] 화면 말고 서버가 막는가 (11)');
+
+  // ── ① 참여 취소 사유는 본인도 못 지운다 ──
+  // 화면에는 삭제 버튼이 없지만, RPC 를 직접 부르면 통과했었다.
+  const { data: lnAct } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 사유 삭제', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    status: 'ACTIVE',
+    recruit_end_at:    new Date(now + 3 * 86400000).toISOString(),
+    activity_start_at: new Date(now + 5 * 86400000).toISOString(),
+    activity_end_at:   new Date(now + 6 * 86400000).toISOString(),
+  }).select('id').single();
+  const { data: lnItem } = await admin.from('action_items').insert({
+    action_id: lnAct.id, type: 'PERSON', name: '참가자', target_type: 'MINIMUM',
+    min_required: 1, max_allowed: null, unit: '명', gender_requirement: 'ANY',
+    condition_name: null, condition_desc: null, sort_order: 1,
+  }).select('id').single();
+  await cB.rpc('join_action', {
+    p_action_id: lnAct.id,
+    p_items: [{ action_item_id: lnItem.id, quantity: 1 }],
+  });
+  await cB.rpc('leave_action_with_reason', {
+    p_action_id: lnAct.id, p_reason: '검증용 사유입니다. 지워지면 안 됩니다.',
+  });
+  const { data: lnMsg } = await admin.from('chat_messages')
+    .select('id').eq('action_id', lnAct.id).eq('kind', 'LEFT_NOTICE')
+    .limit(1).maybeSingle();
+
+  if (!lnMsg) {
+    no('LEFT_NOTICE 글이 안 만들어짐 !! — 나가기 사유 흐름 확인 필요');
+  } else {
+    const rLn = await cB.rpc('delete_chat_message', { p_message_id: lnMsg.id });
+    rLn.error
+      ? ok('참여 취소 사유는 본인도 삭제 거절', rLn.error.message.slice(0, 26))
+      : no('참여 취소 사유가 삭제됨 !! — 11_update.sql 을 실행했는가');
+  }
+
+  // ── ② 소감은 결과가 올라온 뒤에만 ──
+  // 활동만 끝나고(ENDED) 결과가 없으면 거절돼야 한다.
+  const { data: vcAct } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 결과 전 소감', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    status: 'ENDED',
+    recruit_end_at:    new Date(now - 5 * 86400000).toISOString(),
+    activity_start_at: new Date(now - 3 * 86400000).toISOString(),
+    activity_end_at:   new Date(now - 2 * 86400000).toISOString(),
+  }).select('id').single();
+  await admin.from('participations')
+    .insert({ action_id: vcAct.id, user_id: uidB, status: 'AFTER_ACTION' });
+
+  const rVc1 = await cB.rpc('submit_crew_voice', {
+    p_action_id: vcAct.id, p_content: '결과가 아직 없는데 소감을 남겨봅니다.',
+  });
+  rVc1.error
+    ? ok('결과 공개 전 소감 거절', rVc1.error.message.slice(0, 26))
+    : no('결과가 없는데 소감이 저장됨 !! — 11_update.sql 을 실행했는가');
+
+  // COMPLETED 로 바꾸면 허용돼야 한다
+  await admin.from('actions').update({ status: 'COMPLETED' }).eq('id', vcAct.id);
+  const rVc2 = await cB.rpc('submit_crew_voice', {
+    p_action_id: vcAct.id, p_content: '결과가 올라온 뒤라 이제 소감을 남깁니다.',
+  });
+  rVc2.error
+    ? no('결과가 올라왔는데 소감이 거절됨 !!', rVc2.error.message.slice(0, 40))
+    : ok('결과 공개 뒤 소감은 허용됨');
+
+  await admin.from('actions').delete().eq('id', vcAct.id);
+
+  // ── ③ 항목 추가는 모집 중일 때만 ──
+  const rAdd1 = await cA.from('action_items').insert({
+    action_id: lnAct.id, type: 'GOODS', name: '[검증] 모집 중 추가',
+    target_type: 'MINIMUM', min_required: 1, max_allowed: null, unit: '개',
+    gender_requirement: 'ANY', condition_name: null, condition_desc: null,
+    sort_order: 50,
+  });
+  rAdd1.error
+    ? no('모집 중인데 항목 추가가 막힘 !!', rAdd1.error.message.slice(0, 40))
+    : ok('모집 중에는 항목 추가 허용');
+
+  // 모집이 이미 끝난 액션에는 거절돼야 한다.
+  //
+  // ★ 공개된 액션의 날짜는 나중에 못 바꿉니다(07 이 service_role 도 막습니다).
+  //   그래서 update 로 마감을 앞당기는 대신, 처음부터 마감이 지난 액션을 만듭니다.
+  //   처음엔 update 로 짰다가 이 검사가 통과해버려서 알았습니다.
+  const { data: closedAct } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 마감 지난 액션', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    status: 'ACTIVE',
+    recruit_end_at:    new Date(now - 2 * 86400000).toISOString(),
+    activity_start_at: new Date(now + 2 * 86400000).toISOString(),
+    activity_end_at:   new Date(now + 3 * 86400000).toISOString(),
+  }).select('id').single();
+
+  const rAdd2 = await cA.from('action_items').insert({
+    action_id: closedAct.id, type: 'GOODS', name: '[검증] 마감 뒤 추가',
+    target_type: 'MINIMUM', min_required: 1, max_allowed: null, unit: '개',
+    gender_requirement: 'ANY', condition_name: null, condition_desc: null,
+    sort_order: 51,
+  });
+  rAdd2.error
+    ? ok('모집 마감 뒤 항목 추가 거절', rAdd2.error.message.slice(0, 26))
+    : no('마감됐는데 항목이 추가됨 !! — 신청할 수 있는 사람이 없습니다');
+
+  await admin.from('actions').delete().eq('id', closedAct.id);
+
+  // COMPLETED 에도 거절돼야 한다
+  await admin.from('actions').update({ status: 'COMPLETED' }).eq('id', lnAct.id);
+  const rAdd3 = await cA.from('action_items').insert({
+    action_id: lnAct.id, type: 'GOODS', name: '[검증] 완료 뒤 추가',
+    target_type: 'MINIMUM', min_required: 1, max_allowed: null, unit: '개',
+    gender_requirement: 'ANY', condition_name: null, condition_desc: null,
+    sort_order: 52,
+  });
+  rAdd3.error
+    ? ok('완료된 액션에 항목 추가 거절 — 결과에 0명짜리 항목이 안 낌')
+    : no('완료된 액션에 항목이 추가됨 !!');
+
+  await admin.from('actions').delete().eq('id', lnAct.id);
+
+
 } catch (e) {
   no('예외 발생', e.message);
 } finally {

@@ -15,7 +15,7 @@ import { ActionGallery } from '@/components/action/ActionGallery';
 import { AddressBox } from '@/components/action/AddressBox';
 import { MessageAccessButton } from '@/components/action/MessageAccessButton';
 import { Avatar } from '@/components/ui/Avatar';
-import { StatusBadge } from '@/components/ui/Badge';
+import { Badge, StatusBadge } from '@/components/ui/Badge';
 import { LikeButton, SaveButton, ShareButton, FollowButton } from '@/components/ui/ToggleButtons';
 import { Header } from '@/components/layout/Header';
 import {
@@ -250,6 +250,9 @@ export default async function ActionDetailPage({
               </p>
             )}
           </div>
+          {action.placeName && (
+            <p className="text-sm font-semibold text-neutral-900">{action.placeName}</p>
+          )}
           {action.address && <AddressBox address={action.address} />}
         </section>
 

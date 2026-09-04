@@ -43,9 +43,10 @@ function toISO(local: string): string | null {
 
 /** 종료 시각은 유지하고 날짜만 활동 시작일에 맞춥니다. */
 function moveToSameDate(value: string, activityStart: string): string {
-  const [startDate] = activityStart.split('T');
+  const [startDate, startTime] = activityStart.split('T');
   const [, time] = value.split('T');
-  return startDate && time ? `${startDate}T${time}` : value;
+  if (!startDate) return value;
+  return time ? `${startDate}T${time}` : startTime ? activityStart : value;
 }
 
 function scrollAndFocus(target: HTMLElement | null) {
@@ -419,7 +420,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         <span className={label}>일정</span>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[12px] text-neutral-500">모집 마감</span>
+          <span className="text-[12px] text-neutral-500">모집 마감일 :</span>
           <input
             ref={recruitEndRef}
             type="datetime-local"
