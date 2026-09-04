@@ -1,0 +1,94 @@
+import Link from 'next/link';
+import type { LegalDocument } from './legal-documents';
+
+type LegalDocumentPageProps = {
+  document: LegalDocument;
+  otherDocument: {
+    href: '/terms' | '/privacy';
+    label: string;
+  };
+};
+
+export function LegalDocumentPage({
+  document,
+  otherDocument,
+}: LegalDocumentPageProps) {
+  return (
+    <main className="min-h-dvh bg-white pb-12">
+      <header className="sticky top-0 z-20 flex h-14 items-center border-b border-neutral-100 bg-white/95 px-4 backdrop-blur">
+        <Link
+          href="/signup"
+          aria-label="회원가입으로 돌아가기"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-neutral-700 hover:bg-neutral-100"
+        >
+          ‹
+        </Link>
+        <p className="absolute left-1/2 -translate-x-1/2 text-[15px] font-semibold text-neutral-900">
+          약관 안내
+        </p>
+      </header>
+
+      <article className="px-5 pb-8 pt-8">
+        <div className="border-b border-neutral-200 pb-7">
+          <p className="text-[12px] font-semibold tracking-wide text-neutral-400">
+            CHAKCHAK POLICY
+          </p>
+          <h1 className="mt-2 text-[26px] font-bold tracking-tight text-neutral-900">
+            {document.title}
+          </h1>
+          <span className="mt-3 inline-flex rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-medium text-neutral-600">
+            {document.version}
+          </span>
+        </div>
+
+        <div className="space-y-9 pt-8">
+          {document.sections.map((section, sectionIndex) => {
+            const sectionId = `legal-section-${sectionIndex + 1}`;
+
+            return (
+              <section key={section.title} aria-labelledby={sectionId}>
+                <h2
+                  id={sectionId}
+                  className="text-[16px] font-bold leading-relaxed text-neutral-900"
+                >
+                  {section.title}
+                </h2>
+                <div className="mt-3 space-y-2.5">
+                  {section.blocks.map((block, index) =>
+                    block.type === 'bullet' ? (
+                      <p
+                        key={`${section.title}-${index}`}
+                        className="flex gap-2 pl-1 text-[14px] leading-7 text-neutral-600"
+                      >
+                        <span aria-hidden="true" className="shrink-0">
+                          •
+                        </span>
+                        <span>{block.text}</span>
+                      </p>
+                    ) : (
+                      <p
+                        key={`${section.title}-${index}`}
+                        className="whitespace-pre-line text-[14px] leading-7 text-neutral-600"
+                      >
+                        {block.text}
+                      </p>
+                    ),
+                  )}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      </article>
+
+      <div className="mx-5 border-t border-neutral-200 pt-6 text-center">
+        <Link
+          href={otherDocument.href}
+          className="text-[13px] font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+        >
+          {otherDocument.label}도 확인하기
+        </Link>
+      </div>
+    </main>
+  );
+}
