@@ -219,7 +219,7 @@ export function ActionCard({
           </p>
 
           {/* 3. 인터랙티브 요소들 & 통계 4종 */}
-          <div className="mt-1 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
+          <div className="pointer-events-auto mt-1 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
             {/* 작성자 프로필 링크 및 참여 인원 */}
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               <Link
