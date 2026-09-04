@@ -14,6 +14,7 @@ import { QuotaProgress } from '@/components/action/QuotaProgress';
 import { ActionGallery } from '@/components/action/ActionGallery';
 import { AddressBox } from '@/components/action/AddressBox';
 import { MessageAccessButton } from '@/components/action/MessageAccessButton';
+import { ActionCrewSection } from '@/components/action/ActionCrewSection';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
 import { LikeButton, SaveButton, ShareButton, FollowButton } from '@/components/ui/ToggleButtons';
@@ -52,19 +53,28 @@ export default async function ActionDetailPage({
   let crewOwner: UserSummary | null = null;
   let crew: CrewMember[] = [];
 
-  if (isCrewMember) {
-    try {
-      const res = await getActionCrew(supabase, id, user?.id ?? null);
-      crewOwner = res.owner;
-      crew = res.crew;
-    } catch {
-      // Crew 조회 실패 시 기본값 fallback
-    }
+  try {
+    const res = await getActionCrew(supabase, id, user?.id ?? null);
+    crewOwner = res.owner;
+    crew = res.crew;
+  } catch {
+    // Crew 조회 실패 시 기본값 fallback
   }
 
-  const displayMembers = isCrewMember
-    ? (crewOwner ? [crewOwner, ...crew] : crew).slice(0, 4)
-    : [];
+  let displayMembers: UserSummary[] = crewOwner ? [crewOwner, ...crew] : crew;
+  if (displayMembers.length === 0 && action.owner) {
+    displayMembers = [
+      {
+        id: action.owner.id,
+        nickname: action.owner.nickname,
+        bio: action.owner.bio ?? null,
+        participatedCount: 0,
+        ledCount: 0,
+        followedByMe: action.followingOwner ?? false,
+      },
+    ];
+  }
+  const summaryMembers = displayMembers.slice(0, 4);
 
   const deadline = timeUntilDeadline(action.recruitEndAt);
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
@@ -90,7 +100,7 @@ export default async function ActionDetailPage({
       return { label: '내가 만든 액션', href: '/activity?tab=created' } as const;
     if (action.myParticipation && action.myParticipation !== 'LEFT')
       return {
-        label: 'CREW CHAT으로 가기',
+        label: '함께하는 크루와 이야기하기',
         href: `/action/${id}/chat`,
         isCrewChat: true,
       } as const;
@@ -266,41 +276,12 @@ export default async function ActionDetailPage({
           </section>
         )}
 
-        {/* 함께하는 크루 */}
-        <section className="flex flex-col gap-3 pt-2">
-          <h2 className="text-[15px] font-bold text-neutral-900">함께하는 크루</h2>
-          <Link
-            href={`/action/${id}/crew`}
-            className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
-          >
-            {isCrewMember ? (
-              <div className="flex items-center gap-3 min-w-0">
-                {displayMembers.length > 0 && (
-                  <div className="flex -space-x-2 overflow-hidden shrink-0">
-                    {displayMembers.map((member, idx) => (
-                      <Avatar
-                        key={member.id || idx}
-                        name={member.nickname ?? '?'}
-                        size="sm"
-                        className="ring-2 ring-white"
-                      />
-                    ))}
-                  </div>
-                )}
-                <span className="truncate text-[14px] font-semibold text-neutral-800">
-                  {action.crewCount}명 참여 중
-                </span>
-              </div>
-            ) : (
-              <span className="text-[14px] font-semibold text-neutral-800">
-                {action.crewCount}명이 함께해요
-              </span>
-            )}
-            <span className="shrink-0 text-[13px] font-medium text-neutral-400">
-              전체보기 ›
-            </span>
-          </Link>
-        </section>
+        <ActionCrewSection
+          actionId={action.id}
+          crewCount={action.crewCount}
+          members={summaryMembers}
+          canViewCrew={isCrewMember}
+        />
       </div>
 
       {/* 하단 고정 버튼 */}

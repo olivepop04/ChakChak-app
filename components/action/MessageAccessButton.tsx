@@ -27,7 +27,7 @@ export function MessageAccessButton({
   return (
     <>
       <Button type="button" size="lg" variant="secondary" fullWidth onClick={handleClick}>
-        CREW CHAT으로 가기
+        함께하는 크루와 이야기하기
       </Button>
 
       {isOpen && (
