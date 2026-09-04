@@ -107,16 +107,22 @@ export function ActionCard({
 
             {/* 3. 인터랙티브 요소들 & 통계 4종 */}
             <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-1.5">
-              {/* 작성자 프로필 링크 */}
-              <Link
-                href={`/user/${action.owner?.id}`}
-                className="pointer-events-auto flex items-center gap-1.5 min-w-0 text-xs text-neutral-600 hover:underline"
-              >
-                <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-                <span className="truncate text-xs text-neutral-600">
-                  @{action.owner?.nickname ?? '호스트'}
+              {/* 작성자 프로필 링크 및 참여 인원 */}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Link
+                  href={`/user/${action.owner?.id}`}
+                  className="pointer-events-auto flex items-center gap-1.5 min-w-0 text-xs text-neutral-600 hover:underline"
+                >
+                  <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
+                  <span className="truncate text-xs text-neutral-600">
+                    @{action.owner?.nickname ?? '호스트'}
+                  </span>
+                </Link>
+                <span className="shrink-0 text-xs text-neutral-400">·</span>
+                <span className="shrink-0 text-xs text-neutral-500">
+                  {action.crewCount ?? 0}명 참여 중
                 </span>
-              </Link>
+              </div>
 
               {/* 통계 4종 (좋아요, 공유, 저장, 참여인원) */}
               <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs text-neutral-500 tabular-nums">
@@ -214,16 +220,22 @@ export function ActionCard({
 
           {/* 3. 인터랙티브 요소들 & 통계 4종 */}
           <div className="mt-1 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
-            {/* 작성자 프로필 링크 */}
-            <Link
-              href={`/user/${action.owner?.id}`}
-              className="pointer-events-auto flex items-center gap-1.5 min-w-0 flex-1 text-xs text-neutral-600 hover:underline"
-            >
-              <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-              <span className="truncate text-xs text-neutral-600">
-                @{action.owner?.nickname ?? '호스트'}
+            {/* 작성자 프로필 링크 및 참여 인원 */}
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <Link
+                href={`/user/${action.owner?.id}`}
+                className="pointer-events-auto flex items-center gap-1.5 min-w-0 text-xs text-neutral-600 hover:underline"
+              >
+                <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
+                <span className="truncate text-xs text-neutral-600">
+                  @{action.owner?.nickname ?? '호스트'}
+                </span>
+              </Link>
+              <span className="shrink-0 text-xs text-neutral-400">·</span>
+              <span className="shrink-0 text-xs text-neutral-500">
+                {action.crewCount ?? 0}명 참여 중
               </span>
-            </Link>
+            </div>
 
             {/* 통계 4종 (좋아요, 공유, 저장, 참여인원) */}
             <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs tabular-nums text-neutral-500">
