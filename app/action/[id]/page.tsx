@@ -81,7 +81,10 @@ export default async function ActionDetailPage({
   const canViewChat =
     action.isOwner ||
     !!(action.myParticipation && action.myParticipation !== 'LEFT');
-  const showMessageAccessButton = action.isOwner || !canViewChat;
+  const showMessageAccessButton =
+    action.isOwner &&
+    action.status !== 'CANCELLED' &&
+    action.status !== 'COMPLETED';
   const canEditActionText =
     action.isOwner &&
     (action.status === 'ACTIVE' ||
