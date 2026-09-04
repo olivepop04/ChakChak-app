@@ -17,6 +17,7 @@ import {
   LeaveButton,
   DeleteDraftButton,
   CancelActionButton,
+  EarlyEndButton,
 } from '@/components/action/ActivityButtons';
 import { getShortfallActionIds } from '@/lib/queries/stats';
 import { cn } from '@/lib/utils/cn';
@@ -27,35 +28,66 @@ const btn =
 const primary = `${btn} bg-neutral-900 text-white`;
 const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 
-/** 참여 상태별 버튼 (팀 합의 표 그대로) */
+/** 참여 및 액션 상태별 버튼 (액션 상태와 참여 상태를 함께 고려) */
 function JoinedFooter({ item }: { item: JoinedActionData }) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {item.participationStatus === 'BEFORE_ACTION' && (
-        <>
-          <Link href={`/action/${item.id}/chat`} className={secondary}>
-            CREW CHAT
-          </Link>
+  if (item.status === 'CANCELLED') {
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}`} className={secondary}>
+          취소 사유 보기
+        </Link>
+      </div>
+    );
+  }
+
+  if (item.status === 'ACTIVE') {
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}/chat`} className={secondary}>
+          CREW CHAT
+        </Link>
+        {item.participationStatus === 'BEFORE_ACTION' && (
           <LeaveButton actionId={item.id} />
-        </>
-      )}
+        )}
+      </div>
+    );
+  }
 
-      {item.participationStatus === 'AFTER_ACTION' && (
-        <>
-          <Link href={`/action/${item.id}/result`} className={secondary}>
-            결과 보기
-          </Link>
-          <Link href={`/action/${item.id}/voice`} className={primary}>
-            소감 남기기
-          </Link>
-        </>
-      )}
+  // ENDED: 호스트가 아직 결과를 작성/공개하지 않음 (결과 없음)
+  if (item.status === 'ENDED') {
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}/chat`} className={secondary}>
+          CREW CHAT
+        </Link>
+      </div>
+    );
+  }
 
-      {item.participationStatus === 'ACTUALLY_PARTICIPATED' && (
+  // COMPLETED: 호스트가 결과를 등록 완료한 상태
+  if (item.status === 'COMPLETED') {
+    const hasSubmittedVoice =
+      item.participationStatus === 'ACTUALLY_PARTICIPATED' || item.hasVoice;
+
+    return (
+      <div className="flex flex-wrap gap-1.5">
         <Link href={`/action/${item.id}/result`} className={secondary}>
           결과 보기
         </Link>
-      )}
+        {!hasSubmittedVoice && (
+          <Link href={`/action/${item.id}/voice`} className={primary}>
+            소감 남기기
+          </Link>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      <Link href={`/action/${item.id}/chat`} className={secondary}>
+        CREW CHAT
+      </Link>
     </div>
   );
 }
@@ -68,6 +100,10 @@ function CreatedFooter({
   item: ActionCardData;
   isShortfall?: boolean;
 }) {
+  const isStarted = item.activityStartAt
+    ? new Date(item.activityStartAt) <= new Date()
+    : false;
+
   return (
     <div className="flex flex-col gap-2.5">
       {isShortfall && (
@@ -94,7 +130,11 @@ function CreatedFooter({
             <Link href={`/action/${item.id}/chat`} className={secondary}>
               CREW CHAT
             </Link>
-            <CancelActionButton actionId={item.id} />
+            {isStarted ? (
+              <EarlyEndButton actionId={item.id} />
+            ) : (
+              <CancelActionButton actionId={item.id} />
+            )}
           </>
         )}
 
@@ -167,6 +207,27 @@ export default async function ActivityPage({
     // 모집이 마감됐는데 인원이 모자란 액션을 호스트에게 알립니다 (F37).
     // 알림 화면을 안 열고 여기만 봐도 상황을 알 수 있어야 합니다.
     await syncHostNotifications(user.id);
+  } else {
+    // 내가 참여한 액션 중 활동 기간이 지난 ACTIVE 액션의 생애주기를 ENDED로 동기화합니다.
+    const { data: joinedParts } = await supabase
+      .from('participations')
+      .select('action_id')
+      .eq('user_id', user.id)
+      .neq('status', 'LEFT');
+
+    const joinedActionIds = (joinedParts ?? []).map((p) => p.action_id);
+    if (joinedActionIds.length > 0) {
+      const { data: staleJoined } = await supabase
+        .from('actions')
+        .select('id')
+        .in('id', joinedActionIds)
+        .eq('status', 'ACTIVE')
+        .lt('activity_end_at', new Date().toISOString());
+
+      for (const a of staleJoined ?? []) {
+        await supabase.rpc('sync_action_status', { p_action_id: a.id });
+      }
+    }
   }
 
   const joined = isCreated ? [] : await getMyJoinedActions(supabase, user.id);

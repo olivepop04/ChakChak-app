@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { deleteDraft, cancelAction } from '@/lib/mutations';
+import { deleteDraft, cancelAction, endActionEarly } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
 
 const btn =
@@ -76,6 +76,37 @@ export function CancelActionButton({ actionId }: { actionId: string }) {
   return (
     <button type="button" onClick={handle} disabled={busy} className={secondary}>
       취소하기
+    </button>
+  );
+}
+
+/** 조기 종료 — 활동 중(시작 이후)인 액션을 일찍 종료합니다 */
+export function EarlyEndButton({ actionId }: { actionId: string }) {
+  const router = useRouter();
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+
+  async function handle() {
+    if (busy) return;
+
+    const reason = prompt(
+      '조기 종료 사유를 적어주세요. 크루들에게 그대로 전달됩니다. (5자 이상)',
+    );
+    if (reason === null) return;
+
+    setBusy(true);
+    const res = await endActionEarly(createClient(), actionId, reason);
+    if (!res.ok) toast(res.message, 'error');
+    else {
+      toast('활동을 일찍 종료했어요. 크루들에게 알림이 갔어요.');
+      router.refresh();
+    }
+    setBusy(false);
+  }
+
+  return (
+    <button type="button" onClick={handle} disabled={busy} className={secondary}>
+      조기종료
     </button>
   );
 }
