@@ -45,12 +45,6 @@ export function LeaveButton({ actionId }: { actionId: string }) {
   async function handleLeave() {
     const trimmedReason = reason.trim();
     if (busy || trimmedReason.length < 5) return;
-    if (
-      !confirm(
-        '이 내용이 크루들에게 보입니다. 한번 보내면 지울 수 없어요.\n그래도 참여를 취소할까요?',
-      )
-    )
-      return;
 
     setBusy(true);
     const res = await leaveActionWithReason(createClient(), actionId, trimmedReason);
@@ -89,6 +83,9 @@ export function LeaveButton({ actionId }: { actionId: string }) {
             </h2>
             <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
               사유는 크루 게시판에 남으며, 참여를 취소하면 게시판에 들어갈 수 없어요.
+            </p>
+            <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-semibold leading-relaxed text-amber-800">
+              이 내용은 크루에게 공개되며, 한번 보내면 지울 수 없습니다.
             </p>
 
             <label className="mt-4 flex flex-col gap-1.5">
