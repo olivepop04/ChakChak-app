@@ -107,8 +107,10 @@ const IMG = {
  *          방식 R = 정해진 인원(min~max) · M = 최소 인원만(상한 없음)
  */
 const ACTIONS = [
-  ['[모집미달 테스트] 동네 플로깅 모집', '환경', IMG.env, '서울특별시 성동구 왕십리로 100', 'ACTIVE', 2, 0.5,
-    [['플로깅 참가자', 'PERSON', 'M', 10, null, '명', 'ANY']]],
+  // 모집은 어제 끝났고 활동은 엿새 뒤 — 일주일쯤 이 상태로 남습니다.
+  // (마지막 숫자 7 = 활동 7일 전에 모집 마감. 기본값은 1입니다)
+  ['[모집미달 테스트] 동네 플로깅 모집', '환경', IMG.env, '서울특별시 성동구 왕십리로 100', 'ACTIVE', 2, 6,
+    [['플로깅 참가자', 'PERSON', 'M', 10, null, '명', 'ANY']], 7],
   ['우리 동네 보호소를 함께 도와요', '동물', IMG.dog, '서울특별시 성동구 왕십리로 100', 'ACTIVE', 0, 5,
     [['산책 도우미', 'PERSON', 'M', 5, null, '명', 'ANY'], ['사료', 'GOODS', 'M', 50, null, '포', 'ANY']]],
   ['유기견 산책 친구를 찾습니다', '동물', IMG.animal, '서울특별시 마포구 월드컵로 30', 'ACTIVE', 4, 7,
@@ -320,7 +322,8 @@ async function seed() {
   let voiceCount = 0;
 
   for (const [idx, row] of ACTIONS.entries()) {
-    const [title, category, image, address, status, daysAgo, whenDay, items] = row;
+    const [title, category, image, address, status, daysAgo, whenDay, items, recruitDaysBefore] =
+      row;
     const owner = users[idx % users.length];
     if (!owner) continue;
 
@@ -354,7 +357,15 @@ async function seed() {
       activityEnd.setTime(activityStart.getTime() + 3 * 3600000);
     }
 
-    const recruitEnd = new Date(activityStart.getTime() - DAY);
+    // 보통 활동 하루 전에 모집을 마감합니다.
+    //
+    // "모집은 끝났는데 활동은 아직" 인 상태를 오래 유지하려면 이 간격을
+    // 늘려야 합니다. 전에는 하루로 고정이라, 모집미달 시연 액션이
+    // 하루만 지나면 활동까지 끝나버려 '소감 작성 필요' 로 보였습니다.
+    // 성은님이 여러 번 제보하신 그 건입니다. (2026-09-07)
+    const recruitEnd = new Date(
+      activityStart.getTime() - (recruitDaysBefore ?? 1) * DAY,
+    );
 
     const { data: action, error } = await admin
       .from('actions')

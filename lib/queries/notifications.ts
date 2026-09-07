@@ -66,6 +66,18 @@ export const NOTIFICATION_TEMPLATE: Record<
     cta: '진행할지 정하기',
     href: (id) => `/activity?tab=created&focus=${id}`,
   },
+  // 호스트가 활동 중에 일찍 끝냈을 때 크루에게 (12·13)
+  //
+  // 알림은 supabase/12 의 end_action_early() 가 이미 보내고 있었는데
+  // 여기 문구를 안 만들어서 화면에 안 나왔습니다. 제 누락이었습니다.
+  //
+  // 사유는 크루챗에 공지로 남으므로 크루챗으로 보냅니다.
+  EARLY_END: {
+    icon: '⏹️',
+    title: '액션이 종료예정 시간보다 일찍 종료되었어요',
+    cta: '사유 확인하기',
+    href: (id) => `/action/${id}/chat`,
+  },
 };
 
 export async function getNotifications(

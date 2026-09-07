@@ -69,7 +69,16 @@ export async function POST(request: NextRequest) {
     });
 
     return json({ taken });
-  } catch {
+  } catch (err) {
+    // 서버 기록에 진짜 이유를 남깁니다 (13).
+    //
+    // 전에는 catch 가 오류를 통째로 삼켜서, 화면에는 안내 문구만 나오고
+    // 원인이 어디에도 안 남았습니다. 성은님이 가입 테스트를 못 하셨는데
+    // 이유를 찾는 데 한참 걸렸습니다.
+    //
+    // 사용자에게 보이는 문구는 그대로 둡니다 — 계정이 있는지 없는지를
+    // 오류 메시지로 흘리면 안 되기 때문입니다.
+    console.error('[check-email] 이메일 확인 실패:', err);
     return json(
       { error: '이메일을 확인하지 못했어요. 잠시 후 다시 시도해주세요.' },
       503,

@@ -947,6 +947,63 @@ try {
   await admin.from('actions').delete().in('id', [running, past, notYet]);
 
 
+  // ═══════════════════════════════════════════════════════════
+  console.log('\n[18] 취소된 액션에는 더 이상 반응할 수 없다 (13)');
+
+  const { data: cxAct } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 취소 예정', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    status: 'ACTIVE',
+    recruit_end_at:    new Date(now + 2 * 86400000).toISOString(),
+    activity_start_at: new Date(now + 4 * 86400000).toISOString(),
+    activity_end_at:   new Date(now + 5 * 86400000).toISOString(),
+  }).select('id').single();
+
+  // ── ① 취소 전에는 좋아요·저장이 된다 ──
+  const rL1 = await cB.from('likes').insert({ action_id: cxAct.id, user_id: uidB });
+  const rS1 = await cB.from('saves').insert({ action_id: cxAct.id, user_id: uidB });
+  rL1.error || rS1.error
+    ? no('취소 전인데 좋아요·저장이 막힘 !!', (rL1.error ?? rS1.error).message.slice(0, 40))
+    : ok('취소 전에는 좋아요·저장 허용');
+
+  // ── ② 취소한다 ──
+  const rCancel = await cA.rpc('cancel_action', {
+    p_action_id: cxAct.id, p_reason: '검증용 취소입니다.',
+  });
+  if (rCancel.error) no('취소가 안 됨 !!', rCancel.error.message.slice(0, 40));
+
+  // ── ③ 취소 뒤에는 새로 누를 수 없다 ──
+  const rL2 = await cC.from('likes').insert({ action_id: cxAct.id, user_id: uidC });
+  rL2.error
+    ? ok('취소된 액션에 좋아요 거절')
+    : no('취소된 액션에 좋아요가 됨 !! — 13_update.sql 을 실행했는가');
+
+  const rS2 = await cC.from('saves').insert({ action_id: cxAct.id, user_id: uidC });
+  rS2.error
+    ? ok('취소된 액션에 저장 거절')
+    : no('취소된 액션에 저장이 됨 !!');
+
+  const rSh = await cB.rpc('notify_invite', { p_action_id: cxAct.id, p_target: uidC });
+  rSh.error
+    ? ok('취소된 액션 공유 거절', rSh.error.message.slice(0, 24))
+    : no('취소된 액션이 공유됨 !!');
+
+  // ── ④ 취소 전에 눌러둔 것은 남아 있고, 해제도 된다 ──
+  const { data: keptLike } = await cB.from('likes')
+    .select('action_id').eq('action_id', cxAct.id).eq('user_id', uidB).maybeSingle();
+  keptLike
+    ? ok('취소 전에 눌러둔 좋아요는 그대로 남음 — 크루 잘못이 아니므로')
+    : no('취소하면서 기존 좋아요가 사라짐 !!');
+
+  const rUnlike = await cB.from('likes')
+    .delete().eq('action_id', cxAct.id).eq('user_id', uidB);
+  rUnlike.error
+    ? no('취소된 액션에서 좋아요 해제가 막힘 !!', rUnlike.error.message.slice(0, 40))
+    : ok('취소된 액션이어도 좋아요 해제는 됨');
+
+  await admin.from('actions').delete().eq('id', cxAct.id);
+
+
 } catch (e) {
   no('예외 발생', e.message);
 } finally {

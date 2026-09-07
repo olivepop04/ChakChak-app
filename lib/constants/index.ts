@@ -171,6 +171,7 @@ export const NOTIFICATION_TYPES = [
   'INVITED',
   'LEFT_CREW',
   'SHORTFALL',
+  'EARLY_END',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
