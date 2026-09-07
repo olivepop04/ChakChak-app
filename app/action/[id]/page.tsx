@@ -198,7 +198,7 @@ export default async function ActionDetailPage({
         </div>
 
         {/* 상단 버튼 그룹 (참여인원 · 좋아요 · 저장 · 공유) */}
-        <div className="flex items-center gap-2 border-y border-neutral-100 py-2 text-xs tabular-nums text-neutral-500">
+        <div className="flex items-center justify-start gap-1 border-y border-neutral-100 py-2 text-xs tabular-nums text-neutral-500">
           <CrewAnchorButton
             count={action.crewCount}
             className="px-1 py-0.5 text-xs gap-1"

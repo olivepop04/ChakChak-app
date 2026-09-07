@@ -6,6 +6,7 @@
  */
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/queries/profiles';
 import { getSavedActions } from '@/lib/queries/actions';
@@ -62,9 +63,9 @@ export default async function MyPage() {
           <Link
             href="/notifications"
             aria-label="알림"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg hover:bg-neutral-100"
+            className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-neutral-100 text-neutral-600"
           >
-            🔔
+            <Bell className="h-5 w-5 text-neutral-700" />
           </Link>
         }
       />

@@ -11,7 +11,12 @@
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusBadge } from '@/components/ui/Badge';
-import { LikeButton, SaveButton } from '@/components/ui/ToggleButtons';
+import {
+  CrewAnchorButton,
+  LikeButton,
+  SaveButton,
+  ShareButton,
+} from '@/components/ui/ToggleButtons';
 import type { ActionCardData } from '@/lib/types/view';
 import { cn } from '@/lib/utils/cn';
 
@@ -119,11 +124,11 @@ export function ActionCard({
               </Link>
 
               {/* 통계 4종 (참여인원, 좋아요, 저장, 공유) */}
-              <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs text-neutral-500 tabular-nums">
-                <span className="inline-flex items-center gap-0.5" title="참여 인원">
-                  <span aria-hidden="true">👥</span>
-                  <span>{action.crewCount ?? 0}</span>
-                </span>
+              <div className="pointer-events-auto flex items-center justify-start gap-1 shrink-0 text-xs text-neutral-500 tabular-nums">
+                <CrewAnchorButton
+                  count={action.crewCount ?? 0}
+                  className="px-1 py-0.5 text-xs gap-1"
+                />
                 <LikeButton
                   actionId={action.id}
                   initialLiked={action.likedByMe}
@@ -136,10 +141,12 @@ export function ActionCard({
                   initialCount={action.saveCount ?? 0}
                   className="px-1 py-0.5 text-xs gap-1"
                 />
-                <span className="inline-flex items-center gap-0.5" title="공유 수">
-                  <span aria-hidden="true">↗</span>
-                  <span>{action.shareCount ?? 0}</span>
-                </span>
+                <ShareButton
+                  actionId={action.id}
+                  actionTitle={action.title}
+                  count={action.shareCount ?? 0}
+                  className="px-1 py-0.5 text-xs gap-1"
+                />
               </div>
             </div>
           </div>
@@ -226,11 +233,11 @@ export function ActionCard({
             </Link>
 
             {/* 통계 4종 (참여인원, 좋아요, 저장, 공유) */}
-            <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs tabular-nums text-neutral-500">
-              <span className="inline-flex items-center gap-0.5" title="참여 인원">
-                <span aria-hidden="true">👥</span>
-                <span>{action.crewCount ?? 0}</span>
-              </span>
+            <div className="pointer-events-auto flex items-center justify-start gap-1 shrink-0 text-xs tabular-nums text-neutral-500">
+              <CrewAnchorButton
+                count={action.crewCount ?? 0}
+                className="px-1 py-0.5 text-xs gap-1"
+              />
               <LikeButton
                 actionId={action.id}
                 initialLiked={action.likedByMe}
@@ -243,10 +250,12 @@ export function ActionCard({
                 initialCount={action.saveCount ?? 0}
                 className="px-1 py-0.5 text-xs gap-1"
               />
-              <span className="inline-flex items-center gap-0.5" title="공유 수">
-                <span aria-hidden="true">↗</span>
-                <span>{action.shareCount ?? 0}</span>
-              </span>
+              <ShareButton
+                actionId={action.id}
+                actionTitle={action.title}
+                count={action.shareCount ?? 0}
+                className="px-1 py-0.5 text-xs gap-1"
+              />
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@
  * user!.id 처럼 강제로 단언하지 마세요. 비회원이 열면 터집니다.
  */
 import Link from 'next/link';
+import { Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getActionFeed } from '@/lib/queries/actions';
 import { getUnreadCount } from '@/lib/queries/notifications';
@@ -70,9 +71,9 @@ export default async function HomePage({
           <Link
             href="/notifications"
             aria-label="알림"
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-xl text-neutral-600 hover:bg-neutral-100"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
           >
-            🔔
+            <Bell className="h-5 w-5 text-neutral-700" />
             {unread > 0 && (
               <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                 {unread > 9 ? '9+' : unread}
