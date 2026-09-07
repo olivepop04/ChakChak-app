@@ -30,7 +30,7 @@ export function ActionCrewSection({
   }
 
   return (
-    <section className="flex flex-col gap-3 pt-2">
+    <section id="crew-section" className="flex flex-col gap-3 pt-2">
       <h2 className="text-[15px] font-bold text-neutral-900">함께하는 크루</h2>
       <button
         type="button"

@@ -390,6 +390,7 @@ export async function getActionDetail(
     likeCount: c?.like ?? 0,
     saveCount: c?.save ?? 0,
     crewCount: c?.crew ?? 0,
+    shareCount: c?.share ?? 0,
     likedByMe: social.liked.has(actionId),
     savedByMe: social.saved.has(actionId),
     followingOwner,

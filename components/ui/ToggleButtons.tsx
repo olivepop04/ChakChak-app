@@ -368,11 +368,46 @@ export function FollowButton({
 }
 
 // ─────────────────────────────────────────────────────────────
+export function CrewAnchorButton({
+  count,
+  targetId = 'crew-section',
+  className,
+}: {
+  count: number;
+  targetId?: string;
+  className?: string;
+}) {
+  function handleClick() {
+    const el = document.getElementById(targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-label="참여인원"
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900',
+        className,
+      )}
+    >
+      <span aria-hidden="true">👥</span>
+      <span className="tabular-nums">{count}</span>
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 export function ShareButton({
   actionId,
+  count,
   className,
 }: {
   actionId: string;
+  count?: number;
   className?: string;
 }) {
   const toast = useToast();
@@ -406,7 +441,11 @@ export function ShareButton({
       )}
     >
       <span aria-hidden="true">↗</span>
-      <span>공유</span>
+      {count !== undefined ? (
+        <span className="tabular-nums">{count}</span>
+      ) : (
+        <span>공유</span>
+      )}
     </button>
   );
 }
