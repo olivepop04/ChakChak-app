@@ -10,8 +10,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toggleLike, toggleSave, toggleFollow } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
@@ -70,6 +72,7 @@ export function LikeButton({
   className?: string;
 }) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(false);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const { on, count, handle } = useOptimisticToggle(
@@ -79,12 +82,24 @@ export function LikeButton({
   );
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (!loginPromptOpen) return;
+
     function closeWithEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') setLoginPromptOpen(false);
     }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     document.addEventListener('keydown', closeWithEscape);
-    return () => document.removeEventListener('keydown', closeWithEscape);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.removeEventListener('keydown', closeWithEscape);
+    };
   }, [loginPromptOpen]);
 
   async function handleLike() {
@@ -123,51 +138,54 @@ export function LikeButton({
         <span className="tabular-nums">{count}</span>
       </button>
 
-      {loginPromptOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-4 sm:items-center"
-          onClick={() => setLoginPromptOpen(false)}
-        >
+      {mounted &&
+        loginPromptOpen &&
+        createPortal(
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="like-login-title"
-            className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
-            onClick={(event) => event.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setLoginPromptOpen(false)}
           >
-            <span
-              aria-hidden="true"
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-xl"
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="like-login-title"
+              className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+              onClick={(event) => event.stopPropagation()}
             >
-              ♡
-            </span>
-            <h2
-              id="like-login-title"
-              className="mt-4 text-[17px] font-bold text-neutral-900"
-            >
-              로그인하고 관심을 표현해보세요
-            </h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-              로그인하고 나에게 맞는 활동을 추천받아 보세요. 마음에 든
-              액션에는 좋아요도 남길 수 있어요.
-            </p>
-            <Link
-              href={`/login?next=${encodeURIComponent(pathname)}`}
-              autoFocus
-              className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-neutral-900 text-[14px] font-semibold text-white"
-            >
-              로그인하고 계속하기
-            </Link>
-            <button
-              type="button"
-              onClick={() => setLoginPromptOpen(false)}
-              className="mt-2 h-11 w-full rounded-xl text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
-            >
-              다음에 할게요
-            </button>
-          </div>
-        </div>
-      )}
+              <span
+                aria-hidden="true"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-xl text-rose-500"
+              >
+                ♡
+              </span>
+              <h2
+                id="like-login-title"
+                className="mt-4 text-[17px] font-bold text-neutral-900"
+              >
+                로그인하고 관심을 표현해보세요
+              </h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+                로그인하고 나에게 맞는 활동을 추천받아 보세요. 마음에 든
+                액션에는 좋아요도 남길 수 있어요.
+              </p>
+              <Link
+                href={`/login?next=${encodeURIComponent(pathname)}`}
+                autoFocus
+                className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-neutral-900 text-[14px] font-semibold text-white"
+              >
+                로그인하고 계속하기
+              </Link>
+              <button
+                type="button"
+                onClick={() => setLoginPromptOpen(false)}
+                className="mt-2 h-11 w-full rounded-xl text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
+              >
+                다음에 할게요
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
@@ -185,6 +203,7 @@ export function SaveButton({
   className?: string;
 }) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(false);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const { on, count, handle } = useOptimisticToggle(
@@ -194,14 +213,24 @@ export function SaveButton({
   );
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (!loginPromptOpen) return;
 
     function closeWithEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') setLoginPromptOpen(false);
     }
 
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     document.addEventListener('keydown', closeWithEscape);
-    return () => document.removeEventListener('keydown', closeWithEscape);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.removeEventListener('keydown', closeWithEscape);
+    };
   }, [loginPromptOpen]);
 
   async function handleSave() {
@@ -240,58 +269,66 @@ export function SaveButton({
           className,
         )}
       >
-        <span aria-hidden="true">{on ? '🔖' : '🏷'}</span>
+        <Star
+          className={cn(
+            'h-3.5 w-3.5 shrink-0 transition-colors',
+            on ? 'fill-amber-500 text-amber-500' : 'fill-none text-neutral-400',
+          )}
+        />
         {initialCount !== undefined && (
           <span className="tabular-nums">{count}</span>
         )}
       </button>
 
-      {loginPromptOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-4 sm:items-center"
-          onClick={() => setLoginPromptOpen(false)}
-        >
+      {mounted &&
+        loginPromptOpen &&
+        createPortal(
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="save-login-title"
-            className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
-            onClick={(event) => event.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setLoginPromptOpen(false)}
           >
-            <span
-              aria-hidden="true"
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-50 text-xl"
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="save-login-title"
+              className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+              onClick={(event) => event.stopPropagation()}
             >
-              🔖
-            </span>
-            <h2
-              id="save-login-title"
-              className="mt-4 text-[17px] font-bold text-neutral-900"
-            >
-              로그인하고 액션을 저장해보세요
-            </h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-              로그인하고 나에게 맞는 활동을 추천받아 보세요. 마음에 든 액션도
-              MY에 모아둘 수 있어요.
-            </p>
+              <span
+                aria-hidden="true"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-50 text-xl"
+              >
+                <Star className="h-6 w-6 fill-amber-500 text-amber-500" />
+              </span>
+              <h2
+                id="save-login-title"
+                className="mt-4 text-[17px] font-bold text-neutral-900"
+              >
+                로그인하고 액션을 저장해보세요
+              </h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+                로그인하고 나에게 맞는 활동을 추천받아 보세요. 마음에 든 액션도
+                MY에 모아둘 수 있어요.
+              </p>
 
-            <Link
-              href={`/login?next=${encodeURIComponent(pathname)}`}
-              autoFocus
-              className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-neutral-900 text-[14px] font-semibold text-white"
-            >
-              로그인하고 계속하기
-            </Link>
-            <button
-              type="button"
-              onClick={() => setLoginPromptOpen(false)}
-              className="mt-2 h-11 w-full rounded-xl text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
-            >
-              다음에 할게요
-            </button>
-          </div>
-        </div>
-      )}
+              <Link
+                href={`/login?next=${encodeURIComponent(pathname)}`}
+                autoFocus
+                className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-neutral-900 text-[14px] font-semibold text-white"
+              >
+                로그인하고 계속하기
+              </Link>
+              <button
+                type="button"
+                onClick={() => setLoginPromptOpen(false)}
+                className="mt-2 h-11 w-full rounded-xl text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
+              >
+                다음에 할게요
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
