@@ -65,7 +65,7 @@ export async function getTrendStats(supabase: DB): Promise<TrendStats> {
     await Promise.all([
       supabase
         .from('actions')
-        .select('id, category, status, address, created_at')
+        .select('id, category, categories, status, address, created_at')
         .in('status', ['ACTIVE', 'ENDED', 'COMPLETED', 'CANCELLED']),
       supabase
         .from('action_item_progress')
@@ -91,11 +91,17 @@ export async function getTrendStats(supabase: DB): Promise<TrendStats> {
   // ── 카테고리별 ──
   const catCount = new Map<string, { count: number; crew: number }>();
   for (const c of CATEGORIES) catCount.set(c, { count: 0, crew: 0 });
+  // 액션 하나가 카테고리를 여러 개 가질 수 있습니다 (14).
+  // 두 카테고리를 가진 액션은 두 칸에 모두 셉니다. 그래서 카테고리별
+  // 합계는 전체 액션 수보다 클 수 있습니다 — 정상입니다.
   for (const a of rows) {
-    const cur = catCount.get(a.category) ?? { count: 0, crew: 0 };
-    cur.count += 1;
-    cur.crew += crewByAction.get(a.id) ?? 0;
-    catCount.set(a.category, cur);
+    const cats = a.categories?.length ? a.categories : [a.category];
+    for (const cat of cats) {
+      const cur = catCount.get(cat) ?? { count: 0, crew: 0 };
+      cur.count += 1;
+      cur.crew += crewByAction.get(a.id) ?? 0;
+      catCount.set(cat, cur);
+    }
   }
 
   // ── 상태별 ──

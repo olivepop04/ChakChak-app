@@ -91,7 +91,7 @@ export async function getParticipatedActions(
   const { data, error } = await supabase
     .from('actions')
     .select(
-      `id, title, description, category, image_urls, thumbnail_index,
+      `id, title, description, category, categories, image_urls, thumbnail_index,
        address, place_name, status, activity_start_at, recruit_end_at,
        owner:profiles!actions_owner_id_fkey ( id, nickname )`,
     )
@@ -105,6 +105,7 @@ export async function getParticipatedActions(
     title: string;
     description: string | null;
     category: string;
+    categories: string[] | null;
     image_urls: string[];
     thumbnail_index: number;
     address: string | null;
@@ -120,6 +121,7 @@ export async function getParticipatedActions(
     title: a.title,
     summary: a.description?.slice(0, 60) ?? null,
     category: a.category,
+    categories: a.categories ?? [a.category],
     thumbnailUrl: pickThumbnail(a.image_urls, a.thumbnail_index),
     address: a.address,
     placeName: a.place_name,
@@ -171,7 +173,7 @@ export async function getFollowing(
 
 /**
  * Share 화면 사용자 검색.
- * 닉네임으로만 검색한다. 이메일·전화번호로는 찾을 수 없다.
+ * 이름과 닉네임으로 검색한다 (2026-09-07 회의). 이메일·전화번호로는 못 찾는다.
  * 최소 2자, 최대 10명, 본인 제외.
  */
 export async function searchUsers(
@@ -182,10 +184,20 @@ export async function searchUsers(
   const q = keyword.trim();
   if (q.length < 2) return [];
 
+  // 이름과 닉네임 둘 다 찾습니다 (2026-09-07 회의).
+  //
+  // 이름은 실명입니다. 실명으로 남을 찾을 수 있게 되는 변경이라
+  // 팀에서 정하고 넣었습니다 — 화면 안내도 "이름과 닉네임으로 친구를
+  // 찾을 수 있고, 상대방 알림으로 보내져요" 로 바꿉니다.
+  //
+  // 검색어의 % 와 _ 는 뜻이 있는 글자라 그대로 두면 "모두 찾기" 가 됩니다.
+  // 사람이 친 글자 그대로 찾도록 막아둡니다.
+  const safe = q.replace(/[\\%_]/g, (c) => `\\${c}`);
+
   const { data } = await supabase
     .from('profiles')
     .select('id')
-    .ilike('nickname', `%${q}%`)
+    .or(`nickname.ilike.%${safe}%,name.ilike.%${safe}%`)
     .neq('id', viewerId)
     .limit(10);
 

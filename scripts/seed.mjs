@@ -106,9 +106,23 @@ const IMG = {
  * items:   [이름, 종류, 방식, 최소, 최대, 단위, 성별제한]
  *          방식 R = 정해진 인원(min~max) · M = 최소 인원만(상한 없음)
  */
+// 카테고리를 두 개 가진 시연용 액션 (14).
+// 홈에서 "교육" 칩을 눌러도 아래 액션들이 나오는지 보여주기 위한 것입니다.
+// 제목에 없는 카테고리를 억지로 붙이지 않았습니다.
+// ⚠️ 원래 카테고리와 같은 값을 넣으면 안 됩니다 — 중복은 DB 가 거절합니다.
+//    (실제로 '경로당 대청소' 에 '노인' 을 붙였다가 걸렸습니다)
+const EXTRA_CATEGORY = {
+  '유기묘 임시보호 설명회': '교육',
+  '폐현수막으로 장바구니 만들기': '지역사회',
+  '경로당 대청소': '지역사회',
+  '골목길 벽화 그리기': '환경',
+};
+
 const ACTIONS = [
-  ['[모집미달 테스트] 동네 플로깅 모집', '환경', IMG.env, '서울특별시 성동구 왕십리로 100', 'ACTIVE', 2, 0.5,
-    [['플로깅 참가자', 'PERSON', 'M', 10, null, '명', 'ANY']]],
+  // 모집은 어제 끝났고 활동은 엿새 뒤 — 일주일쯤 이 상태로 남습니다.
+  // (마지막 숫자 7 = 활동 7일 전에 모집 마감. 기본값은 1입니다)
+  ['[모집미달 테스트] 동네 플로깅 모집', '환경', IMG.env, '서울특별시 성동구 왕십리로 100', 'ACTIVE', 2, 6,
+    [['플로깅 참가자', 'PERSON', 'M', 10, null, '명', 'ANY']], 7],
   ['우리 동네 보호소를 함께 도와요', '동물', IMG.dog, '서울특별시 성동구 왕십리로 100', 'ACTIVE', 0, 5,
     [['산책 도우미', 'PERSON', 'M', 5, null, '명', 'ANY'], ['사료', 'GOODS', 'M', 50, null, '포', 'ANY']]],
   ['유기견 산책 친구를 찾습니다', '동물', IMG.animal, '서울특별시 마포구 월드컵로 30', 'ACTIVE', 4, 7,
@@ -320,7 +334,8 @@ async function seed() {
   let voiceCount = 0;
 
   for (const [idx, row] of ACTIONS.entries()) {
-    const [title, category, image, address, status, daysAgo, whenDay, items] = row;
+    const [title, category, image, address, status, daysAgo, whenDay, items, recruitDaysBefore] =
+      row;
     const owner = users[idx % users.length];
     if (!owner) continue;
 
@@ -354,7 +369,15 @@ async function seed() {
       activityEnd.setTime(activityStart.getTime() + 3 * 3600000);
     }
 
-    const recruitEnd = new Date(activityStart.getTime() - DAY);
+    // 보통 활동 하루 전에 모집을 마감합니다.
+    //
+    // "모집은 끝났는데 활동은 아직" 인 상태를 오래 유지하려면 이 간격을
+    // 늘려야 합니다. 전에는 하루로 고정이라, 모집미달 시연 액션이
+    // 하루만 지나면 활동까지 끝나버려 '소감 작성 필요' 로 보였습니다.
+    // 성은님이 여러 번 제보하신 그 건입니다. (2026-09-07)
+    const recruitEnd = new Date(
+      activityStart.getTime() - (recruitDaysBefore ?? 1) * DAY,
+    );
 
     const { data: action, error } = await admin
       .from('actions')
@@ -366,6 +389,12 @@ async function seed() {
         title,
         description: `${title}. 처음이신 분도 담당자가 함께 안내해드리니 편하게 참여하세요.`,
         category,
+        // 카테고리를 여러 개 가질 수 있습니다 (14).
+        // 시연에서 보이도록, 제목·항목에 어울리는 두 번째 카테고리를
+        // 몇 개에만 붙입니다. 나머지는 하나 그대로입니다.
+        categories: EXTRA_CATEGORY[title]
+          ? [category, EXTRA_CATEGORY[title]]
+          : [category],
         image_urls: [image],
         thumbnail_index: 0,
         address,

@@ -24,7 +24,10 @@ export interface ActionCardData {
   id: string;
   title: string;
   summary: string | null;
+  /** 대표 카테고리 = categories[0]. 배지 하나만 그릴 때 씁니다 */
   category: Category;
+  /** 카테고리 1~3개 (14). 여러 개를 보여줄 때 씁니다 */
+  categories: Category[];
   /** 대표 이미지 1장. 없으면 null → 컴포넌트가 대체 표시를 그린다 */
   thumbnailUrl: string | null;
   address: string | null;
@@ -69,7 +72,10 @@ export interface ActionDetailData {
   id: string;
   title: string;
   description: string | null;
+  /** 대표 카테고리 = categories[0]. 배지 하나만 그릴 때 씁니다 */
   category: Category;
+  /** 카테고리 1~3개 (14). 여러 개를 보여줄 때 씁니다 */
+  categories: Category[];
   imageUrls: string[];
   thumbnailIndex: number;
   address: string | null;

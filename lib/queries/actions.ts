@@ -31,7 +31,7 @@ type DB = SupabaseClient<Database>;
 
 /** 카드/상세에 공통으로 필요한 컬럼 */
 const ACTION_COLUMNS = `
-  id, title, description, category, image_urls, thumbnail_index,
+  id, title, description, category, categories, image_urls, thumbnail_index,
   address, place_name, notice, status, cancel_reason,
   recruit_end_at, activity_start_at, activity_end_at,
   owner:profiles!actions_owner_id_fkey ( id, nickname, bio )
@@ -42,6 +42,8 @@ interface RawAction {
   title: string;
   description: string | null;
   category: Category;
+  /** 카테고리 1~3개. 첫 번째가 대표입니다 (14) */
+  categories: Category[];
   image_urls: string[];
   thumbnail_index: number;
   address: string | null;
@@ -136,6 +138,7 @@ function toCard(
     title: raw.title,
     summary: summarize(raw.description),
     category: raw.category,
+    categories: raw.categories ?? [raw.category],
     thumbnailUrl: pickThumbnail(raw.image_urls, raw.thumbnail_index),
     address: raw.address,
     placeName: raw.place_name,
@@ -223,7 +226,11 @@ export async function getActionFeed(
     .order('recruit_end_at', { ascending: true, nullsFirst: false })
     .limit(fetchCount);
 
-  if (category) q = q.eq('category', category);
+  // 액션이 카테고리를 여러 개 가질 수 있습니다 (14).
+  // 고른 칩을 **하나라도** 가진 액션이 나와야 하므로 overlaps 를 씁니다.
+  // eq('category') 로 두면 대표 카테고리만 걸려서, 두 번째·세 번째로
+  // 넣은 카테고리로는 그 액션을 영영 찾을 수 없습니다.
+  if (category) q = q.overlaps('categories', [category]);
 
   if (sort === 'DEADLINE') {
     q = q.order('activity_start_at', { ascending: true });
@@ -375,6 +382,7 @@ export async function getActionDetail(
     title: raw.title,
     description: raw.description,
     category: raw.category,
+    categories: raw.categories ?? [raw.category],
     imageUrls: raw.image_urls ?? [],
     thumbnailIndex: raw.thumbnail_index,
     address: raw.address,
@@ -500,7 +508,10 @@ export async function getRecommendCandidates(
     .gt('recruit_end_at', new Date().toISOString()) // 모집 마감 제외
     .limit(50);
 
-  if (filter.categories?.length) q = q.in('category', filter.categories);
+  // 관심 카테고리 중 하나라도 걸치면 후보에 넣습니다 (14).
+  // in('category') 는 대표만 봐서, 두 번째 카테고리가 내 관심사인
+  // 액션이 추천에서 빠졌습니다.
+  if (filter.categories?.length) q = q.overlaps('categories', filter.categories);
   if (joinedIds.length) q = q.not('id', 'in', `(${joinedIds.join(',')})`);
 
   const { data, error } = await q;

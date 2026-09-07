@@ -121,9 +121,16 @@ export function scoreAction(
     [...profile.categories, answers.category].filter(Boolean) as string[],
   );
   const wantsAll = wanted.has('전체');
-  if (wantsAll || wanted.has(action.category)) {
+  // 액션이 카테고리를 여러 개 가질 수 있습니다 (14).
+  // 그중 하나라도 관심 분야면 점수를 줍니다. 대표만 보면
+  // 두 번째 카테고리가 내 관심사인 액션이 추천에서 밀립니다.
+  const actionCats = action.categories?.length
+    ? action.categories
+    : [action.category];
+  const hit = actionCats.find((c) => wanted.has(c));
+  if (wantsAll || hit) {
     score += 25;
-    matched.push(wantsAll ? '관심 분야' : `관심 분야(${action.category})`);
+    matched.push(wantsAll ? '관심 분야' : `관심 분야(${hit})`);
   }
 
   // 2) 활동 가능 지역
