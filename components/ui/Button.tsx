@@ -50,7 +50,7 @@ export function Button({
     <button
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center font-semibold transition-colors',
+        'inline-flex items-center justify-center whitespace-nowrap font-semibold transition-colors',
         'disabled:cursor-not-allowed disabled:opacity-40',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2',
         VARIANT[variant],
