@@ -32,7 +32,7 @@ type DB = SupabaseClient<Database>;
 /** 카드/상세에 공통으로 필요한 컬럼 */
 const ACTION_COLUMNS = `
   id, title, description, category, categories, image_urls, thumbnail_index,
-  address, place_name, notice, status, cancel_reason,
+  address, place_name, notice, status, cancel_reason, early_end_reason,
   recruit_end_at, activity_start_at, activity_end_at,
   owner:profiles!actions_owner_id_fkey ( id, nickname, bio )
 `;
@@ -51,6 +51,7 @@ interface RawAction {
   notice: string | null;
   status: ActionStatus;
   cancel_reason: string | null;
+  early_end_reason: string | null;
   recruit_end_at: string | null;
   activity_start_at: string | null;
   activity_end_at: string | null;
@@ -390,6 +391,7 @@ export async function getActionDetail(
     notice: raw.notice,
     status: raw.status,
     cancelReason: raw.cancel_reason,
+    earlyEndReason: raw.early_end_reason,
     recruitEndAt: raw.recruit_end_at,
     activityStartAt: raw.activity_start_at,
     activityEndAt: raw.activity_end_at,

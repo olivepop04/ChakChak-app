@@ -84,6 +84,8 @@ export interface ActionDetailData {
   notice: string | null;
   status: ActionStatus;
   cancelReason: string | null;
+  /** 호스트가 활동을 일찍 끝뎌 이유 (15). 취소 사유와 같은 자리에 띄우면 됩니다 */
+  earlyEndReason: string | null;
   recruitEndAt: string | null;
   activityStartAt: string | null;
   activityEndAt: string | null;

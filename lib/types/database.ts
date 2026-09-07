@@ -189,6 +189,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          early_end_reason: string | null
           id: string
           image_urls: string[]
           notice: string | null
@@ -210,6 +211,7 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          early_end_reason?: string | null
           id?: string
           image_urls?: string[]
           notice?: string | null
@@ -231,6 +233,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          early_end_reason?: string | null
           id?: string
           image_urls?: string[]
           notice?: string | null
