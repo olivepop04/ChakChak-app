@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   SKILLS,
   SKILL_NONE,
-  SKILL_UNSURE,
 } from '@/lib/constants';
 import {
   buildStoredSkills,
@@ -16,7 +15,6 @@ const OPTIONS = [
   ...SKILLS,
   SKILL_OTHER_OPTION,
   SKILL_NONE,
-  SKILL_UNSURE,
 ] as const;
 
 export function TalentPreferenceEditor({
@@ -37,13 +35,13 @@ export function TalentPreferenceEditor({
   }
 
   function toggle(option: string) {
-    if (option === SKILL_NONE || option === SKILL_UNSURE) {
+    if (option === SKILL_NONE) {
       commit(selected.includes(option) ? [] : [option], '');
       return;
     }
 
     const withoutExclusive = selected.filter(
-      (item) => item !== SKILL_NONE && item !== SKILL_UNSURE,
+      (item) => item !== SKILL_NONE,
     );
     const next = withoutExclusive.includes(option)
       ? withoutExclusive.filter((item) => item !== option)
@@ -93,8 +91,8 @@ export function TalentPreferenceEditor({
       )}
 
       <p className="text-[11px] leading-relaxed text-neutral-400">
-        여러 개를 고를 수 있어요. 아직 잘 모르겠다면 나중에 프로필에서
-        바꿀 수 있습니다.
+        여러 개를 고를 수 있어요. 목록에 없다면 기타에 직접 입력하고,
+        나중에 프로필에서 바꿀 수 있습니다.
       </p>
     </div>
   );

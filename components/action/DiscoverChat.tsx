@@ -111,7 +111,7 @@ export function DiscoverChat({
       <div className="flex flex-col gap-5 px-5 pb-24 pt-6">
         <Bubble>
           로그인하고 나에게 맞는 활동을 추천받아 보세요.
-          <br />내 관심 분야와 가능한 시간을 다시 묻지 않고 바로 시작할게요.
+          <br />질문을 통해 사용자의 성향에 맞춘 후보를 보여줘요.
         </Bubble>
         <div className="rounded-2xl border border-neutral-200 bg-white p-5">
           <p className="text-[14px] font-semibold text-neutral-900">
@@ -146,9 +146,14 @@ export function DiscoverChat({
   return (
     <div className="flex flex-col gap-4 px-5 pb-24 pt-4">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] text-neutral-500">
-          <b className="font-semibold text-neutral-800">{nickname}</b>님 맞춤 대화
-        </p>
+        <div>
+          <p className="text-[12px] text-neutral-500">
+            <b className="font-semibold text-neutral-800">{nickname}</b>님 맞춤 대화
+          </p>
+          <p className="mt-0.5 text-[11px] text-neutral-400">
+            질문을 통해 사용자의 성향에 맞춘 후보를 보여줘요.
+          </p>
+        </div>
         {items === null && (
           <span className="text-[11px] tabular-nums text-neutral-400">
             답변 {answeredCount}개 반영 · 최대 4개

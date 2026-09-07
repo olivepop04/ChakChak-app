@@ -468,6 +468,30 @@ export async function getSavedActions(
 // 타인 프로필 — 그 사람이 만든 공개 액션. 담당: 개발 A
 // DRAFT 는 절대 포함하지 않는다.
 // ─────────────────────────────────────────────────────────────
+/**
+ * 프로필처럼 이미 액션 ID 목록을 알고 있는 화면에서 카드 데이터를 완성한다.
+ * 좋아요·저장·참여·공유 수와 로그인 사용자의 반응 여부도 공통 방식으로 붙인다.
+ */
+export async function getActionCardsByIds(
+  supabase: DB,
+  actionIds: string[],
+  viewerId: string | null,
+): Promise<ActionCardData[]> {
+  if (actionIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('actions')
+    .select(ACTION_COLUMNS)
+    .in('id', actionIds);
+
+  if (error) throw error;
+  return buildCards(
+    supabase,
+    (data ?? []) as unknown as RawAction[],
+    viewerId,
+  );
+}
+
 export async function getPublicActionsByOwner(
   supabase: DB,
   ownerId: string,

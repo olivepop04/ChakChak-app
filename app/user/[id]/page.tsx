@@ -14,9 +14,9 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfile, getParticipatedActions } from '@/lib/queries/profiles';
 import { getPublicActionsByOwner } from '@/lib/queries/actions';
 import { Avatar } from '@/components/ui/Avatar';
-import { ActionCard } from '@/components/ui/ActionCard';
 import { FollowButton } from '@/components/ui/ToggleButtons';
 import { Header } from '@/components/layout/Header';
+import { ProfileActionSection } from '@/components/my/ProfileActionSection';
 
 function Stat({ value, label, href }: { value: number; label: string; href?: string }) {
   const inner = (
@@ -107,54 +107,35 @@ export default async function UserProfilePage({
       </section>
 
       {profile.categories.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 px-5 pt-5">
-          {profile.categories.map((c) => (
-            <span
-              key={c}
-              className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-medium text-neutral-600"
-            >
-              {c}
-            </span>
-          ))}
-        </div>
+        <section className="px-5 pt-5">
+          <p className="pb-2 text-[12px] font-semibold text-neutral-500">
+            관심 카테고리 :
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {profile.categories.map((c) => (
+              <span
+                key={c}
+                className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-medium text-neutral-600"
+              >
+                {c}
+              </span>
+            ))}
+          </div>
+        </section>
       )}
 
-      <section className="mt-7">
-        <h2 className="px-5 pb-3 text-[15px] font-bold text-neutral-900">
-          만든 액션 <span className="text-neutral-400">{created.length}</span>
-        </h2>
-        {created.length === 0 ? (
-          <p className="mx-5 rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] text-neutral-400">
-            아직 만든 액션이 없어요.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-4 px-5">
-            {created.map((a) => (
-              <ActionCard key={a.id} action={a} showStatus />
-            ))}
-          </div>
-        )}
-      </section>
+      <ProfileActionSection
+        title="호스트한 액션"
+        emptyText="아직 호스트한 액션이 없어요."
+        actions={created}
+      />
 
-      <section className="mt-7">
-        <h2 className="px-5 pb-1 text-[15px] font-bold text-neutral-900">
-          참여한 액션 <span className="text-neutral-400">{joined.length}</span>
-        </h2>
-        <p className="px-5 pb-3 text-[11px] text-neutral-400">
-          활동이 끝난 액션만 보여요.
-        </p>
-        {joined.length === 0 ? (
-          <p className="mx-5 rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] text-neutral-400">
-            아직 완료한 액션이 없어요.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-4 px-5">
-            {joined.map((a) => (
-              <ActionCard key={a.id} action={a} showStatus />
-            ))}
-          </div>
-        )}
-      </section>
+      <ProfileActionSection
+        title="참여한 액션"
+        emptyText="아직 완료한 액션이 없어요."
+        description="활동이 끝나고 소감까지 작성한 액션만 보여요."
+        actions={joined}
+      />
     </main>
   );
 }

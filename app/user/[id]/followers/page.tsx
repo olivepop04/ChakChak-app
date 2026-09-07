@@ -36,7 +36,12 @@ export default async function FollowersPage({
       </div>
 
       {followers.length === 0 ? (
-        <EmptyState icon="👥" title="아직 팔로워가 없어요" />
+        <EmptyState
+          icon="👥"
+          title="아직 팔로워가 없어요."
+          description="액션을 시작하고 새로운 크루를 만나보세요."
+          action={{ label: '액션 찾아보기', href: '/discover' }}
+        />
       ) : (
         <UserList users={followers} />
       )}

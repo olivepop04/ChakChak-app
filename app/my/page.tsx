@@ -7,11 +7,15 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { getProfile } from '@/lib/queries/profiles';
-import { getSavedActions } from '@/lib/queries/actions';
+import { getParticipatedActions, getProfile } from '@/lib/queries/profiles';
+import {
+  getPublicActionsByOwner,
+  getSavedActions,
+} from '@/lib/queries/actions';
 import { Avatar } from '@/components/ui/Avatar';
 import { LogoutButton } from '@/components/ui/LogoutButton';
 import { MySavedSection } from '@/components/my/MySavedSection';
+import { ProfileActionSection } from '@/components/my/ProfileActionSection';
 import { Header } from '@/components/layout/Header';
 
 function Stat({
@@ -50,7 +54,11 @@ export default async function MyPage() {
   const profile = await getProfile(supabase, user.id, user.id);
   if (!profile) redirect('/login');
 
-  const saved = await getSavedActions(supabase, user.id);
+  const [saved, hosted, participated] = await Promise.all([
+    getSavedActions(supabase, user.id),
+    getPublicActionsByOwner(supabase, user.id, user.id),
+    getParticipatedActions(supabase, user.id, user.id),
+  ]);
 
   return (
     <main className="pb-24">
@@ -117,17 +125,35 @@ export default async function MyPage() {
 
       {/* 관심 카테고리 */}
       {profile.categories.length > 0 && (
-        <section className="flex flex-wrap gap-1.5 px-5 pt-5">
-          {profile.categories.map((c) => (
-            <span
-              key={c}
-              className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-medium text-neutral-600"
-            >
-              {c}
-            </span>
-          ))}
+        <section className="px-5 pt-5">
+          <p className="pb-2 text-[12px] font-semibold text-neutral-500">
+            관심 카테고리 :
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {profile.categories.map((c) => (
+              <span
+                key={c}
+                className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-medium text-neutral-600"
+              >
+                {c}
+              </span>
+            ))}
+          </div>
         </section>
       )}
+
+      <ProfileActionSection
+        title="호스트한 액션"
+        emptyText="아직 호스트한 액션이 없어요."
+        actions={hosted}
+      />
+
+      <ProfileActionSection
+        title="참여한 액션"
+        emptyText="아직 완료한 액션이 없어요."
+        description="활동이 끝나고 소감까지 작성한 액션만 보여요."
+        actions={participated}
+      />
 
       {/* 저장한 액션 (초기 2개 세로형 + 더보기 클릭 시 가로형 확방) */}
       <MySavedSection saved={saved} />
