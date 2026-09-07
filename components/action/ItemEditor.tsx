@@ -12,7 +12,6 @@
 'use client';
 
 import {
-  UNIT_SUGGESTIONS,
   PERSON_UNIT,
   GENDER_REQUIREMENTS,
   GENDER_REQUIREMENT_LABEL,
@@ -148,7 +147,7 @@ export function ItemEditor({
                 onChange={() => setTargetType(i, 'RANGE')}
                 className="accent-neutral-900"
               />
-              정해진 수량이 필요해요
+              {item.type === 'PERSON' ? '정해진 인원이 필요해요' : '정해진 수량이 필요해요'}
             </label>
 
             {item.targetType === 'RANGE' && (
@@ -190,7 +189,9 @@ export function ItemEditor({
                 onChange={() => setTargetType(i, 'MINIMUM')}
                 className="accent-neutral-900"
               />
-              최소 수량만 정할게요 (계속 모집)
+              {item.type === 'PERSON'
+                ? '최소 인원만 정할게요 (계속 모집)'
+                : '최소 수량만 정할게요 (계속 모집)'}
             </label>
 
             {item.targetType === 'MINIMUM' && (
@@ -217,17 +218,12 @@ export function ItemEditor({
             <div className="flex flex-col gap-1.5">
               <span className="text-[12px] font-medium text-neutral-700">단위</span>
               <input
+                type="text"
                 value={item.unit ?? ''}
                 onChange={(e) => update(i, { unit: e.target.value })}
-                list={`units-${i}`}
                 placeholder="개"
                 className={`${inputSm} w-28`}
               />
-              <datalist id={`units-${i}`}>
-                {UNIT_SUGGESTIONS.map((u) => (
-                  <option key={u} value={u} />
-                ))}
-              </datalist>
             </div>
           )}
 

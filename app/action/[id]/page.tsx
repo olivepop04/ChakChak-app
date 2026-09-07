@@ -17,7 +17,7 @@ import { MessageAccessButton } from '@/components/action/MessageAccessButton';
 import { ActionCrewSection } from '@/components/action/ActionCrewSection';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
-import { LikeButton, SaveButton, ShareButton, FollowButton } from '@/components/ui/ToggleButtons';
+import { CrewAnchorButton, LikeButton, SaveButton, ShareButton, FollowButton } from '@/components/ui/ToggleButtons';
 import { Header } from '@/components/layout/Header';
 import {
   formatActivityPeriod,
@@ -121,15 +121,6 @@ export default async function ActionDetailPage({
       <Header
         back
         backHref="/"
-        right={
-          <Link
-            href={`/action/${id}/share`}
-            aria-label="공유"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg hover:bg-neutral-100"
-          >
-            ↗
-          </Link>
-        }
       />
 
       <ActionGallery
@@ -206,20 +197,30 @@ export default async function ActionDetailPage({
           )}
         </div>
 
-        {/* 상단 버튼 그룹 (좋아요 · 저장 · 공유) */}
-        <div className="flex items-center gap-1 border-y border-neutral-100 py-2">
+        {/* 상단 버튼 그룹 (참여인원 · 좋아요 · 저장 · 공유) */}
+        <div className="flex items-center gap-2 border-y border-neutral-100 py-2 text-xs tabular-nums text-neutral-500">
+          <CrewAnchorButton
+            count={action.crewCount}
+            className="px-1 py-0.5 text-xs gap-1"
+          />
           <LikeButton
             actionId={action.id}
             initialLiked={action.likedByMe}
             initialCount={action.likeCount}
+            className="px-1 py-0.5 text-xs gap-1"
           />
           <SaveButton
             actionId={action.id}
             initialSaved={action.savedByMe}
             initialCount={action.saveCount}
+            className="px-1 py-0.5 text-xs gap-1"
           />
           <ShareButton
             actionId={action.id}
+            actionTitle={action.title}
+            viewerId={user?.id ?? null}
+            count={action.shareCount}
+            className="px-1 py-0.5 text-xs gap-1"
           />
         </div>
 
@@ -250,9 +251,9 @@ export default async function ActionDetailPage({
           )}
         </section>
 
-        {/* 일정 & 장소 */}
+        {/* 활동 일정 */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-[15px] font-bold text-neutral-900">일정 &amp; 장소</h2>
+          <h2 className="text-[15px] font-bold text-neutral-900">활동 일정</h2>
           <div className="flex flex-col gap-1 rounded-xl bg-neutral-50 p-4">
             <p className="text-sm font-medium text-neutral-900">
               {formatActivityPeriod(action.activityStartAt, action.activityEndAt)}
@@ -263,11 +264,18 @@ export default async function ActionDetailPage({
               </p>
             )}
           </div>
-          {action.placeName && (
-            <p className="text-sm font-semibold text-neutral-900">{action.placeName}</p>
-          )}
-          {action.address && <AddressBox address={action.address} />}
         </section>
+
+        {/* 활동 장소 */}
+        {(action.placeName || action.address) && (
+          <section className="flex flex-col gap-3">
+            <h2 className="text-[15px] font-bold text-neutral-900">활동 장소</h2>
+            <AddressBox
+              placeName={action.placeName}
+              address={action.address ?? action.placeName ?? ''}
+            />
+          </section>
+        )}
 
         {/* 안내사항 */}
         {action.notice && (

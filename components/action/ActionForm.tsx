@@ -535,13 +535,14 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       </label>
 
       {/* 하단 고정 버튼 */}
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-app gap-2 border-t border-neutral-200 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-app items-center gap-2 border-t border-neutral-200 bg-white p-4">
         <Button
           type="button"
           variant="secondary"
           size="lg"
           onClick={handleSave}
           loading={busy}
+          className="shrink-0 min-w-[76px] whitespace-nowrap flex-row"
         >
           저장
         </Button>
@@ -551,6 +552,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           fullWidth
           onClick={handleReview}
           loading={busy}
+          className="shrink flex-1 min-w-0 whitespace-nowrap flex-row"
         >
           액션 생성하기
         </Button>

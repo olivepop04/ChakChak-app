@@ -86,6 +86,7 @@ export interface ActionDetailData {
   likeCount: number;
   saveCount: number;
   crewCount: number;
+  shareCount: number;
   likedByMe: boolean;
   savedByMe: boolean;
   followingOwner: boolean;

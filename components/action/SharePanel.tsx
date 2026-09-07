@@ -22,9 +22,11 @@ import type { UserSummary } from '@/lib/types/view';
 export function SharePanel({
   actionId,
   viewerId,
+  className,
 }: {
   actionId: string;
-  viewerId: string;
+  viewerId?: string | null;
+  className?: string;
 }) {
   const toast = useToast();
   const [keyword, setKeyword] = useState('');
@@ -39,6 +41,11 @@ export function SharePanel({
       : '';
 
   async function handleSearch() {
+    if (!viewerId) {
+      toast('로그인 후 친구에게 보낼 수 있습니다.', 'error');
+      return;
+    }
+
     const q = keyword.trim();
     if (q.length < LIMITS.NICKNAME_MIN) {
       toast(`${LIMITS.NICKNAME_MIN}자 이상 입력해주세요.`, 'error');
@@ -76,7 +83,7 @@ export function SharePanel({
   }
 
   return (
-    <div className="flex flex-col gap-7 px-5 py-5">
+    <div className={className ?? 'flex flex-col gap-7 px-5 py-5'}>
       {/* 회원에게 보내기 */}
       <section className="flex flex-col gap-3">
         <div>

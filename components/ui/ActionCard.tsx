@@ -118,27 +118,27 @@ export function ActionCard({
                 </span>
               </Link>
 
-              {/* 통계 4종 (좋아요, 공유, 저장, 참여인원) */}
+              {/* 통계 4종 (참여인원, 좋아요, 저장, 공유) */}
               <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs text-neutral-500 tabular-nums">
+                <span className="inline-flex items-center gap-0.5" title="참여 인원">
+                  <span aria-hidden="true">👥</span>
+                  <span>{action.crewCount ?? 0}</span>
+                </span>
                 <LikeButton
                   actionId={action.id}
                   initialLiked={action.likedByMe}
                   initialCount={action.likeCount ?? 0}
                   className="px-1 py-0.5 text-xs gap-1"
                 />
-                <span className="inline-flex items-center gap-0.5" title="공유 수">
-                  <span aria-hidden="true">↗</span>
-                  <span>{action.shareCount ?? 0}</span>
-                </span>
                 <SaveButton
                   actionId={action.id}
                   initialSaved={action.savedByMe}
                   initialCount={action.saveCount ?? 0}
                   className="px-1 py-0.5 text-xs gap-1"
                 />
-                <span className="inline-flex items-center gap-0.5" title="참여 인원">
-                  <span aria-hidden="true">👥</span>
-                  <span>{action.crewCount ?? 0}</span>
+                <span className="inline-flex items-center gap-0.5" title="공유 수">
+                  <span aria-hidden="true">↗</span>
+                  <span>{action.shareCount ?? 0}</span>
                 </span>
               </div>
             </div>
@@ -225,27 +225,27 @@ export function ActionCard({
               </span>
             </Link>
 
-            {/* 통계 4종 (좋아요, 공유, 저장, 참여인원) */}
+            {/* 통계 4종 (참여인원, 좋아요, 저장, 공유) */}
             <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs tabular-nums text-neutral-500">
+              <span className="inline-flex items-center gap-0.5" title="참여 인원">
+                <span aria-hidden="true">👥</span>
+                <span>{action.crewCount ?? 0}</span>
+              </span>
               <LikeButton
                 actionId={action.id}
                 initialLiked={action.likedByMe}
                 initialCount={action.likeCount ?? 0}
                 className="px-1 py-0.5 text-xs gap-1"
               />
-              <span className="inline-flex items-center gap-0.5" title="공유 수">
-                <span aria-hidden="true">↗</span>
-                <span>{action.shareCount ?? 0}</span>
-              </span>
               <SaveButton
                 actionId={action.id}
                 initialSaved={action.savedByMe}
                 initialCount={action.saveCount ?? 0}
                 className="px-1 py-0.5 text-xs gap-1"
               />
-              <span className="inline-flex items-center gap-0.5" title="참여 인원">
-                <span aria-hidden="true">👥</span>
-                <span>{action.crewCount ?? 0}</span>
+              <span className="inline-flex items-center gap-0.5" title="공유 수">
+                <span aria-hidden="true">↗</span>
+                <span>{action.shareCount ?? 0}</span>
               </span>
             </div>
           </div>
