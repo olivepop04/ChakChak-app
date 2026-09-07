@@ -251,9 +251,9 @@ export default async function ActionDetailPage({
           )}
         </section>
 
-        {/* 일정 & 장소 */}
+        {/* 활동 일정 */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-[15px] font-bold text-neutral-900">일정 &amp; 장소</h2>
+          <h2 className="text-[15px] font-bold text-neutral-900">활동 일정</h2>
           <div className="flex flex-col gap-1 rounded-xl bg-neutral-50 p-4">
             <p className="text-sm font-medium text-neutral-900">
               {formatActivityPeriod(action.activityStartAt, action.activityEndAt)}
@@ -264,11 +264,18 @@ export default async function ActionDetailPage({
               </p>
             )}
           </div>
-          {action.placeName && (
-            <p className="text-sm font-semibold text-neutral-900">{action.placeName}</p>
-          )}
-          {action.address && <AddressBox address={action.address} />}
         </section>
+
+        {/* 활동 장소 */}
+        {(action.placeName || action.address) && (
+          <section className="flex flex-col gap-3">
+            <h2 className="text-[15px] font-bold text-neutral-900">활동 장소</h2>
+            <AddressBox
+              placeName={action.placeName}
+              address={action.address ?? action.placeName ?? ''}
+            />
+          </section>
+        )}
 
         {/* 안내사항 */}
         {action.notice && (

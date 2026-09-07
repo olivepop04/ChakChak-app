@@ -12,6 +12,7 @@ import { getSavedActions } from '@/lib/queries/actions';
 import { Avatar } from '@/components/ui/Avatar';
 import { LogoutButton } from '@/components/ui/LogoutButton';
 import { MySavedSection } from '@/components/my/MySavedSection';
+import { Header } from '@/components/layout/Header';
 
 function Stat({
   value,
@@ -53,16 +54,20 @@ export default async function MyPage() {
 
   return (
     <main className="pb-24">
-      <header className="flex items-center justify-between px-5 pb-2 pt-6">
-        <h1 className="text-xl font-bold tracking-tight text-neutral-900">MY</h1>
-        <Link
-          href="/notifications"
-          aria-label="알림"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-lg hover:bg-neutral-100"
-        >
-          🔔
-        </Link>
-      </header>
+      <Header
+        title="MY"
+        back
+        backHref="/"
+        right={
+          <Link
+            href="/notifications"
+            aria-label="알림"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg hover:bg-neutral-100"
+          >
+            🔔
+          </Link>
+        }
+      />
 
       {/* 프로필 */}
       <section className="flex items-center gap-4 px-5 py-4">
