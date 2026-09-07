@@ -121,15 +121,6 @@ export default async function ActionDetailPage({
       <Header
         back
         backHref="/"
-        right={
-          <Link
-            href={`/action/${id}/share`}
-            aria-label="공유"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-lg hover:bg-neutral-100"
-          >
-            ↗
-          </Link>
-        }
       />
 
       <ActionGallery
@@ -226,6 +217,8 @@ export default async function ActionDetailPage({
           />
           <ShareButton
             actionId={action.id}
+            actionTitle={action.title}
+            viewerId={user?.id ?? null}
             count={action.shareCount}
             className="px-1 py-0.5 text-xs gap-1"
           />

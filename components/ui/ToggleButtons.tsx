@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/client';
 import { toggleLike, toggleSave, toggleFollow } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils/cn';
+import { ShareModal } from '@/components/action/ShareModal';
 
 /** 세 버튼이 공유하는 로직 */
 function useOptimisticToggle(
@@ -403,50 +404,48 @@ export function CrewAnchorButton({
 // ─────────────────────────────────────────────────────────────
 export function ShareButton({
   actionId,
+  actionTitle,
+  viewerId,
   count,
   className,
 }: {
   actionId: string;
+  actionTitle?: string;
+  viewerId?: string | null;
   count?: number;
   className?: string;
 }) {
-  const toast = useToast();
-
-  async function handleShare() {
-    const shareUrl =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/action/${actionId}`
-        : '';
-
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareUrl);
-        toast('링크를 복사했어요.', 'success');
-      } else {
-        toast('주소창의 링크를 복사해주세요.', 'error');
-      }
-    } catch {
-      toast('복사에 실패했어요. 주소창의 링크를 직접 복사해주세요.', 'error');
-    }
-  }
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <button
-      type="button"
-      onClick={handleShare}
-      aria-label="공유"
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100',
-        className,
+    <>
+      <button
+        type="button"
+        onClick={() => setModalOpen(true)}
+        aria-label="공유"
+        className={cn(
+          'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100',
+          className,
+        )}
+      >
+        <span aria-hidden="true">↗</span>
+        {count !== undefined ? (
+          <span className="tabular-nums">{count}</span>
+        ) : (
+          <span>공유</span>
+        )}
+      </button>
+
+      {modalOpen && (
+        <ShareModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          actionId={actionId}
+          actionTitle={actionTitle ?? ''}
+          viewerId={viewerId ?? null}
+        />
       )}
-    >
-      <span aria-hidden="true">↗</span>
-      {count !== undefined ? (
-        <span className="tabular-nums">{count}</span>
-      ) : (
-        <span>공유</span>
-      )}
-    </button>
+    </>
   );
 }
 
