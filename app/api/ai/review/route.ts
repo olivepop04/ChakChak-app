@@ -12,8 +12,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { callStructuredAI, ReviewSchema, AIError, type ReviewResult } from '@/lib/openai';
+import { getPlaceErrors } from '@/lib/utils/place-validation';
 
-const PROMPT_VERSION = 'review-v3';   // v2: 서비스명 착착·'인원' · v3: Owner→호스트
+const PROMPT_VERSION = 'review-v4';   // v2: 착착·'인원' · v3: Owner→호스트 · v4: 장소 검수
 
 const SYSTEM = `당신은 사회공헌 활동 플랫폼 "착착(CHAK CHAK)"의 콘텐츠 검수자입니다.
 호스트가 올리려는 액션(봉사·나눔 활동)을 검토하고 JSON으로만 답하세요.
@@ -23,10 +24,13 @@ const SYSTEM = `당신은 사회공헌 활동 플랫폼 "착착(CHAK CHAK)"의 �
 2. 취지 적합성 — 사회공헌 활동인가. 영리 홍보, 다단계, 정치·종교 권유는 부적합
 3. 표현 — 차별적이거나 불쾌감을 주는 표현이 있는가
 4. 구체성 — 참여자가 "무엇을 하는지" 알 수 있게 쓰였는가
+5. 장소 — 참여자가 그날 찾아갈 수 있을 만큼 주소가 구체적인가.
+   "파주", "서울" 처럼 넓은 지역만 있으면 어디로 가야 할지 알 수 없습니다.
+   다만 상세 집주소(동·호)까지 적혀 있으면 개인정보라 오히려 문제입니다.
 
 decision 기준
   BLOCK  : 개인정보 노출, 명백한 영리·홍보·정치·종교, 차별 표현
-  REVISE : 활동 설명이 모호하거나 참여 방법을 알 수 없음
+  REVISE : 활동 설명이 모호하거나 참여 방법을 알 수 없음, 또는 장소가 너무 넓어 찾아갈 수 없음
   PASS   : 큰 문제 없음
 
 작성 규칙
@@ -48,6 +52,8 @@ function checkByCode(a: {
   activity_end_at: string | null;
   image_urls: string[];
   itemCount: number;
+  address: string | null;
+  place_name: string | null;
 }): string[] {
   const errors: string[] = [];
 
@@ -65,14 +71,12 @@ function checkByCode(a: {
   if (a.image_urls.length === 0) errors.push('대표 이미지를 1장 이상 올려주세요.');
   if (a.itemCount === 0) errors.push('모집 항목을 하나 이상 추가해주세요.');
 
-  // 개인정보 1차 확인 — 정규식이 AI보다 정확한 영역입니다
-  const text = `${a.title} ${a.description ?? ''}`;
-  if (/01[016-9][-\s.]?\d{3,4}[-\s.]?\d{4}/.test(text))
-    errors.push('본문에 전화번호가 있어요. 개인정보는 빼주세요.');
-  if (/[\w.+-]+@[\w-]+\.[\w.]+/.test(text))
-    errors.push('본문에 이메일 주소가 있어요. 개인정보는 빼주세요.');
-  if (/\d{6}\s?-\s?[1-4]\d{6}/.test(text))
-    errors.push('본문에 주민등록번호로 보이는 숫자가 있어요.');
+  // 장소 (PDF 25쪽) — "파주" 라고만 적어도 공개되던 문제.
+  //
+  // 규칙을 lib/utils/place-validation.ts 로 뺐습니다.
+  // 액션 만들기 화면(개발 B)이 같은 함수를 써야 "화면은 통과인데
+  // 공개가 안 되는" 일이 안 생깁니다.
+  errors.push(...getPlaceErrors({ address: a.address, placeName: a.place_name }));
 
   return errors;
 }
@@ -95,7 +99,7 @@ export async function POST(request: Request) {
   const { data: action } = await supabase
     .from('actions')
     .select(
-      'id, owner_id, title, description, category, image_urls, recruit_end_at, activity_start_at, activity_end_at, notice',
+      'id, owner_id, title, description, category, categories, image_urls, address, place_name, recruit_end_at, activity_start_at, activity_end_at, notice',
     )
     .eq('id', actionId)
     .maybeSingle();
@@ -118,6 +122,8 @@ export async function POST(request: Request) {
     activity_end_at: action.activity_end_at,
     image_urls: action.image_urls ?? [],
     itemCount: items?.length ?? 0,
+    address: action.address,
+    place_name: action.place_name,
   });
 
   // 필수 항목이 비었으면 AI 를 부를 필요가 없습니다 (비용 절약)
@@ -141,7 +147,9 @@ export async function POST(request: Request) {
       user: JSON.stringify({
         제목: action.title,
         소개: action.description,
-        카테고리: action.category,
+        카테고리: action.categories ?? [action.category],
+        주소: action.address,
+        장소이름: action.place_name,
         안내사항: action.notice,
         모집항목: (items ?? []).map((i) => ({
           종류: i.type === 'PERSON' ? '인원' : '물품',
