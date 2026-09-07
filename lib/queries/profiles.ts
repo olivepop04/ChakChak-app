@@ -91,7 +91,7 @@ export async function getParticipatedActions(
   const { data, error } = await supabase
     .from('actions')
     .select(
-      `id, title, description, category, image_urls, thumbnail_index,
+      `id, title, description, category, categories, image_urls, thumbnail_index,
        address, place_name, status, activity_start_at, recruit_end_at,
        owner:profiles!actions_owner_id_fkey ( id, nickname )`,
     )
@@ -105,6 +105,7 @@ export async function getParticipatedActions(
     title: string;
     description: string | null;
     category: string;
+    categories: string[] | null;
     image_urls: string[];
     thumbnail_index: number;
     address: string | null;
@@ -120,6 +121,7 @@ export async function getParticipatedActions(
     title: a.title,
     summary: a.description?.slice(0, 60) ?? null,
     category: a.category,
+    categories: a.categories ?? [a.category],
     thumbnailUrl: pickThumbnail(a.image_urls, a.thumbnail_index),
     address: a.address,
     placeName: a.place_name,
@@ -171,7 +173,7 @@ export async function getFollowing(
 
 /**
  * Share 화면 사용자 검색.
- * 닉네임으로만 검색한다. 이메일·전화번호로는 찾을 수 없다.
+ * 이름과 닉네임으로 검색한다 (2026-09-07 회의). 이메일·전화번호로는 못 찾는다.
  * 최소 2자, 최대 10명, 본인 제외.
  */
 export async function searchUsers(

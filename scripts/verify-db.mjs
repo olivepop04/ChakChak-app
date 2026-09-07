@@ -1004,6 +1004,79 @@ try {
   await admin.from('actions').delete().eq('id', cxAct.id);
 
 
+  // ═══════════════════════════════════════════════════════════
+  console.log('\n[19] 카테고리를 여러 개 가질 수 있다 (14)');
+
+  /** 카테고리만 바꿔가며 액션을 만들어본다 */
+  async function mkCat(title, cats) {
+    return admin.from('actions').insert({
+      owner_id: uidA, title, description: '자동 검증용',
+      category: '환경',
+      ...(cats ? { categories: cats } : {}),
+      image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+      status: 'ACTIVE',
+      recruit_end_at:    new Date(now + 2 * 86400000).toISOString(),
+      activity_start_at: new Date(now + 4 * 86400000).toISOString(),
+      activity_end_at:   new Date(now + 5 * 86400000).toISOString(),
+    }).select('id, category, categories').single();
+  }
+
+  // ── ① 여러 개 저장 · 대표가 첫 번째로 맞춰짐 ──
+  const rMulti = await mkCat('[검증] 카테고리 둘', ['교육', '환경']);
+  if (rMulti.error) {
+    no('카테고리 두 개를 못 넣음 !!', rMulti.error.message.slice(0, 44));
+  } else {
+    rMulti.data.category === '교육'
+      ? ok('대표 카테고리가 첫 번째로 자동 설정됨', rMulti.data.category)
+      : no(`대표가 "${rMulti.data.category}" — 첫 번째("교육")여야 함 !!`);
+
+    // ── ② 두 번째 카테고리로도 찾힌다 ──
+    const { data: bySecond } = await anon.from('actions')
+      .select('id').eq('id', rMulti.data.id).overlaps('categories', ['환경']);
+    bySecond?.length
+      ? ok('두 번째 카테고리로도 액션이 찾힘 — 홈 칩 필터가 이걸 씁니다')
+      : no('두 번째 카테고리로는 못 찾음 !! — overlaps 를 쓰고 있는가');
+
+    // ── ③ 공개한 뒤에는 못 바꾼다 ──
+    const rLock = await cA.from('actions')
+      .update({ categories: ['동물'] }).eq('id', rMulti.data.id);
+    const { data: after } = await admin.from('actions')
+      .select('categories').eq('id', rMulti.data.id).single();
+    after.categories.includes('교육')
+      ? ok('공개한 뒤에는 카테고리를 못 바꿈')
+      : no('공개된 액션의 카테고리가 바뀜 !!');
+    void rLock;
+
+    await admin.from('actions').delete().eq('id', rMulti.data.id);
+  }
+
+  // ── ④ categories 를 안 줘도 대표 하나로 채워진다 (옛 코드 호환) ──
+  const rOnly = await mkCat('[검증] 카테고리 안 줌', null);
+  if (rOnly.error) {
+    no('categories 없이 액션을 못 만듦 !! — 옛 코드가 깨집니다', rOnly.error.message.slice(0, 40));
+  } else {
+    JSON.stringify(rOnly.data.categories) === JSON.stringify(['환경'])
+      ? ok('categories 를 안 줘도 대표로 채워짐 — 옛 코드가 안 깨짐')
+      : no(`categories 가 ${JSON.stringify(rOnly.data.categories)} !!`);
+    await admin.from('actions').delete().eq('id', rOnly.data.id);
+  }
+
+  // ── ⑤ 규칙 세 가지 ──
+  for (const [label, cats] of [
+    ['네 개', ['환경', '동물', '교육', '노인']],
+    ['중복', ['환경', '환경']],
+    ['없는 카테고리', ['환경', '우주']],
+  ]) {
+    const r = await mkCat(`[검증] ${label}`, cats);
+    if (r.error) {
+      ok(`${label} 거절`);
+    } else {
+      no(`${label}가 통과됨 !!`);
+      await admin.from('actions').delete().eq('id', r.data.id);
+    }
+  }
+
+
 } catch (e) {
   no('예외 발생', e.message);
 } finally {

@@ -14,7 +14,7 @@ import type {
   CrewItemGroup,
   ActionResultData,
 } from '@/lib/types/view';
-import type { ParticipationStatus, ItemType, ActionStatus } from '@/lib/constants';
+import type { ParticipationStatus, ItemType, ActionStatus, Category } from '@/lib/constants';
 import { getActionItems, pickThumbnail } from '@/lib/queries/actions';
 
 type DB = SupabaseClient<Database>;
@@ -50,7 +50,7 @@ export async function getMyJoinedActions(
     supabase
       .from('actions')
       .select(
-        `id, title, description, category, image_urls, thumbnail_index,
+        `id, title, description, category, categories, image_urls, thumbnail_index,
          address, place_name, status, activity_start_at, recruit_end_at,
          owner:profiles!actions_owner_id_fkey ( id, nickname )`,
       )
@@ -91,6 +91,7 @@ export async function getMyJoinedActions(
     title: string;
     description: string | null;
     category: string;
+    categories: string[] | null;
     image_urls: string[];
     thumbnail_index: number;
     address: string | null;
@@ -137,6 +138,7 @@ export async function getMyJoinedActions(
         title: a.title,
         summary: a.description?.slice(0, 60) ?? null,
         category: a.category,
+        categories: (a.categories ?? [a.category]) as Category[],
         thumbnailUrl: pickThumbnail(a.image_urls, a.thumbnail_index),
         address: a.address,
         placeName: a.place_name,

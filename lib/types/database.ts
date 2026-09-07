@@ -185,6 +185,7 @@ export type Database = {
           activity_start_at: string | null
           address: string | null
           cancel_reason: string | null
+          categories: string[]
           category: string
           created_at: string
           description: string | null
@@ -205,6 +206,7 @@ export type Database = {
           activity_start_at?: string | null
           address?: string | null
           cancel_reason?: string | null
+          categories: string[]
           category: string
           created_at?: string
           description?: string | null
@@ -225,6 +227,7 @@ export type Database = {
           activity_start_at?: string | null
           address?: string | null
           cancel_reason?: string | null
+          categories?: string[]
           category?: string
           created_at?: string
           description?: string | null
@@ -875,6 +878,7 @@ export type Database = {
         Args: { p_action_id: string; p_reason: string }
         Returns: undefined
       }
+      has_no_duplicate: { Args: { arr: string[] }; Returns: boolean }
       is_action_crew: { Args: { a: string }; Returns: boolean }
       is_action_member: { Args: { a: string }; Returns: boolean }
       is_action_owner: { Args: { a: string }; Returns: boolean }

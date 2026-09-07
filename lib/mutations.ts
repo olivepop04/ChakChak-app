@@ -55,7 +55,10 @@ function toMessage(error: { message?: string } | null, fallback: string) {
 export interface ActionDraftInput {
   title: string;
   description?: string | null;
+  /** 대표 카테고리. categories 를 주면 안 줘도 됩니다 */
   category: string;
+  /** 카테고리 1~3개 (14). 첫 번째가 대표가 됩니다 */
+  categories?: string[];
   imageUrls?: string[];
   thumbnailIndex?: number;
   /** 주소 검색으로 고른 값. 예) 서울특별시 강동구 … */
@@ -120,6 +123,11 @@ export async function saveActionDraft(
     title,
     description: input.description?.trim() || null,
     category: input.category,
+    // categories 를 주면 그걸 쓰고, 안 주면 대표 하나만 넣습니다.
+    // DB 트리거가 category 를 categories[0] 으로 맞춰줍니다 (14).
+    categories: input.categories?.length
+      ? input.categories
+      : [input.category],
     image_urls: images,
     thumbnail_index: Math.min(
       input.thumbnailIndex ?? 0,
