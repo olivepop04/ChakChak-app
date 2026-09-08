@@ -63,6 +63,7 @@ export interface ActionFormInitial {
   title: string;
   description: string;
   category: Category;
+  categories: Category[];
   imageUrls: string[];
   thumbnailIndex: number;
   address: string;
@@ -95,11 +96,15 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const draftCreationRef = useRef<Promise<string | null> | null>(null);
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
-  const [category, setCategory] = useState<Category>(initial.category);
+  const [categories, setCategories] = useState<Category[]>(
+    initial.categories.length > 0 ? initial.categories : [initial.category],
+  );
+  const category = categories[0];
   const [imageUrls, setImageUrls] = useState(initial.imageUrls);
   const [thumbnailIndex, setThumbnailIndex] = useState(initial.thumbnailIndex);
   // F32 — 입력칸은 개발 B 가 만듭니다. 배선은 되어 있으니 setPlaceName 만 연결하면 됩니다.
   const [placeName, setPlaceName] = useState(initial.placeName);
+  const [placeNameError, setPlaceNameError] = useState('');
   const [address, setAddress] = useState(initial.address);
   const [notice, setNotice] = useState(initial.notice);
   const [recruitEnd, setRecruitEnd] = useState(toLocalInput(initial.recruitEndAt));
@@ -124,6 +129,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const recruitEndRef = useRef<HTMLInputElement>(null);
   const activityStartRef = useRef<HTMLInputElement>(null);
   const activityEndRef = useRef<HTMLInputElement>(null);
+  const placeNameRef = useRef<HTMLInputElement>(null);
   const pendingReviewTargetRef = useRef<HTMLElement | null>(null);
 
   const [busy, setBusy] = useState(false);
@@ -137,7 +143,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       const creation = (async () => {
         const saved = await saveActionDraft(
           createClient(),
-          { title: draftTitle, category },
+          { title: draftTitle, category, categories },
           null,
         );
         if (!saved.ok) {
@@ -158,7 +164,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         if (draftCreationRef.current === creation) draftCreationRef.current = null;
       }
     },
-    [category, toast],
+    [categories, category, toast],
   );
 
   useEffect(() => {
@@ -201,6 +207,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         title,
         description,
         category,
+        categories,
         imageUrls,
         thumbnailIndex,
         address,
@@ -277,9 +284,21 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     if (id) toast('저장했어요. 이어서 작성할 수 있어요.', 'success');
   }
 
+  function showPlaceNameError() {
+    setPlaceNameError('장소명을 입력해주세요.');
+    setReview(null);
+    pendingReviewTargetRef.current = null;
+    window.requestAnimationFrame(() => scrollAndFocus(placeNameRef.current));
+  }
+
   /** 1차: 저장 + 검수 요청 */
   async function handleReview() {
     if (busy) return;
+    if (!placeName.trim()) {
+      showPlaceNameError();
+      return;
+    }
+    setPlaceNameError('');
     setBusy(true);
     setReview(null);
     pendingReviewTargetRef.current = null;
@@ -313,7 +332,16 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
   /** 2차: Owner 가 최종 공개 */
   async function handlePublish() {
-    if (busy || !actionId) return;
+    if (busy) return;
+    if (!review || review.decision !== 'PASS') {
+      toast('검수 내용을 수정한 뒤 다시 확인해주세요.', 'error');
+      return;
+    }
+    if (!placeName.trim()) {
+      showPlaceNameError();
+      return;
+    }
+    if (!actionId) return;
     setBusy(true);
 
     const supabase = createClient();
@@ -334,6 +362,24 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     toast('액션을 공개했어요!', 'success');
     router.push(`/action/${actionId}`);
     router.refresh();
+  }
+
+  function toggleCategory(nextCategory: Category) {
+    if (categories.includes(nextCategory)) {
+      if (categories.length === 1) {
+        toast('카테고리를 하나 이상 선택해주세요.', 'error');
+        return;
+      }
+      setCategories(categories.filter((selected) => selected !== nextCategory));
+      return;
+    }
+
+    if (categories.length >= 3) {
+      toast('카테고리는 최대 3개까지 선택할 수 있어요.', 'error');
+      return;
+    }
+
+    setCategories([...categories, nextCategory]);
   }
 
   return (
@@ -358,9 +404,10 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             <button
               key={c}
               type="button"
-              onClick={() => setCategory(c)}
+              aria-pressed={categories.includes(c)}
+              onClick={() => toggleCategory(c)}
               className={`rounded-full border px-3.5 py-2 text-[13px] font-medium ${
-                category === c
+                categories.includes(c)
                   ? 'border-neutral-900 bg-neutral-900 text-white'
                   : 'border-neutral-300 bg-white text-neutral-600'
               }`}
@@ -512,13 +559,26 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         </div>
 
         <label className="flex flex-col gap-1.5">
-          <span className={label}>장소명</span>
+          <span className={label}>
+            장소명 <span className="text-red-600">*</span>
+          </span>
           <input
+            ref={placeNameRef}
             value={placeName}
-            onChange={(e) => setPlaceName(e.target.value)}
+            onChange={(e) => {
+              setPlaceName(e.target.value);
+              if (placeNameError) setPlaceNameError('');
+            }}
             placeholder="예) 신라목욕탕"
+            aria-invalid={!!placeNameError}
+            aria-describedby={placeNameError ? 'place-name-error' : undefined}
             className={input}
           />
+          {placeNameError && (
+            <span id="place-name-error" className="text-[12px] text-red-600" role="alert">
+              {placeNameError}
+            </span>
+          )}
         </label>
       </div>
 
@@ -626,6 +686,7 @@ function ReviewPanel({
   onPublish: () => void;
   busy: boolean;
 }) {
+  const canPublish = review.decision === 'PASS';
   const blocked = review.decision === 'BLOCK';
 
   const tone = blocked
@@ -637,7 +698,7 @@ function ReviewPanel({
   const heading = blocked
     ? '공개하기 전에 고쳐야 할 것이 있어요'
     : review.decision === 'REVISE'
-      ? '이대로도 공개할 수 있지만, 이런 점을 보완하면 좋아요'
+      ? '공개하기 전에 내용을 조금 수정해주세요'
       : '확인했어요. 공개할 준비가 됐어요';
 
   return (
@@ -681,14 +742,18 @@ function ReviewPanel({
         </ul>
       )}
 
-      {!blocked && (
+      {canPublish && (
         <Button type="button" onClick={onPublish} loading={busy} fullWidth>
           액션 공개하기
         </Button>
       )}
-      {blocked && (
-        <p className="text-[12px] text-red-700">
-          위 내용을 고치고 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
+      {!canPublish && (
+        <p
+          className={`text-[12px] ${
+            blocked ? 'text-red-700' : 'text-amber-800'
+          }`}
+        >
+          위 내용을 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러 검수해주세요.
         </p>
       )}
     </div>
