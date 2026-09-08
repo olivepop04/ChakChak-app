@@ -5,6 +5,7 @@
  *   여기 있는 건 조회 전용이다.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getPublicParticipationCounts } from '@/lib/queries/public-stats';
 import type { Database } from '@/lib/types/database';
 import type {
   JoinedActionData,
@@ -282,6 +283,10 @@ export function groupCrewByItem(crew: CrewMember[]): CrewItemGroup[] {
 /**
  * 여러 사용자의 활동 이력을 한 번에.
  * 참여 수는 ACTUALLY_PARTICIPATED 만 센다 (소감까지 쓴 것).
+ *
+ * ★ participations 를 직접 세면 안 됩니다. RLS 가 "내 참여 · 내 액션 · 내 크루"
+ *   만 열어줘서, 남의 프로필에서 참여 수가 0 으로 나왔습니다 (2026-09-08).
+ *   supabase/16_update.sql 의 public_participation_counts 를 쓰세요.
  */
 export async function getUserSummaries(
   supabase: DB,
@@ -290,17 +295,14 @@ export async function getUserSummaries(
 ): Promise<UserSummary[]> {
   if (userIds.length === 0) return [];
 
-  const [{ data: profiles }, { data: parts }, { data: led }, { data: follows }] =
+  const [{ data: profiles }, partCount, { data: led }, { data: follows }] =
     await Promise.all([
       supabase
         .from('profiles')
         .select('id, nickname, bio')
         .in('id', userIds),
-      supabase
-        .from('participations')
-        .select('user_id')
-        .in('user_id', userIds)
-        .eq('status', 'ACTUALLY_PARTICIPATED'),
+      // 남의 참여는 RLS 때문에 직접 세면 0 이나 일부만 나옵니다 (16).
+      getPublicParticipationCounts(supabase, userIds),
       supabase
         .from('actions')
         .select('owner_id')
@@ -314,10 +316,6 @@ export async function getUserSummaries(
             .in('following_id', userIds)
         : Promise.resolve({ data: [] as { following_id: string }[] }),
     ]);
-
-  const partCount = new Map<string, number>();
-  for (const p of parts ?? [])
-    partCount.set(p.user_id, (partCount.get(p.user_id) ?? 0) + 1);
 
   const ledCount = new Map<string, number>();
   for (const a of led ?? [])

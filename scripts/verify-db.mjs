@@ -1077,6 +1077,94 @@ try {
   }
 
 
+  // ============================================================
+  console.log('\n[20] 남이 봐도 참여 통계가 맞게 나오는가 (16)');
+
+  // participations RLS 는 "내 참여 · 내 액션 · 내 크루" 만 열어준다.
+  // 그래서 화면이 그 테이블을 직접 세면 남의 참여가 0 으로 나왔다 (2026-09-08).
+  // 공개 범위만큼 돌려주는 함수 두 개가 제대로 도는지 본다.
+  //
+  // 앞 단계에서 만든 참여는 그때그때 지워지므로, 여기서 확인용으로 두 건을 만든다.
+  //   ① 끝난 액션 + 소감까지 쓴 참여  → 남에게 보여야 한다
+  //   ② 아직 진행 중인 액션 + 참여 예정 → 남에게 보이면 안 된다
+
+  const { data: 완료액션 } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 공개 통계 - 끝난 액션', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    status: 'COMPLETED',
+    recruit_end_at:    new Date(now - 5 * 86400000).toISOString(),
+    activity_start_at: new Date(now - 4 * 86400000).toISOString(),
+    activity_end_at:   new Date(now - 3 * 86400000).toISOString(),
+  }).select('id').single();
+  await admin.from('participations').insert({
+    action_id: 완료액션.id, user_id: uidB, status: 'ACTUALLY_PARTICIPATED',
+  });
+
+  const { data: 진행액션 } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 공개 통계 - 진행 중', description: '자동 검증용',
+    category: '환경', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    status: 'ACTIVE',
+    recruit_end_at:    new Date(now + 2 * 86400000).toISOString(),
+    activity_start_at: new Date(now + 4 * 86400000).toISOString(),
+    activity_end_at:   new Date(now + 5 * 86400000).toISOString(),
+  }).select('id').single();
+  await admin.from('participations').insert({
+    action_id: 진행액션.id, user_id: uidB, status: 'BEFORE_ACTION',
+  });
+
+  const { count: 진짜완료 } = await admin.from('participations')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', uidB).eq('status', 'ACTUALLY_PARTICIPATED');
+  const { count: 전체참여 } = await admin.from('participations')
+    .select('id', { count: 'exact', head: true }).eq('user_id', uidB);
+
+  const anonStats = createClient(URL, ANON, { auth: { persistSession: false } });
+
+  const rCnt = await anonStats.rpc('public_participation_counts', { p_user_ids: [uidB] });
+  if (rCnt.error) {
+    no('비회원이 참여 통계 함수를 못 부름 — 16_update.sql 을 실행했는가', rCnt.error.message.slice(0, 40));
+  } else {
+    const got = rCnt.data?.[0]?.participated_count ?? 0;
+    got === 진짜완료
+      ? ok(`비회원도 참여 완료 수가 맞게 보임 (${got}건)`)
+      : no('참여 완료 수가 다름', `함수 ${got} vs 실제 ${진짜완료}`);
+  }
+
+  // 확인용으로 만든 두 건이 그대로 있어야 아래 검사가 의미가 있다
+  진짜완료 >= 1 && 전체참여 > 진짜완료
+    ? ok(`참여 예정·나간 기록은 안 셈 (전체 ${전체참여} 중 ${진짜완료}만)`)
+    : no('확인용 데이터가 준비되지 않음', `완료 ${진짜완료} / 전체 ${전체참여}`);
+
+  const rIds = await anonStats.rpc('public_participated_action_ids', { p_user_id: uidB });
+  if (rIds.error) {
+    no('비회원이 참여 액션 목록 함수를 못 부름', rIds.error.message.slice(0, 40));
+  } else {
+    const ids = (rIds.data ?? []).map((r) => r.action_id);
+    ids.length === 진짜완료
+      ? ok(`비회원도 참여한 액션 목록을 받음 (${ids.length}건)`)
+      : no('참여 액션 개수가 다름', `${ids.length} vs ${진짜완료}`);
+
+    // 돌려준 액션이 정말 끝난 것들인가
+    if (ids.length > 0) {
+      const { data: st } = await admin.from('actions').select('status').in('id', ids);
+      (st ?? []).every((a) => a.status === 'ENDED' || a.status === 'COMPLETED')
+        ? ok('끝난 액션만 돌려줌 — 참여 예정이 새지 않음')
+        : no('아직 안 끝난 액션이 섞임', (st ?? []).map((a) => a.status).join(','));
+    }
+  }
+
+  // 로그인했지만 아무 상관 없는 사람도 같은 숫자를 봐야 한다
+  const rMine = await cA.rpc('public_participation_counts', { p_user_ids: [uidB] });
+  (rMine.data?.[0]?.participated_count ?? 0) === 진짜완료
+    ? ok('로그인 사용자도 같은 숫자를 봄')
+    : no('사람마다 숫자가 다름');
+
+  // 확인용 데이터 치우기
+  for (const id of [완료액션.id, 진행액션.id]) {
+    await admin.from('participations').delete().eq('action_id', id);
+    await admin.from('actions').delete().eq('id', id);
+  }
+
 } catch (e) {
   no('예외 발생', e.message);
 } finally {
