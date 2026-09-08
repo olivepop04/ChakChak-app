@@ -63,6 +63,7 @@ export interface ActionFormInitial {
   title: string;
   description: string;
   category: Category;
+  categories: Category[];
   imageUrls: string[];
   thumbnailIndex: number;
   address: string;
@@ -95,7 +96,10 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const draftCreationRef = useRef<Promise<string | null> | null>(null);
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
-  const [category, setCategory] = useState<Category>(initial.category);
+  const [categories, setCategories] = useState<Category[]>(
+    initial.categories.length > 0 ? initial.categories : [initial.category],
+  );
+  const category = categories[0];
   const [imageUrls, setImageUrls] = useState(initial.imageUrls);
   const [thumbnailIndex, setThumbnailIndex] = useState(initial.thumbnailIndex);
   // F32 — 입력칸은 개발 B 가 만듭니다. 배선은 되어 있으니 setPlaceName 만 연결하면 됩니다.
@@ -137,7 +141,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       const creation = (async () => {
         const saved = await saveActionDraft(
           createClient(),
-          { title: draftTitle, category },
+          { title: draftTitle, category, categories },
           null,
         );
         if (!saved.ok) {
@@ -158,7 +162,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         if (draftCreationRef.current === creation) draftCreationRef.current = null;
       }
     },
-    [category, toast],
+    [categories, category, toast],
   );
 
   useEffect(() => {
@@ -201,6 +205,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         title,
         description,
         category,
+        categories,
         imageUrls,
         thumbnailIndex,
         address,
@@ -336,6 +341,24 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     router.refresh();
   }
 
+  function toggleCategory(nextCategory: Category) {
+    if (categories.includes(nextCategory)) {
+      if (categories.length === 1) {
+        toast('카테고리를 하나 이상 선택해주세요.', 'error');
+        return;
+      }
+      setCategories(categories.filter((selected) => selected !== nextCategory));
+      return;
+    }
+
+    if (categories.length >= 3) {
+      toast('카테고리는 최대 3개까지 선택할 수 있어요.', 'error');
+      return;
+    }
+
+    setCategories([...categories, nextCategory]);
+  }
+
   return (
     <div className="flex flex-col gap-6 px-5 pb-32 pt-4">
       {/* 제목 */}
@@ -358,9 +381,10 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             <button
               key={c}
               type="button"
-              onClick={() => setCategory(c)}
+              aria-pressed={categories.includes(c)}
+              onClick={() => toggleCategory(c)}
               className={`rounded-full border px-3.5 py-2 text-[13px] font-medium ${
-                category === c
+                categories.includes(c)
                   ? 'border-neutral-900 bg-neutral-900 text-white'
                   : 'border-neutral-300 bg-white text-neutral-600'
               }`}

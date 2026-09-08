@@ -18,6 +18,7 @@ const EMPTY: ActionFormInitial = {
   title: '',
   description: '',
   category: CATEGORIES[0],
+  categories: [CATEGORIES[0]],
   imageUrls: [],
   thumbnailIndex: 0,
   address: '',
@@ -65,6 +66,9 @@ export default async function CreateActionPage({
       title: action.title,
       description: action.description ?? '',
       category: action.category as Category,
+      categories: action.categories?.length
+        ? (action.categories as Category[])
+        : [action.category as Category],
       imageUrls: action.image_urls ?? [],
       thumbnailIndex: action.thumbnail_index ?? 0,
       address: action.address ?? '',
