@@ -135,40 +135,40 @@ export function ActionCard({
               </p>
 
               {/* 통계 + 아바타 */}
-              <div className="flex items-center justify-between text-xs text-neutral-500 border-t border-neutral-100 pt-1.5">
+              <div className="flex items-center justify-between gap-1.5 text-xs text-neutral-500 border-t border-neutral-100 pt-1.5">
                 <Link
                   href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
                   onClick={(e) => e.stopPropagation()}
-                  className="pointer-events-auto cursor-pointer flex items-center gap-1.5 min-w-0 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
+                  className="pointer-events-auto cursor-pointer flex items-center gap-1 min-w-0 flex-1 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
                 >
                   <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-                  <span className="text-xs text-neutral-600 truncate max-w-[70px]">
+                  <span className="text-xs text-neutral-600 truncate min-w-[36px]">
                     @{action.owner?.nickname ?? '호스트'}
                   </span>
                 </Link>
 
-                <div className="flex items-center gap-1 text-[11px] pointer-events-auto">
+                <div className="flex items-center gap-0.5 text-[11px] shrink-0 pointer-events-auto">
                   <CrewAnchorButton
                     count={action.crewCount ?? 0}
-                    className="px-1 py-0.5 text-xs gap-1"
+                    className="px-0.5 py-0.5 text-[11px] gap-0.5"
                   />
                   <LikeButton
                     actionId={action.id}
                     initialLiked={action.likedByMe}
                     initialCount={action.likeCount ?? 0}
-                    className="px-1 py-0.5 text-xs gap-1"
+                    className="px-0.5 py-0.5 text-[11px] gap-0.5"
                   />
                   <SaveButton
                     actionId={action.id}
                     initialSaved={action.savedByMe}
                     initialCount={action.saveCount ?? 0}
-                    className="px-1 py-0.5 text-xs gap-1"
+                    className="px-0.5 py-0.5 text-[11px] gap-0.5"
                   />
                   <ShareButton
                     actionId={action.id}
                     actionTitle={action.title}
                     count={action.shareCount ?? 0}
-                    className="px-1 py-0.5 text-xs gap-1"
+                    className="px-0.5 py-0.5 text-[11px] gap-0.5"
                   />
                 </div>
               </div>

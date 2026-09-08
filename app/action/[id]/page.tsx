@@ -24,6 +24,7 @@ import {
   formatDateShort,
   timeUntilDeadline,
 } from '@/lib/utils/date';
+import { getActionCta } from '@/lib/utils/action-cta';
 import type { UserSummary, CrewMember } from '@/lib/types/view';
 
 export default async function ActionDetailPage({
@@ -96,67 +97,15 @@ export default async function ActionDetailPage({
     ? new Date() > new Date(action.activityEndAt)
     : false;
 
-  // ── 하단 버튼을 무엇으로 보여줄지 ──────────────────────────
-  // 순서가 중요합니다. 위쪽 조건이 먼저 걸립니다.
-  type CtaConfig =
-    | { type: 'disabled'; label: string }
-    | { type: 'link'; label: string; href: string; isCrewChat?: boolean }
-    | { type: 'host_ended_write_result'; chatHref: string; writeHref: string };
-
-  const cta: CtaConfig = (() => {
-    // 1. 취소됨 (공통: 호스트 & 일반 사용자)
-    if (action.status === 'CANCELLED')
-      return { type: 'disabled', label: '취소된 액션이에요' };
-
-    // 2. 결과 작성 후 / 완료 (공통: 호스트 & 일반 사용자)
-    if (action.status === 'COMPLETED')
-      return { type: 'link', label: '결과 보기', href: `/action/${id}/result` };
-
-    // 3. 호스트일 때 (action.isOwner === true)
-    if (action.isOwner) {
-      // 조기 종료된 액션 (earlyEndReason 존재): 결과 작성 비노출 & 단일 크루 채팅 버튼
-      if (action.earlyEndReason) {
-        return {
-          type: 'link',
-          label: '함께하는 크루와 이야기하기',
-          href: `/action/${id}/chat`,
-          isCrewChat: true,
-        };
-      }
-      // 활동 종료일이 지남 (정상 종료, 결과 아직 미작성)
-      if (action.status === 'ENDED' || isPastActivityEnd) {
-        return {
-          type: 'host_ended_write_result',
-          chatHref: `/action/${id}/chat`,
-          writeHref: `/action/${id}/result/write`,
-        };
-      }
-      // 활동 종료 전 (모집 중 · 마감 · 활동 중 전부)
-      return {
-        type: 'link',
-        label: '함께하는 크루와 이야기하기',
-        href: `/action/${id}/chat`,
-        isCrewChat: true,
-      };
-    }
-
-    // 4. 일반 사용자/참여자일 때 (action.isOwner === false)
-    if (action.myParticipation && action.myParticipation !== 'LEFT')
-      return {
-        type: 'link',
-        label: '함께하는 크루와 이야기하기',
-        href: `/action/${id}/chat`,
-        isCrewChat: true,
-      };
-    if (action.status === 'ENDED' || isPastActivityEnd)
-      return { type: 'disabled', label: '활동이 끝났어요' };
-    if (action.recruitClosed)
-      return { type: 'disabled', label: '모집이 마감되었어요' };
-    if (allFull)
-      return { type: 'disabled', label: '모집이 완료되었어요' };
-
-    return { type: 'link', label: '참여하기', href: `/action/${id}/join` };
-  })();
+  const cta = getActionCta({
+    actionId: action.id,
+    status: action.status,
+    isOwner: action.isOwner,
+    myParticipation: action.myParticipation,
+    activityEndAt: action.activityEndAt,
+    recruitClosed: action.recruitClosed,
+    allItemsFull: allFull,
+  });
 
   const detailCategories =
     action.categories && action.categories.length > 0

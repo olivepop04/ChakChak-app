@@ -38,7 +38,7 @@ export const NOTIFICATION_TEMPLATE: Record<
   },
   VOICE_REQUEST: {
     icon: '✍️',
-    title: '아직 당신의 이야기가 남아있어요',
+    title: '소감을 작성해서 참여한 액션을 마무리하세요.',
     cta: '소감 남기기',
     href: (id) => `/action/${id}/voice`,
   },
@@ -62,7 +62,7 @@ export const NOTIFICATION_TEMPLATE: Record<
   },
   SHORTFALL: {
     icon: '📉',
-    title: '모집이 마감됐는데 인원이 조금 모자라요',
+    title: '모집 인원 미달로 진행 여부를 결정하세요.',
     cta: '진행할지 정하기',
     href: (id) => `/activity?tab=created&focus=${id}`,
   },

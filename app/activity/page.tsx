@@ -33,8 +33,8 @@ const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 function JoinedFooter({ item }: { item: JoinedActionData }) {
   if (item.status === 'CANCELLED') {
     return (
-      <div className="flex flex-wrap gap-1.5">
-        <Link href={`/action/${item.id}`} className={secondary}>
+      <div className="flex items-center gap-2 w-full">
+        <Link href={`/action/${item.id}`} className={`${secondary} flex-1`}>
           취소 사유 보기
         </Link>
       </div>
@@ -43,8 +43,8 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
 
   if (item.status === 'ACTIVE') {
     return (
-      <div className="flex flex-wrap gap-1.5">
-        <Link href={`/action/${item.id}/chat`} className={secondary}>
+      <div className="flex items-center gap-2 w-full">
+        <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
           CREW CHAT
         </Link>
         {item.participationStatus === 'BEFORE_ACTION' && (
@@ -54,40 +54,15 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
     );
   }
 
-  // ENDED: 호스트가 아직 결과를 작성/공개하지 않음 (결과 없음)
-  if (item.status === 'ENDED') {
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        <Link href={`/action/${item.id}/chat`} className={secondary}>
-          CREW CHAT
-        </Link>
-      </div>
-    );
-  }
-
-  // COMPLETED: 호스트가 결과를 등록 완료한 상태
-  if (item.status === 'COMPLETED') {
-    const hasSubmittedVoice =
-      item.participationStatus === 'ACTUALLY_PARTICIPATED' || item.hasVoice;
-
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        <Link href={`/action/${item.id}/result`} className={secondary}>
-          결과 보기
-        </Link>
-        {!hasSubmittedVoice && (
-          <Link href={`/action/${item.id}/voice`} className={primary}>
-            소감 남기기
-          </Link>
-        )}
-      </div>
-    );
-  }
-
+  // ENDED / COMPLETED ('소감 작성 필요' 상태 포함):
+  // [CREW CHAT] 과 [결과 보기] 2개의 버튼으로 통일 (flex-1 적용 5:5 비율 수평 배치)
   return (
-    <div className="flex flex-wrap gap-1.5">
-      <Link href={`/action/${item.id}/chat`} className={secondary}>
+    <div className="flex items-center gap-2 w-full">
+      <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
         CREW CHAT
+      </Link>
+      <Link href={`/action/${item.id}/result`} className={`${secondary} flex-1`}>
+        결과 보기
       </Link>
     </div>
   );
