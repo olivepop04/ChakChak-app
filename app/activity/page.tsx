@@ -13,6 +13,7 @@ import { getMyCreatedActions } from '@/lib/queries/actions';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ParticipationBadge } from '@/components/ui/Badge';
+import { Header } from '@/components/layout/Header';
 import {
   LeaveButton,
   DeleteDraftButton,
@@ -250,11 +251,7 @@ export default async function ActivityPage({
 
   return (
     <main className="pb-24">
-      <header className="px-5 pb-3 pt-6">
-        <h1 className="text-xl font-bold tracking-tight text-neutral-900">
-          내 활동
-        </h1>
-      </header>
+      <Header title="내 활동" back backHref="/" sticky />
 
       {/* 탭 */}
       <div className="flex border-b border-neutral-200 px-5">

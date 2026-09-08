@@ -15,7 +15,7 @@ export default async function SavedPage() {
   const saved = await getSavedActions(supabase, user.id);
 
   return (
-    <main className="pb-24">
+    <main className="min-h-screen pb-28">
       <Header title="저장한 액션" back backHref="/my" sticky />
 
       {saved.length === 0 ? (

@@ -8,6 +8,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 interface HeaderProps {
@@ -56,9 +57,9 @@ export function Header({
           type="button"
           onClick={handleBack}
           aria-label="뒤로 가기"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-xl text-neutral-700 hover:bg-neutral-100"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
         >
-          ‹
+          <ChevronLeft className="h-5 w-5 text-neutral-700" />
         </button>
       ) : (
         <span className="w-2" />

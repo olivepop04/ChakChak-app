@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * 액션 카드. Home · Discover · Activity · 저장목록 · 프로필이 전부 이걸 쓴다.
  *
@@ -99,26 +101,28 @@ export function ActionCard({
                 </>
               )}
             </div>
-            {showStatus && (
-              <div className="absolute right-1.5 top-1.5 z-10">
-                <StatusBadge
-                  status={action.status}
-                  recruitClosed={isRecruitClosed}
-                  className="bg-white/90 shadow-xs"
-                />
-              </div>
-            )}
           </div>
 
           {/* 우측 정보 */}
           <div className="flex flex-1 flex-col justify-between min-w-0">
             <div>
-              <h3 className="truncate text-[15px] font-bold leading-snug text-neutral-900">
-                {action.title}
-              </h3>
+              {/* 상태 뱃지 + 제목 수평(인라인) 배치 */}
+              <div className="flex items-center gap-2 min-w-0">
+                {showStatus && (
+                  <div className="shrink-0">
+                    <StatusBadge
+                      status={action.status}
+                      recruitClosed={isRecruitClosed}
+                    />
+                  </div>
+                )}
+                <h3 className="flex-1 truncate text-[15px] font-bold leading-snug text-neutral-900 min-w-0">
+                  {action.title}
+                </h3>
+              </div>
 
               {action.summary && (
-                <p className="line-clamp-2 mt-0.5 text-xs text-neutral-500">
+                <p className="line-clamp-2 mt-1 text-xs text-neutral-500">
                   {action.summary}
                 </p>
               )}
@@ -132,12 +136,16 @@ export function ActionCard({
 
               {/* 통계 + 아바타 */}
               <div className="flex items-center justify-between text-xs text-neutral-500 border-t border-neutral-100 pt-1.5">
-                <div className="flex items-center gap-1.5 pointer-events-auto">
+                <Link
+                  href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
+                  onClick={(e) => e.stopPropagation()}
+                  className="pointer-events-auto cursor-pointer flex items-center gap-1.5 min-w-0 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
+                >
                   <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
                   <span className="text-xs text-neutral-600 truncate max-w-[70px]">
                     @{action.owner?.nickname ?? '호스트'}
                   </span>
-                </div>
+                </Link>
 
                 <div className="flex items-center gap-1 text-[11px] pointer-events-auto">
                   <CrewAnchorButton
@@ -248,8 +256,9 @@ export function ActionCard({
           <div className="pointer-events-auto mt-1 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
             {/* 작성자 프로필 링크 */}
             <Link
-              href={`/user/${action.owner?.id}`}
-              className="pointer-events-auto flex items-center gap-1.5 min-w-0 flex-1 text-xs text-neutral-600 hover:underline"
+              href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
+              onClick={(e) => e.stopPropagation()}
+              className="pointer-events-auto cursor-pointer flex items-center gap-1.5 min-w-0 flex-1 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
             >
               <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
               <span className="truncate text-xs text-neutral-600">
