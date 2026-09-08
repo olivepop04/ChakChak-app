@@ -13,7 +13,9 @@ import {
   REGIONS,
   SIDO_LIST,
   NATIONWIDE,
+  PROVINCE_WIDE,
   formatRegion,
+  mergeRegionSelection,
   shortRegion,
 } from '@/lib/constants/regions';
 import { Button } from '@/components/ui/Button';
@@ -33,14 +35,7 @@ export function RegionPicker({
   const isNationwide = value.includes(NATIONWIDE);
 
   function add(region: string) {
-    if (region === NATIONWIDE) {
-      onChange([NATIONWIDE]); // 전국을 고르면 나머지는 의미가 없다
-    } else {
-      const next = value.filter((v) => v !== NATIONWIDE);
-      if (!next.includes(region) && next.length < max) {
-        onChange([...next, region]);
-      }
-    }
+    onChange(mergeRegionSelection(value, region, max));
     setOpen(false);
     setSido(null);
   }
@@ -82,8 +77,8 @@ export function RegionPicker({
       </div>
 
       <p className="text-[11px] text-neutral-400">
-        시·군·구 단위로 최대 {max}곳까지 고를 수 있어요. 전국을 고르면 모든 지역의
-        액션을 추천받습니다.
+        시·도 전체 또는 시·군·구 단위로 최대 {max}곳까지 고를 수 있어요.
+        전국을 고르면 모든 지역의 액션을 추천받습니다.
       </p>
 
       {/* 선택 창 */}
@@ -129,7 +124,7 @@ export function RegionPicker({
                       </button>
                     </li>
                   ))
-                : REGIONS[sido].map((g) => (
+                : [PROVINCE_WIDE, ...REGIONS[sido]].map((g) => (
                     <li key={g}>
                       <button
                         type="button"
@@ -137,7 +132,7 @@ export function RegionPicker({
                         disabled={value.includes(formatRegion(sido, g))}
                         className="w-full px-5 py-3.5 text-left text-[15px] hover:bg-neutral-50 disabled:text-neutral-300"
                       >
-                        {g}
+                        {g === PROVINCE_WIDE ? `${sido} 전체` : g}
                       </button>
                     </li>
                   ))}

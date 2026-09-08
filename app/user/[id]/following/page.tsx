@@ -31,15 +31,15 @@ export default async function FollowingPage({
           {following.length}명
         </p>
         <p className="mt-0.5 text-[12px] text-neutral-500">
-          관심 있는 사람들의 새로운 액션을 만나보세요.
+          @{profile.nickname}님이 팔로우하는 사람
         </p>
       </div>
 
       {following.length === 0 ? (
         <EmptyState
-          icon="👋"
-          title="아직 팔로우한 사람이 없어요"
-          description="액션 상세에서 호스트를 팔로우해보세요."
+          icon="👥"
+          title="아직 팔로우하는 사람이 없어요."
+          description="관심 있는 호스트를 팔로우해보세요."
           action={{ label: '액션 찾아보기', href: '/discover' }}
         />
       ) : (

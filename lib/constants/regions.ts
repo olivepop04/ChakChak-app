@@ -11,6 +11,7 @@
  */
 
 export const NATIONWIDE = '전국';
+export const PROVINCE_WIDE = '전체';
 
 export const REGIONS: Record<string, string[]> = {
   서울특별시: [
@@ -55,6 +56,33 @@ export function formatRegion(sido: string, sigungu: string): string {
   return `${sido} ${sigungu}`;
 }
 
+/**
+ * 지역을 추가할 때 전국·시도 전체·세부 지역이 서로 중복되지 않게 정리한다.
+ * 예: 서울 성동구가 있는 상태에서 서울 전체를 고르면 서울 전체 하나만 남는다.
+ */
+export function mergeRegionSelection(
+  current: string[],
+  region: string,
+  max: number,
+): string[] {
+  if (region === NATIONWIDE) return [NATIONWIDE];
+
+  const [nextSido, nextSigungu] = region.split(' ');
+  let next = current.filter((item) => item !== NATIONWIDE);
+
+  if (nextSigungu === PROVINCE_WIDE) {
+    next = next.filter((item) => item.split(' ')[0] !== nextSido);
+  } else {
+    next = next.filter(
+      (item) => item !== formatRegion(nextSido, PROVINCE_WIDE),
+    );
+  }
+
+  if (next.includes(region)) return next;
+  if (next.length >= max) return current;
+  return [...next, region];
+}
+
 /** 화면에 짧게 보여줄 때: '서울특별시 강남구' → '서울 강남구' */
 export function shortRegion(region: string): string {
   if (region === NATIONWIDE) return '전국';
@@ -79,6 +107,9 @@ export function matchesRegion(address: string | null, userRegions: string[]): bo
   return userRegions.some((r) => {
     const [sido, sigungu] = r.split(' ');
     if (!sigungu) return false;
+    if (sigungu === PROVINCE_WIDE) {
+      return address.includes(sido);
+    }
     // '서울특별시 성동구' 는 주소에 '성동구' 가 있으면 일치로 본다
     return address.includes(sigungu);
   });

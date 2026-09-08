@@ -10,9 +10,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
 import type { Gender } from '@/lib/constants';
 import type { ProfileData, UserSummary, ActionCardData } from '@/lib/types/view';
-import type { TimePref, NotificationType, ActionStatus } from '@/lib/constants';
+import type { TimePref, NotificationType } from '@/lib/constants';
 import { getUserSummaries } from '@/lib/queries/participations';
-import { pickThumbnail } from '@/lib/queries/actions';
+import { getActionCardsByIds } from '@/lib/queries/actions';
+import { sortProfileActionsByLatestActivity } from '@/lib/utils/profile-actions';
 
 type DB = SupabaseClient<Database>;
 
@@ -88,53 +89,12 @@ export async function getParticipatedActions(
   const ids = (parts ?? []).map((p) => p.action_id);
   if (ids.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from('actions')
-    .select(
-      `id, title, description, category, categories, image_urls, thumbnail_index,
-       address, place_name, status, activity_start_at, recruit_end_at,
-       owner:profiles!actions_owner_id_fkey ( id, nickname )`,
-    )
-    .in('id', ids)
-    .in('status', ['COMPLETED', 'ENDED']);
-
-  if (error) throw error;
-
-  type Row = {
-    id: string;
-    title: string;
-    description: string | null;
-    category: string;
-    categories: string[] | null;
-    image_urls: string[];
-    thumbnail_index: number;
-    address: string | null;
-    place_name: string | null;
-    recruit_end_at: string | null;
-    status: string;
-    activity_start_at: string | null;
-    owner: { id: string; nickname: string } | null;
-  };
-
-  return ((data ?? []) as unknown as Row[]).map((a) => ({
-    id: a.id,
-    title: a.title,
-    summary: a.description?.slice(0, 60) ?? null,
-    category: a.category,
-    categories: a.categories ?? [a.category],
-    thumbnailUrl: pickThumbnail(a.image_urls, a.thumbnail_index),
-    address: a.address,
-    placeName: a.place_name,
-    status: a.status as ActionStatus,
-    activityStartAt: a.activity_start_at,
-    recruitEndAt: a.recruit_end_at,
-    owner: a.owner ?? { id: '', nickname: '알 수 없음' },
-    likeCount: 0,
-    saveCount: 0,
-    crewCount: 0,
-    likedByMe: false,
-    savedByMe: false,
-  })) as ActionCardData[];
+  const cards = await getActionCardsByIds(supabase, ids, viewerId);
+  return sortProfileActionsByLatestActivity(
+    cards.filter(
+      (action) => action.status === 'COMPLETED' || action.status === 'ENDED',
+    ),
+  );
 }
 
 /** 팔로워 목록 */
