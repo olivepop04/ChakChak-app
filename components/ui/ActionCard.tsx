@@ -147,32 +147,33 @@ export function ActionCard({
                   </span>
                 </Link>
 
-                <div className="flex items-center gap-1 shrink-0 ml-auto pointer-events-auto text-[10px] sm:text-[11px] font-medium text-neutral-500">
+                {/* 메타 4종: 375px에서는 초슬림 밀착, 넓은 화면(sm)에서는 홈피드 규격으로 확장 */}
+                <div className="flex items-center gap-0.5 min-[410px]:gap-1 sm:gap-1.5 shrink-0 ml-auto pointer-events-auto text-[10px] min-[410px]:text-[11px] sm:text-xs font-medium text-neutral-500">
                   <CrewAnchorButton
                     count={action.crewCount ?? 0}
-                    className="p-0 text-[10px] sm:text-[11px] gap-0.5 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5"
-                    iconClassName="w-3.5 h-3.5 shrink-0"
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <LikeButton
                     actionId={action.id}
                     initialLiked={action.likedByMe}
                     initialCount={action.likeCount ?? 0}
-                    className="p-0 text-[10px] sm:text-[11px] gap-0.5 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5"
-                    iconClassName="w-3.5 h-3.5 shrink-0"
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <SaveButton
                     actionId={action.id}
                     initialSaved={action.savedByMe}
                     initialCount={action.saveCount ?? 0}
-                    className="p-0 text-[10px] sm:text-[11px] gap-0.5 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5"
-                    iconClassName="w-3.5 h-3.5 shrink-0"
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <ShareButton
                     actionId={action.id}
                     actionTitle={action.title}
                     count={action.shareCount ?? 0}
-                    className="p-0 text-[10px] sm:text-[11px] gap-0.5 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5"
-                    iconClassName="w-3.5 h-3.5 shrink-0"
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                 </div>
               </div>
