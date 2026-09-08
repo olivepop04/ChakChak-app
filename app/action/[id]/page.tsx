@@ -107,6 +107,15 @@ export default async function ActionDetailPage({
     allItemsFull: allFull,
   });
 
+  const isParticipant =
+    !action.isOwner &&
+    !!action.myParticipation &&
+    action.myParticipation !== 'LEFT';
+  const customStatusLabel =
+    action.status === 'ENDED' && isParticipant
+      ? '소감 작성 필요'
+      : undefined;
+
   const detailCategories =
     action.categories && action.categories.length > 0
       ? action.categories
@@ -175,6 +184,7 @@ export default async function ActionDetailPage({
             <StatusBadge
               status={action.status}
               recruitClosed={action.recruitClosed}
+              customLabel={customStatusLabel}
             />
             {deadline && action.status === 'ACTIVE' && (
               <span className="text-[11px] font-medium text-amber-700">

@@ -74,7 +74,7 @@ export function ActionCard({
         </Link>
 
         {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
-        <div className="relative z-10 flex flex-row gap-3 p-3 w-full pointer-events-none">
+        <div className="relative z-10 flex flex-row gap-2.5 p-3.5 w-full pointer-events-none">
           {/* 좌측 썸네일 */}
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
             {action.thumbnailUrl ? (
@@ -135,40 +135,44 @@ export function ActionCard({
               </p>
 
               {/* 통계 + 아바타 */}
-              <div className="flex items-center justify-between gap-1.5 text-xs text-neutral-500 border-t border-neutral-100 pt-1.5">
+              <div className="flex items-center justify-between w-full min-w-0 pt-2 mt-1.5 border-t border-neutral-100">
                 <Link
                   href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
                   onClick={(e) => e.stopPropagation()}
-                  className="pointer-events-auto cursor-pointer flex items-center gap-1 min-w-0 flex-1 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
+                  className="pointer-events-auto cursor-pointer flex items-center gap-1 shrink-0 min-w-0 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
                 >
-                  <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-                  <span className="text-xs text-neutral-600 truncate min-w-[36px]">
+                  <Avatar name={action.owner?.nickname ?? '호스트'} size="xs" />
+                  <span className="shrink-0 whitespace-nowrap text-[11px] font-medium text-neutral-600">
                     @{action.owner?.nickname ?? '호스트'}
                   </span>
                 </Link>
 
-                <div className="flex items-center gap-0.5 text-[11px] shrink-0 pointer-events-auto">
+                <div className="flex items-center gap-1 shrink-0 ml-auto pointer-events-auto text-[10px] sm:text-[11px] font-medium text-neutral-500">
                   <CrewAnchorButton
                     count={action.crewCount ?? 0}
-                    className="px-0.5 py-0.5 text-[11px] gap-0.5"
+                    className="p-0 text-[10px] sm:text-[11px] gap-0.5 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5"
+                    iconClassName="w-3.5 h-3.5 shrink-0"
                   />
                   <LikeButton
                     actionId={action.id}
                     initialLiked={action.likedByMe}
                     initialCount={action.likeCount ?? 0}
-                    className="px-0.5 py-0.5 text-[11px] gap-0.5"
+                    className="p-0 text-[10px] sm:text-[11px] gap-0.5 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5"
+                    iconClassName="w-3.5 h-3.5 shrink-0"
                   />
                   <SaveButton
                     actionId={action.id}
                     initialSaved={action.savedByMe}
                     initialCount={action.saveCount ?? 0}
-                    className="px-0.5 py-0.5 text-[11px] gap-0.5"
+                    className="p-0 text-[10px] sm:text-[11px] gap-0.5 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5"
+                    iconClassName="w-3.5 h-3.5 shrink-0"
                   />
                   <ShareButton
                     actionId={action.id}
                     actionTitle={action.title}
                     count={action.shareCount ?? 0}
-                    className="px-0.5 py-0.5 text-[11px] gap-0.5"
+                    className="p-0 text-[10px] sm:text-[11px] gap-0.5 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5"
+                    iconClassName="w-3.5 h-3.5 shrink-0"
                   />
                 </div>
               </div>

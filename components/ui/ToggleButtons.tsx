@@ -66,11 +66,13 @@ export function LikeButton({
   initialLiked,
   initialCount,
   className,
+  iconClassName,
 }: {
   actionId: string;
   initialLiked: boolean;
   initialCount: number;
   className?: string;
+  iconClassName?: string;
 }) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
@@ -138,7 +140,8 @@ export function LikeButton({
       >
         <Heart
           className={cn(
-            'h-4 w-4 shrink-0 transition-colors',
+            iconClassName || 'h-4 w-4',
+            'shrink-0 transition-colors',
             on ? 'fill-red-500 text-red-500' : 'fill-none text-neutral-400',
           )}
         />
@@ -203,11 +206,13 @@ export function SaveButton({
   initialSaved,
   initialCount,
   className,
+  iconClassName,
 }: {
   actionId: string;
   initialSaved: boolean;
   initialCount?: number;
   className?: string;
+  iconClassName?: string;
 }) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
@@ -279,7 +284,8 @@ export function SaveButton({
       >
         <Star
           className={cn(
-            'h-4 w-4 shrink-0 transition-colors',
+            iconClassName || 'h-4 w-4',
+            'shrink-0 transition-colors',
             on ? 'fill-amber-500 text-amber-500' : 'fill-none text-neutral-400',
           )}
         />
@@ -383,10 +389,12 @@ export function CrewAnchorButton({
   count,
   targetId = 'crew-section',
   className,
+  iconClassName,
 }: {
   count: number;
   targetId?: string;
   className?: string;
+  iconClassName?: string;
 }) {
   function handleClick(e: React.MouseEvent) {
     const el = document.getElementById(targetId);
@@ -406,7 +414,7 @@ export function CrewAnchorButton({
         className,
       )}
     >
-      <UsersRound className="h-4 w-4 shrink-0 text-neutral-400" />
+      <UsersRound className={cn(iconClassName || 'h-4 w-4', 'shrink-0 text-neutral-400')} />
       <span className="tabular-nums">{count}</span>
     </button>
   );
@@ -420,6 +428,7 @@ export function ShareButton({
   showCount = false,
   count,
   className,
+  iconClassName,
 }: {
   actionId: string;
   actionTitle?: string;
@@ -427,6 +436,7 @@ export function ShareButton({
   showCount?: boolean;
   count?: number;
   className?: string;
+  iconClassName?: string;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -446,7 +456,7 @@ export function ShareButton({
           className,
         )}
       >
-        <Share2 className="h-4 w-4 shrink-0 text-neutral-400" />
+        <Share2 className={cn(iconClassName || 'h-4 w-4', 'shrink-0 text-neutral-400')} />
         {showCount && count !== undefined && (
           <span className="tabular-nums">{count}</span>
         )}
