@@ -8,14 +8,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { HouseHeart, SearchCheck, Plus, Flame, UserCircle } from 'lucide-react';
+import { HouseHeart, SearchCheck, Plus, Grid2x2Plus, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const TABS = [
   { href: '/', label: 'HOME', icon: HouseHeart },
   { href: '/discover', label: 'DISCOVER', icon: SearchCheck },
   { href: '/action/create', label: 'CREATE', icon: Plus },
-  { href: '/activity', label: 'ACTIVITY', icon: Flame },
+  { href: '/activity', label: 'ACTIVITY', icon: Grid2x2Plus },
   { href: '/my', label: 'MY', icon: UserCircle },
 ] as const;
 

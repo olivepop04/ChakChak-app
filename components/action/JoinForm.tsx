@@ -177,11 +177,11 @@ export function JoinForm({
 
       {/* 나의 참여 요약 */}
       {chosen.length > 0 && (
-        <section className="flex flex-col gap-2 rounded-xl bg-neutral-900 p-4 text-white">
-          <h3 className="text-[13px] font-semibold text-white/70">나의 참여</h3>
+        <section className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-neutral-900">
+          <h3 className="text-[13px] font-semibold text-neutral-500">나의 참여</h3>
           <ul className="flex flex-col gap-1">
             {chosen.map((i) => (
-              <li key={i.id} className="text-sm font-medium">
+              <li key={i.id} className="text-sm font-semibold text-neutral-800">
                 {i.type === 'PERSON'
                   ? `🙋 ${i.name} 1${PERSON_UNIT}`
                   : `📦 ${i.name} ${selection[i.id].quantity}${i.unit}`}
