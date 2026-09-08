@@ -1,8 +1,8 @@
 /**
  * 액션 공유.
  *
- * 회원 공유: 닉네임으로만 검색합니다.
- *   이메일·전화번호로 사람을 찾을 수 있으면 개인정보가 새어 나갑니다.
+ * 회원 공유: 이름과 닉네임으로 검색합니다 (2026-09-07 회의).
+ *   이메일·전화번호로는 못 찾습니다. 그걸로 사람을 찾을 수 있으면 개인정보가 새어 나갑니다.
  *   최소 2자부터, 최대 10명, 본인 제외 — searchUsers 가 처리합니다.
  *
  * 비회원 공유: URL 복사만.
@@ -40,21 +40,36 @@ export function SharePanel({
       ? `${window.location.origin}/action/${actionId}`
       : '';
 
-  async function handleSearch() {
-    if (!viewerId) {
-      toast('로그인 후 친구에게 보낼 수 있습니다.', 'error');
-      return;
-    }
+  /**
+   * 누가 보고 있는지 확정한다.
+   *
+   * 화면이 viewerId 를 넘겨주면 그걸 쓰고, 안 넘겨주면 세션에서 직접 읽는다.
+   * 카드(ActionCard)처럼 서버에서 사용자를 안 들고 오는 자리에서도
+   * 공유창이 열리기 때문이다. 이 갈래가 없으면 로그인한 사람에게도
+   * "로그인 후 친구에게 보낼 수 있습니다" 가 떴다 (2026-09-08).
+   */
+  async function resolveViewerId(): Promise<string | null> {
+    if (viewerId) return viewerId;
+    const { data } = await createClient().auth.getUser();
+    return data.user?.id ?? null;
+  }
 
+  async function handleSearch() {
     const q = keyword.trim();
     if (q.length < LIMITS.NICKNAME_MIN) {
       toast(`${LIMITS.NICKNAME_MIN}자 이상 입력해주세요.`, 'error');
       return;
     }
 
+    const me = await resolveViewerId();
+    if (!me) {
+      toast('로그인 후 친구에게 보낼 수 있습니다.', 'error');
+      return;
+    }
+
     setSearching(true);
     try {
-      const found = await searchUsers(createClient(), q, viewerId);
+      const found = await searchUsers(createClient(), q, me);
       setResults(found);
       setSearched(true);
     } catch {
