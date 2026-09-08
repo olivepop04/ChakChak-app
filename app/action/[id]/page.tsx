@@ -158,6 +158,11 @@ export default async function ActionDetailPage({
     return { type: 'link', label: '참여하기', href: `/action/${id}/join` };
   })();
 
+  const detailCategories =
+    action.categories && action.categories.length > 0
+      ? action.categories
+      : [action.category];
+
   return (
     <main className="pb-52">
       <Header
@@ -209,10 +214,15 @@ export default async function ActionDetailPage({
 
         {/* 제목 영역 */}
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <span className="rounded bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold text-neutral-600">
-              {action.category}
-            </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {detailCategories.map((cat) => (
+              <span
+                key={cat}
+                className="rounded bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold text-neutral-600"
+              >
+                {cat}
+              </span>
+            ))}
             <StatusBadge
               status={action.status}
               recruitClosed={action.recruitClosed}

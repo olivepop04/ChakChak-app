@@ -59,6 +59,8 @@ function scrollAndFocus(target: HTMLElement | null) {
   target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+import { X } from 'lucide-react';
+
 export interface ActionFormInitial {
   id: string | null;
   title: string;
@@ -368,22 +370,32 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     router.refresh();
   }
 
-  function toggleCategory(nextCategory: Category) {
-    if (categories.includes(nextCategory)) {
-      if (categories.length === 1) {
-        toast('카테고리를 하나 이상 선택해주세요.', 'error');
+  function handleCategoryClick(targetCategory: Category) {
+    const isSelected = categories.includes(targetCategory);
+
+    if (!isSelected) {
+      if (categories.length >= 3) {
+        toast('카테고리는 최대 3개까지 선택할 수 있어요.', 'error');
         return;
       }
-      setCategories(categories.filter((selected) => selected !== nextCategory));
+      setCategories([...categories, targetCategory]);
+    } else {
+      if (categories[0] !== targetCategory) {
+        setCategories([
+          targetCategory,
+          ...categories.filter((c) => c !== targetCategory),
+        ]);
+        toast(`'${targetCategory}'(이)가 대표 카테고리로 지정되었습니다.`, 'default');
+      }
+    }
+  }
+
+  function handleCategoryDeselect(targetCategory: Category) {
+    if (categories.length === 1 && categories[0] === targetCategory) {
+      toast('카테고리를 하나 이상 선택해주세요.', 'error');
       return;
     }
-
-    if (categories.length >= 3) {
-      toast('카테고리는 최대 3개까지 선택할 수 있어요.', 'error');
-      return;
-    }
-
-    setCategories([...categories, nextCategory]);
+    setCategories(categories.filter((c) => c !== targetCategory));
   }
 
   const isPlaceNameError = placeError.includes('장소 이름');
@@ -406,22 +418,46 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       <div className="flex flex-col gap-2">
         <span className={label}>카테고리</span>
         <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c}
-              type="button"
-              aria-pressed={categories.includes(c)}
-              onClick={() => toggleCategory(c)}
-              className={`rounded-full border px-3.5 py-2 text-[13px] font-medium ${
-                categories.includes(c)
-                  ? 'border-neutral-900 bg-neutral-900 text-white'
-                  : 'border-neutral-300 bg-white text-neutral-600'
-              }`}
-            >
-              {c}
-            </button>
-          ))}
+          {CATEGORIES.map((c) => {
+            const isSelected = categories.includes(c);
+            const isPrimary = isSelected && categories[0] === c;
+
+            return (
+              <div
+                key={c}
+                onClick={() => handleCategoryClick(c)}
+                className={`inline-flex items-center gap-1.5 cursor-pointer rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all ${
+                  isSelected
+                    ? 'border-neutral-900 bg-neutral-900 text-white shadow-xs'
+                    : 'border-neutral-300 bg-white text-neutral-600 hover:border-neutral-400'
+                }`}
+              >
+                {isPrimary && (
+                  <span className="rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-neutral-900">
+                    대표
+                  </span>
+                )}
+                <span>{c}</span>
+                {isSelected && (
+                  <button
+                    type="button"
+                    aria-label={`${c} 카테고리 해제`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCategoryDeselect(c);
+                    }}
+                    className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
+        <p className="mt-1 text-xs text-neutral-500">
+          * 최대 3개까지 선택 가능하며, 선택된 태그를 눌러 대표를 변경하거나 ✕를 눌러 해제할 수 있습니다.
+        </p>
       </div>
 
       {/* 소개 */}

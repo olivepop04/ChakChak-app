@@ -48,6 +48,16 @@ export function ActionCard({
     action.recruitClosed ??
     (action.recruitEndAt ? new Date(action.recruitEndAt) < new Date() : false);
 
+  const primaryCategory =
+    action.category ||
+    (action.categories && action.categories[0]) ||
+    '카테고리';
+  const allCategories =
+    action.categories && action.categories.length > 0
+      ? action.categories
+      : [primaryCategory];
+  const extraCount = allCategories.length - 1;
+
   if (variant === 'horizontal') {
     return (
       <article
@@ -77,9 +87,18 @@ export function ActionCard({
                 이미지 없음
               </div>
             )}
-            <span className="absolute left-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
-              {action.category}
-            </span>
+            <div className="absolute left-1.5 top-1.5 z-10 inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/50 px-2 py-0.5 backdrop-blur-md shrink-0 whitespace-nowrap">
+              <span className="text-[10px] font-medium text-white">
+                {primaryCategory}
+              </span>
+              {extraCount > 0 && (
+                <>
+                  <span className="text-[10px] font-normal text-white/70">
+                    +{extraCount}
+                  </span>
+                </>
+              )}
+            </div>
             {showStatus && (
               <div className="absolute right-1.5 top-1.5 z-10">
                 <StatusBadge
@@ -99,54 +118,51 @@ export function ActionCard({
               </h3>
 
               {action.summary && (
-                <p className="mt-0.5 line-clamp-1 text-xs text-neutral-500">
+                <p className="line-clamp-2 mt-0.5 text-xs text-neutral-500">
                   {action.summary}
                 </p>
               )}
+            </div>
 
-              <p className="mt-1 text-[11px] text-neutral-400">
+            <div className="mt-2 flex flex-col gap-1.5">
+              <p className="text-[11px] text-neutral-400">
                 {formatDate(action.activityStartAt)}
                 {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
               </p>
-            </div>
 
-            {/* 3. 인터랙티브 요소들 & 통계 4종 */}
-            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-1.5">
-              {/* 작성자 프로필 링크 */}
-              <Link
-                href={`/user/${action.owner?.id}`}
-                className="pointer-events-auto flex items-center gap-1.5 min-w-0 text-xs text-neutral-600 hover:underline"
-              >
-                <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-                <span className="truncate text-xs text-neutral-600">
-                  @{action.owner?.nickname ?? '호스트'}
-                </span>
-              </Link>
+              {/* 통계 + 아바타 */}
+              <div className="flex items-center justify-between text-xs text-neutral-500 border-t border-neutral-100 pt-1.5">
+                <div className="flex items-center gap-1.5 pointer-events-auto">
+                  <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
+                  <span className="text-xs text-neutral-600 truncate max-w-[70px]">
+                    @{action.owner?.nickname ?? '호스트'}
+                  </span>
+                </div>
 
-              {/* 통계 4종 (참여인원, 좋아요, 저장, 공유) */}
-              <div className="pointer-events-auto flex items-center justify-start gap-1 shrink-0 text-xs text-neutral-500 tabular-nums">
-                <CrewAnchorButton
-                  count={action.crewCount ?? 0}
-                  className="px-1 py-0.5 text-xs gap-1"
-                />
-                <LikeButton
-                  actionId={action.id}
-                  initialLiked={action.likedByMe}
-                  initialCount={action.likeCount ?? 0}
-                  className="px-1 py-0.5 text-xs gap-1"
-                />
-                <SaveButton
-                  actionId={action.id}
-                  initialSaved={action.savedByMe}
-                  initialCount={action.saveCount ?? 0}
-                  className="px-1 py-0.5 text-xs gap-1"
-                />
-                <ShareButton
-                  actionId={action.id}
-                  actionTitle={action.title}
-                  count={action.shareCount ?? 0}
-                  className="px-1 py-0.5 text-xs gap-1"
-                />
+                <div className="flex items-center gap-1 text-[11px] pointer-events-auto">
+                  <CrewAnchorButton
+                    count={action.crewCount ?? 0}
+                    className="px-1 py-0.5 text-xs gap-1"
+                  />
+                  <LikeButton
+                    actionId={action.id}
+                    initialLiked={action.likedByMe}
+                    initialCount={action.likeCount ?? 0}
+                    className="px-1 py-0.5 text-xs gap-1"
+                  />
+                  <SaveButton
+                    actionId={action.id}
+                    initialSaved={action.savedByMe}
+                    initialCount={action.saveCount ?? 0}
+                    className="px-1 py-0.5 text-xs gap-1"
+                  />
+                  <ShareButton
+                    actionId={action.id}
+                    actionTitle={action.title}
+                    count={action.shareCount ?? 0}
+                    className="px-1 py-0.5 text-xs gap-1"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -189,9 +205,18 @@ export function ActionCard({
               이미지 없음
             </div>
           )}
-          <span className="absolute left-3 top-3 rounded bg-black/60 px-2 py-1 text-[11px] font-medium text-white">
-            {action.category}
-          </span>
+          <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-2.5 py-1 backdrop-blur-md shrink-0 whitespace-nowrap">
+            <span className="text-xs font-medium text-white">
+              {primaryCategory}
+            </span>
+            {extraCount > 0 && (
+              <>
+                <span className="text-[11px] font-normal text-white/70">
+                  +{extraCount}
+                </span>
+              </>
+            )}
+          </div>
           {showStatus && (
             <div className="absolute right-3 top-3 z-10">
               <StatusBadge
