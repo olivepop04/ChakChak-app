@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Heart, Star, Users, Share2 } from 'lucide-react';
+import { Heart, Star, UsersRound, Share2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toggleLike, toggleSave, toggleFollow } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
@@ -406,7 +406,7 @@ export function CrewAnchorButton({
         className,
       )}
     >
-      <Users className="h-4 w-4 shrink-0 text-neutral-400" />
+      <UsersRound className="h-4 w-4 shrink-0 text-neutral-400" />
       <span className="tabular-nums">{count}</span>
     </button>
   );

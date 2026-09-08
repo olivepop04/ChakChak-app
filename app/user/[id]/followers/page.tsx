@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
+import { UserRoundX } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getFollowers, getProfile } from '@/lib/queries/profiles';
 import { UserList } from '@/components/ui/UserList';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { Header } from '@/components/layout/Header';
 
 export default async function FollowersPage({
@@ -36,12 +36,12 @@ export default async function FollowersPage({
       </div>
 
       {followers.length === 0 ? (
-        <EmptyState
-          icon="👥"
-          title="아직 팔로워가 없어요."
-          description="액션을 시작하고 새로운 크루를 만나보세요."
-          action={{ label: '액션 찾아보기', href: '/discover' }}
-        />
+        <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+          <UserRoundX className="h-12 w-12 text-neutral-400 stroke-[1.5]" />
+          <p className="mt-3 text-base font-semibold text-neutral-900">
+            아직 팔로워가 없어요.
+          </p>
+        </div>
       ) : (
         <UserList users={followers} />
       )}
