@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * 액션 카드. Home · Discover · Activity · 저장목록 · 프로필이 전부 이걸 쓴다.
  *
@@ -11,7 +13,12 @@
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusBadge } from '@/components/ui/Badge';
-import { LikeButton, SaveButton } from '@/components/ui/ToggleButtons';
+import {
+  CrewAnchorButton,
+  LikeButton,
+  SaveButton,
+  ShareButton,
+} from '@/components/ui/ToggleButtons';
 import type { ActionCardData } from '@/lib/types/view';
 import { cn } from '@/lib/utils/cn';
 
@@ -43,6 +50,16 @@ export function ActionCard({
     action.recruitClosed ??
     (action.recruitEndAt ? new Date(action.recruitEndAt) < new Date() : false);
 
+  const primaryCategory =
+    action.category ||
+    (action.categories && action.categories[0]) ||
+    '카테고리';
+  const allCategories =
+    action.categories && action.categories.length > 0
+      ? action.categories
+      : [primaryCategory];
+  const extraCount = allCategories.length - 1;
+
   if (variant === 'horizontal') {
     return (
       <article
@@ -57,7 +74,7 @@ export function ActionCard({
         </Link>
 
         {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
-        <div className="relative z-10 flex flex-row gap-3 p-3 w-full pointer-events-none">
+        <div className="relative z-10 flex flex-row gap-2.5 p-3.5 w-full pointer-events-none">
           {/* 좌측 썸네일 */}
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
             {action.thumbnailUrl ? (
@@ -72,74 +89,93 @@ export function ActionCard({
                 이미지 없음
               </div>
             )}
-            <span className="absolute left-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
-              {action.category}
-            </span>
-            {showStatus && (
-              <div className="absolute right-1.5 top-1.5 z-10">
-                <StatusBadge
-                  status={action.status}
-                  recruitClosed={isRecruitClosed}
-                  className="bg-white/90 shadow-xs"
-                />
-              </div>
-            )}
+            <div className="absolute left-1.5 top-1.5 z-10 inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/50 px-2 py-0.5 backdrop-blur-md shrink-0 whitespace-nowrap">
+              <span className="text-[10px] font-medium text-white">
+                {primaryCategory}
+              </span>
+              {extraCount > 0 && (
+                <>
+                  <span className="text-[10px] font-normal text-white/70">
+                    +{extraCount}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           {/* 우측 정보 */}
           <div className="flex flex-1 flex-col justify-between min-w-0">
             <div>
-              <h3 className="truncate text-[15px] font-bold leading-snug text-neutral-900">
-                {action.title}
-              </h3>
+              {/* 상태 뱃지 + 제목 수평(인라인) 배치 */}
+              <div className="flex items-center gap-2 min-w-0">
+                {showStatus && (
+                  <div className="shrink-0">
+                    <StatusBadge
+                      status={action.status}
+                      recruitClosed={isRecruitClosed}
+                    />
+                  </div>
+                )}
+                <h3 className="flex-1 truncate text-[15px] font-bold leading-snug text-neutral-900 min-w-0">
+                  {action.title}
+                </h3>
+              </div>
 
               {action.summary && (
-                <p className="mt-0.5 line-clamp-1 text-xs text-neutral-500">
+                <p className="line-clamp-2 mt-1 text-xs text-neutral-500">
                   {action.summary}
                 </p>
               )}
+            </div>
 
-              <p className="mt-1 text-[11px] text-neutral-400">
+            <div className="mt-2 flex flex-col gap-1.5">
+              <p className="text-[11px] text-neutral-400">
                 {formatDate(action.activityStartAt)}
                 {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
               </p>
-            </div>
 
-            {/* 3. 인터랙티브 요소들 & 통계 4종 */}
-            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-1.5">
-              {/* 작성자 프로필 링크 */}
-              <Link
-                href={`/user/${action.owner?.id}`}
-                className="pointer-events-auto flex items-center gap-1.5 min-w-0 text-xs text-neutral-600 hover:underline"
-              >
-                <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-                <span className="truncate text-xs text-neutral-600">
-                  @{action.owner?.nickname ?? '호스트'}
-                </span>
-              </Link>
+              {/* 통계 + 아바타 */}
+              <div className="flex items-center justify-between w-full min-w-0 pt-2 mt-1.5 border-t border-neutral-100">
+                <Link
+                  href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
+                  onClick={(e) => e.stopPropagation()}
+                  className="pointer-events-auto cursor-pointer flex items-center gap-1 shrink-0 min-w-0 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
+                >
+                  <Avatar name={action.owner?.nickname ?? '호스트'} size="xs" />
+                  <span className="shrink-0 whitespace-nowrap text-[11px] font-medium text-neutral-600">
+                    @{action.owner?.nickname ?? '호스트'}
+                  </span>
+                </Link>
 
-              {/* 통계 4종 (참여인원, 좋아요, 저장, 공유) */}
-              <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs text-neutral-500 tabular-nums">
-                <span className="inline-flex items-center gap-0.5" title="참여 인원">
-                  <span aria-hidden="true">👥</span>
-                  <span>{action.crewCount ?? 0}</span>
-                </span>
-                <LikeButton
-                  actionId={action.id}
-                  initialLiked={action.likedByMe}
-                  initialCount={action.likeCount ?? 0}
-                  className="px-1 py-0.5 text-xs gap-1"
-                />
-                <SaveButton
-                  actionId={action.id}
-                  initialSaved={action.savedByMe}
-                  initialCount={action.saveCount ?? 0}
-                  className="px-1 py-0.5 text-xs gap-1"
-                />
-                <span className="inline-flex items-center gap-0.5" title="공유 수">
-                  <span aria-hidden="true">↗</span>
-                  <span>{action.shareCount ?? 0}</span>
-                </span>
+                {/* 메타 4종: 375px에서는 초슬림 밀착, 넓은 화면(sm)에서는 홈피드 규격으로 확장 */}
+                <div className="flex items-center gap-0.5 min-[410px]:gap-1 sm:gap-1.5 shrink-0 ml-auto pointer-events-auto text-[10px] min-[410px]:text-[11px] sm:text-xs font-medium text-neutral-500">
+                  <CrewAnchorButton
+                    count={action.crewCount ?? 0}
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
+                  />
+                  <LikeButton
+                    actionId={action.id}
+                    initialLiked={action.likedByMe}
+                    initialCount={action.likeCount ?? 0}
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
+                  />
+                  <SaveButton
+                    actionId={action.id}
+                    initialSaved={action.savedByMe}
+                    initialCount={action.saveCount ?? 0}
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
+                  />
+                  <ShareButton
+                    actionId={action.id}
+                    actionTitle={action.title}
+                    count={action.shareCount ?? 0}
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -182,9 +218,18 @@ export function ActionCard({
               이미지 없음
             </div>
           )}
-          <span className="absolute left-3 top-3 rounded bg-black/60 px-2 py-1 text-[11px] font-medium text-white">
-            {action.category}
-          </span>
+          <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-2.5 py-1 backdrop-blur-md shrink-0 whitespace-nowrap">
+            <span className="text-xs font-medium text-white">
+              {primaryCategory}
+            </span>
+            {extraCount > 0 && (
+              <>
+                <span className="text-[11px] font-normal text-white/70">
+                  +{extraCount}
+                </span>
+              </>
+            )}
+          </div>
           {showStatus && (
             <div className="absolute right-3 top-3 z-10">
               <StatusBadge
@@ -216,8 +261,9 @@ export function ActionCard({
           <div className="pointer-events-auto mt-1 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
             {/* 작성자 프로필 링크 */}
             <Link
-              href={`/user/${action.owner?.id}`}
-              className="pointer-events-auto flex items-center gap-1.5 min-w-0 flex-1 text-xs text-neutral-600 hover:underline"
+              href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
+              onClick={(e) => e.stopPropagation()}
+              className="pointer-events-auto cursor-pointer flex items-center gap-1.5 min-w-0 flex-1 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
             >
               <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
               <span className="truncate text-xs text-neutral-600">
@@ -226,11 +272,11 @@ export function ActionCard({
             </Link>
 
             {/* 통계 4종 (참여인원, 좋아요, 저장, 공유) */}
-            <div className="pointer-events-auto flex items-center gap-2 shrink-0 text-xs tabular-nums text-neutral-500">
-              <span className="inline-flex items-center gap-0.5" title="참여 인원">
-                <span aria-hidden="true">👥</span>
-                <span>{action.crewCount ?? 0}</span>
-              </span>
+            <div className="pointer-events-auto flex items-center justify-start gap-1 shrink-0 text-xs tabular-nums text-neutral-500">
+              <CrewAnchorButton
+                count={action.crewCount ?? 0}
+                className="px-1 py-0.5 text-xs gap-1"
+              />
               <LikeButton
                 actionId={action.id}
                 initialLiked={action.likedByMe}
@@ -243,10 +289,12 @@ export function ActionCard({
                 initialCount={action.saveCount ?? 0}
                 className="px-1 py-0.5 text-xs gap-1"
               />
-              <span className="inline-flex items-center gap-0.5" title="공유 수">
-                <span aria-hidden="true">↗</span>
-                <span>{action.shareCount ?? 0}</span>
-              </span>
+              <ShareButton
+                actionId={action.id}
+                actionTitle={action.title}
+                count={action.shareCount ?? 0}
+                className="px-1 py-0.5 text-xs gap-1"
+              />
             </div>
           </div>
         </div>

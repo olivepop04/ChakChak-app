@@ -8,14 +8,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { HouseHeart, SearchCheck, Plus, Grid2x2Plus, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const TABS = [
-  { href: '/', label: 'HOME', icon: '⌂' },
-  { href: '/discover', label: 'DISCOVER', icon: '⌕' },
-  { href: '/action/create', label: 'CREATE', icon: '＋' },
-  { href: '/activity', label: 'ACTIVITY', icon: '◷' },
-  { href: '/my', label: 'MY', icon: '○' },
+  { href: '/', label: 'HOME', icon: HouseHeart },
+  { href: '/discover', label: 'DISCOVER', icon: SearchCheck },
+  { href: '/action/create', label: 'CREATE', icon: Plus },
+  { href: '/activity', label: 'ACTIVITY', icon: Grid2x2Plus },
+  { href: '/my', label: 'MY', icon: UserCircle },
 ] as const;
 
 function isActive(pathname: string, href: string) {
@@ -62,6 +63,7 @@ export function BottomNav() {
       <ul className="flex">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
+          const Icon = tab.icon;
           return (
             <li key={tab.href} className="flex-1">
               <Link
@@ -72,9 +74,7 @@ export function BottomNav() {
                   active ? 'text-neutral-900' : 'text-neutral-400',
                 )}
               >
-                <span className="text-lg leading-none" aria-hidden="true">
-                  {tab.icon}
-                </span>
+                <Icon size={22} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
                 <span className="text-[10px] font-semibold tracking-wide">
                   {tab.label}
                 </span>

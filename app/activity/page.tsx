@@ -13,6 +13,7 @@ import { getMyCreatedActions } from '@/lib/queries/actions';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ParticipationBadge } from '@/components/ui/Badge';
+import { Header } from '@/components/layout/Header';
 import {
   LeaveButton,
   DeleteDraftButton,
@@ -32,8 +33,8 @@ const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 function JoinedFooter({ item }: { item: JoinedActionData }) {
   if (item.status === 'CANCELLED') {
     return (
-      <div className="flex flex-wrap gap-1.5">
-        <Link href={`/action/${item.id}`} className={secondary}>
+      <div className="flex items-center gap-2 w-full">
+        <Link href={`/action/${item.id}`} className={`${secondary} flex-1`}>
           취소 사유 보기
         </Link>
       </div>
@@ -46,8 +47,8 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
       : false;
 
     return (
-      <div className="flex flex-wrap gap-1.5">
-        <Link href={`/action/${item.id}/chat`} className={secondary}>
+      <div className="flex items-center gap-2 w-full">
+        <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
           CREW CHAT
         </Link>
         {!isStarted && item.participationStatus === 'BEFORE_ACTION' && (
@@ -57,34 +58,38 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
     );
   }
 
-  // ENDED: 호스트가 아직 결과를 작성/공개하지 않음 (결과 없음)
+  // ENDED: 호스트가 아직 결과를 안 올렸습니다.
+  // 결과가 없는데 「결과 보기」를 띄우면 "아직 결과가 등록되지 않았어요" 화면으로
+  // 헛걸음하게 됩니다. 상태별 가이드대로 CREW CHAT 만 둡니다.
   if (item.status === 'ENDED') {
     return (
-      <div className="flex flex-wrap gap-1.5">
-        <Link href={`/action/${item.id}/chat`} className={secondary}>
+      <div className="flex items-center gap-2 w-full">
+        <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
           CREW CHAT
         </Link>
       </div>
     );
   }
 
-  // COMPLETED: 호스트 결과 등록 완료 (CREW CHAT · 결과 보기)
+  // COMPLETED: 결과가 나왔습니다. 소감은 결과 화면 아래에서 씁니다.
+  // 버튼 두 개를 5:5 로 나란히 둡니다.
   if (item.status === 'COMPLETED') {
     return (
-      <div className="flex flex-wrap gap-1.5">
-        <Link href={`/action/${item.id}/chat`} className={secondary}>
+      <div className="flex items-center gap-2 w-full">
+        <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
           CREW CHAT
         </Link>
-        <Link href={`/action/${item.id}/result`} className={secondary}>
+        <Link href={`/action/${item.id}/result`} className={`${secondary} flex-1`}>
           결과 보기
         </Link>
       </div>
     );
   }
 
+  // 위에서 안 걸린 상태 (지금은 없습니다)
   return (
-    <div className="flex flex-wrap gap-1.5">
-      <Link href={`/action/${item.id}/chat`} className={secondary}>
+    <div className="flex items-center gap-2 w-full">
+      <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
         CREW CHAT
       </Link>
     </div>
@@ -250,11 +255,7 @@ export default async function ActivityPage({
 
   return (
     <main className="pb-24">
-      <header className="px-5 pb-3 pt-6">
-        <h1 className="text-xl font-bold tracking-tight text-neutral-900">
-          내 활동
-        </h1>
-      </header>
+      <Header title="내 활동" back backHref="/" sticky />
 
       {/* 탭 */}
       <div className="flex border-b border-neutral-200 px-5">

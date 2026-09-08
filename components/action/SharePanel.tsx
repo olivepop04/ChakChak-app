@@ -106,7 +106,7 @@ export function SharePanel({
             착착 친구에게 보내기
           </h2>
           <p className="mt-0.5 text-[12px] text-neutral-500">
-            닉네임으로 찾을 수 있어요. 보내면 상대방 알림에 도착해요.
+            이름과 닉네임으로 친구를 찾을 수 있고, 상대방 알림으로 보내져요.
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export function SharePanel({
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="닉네임 검색 (2자 이상)"
+            placeholder="이름 또는 닉네임 (2자 이상)"
             className="h-11 flex-1 rounded-xl border border-neutral-300 px-4 text-[14px] outline-none focus:border-neutral-900"
           />
           <Button onClick={handleSearch} loading={searching}>
@@ -125,8 +125,8 @@ export function SharePanel({
 
         {searched &&
           (results.length === 0 ? (
-            <p className="rounded-xl bg-neutral-50 px-4 py-5 text-center text-[13px] text-neutral-400">
-              찾는 사람이 없어요. 닉네임을 다시 확인해주세요.
+            <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-5 text-center text-[13px] text-neutral-700">
+              찾는 사람이 없어요. 이름이나 닉네임을 다시 확인해주세요.
             </p>
           ) : (
             <div className="-mx-5 border-y border-neutral-100">

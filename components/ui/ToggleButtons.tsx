@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Star } from 'lucide-react';
+import { Heart, Star, UsersRound, Share2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toggleLike, toggleSave, toggleFollow } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
@@ -66,11 +66,13 @@ export function LikeButton({
   initialLiked,
   initialCount,
   className,
+  iconClassName,
 }: {
   actionId: string;
   initialLiked: boolean;
   initialCount: number;
   className?: string;
+  iconClassName?: string;
 }) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
@@ -103,7 +105,8 @@ export function LikeButton({
     };
   }, [loginPromptOpen]);
 
-  async function handleLike() {
+  async function handleLike(e: React.MouseEvent) {
+    e.stopPropagation();
     if (checkingAuth) return;
     setCheckingAuth(true);
     try {
@@ -130,12 +133,18 @@ export function LikeButton({
         aria-pressed={on}
         aria-label="좋아요"
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
-          on ? 'text-rose-600' : 'text-neutral-500 hover:bg-neutral-100',
+          'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
+          on ? 'text-red-500' : 'text-neutral-500 hover:bg-neutral-100',
           className,
         )}
       >
-        <span aria-hidden="true">{on ? '♥' : '♡'}</span>
+        <Heart
+          className={cn(
+            iconClassName || 'h-4 w-4',
+            'shrink-0 transition-colors',
+            on ? 'fill-red-500 text-red-500' : 'fill-none text-neutral-400',
+          )}
+        />
         <span className="tabular-nums">{count}</span>
       </button>
 
@@ -155,9 +164,9 @@ export function LikeButton({
             >
               <span
                 aria-hidden="true"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-xl text-rose-500"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-xl"
               >
-                ♡
+                <Heart className="h-6 w-6 fill-red-500 text-red-500" />
               </span>
               <h2
                 id="like-login-title"
@@ -197,11 +206,13 @@ export function SaveButton({
   initialSaved,
   initialCount,
   className,
+  iconClassName,
 }: {
   actionId: string;
   initialSaved: boolean;
   initialCount?: number;
   className?: string;
+  iconClassName?: string;
 }) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
@@ -234,7 +245,8 @@ export function SaveButton({
     };
   }, [loginPromptOpen]);
 
-  async function handleSave() {
+  async function handleSave(e: React.MouseEvent) {
+    e.stopPropagation();
     if (checkingAuth) return;
     setCheckingAuth(true);
 
@@ -265,14 +277,15 @@ export function SaveButton({
         aria-pressed={on}
         aria-label="저장"
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
+          'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
           on ? 'text-amber-600' : 'text-neutral-500 hover:bg-neutral-100',
           className,
         )}
       >
         <Star
           className={cn(
-            'h-3.5 w-3.5 shrink-0 transition-colors',
+            iconClassName || 'h-4 w-4',
+            'shrink-0 transition-colors',
             on ? 'fill-amber-500 text-amber-500' : 'fill-none text-neutral-400',
           )}
         />
@@ -353,7 +366,10 @@ export function FollowButton({
   return (
     <button
       type="button"
-      onClick={handle}
+      onClick={(e) => {
+        e.stopPropagation();
+        handle();
+      }}
       aria-pressed={on}
       className={cn(
         'inline-flex h-9 items-center rounded-lg px-3.5 text-[13px] font-semibold transition-colors',
@@ -373,14 +389,17 @@ export function CrewAnchorButton({
   count,
   targetId = 'crew-section',
   className,
+  iconClassName,
 }: {
   count: number;
   targetId?: string;
   className?: string;
+  iconClassName?: string;
 }) {
-  function handleClick() {
+  function handleClick(e: React.MouseEvent) {
     const el = document.getElementById(targetId);
     if (el) {
+      e.stopPropagation();
       el.scrollIntoView({ behavior: 'smooth' });
     }
   }
@@ -391,11 +410,11 @@ export function CrewAnchorButton({
       onClick={handleClick}
       aria-label="참여인원"
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900',
+        'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900',
         className,
       )}
     >
-      <span aria-hidden="true">👥</span>
+      <UsersRound className={cn(iconClassName || 'h-4 w-4', 'shrink-0 text-neutral-400')} />
       <span className="tabular-nums">{count}</span>
     </button>
   );
@@ -406,33 +425,40 @@ export function ShareButton({
   actionId,
   actionTitle,
   viewerId,
+  showCount = false,
   count,
   className,
+  iconClassName,
 }: {
   actionId: string;
   actionTitle?: string;
   viewerId?: string | null;
+  showCount?: boolean;
   count?: number;
   className?: string;
+  iconClassName?: string;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+
+  function handleShare(e: React.MouseEvent) {
+    e.stopPropagation();
+    setModalOpen(true);
+  }
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setModalOpen(true)}
+        onClick={handleShare}
         aria-label="공유"
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100',
+          'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900',
           className,
         )}
       >
-        <span aria-hidden="true">↗</span>
-        {count !== undefined ? (
+        <Share2 className={cn(iconClassName || 'h-4 w-4', 'shrink-0 text-neutral-400')} />
+        {showCount && count !== undefined && (
           <span className="tabular-nums">{count}</span>
-        ) : (
-          <span>공유</span>
         )}
       </button>
 

@@ -107,10 +107,10 @@ export default async function UserProfilePage({
       </section>
 
       {profile.categories.length > 0 && (
-        <section className="px-5 pt-5">
-          <p className="pb-2 text-[12px] font-semibold text-neutral-500">
-            관심 카테고리 :
-          </p>
+        <section className="mt-7 px-5">
+          <h2 className="pb-3 text-[15px] font-bold text-neutral-900">
+            관심 카테고리
+          </h2>
           <div className="flex flex-wrap gap-1.5">
             {profile.categories.map((c) => (
               <span

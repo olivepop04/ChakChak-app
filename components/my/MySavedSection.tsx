@@ -1,8 +1,8 @@
 /**
  * MY 페이지 저장한 액션 영역.
  *
- * 초기에는 최신 2개만 세로형(variant="default")으로 표시하며,
- * + 더보기 클릭 시 추가 목록이 가로형(variant="horizontal")으로 확장됩니다.
+ * 가로형(variant="horizontal") 카드 2개를 기본으로 표시하며,
+ * + 더보기 클릭 시 추가 목록이 아래로 확장됩니다.
  */
 'use client';
 
@@ -46,19 +46,17 @@ export function MySavedSection({ saved }: { saved: ActionCardData[] }) {
         )}
       </div>
 
-      <div className="flex flex-col gap-4 px-5">
-        {/* 초기 2개: 세로형 카드 (variant="default") */}
+      <div className="flex flex-col gap-3 px-5">
+        {/* 상위 2개 포함 전체 가로형 리스트 카드 (variant="horizontal") */}
         {initialItems.map((a) => (
-          <ActionCard key={a.id} action={a} variant="default" showStatus />
+          <ActionCard key={a.id} action={a} variant="horizontal" showStatus />
         ))}
 
         {/* 더보기 클릭 시 펼쳐지는 추가 목록: 가로형 카드 (variant="horizontal") */}
         {expanded && extraItems.length > 0 && (
-          <div className="flex flex-col gap-3 pt-1">
-            {extraItems.map((a) => (
-              <ActionCard key={a.id} action={a} variant="horizontal" showStatus />
-            ))}
-          </div>
+          extraItems.map((a) => (
+            <ActionCard key={a.id} action={a} variant="horizontal" showStatus />
+          ))
         )}
 
         {/* + 더보기 버튼 */}
