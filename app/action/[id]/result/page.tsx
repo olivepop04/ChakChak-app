@@ -79,7 +79,7 @@ export default async function ResultPage({
   }
 
   return (
-    <main className={canWriteVoice ? 'pb-32' : 'pb-24'}>
+    <main className={canWriteVoice ? 'pb-52' : 'pb-24'}>
       <Header title="ACTION RESULT" back backHref={`/action/${id}`} sticky />
 
       <div className="flex flex-col gap-7 px-5 py-6">
@@ -179,7 +179,7 @@ export default async function ResultPage({
 
       {/* 소감 남기기 */}
       {canWriteVoice && (
-        <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+        <div className="fixed inset-x-0 bottom-14 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
           <Link
             href={`/action/${id}/voice`}
             className="flex h-13 w-full items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-semibold text-white"
