@@ -19,6 +19,13 @@ interface EmptyStateProps {
   title: string;
   description?: string;
   action?: { label: string; href: string };
+  actions?: Array<{
+    label: string;
+    href: string;
+    variant?: 'primary' | 'secondary';
+    className?: string;
+  }>;
+  children?: React.ReactNode;
   className?: string;
 }
 
@@ -27,6 +34,8 @@ export function EmptyState({
   title,
   description,
   action,
+  actions,
+  children,
   className,
 }: EmptyStateProps) {
   return (
@@ -55,6 +64,29 @@ export function EmptyState({
           {action.label}
         </Link>
       )}
+      {actions && actions.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
+          {actions.map((act) => {
+            const isSecondary = act.variant === 'secondary';
+            return (
+              <Link
+                key={act.href + act.label}
+                href={act.href}
+                className={cn(
+                  'inline-flex h-10 w-32 items-center justify-center whitespace-nowrap rounded-xl text-[13px] font-semibold transition-colors',
+                  isSecondary
+                    ? 'border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50'
+                    : 'bg-neutral-900 text-white hover:bg-neutral-800',
+                  act.className,
+                )}
+              >
+                {act.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+      {children}
     </div>
   );
 }

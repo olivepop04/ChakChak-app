@@ -23,11 +23,18 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { leaveActionWithReason } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
+import { cn } from '@/lib/utils/cn';
 
-const danger =
-  'inline-flex h-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 text-[12px] font-semibold text-red-600 transition-colors';
+const secondary =
+  'inline-flex h-9 items-center justify-center rounded-lg border border-neutral-300 bg-white px-3 text-[12px] font-semibold text-neutral-700 transition-colors';
 
-export function LeaveButton({ actionId }: { actionId: string }) {
+export function LeaveButton({
+  actionId,
+  className,
+}: {
+  actionId: string;
+  className?: string;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -62,7 +69,12 @@ export function LeaveButton({ actionId }: { actionId: string }) {
 
   return (
     <>
-      <button type="button" onClick={openModal} disabled={busy} className={danger}>
+      <button
+        type="button"
+        onClick={openModal}
+        disabled={busy}
+        className={cn(secondary, className)}
+      >
         나가기
       </button>
 

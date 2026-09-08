@@ -28,7 +28,7 @@ const btn =
 const primary = `${btn} bg-neutral-900 text-white`;
 const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 
-/** 참여 및 액션 상태별 버튼 (액션 상태와 참여 상태를 함께 고려) */
+/** 참여 액션 상태별 버튼 */
 function JoinedFooter({ item }: { item: JoinedActionData }) {
   if (item.status === 'CANCELLED') {
     return (
@@ -41,12 +41,16 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
   }
 
   if (item.status === 'ACTIVE') {
+    const isStarted = item.activityStartAt
+      ? new Date(item.activityStartAt) <= new Date()
+      : false;
+
     return (
       <div className="flex flex-wrap gap-1.5">
         <Link href={`/action/${item.id}/chat`} className={secondary}>
           CREW CHAT
         </Link>
-        {item.participationStatus === 'BEFORE_ACTION' && (
+        {!isStarted && item.participationStatus === 'BEFORE_ACTION' && (
           <LeaveButton actionId={item.id} />
         )}
       </div>
@@ -64,21 +68,16 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
     );
   }
 
-  // COMPLETED: 호스트가 결과를 등록 완료한 상태
+  // COMPLETED: 호스트 결과 등록 완료 (CREW CHAT · 결과 보기)
   if (item.status === 'COMPLETED') {
-    const hasSubmittedVoice =
-      item.participationStatus === 'ACTUALLY_PARTICIPATED' || item.hasVoice;
-
     return (
       <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}/chat`} className={secondary}>
+          CREW CHAT
+        </Link>
         <Link href={`/action/${item.id}/result`} className={secondary}>
           결과 보기
         </Link>
-        {!hasSubmittedVoice && (
-          <Link href={`/action/${item.id}/voice`} className={primary}>
-            소감 남기기
-          </Link>
-        )}
       </div>
     );
   }
@@ -233,15 +232,16 @@ export default async function ActivityPage({
   const joined = isCreated ? [] : await getMyJoinedActions(supabase, user.id);
   const created = isCreated ? await getMyCreatedActions(supabase, user.id) : [];
 
+
   const expiredActiveIds = isCreated
     ? created
-        .filter(
-          (a) =>
-            a.status === 'ACTIVE' &&
-            a.recruitEndAt &&
-            new Date(a.recruitEndAt) < new Date(),
-        )
-        .map((a) => a.id)
+      .filter(
+        (a) =>
+          a.status === 'ACTIVE' &&
+          a.recruitEndAt &&
+          new Date(a.recruitEndAt) < new Date(),
+      )
+      .map((a) => a.id)
     : [];
 
   const shortfallIds = isCreated
@@ -315,12 +315,14 @@ export default async function ActivityPage({
           {joined.map((a) => (
             <div key={a.id} className="relative">
               <ActionCard action={a} footer={<JoinedFooter item={a} />} />
-              <div className="pointer-events-none absolute right-3 top-3 z-10">
-                <ParticipationBadge
-                  status={a.participationStatus}
-                  className="rounded-md border border-neutral-200/60 px-2.5 py-1 text-[12px] font-bold shadow-md"
-                />
-              </div>
+              {a.status !== 'CANCELLED' && (
+                <div className="pointer-events-none absolute right-3 top-3 z-10">
+                  <ParticipationBadge
+                    status={a.participationStatus}
+                    className="rounded-md border border-neutral-200/60 px-2.5 py-1 text-[12px] font-bold shadow-md"
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
