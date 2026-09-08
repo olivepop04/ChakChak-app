@@ -18,6 +18,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { leaveActionWithReason } from '@/lib/mutations';
@@ -65,78 +66,81 @@ export function LeaveButton({ actionId }: { actionId: string }) {
         나가기
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeModal();
-          }}
-        >
+      {open &&
+        typeof document !== 'undefined' &&
+        createPortal(
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="leave-modal-title"
-            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeModal();
+            }}
           >
-            <h2 id="leave-modal-title" className="text-[17px] font-bold text-neutral-900">
-              참여를 취소할까요?
-            </h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
-              사유는 크루 게시판에 남으며, 참여를 취소하면 게시판에 들어갈 수 없어요.
-            </p>
-            <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-semibold leading-relaxed text-amber-800">
-              이 내용은 크루에게 공개되며, 한번 보내면 지울 수 없습니다.
-            </p>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="leave-modal-title"
+              className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+            >
+              <h2 id="leave-modal-title" className="text-[17px] font-bold text-neutral-900">
+                참여를 취소할까요?
+              </h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
+                사유는 크루 게시판에 남으며, 참여를 취소하면 게시판에 들어갈 수 없어요.
+              </p>
+              <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-semibold leading-relaxed text-amber-800">
+                이 내용은 크루에게 공개되며, 한번 보내면 지울 수 없습니다.
+              </p>
 
-            <label className="mt-4 flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-neutral-700">참여 취소 사유</span>
-              <textarea
-                autoFocus
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                rows={5}
-                maxLength={1000}
-                disabled={busy}
-                placeholder="크루가 상황을 이해할 수 있도록 사유를 적어주세요."
-                className="resize-none rounded-xl border border-neutral-300 p-3 text-sm leading-relaxed outline-none focus:border-neutral-900 disabled:bg-neutral-50"
-              />
-            </label>
-            <div className="mt-1 flex items-center justify-between gap-3 text-[11px]">
-              <span
-                className={
-                  reason.trim().length > 0 && reason.trim().length < 5
-                    ? 'text-red-600'
-                    : 'text-neutral-400'
-                }
-              >
-                {reason.trim().length > 0 && reason.trim().length < 5
-                  ? '사유를 5자 이상 적어주세요.'
-                  : '5자 이상 입력해주세요.'}
-              </span>
-              <span className="text-neutral-400">{reason.length}/1000</span>
-            </div>
+              <label className="mt-4 flex flex-col gap-1.5">
+                <span className="text-[13px] font-medium text-neutral-700">참여 취소 사유</span>
+                <textarea
+                  autoFocus
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={5}
+                  maxLength={1000}
+                  disabled={busy}
+                  placeholder="크루가 상황을 이해할 수 있도록 사유를 적어주세요."
+                  className="resize-none rounded-xl border border-neutral-300 p-3 text-sm leading-relaxed outline-none focus:border-neutral-900 disabled:bg-neutral-50"
+                />
+              </label>
+              <div className="mt-1 flex items-center justify-between gap-3 text-[11px]">
+                <span
+                  className={
+                    reason.trim().length > 0 && reason.trim().length < 5
+                      ? 'text-red-600'
+                      : 'text-neutral-400'
+                  }
+                >
+                  {reason.trim().length > 0 && reason.trim().length < 5
+                    ? '사유를 5자 이상 적어주세요.'
+                    : '5자 이상 입력해주세요.'}
+                </span>
+                <span className="text-neutral-400">{reason.length}/1000</span>
+              </div>
 
-            <div className="mt-5 flex gap-2">
-              <button
-                type="button"
-                onClick={closeModal}
-                disabled={busy}
-                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-neutral-300 text-sm font-semibold text-neutral-700 disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleLeave}
-                disabled={busy || reason.trim().length < 5}
-                className="flex h-11 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {busy ? '처리 중...' : '나가기 진행'}
-              </button>
+              <div className="mt-5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  disabled={busy}
+                  className="flex h-11 flex-1 items-center justify-center rounded-xl border border-neutral-300 text-sm font-semibold text-neutral-700 disabled:opacity-50"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLeave}
+                  disabled={busy || reason.trim().length < 5}
+                  className="flex h-11 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {busy ? '처리 중...' : '나가기 진행'}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
