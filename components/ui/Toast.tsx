@@ -55,9 +55,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={show}>
       {children}
 
-      {/* 하단 탭보다 위에 뜨도록 z-index 를 높게 잡는다 */}
+      {/* 하단 탭 및 하단 고정 CTA 버튼보다 위에 띄워지도록 z-index 및 bottom 오프셋 설정 */}
       <div
-        className="pointer-events-none fixed inset-x-0 bottom-24 z-50 mx-auto flex max-w-app flex-col items-center gap-2 px-5"
+        className="pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-44 z-50 flex w-full max-w-[calc(100%-32px)] sm:max-w-[calc(480px-32px)] flex-col items-center gap-2"
         role="status"
         aria-live="polite"
       >
@@ -65,7 +65,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             className={cn(
-              'pointer-events-auto w-full rounded-xl px-4 py-3 text-[13px] font-medium shadow-lg',
+              'pointer-events-auto w-full rounded-xl px-4 py-3 text-[13px] font-medium shadow-lg text-center',
               'animate-[toast-in_180ms_ease-out]',
               TONE[t.tone],
             )}
