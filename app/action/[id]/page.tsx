@@ -13,7 +13,6 @@ import { getActionCrew } from '@/lib/queries/participations';
 import { QuotaProgress } from '@/components/action/QuotaProgress';
 import { ActionGallery } from '@/components/action/ActionGallery';
 import { AddressBox } from '@/components/action/AddressBox';
-import { MessageAccessButton } from '@/components/action/MessageAccessButton';
 import { ActionCrewSection } from '@/components/action/ActionCrewSection';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
@@ -92,28 +91,61 @@ export default async function ActionDetailPage({
       action.status === 'COMPLETED' ||
       action.status === 'CANCELLED');
 
+  const isPastActivityEnd = action.activityEndAt
+    ? new Date() > new Date(action.activityEndAt)
+    : false;
+
   // ── 하단 버튼을 무엇으로 보여줄지 ──────────────────────────
   // 순서가 중요합니다. 위쪽 조건이 먼저 걸립니다.
-  const cta = (() => {
+  type CtaConfig =
+    | { type: 'disabled'; label: string }
+    | { type: 'link'; label: string; href: string; isCrewChat?: boolean }
+    | { type: 'host_ended_write_result'; chatHref: string; writeHref: string };
+
+  const cta: CtaConfig = (() => {
+    // 1. 취소됨 (공통: 호스트 & 일반 사용자)
     if (action.status === 'CANCELLED')
-      return { label: '취소된 액션이에요', disabled: true } as const;
+      return { type: 'disabled', label: '취소된 액션이에요' };
+
+    // 2. 결과 작성 후 / 완료 (공통: 호스트 & 일반 사용자)
     if (action.status === 'COMPLETED')
-      return { label: '결과 보기', href: `/action/${id}/result` } as const;
-    if (action.isOwner)
-      return { label: '내가 만든 액션', href: '/activity?tab=created' } as const;
+      return { type: 'link', label: '결과 보기', href: `/action/${id}/result` };
+
+    // 3. 호스트일 때 (action.isOwner === true)
+    if (action.isOwner) {
+      // 활동 종료일이 지남 (결과 아직 미작성)
+      if (action.status === 'ENDED' || isPastActivityEnd) {
+        return {
+          type: 'host_ended_write_result',
+          chatHref: `/action/${id}/chat`,
+          writeHref: `/action/${id}/result/write`,
+        };
+      }
+      // 활동 종료 전 (모집 중 · 마감 · 활동 중 전부)
+      return {
+        type: 'link',
+        label: 'CREW CHAT',
+        href: `/action/${id}/chat`,
+        isCrewChat: true,
+      };
+    }
+
+    // 4. 일반 사용자/참여자일 때 (action.isOwner === false)
     if (action.myParticipation && action.myParticipation !== 'LEFT')
       return {
+        type: 'link',
         label: '함께하는 크루와 이야기하기',
         href: `/action/${id}/chat`,
         isCrewChat: true,
-      } as const;
-    if (action.status === 'ENDED')
-      return { label: '활동이 끝났어요', disabled: true } as const;
+      };
+    if (action.status === 'ENDED' || isPastActivityEnd)
+      return { type: 'disabled', label: '활동이 끝났어요' };
     if (action.recruitClosed)
-      return { label: '모집이 마감되었어요', disabled: true } as const;
+      return { type: 'disabled', label: '모집이 마감되었어요' };
     if (allFull)
-      return { label: '모집이 완료되었어요', disabled: true } as const;
-    return { label: '참여하기', href: `/action/${id}/join` } as const;
+      return { type: 'disabled', label: '모집이 완료되었어요' };
+
+    return { type: 'link', label: '참여하기', href: `/action/${id}/join` };
   })();
 
   return (
@@ -298,21 +330,47 @@ export default async function ActionDetailPage({
       {/* 하단 고정 버튼 */}
       {/* bottom-14 = 하단 탭 위로 띄웁니다. 이 화면은 탭이 보입니다 */}
       <div className="fixed inset-x-0 bottom-14 z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
-        {showMessageAccessButton && (
-          <MessageAccessButton actionId={action.id} canViewChat={canViewChat} />
-        )}
-        {'href' in cta && cta.href ? (
+        {cta.type === 'host_ended_write_result' ? (
+          <div className="flex w-full items-center gap-2">
+            <Link
+              href={cta.chatHref}
+              className="flex h-13 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-neutral-300 bg-white text-[14px] font-bold text-neutral-800 shadow-sm transition-colors active:bg-neutral-50 whitespace-nowrap"
+            >
+              <svg
+                className="h-4.5 w-4.5 flex-none text-neutral-700"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <span>CREW CHAT</span>
+            </Link>
+            <Link
+              href={cta.writeHref}
+              className="flex h-13 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-neutral-900 text-[14px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800 whitespace-nowrap"
+            >
+              <span>결과 작성</span>
+            </Link>
+          </div>
+        ) : cta.type === 'link' ? (
           <Link
             href={cta.href}
             className={
-              'isCrewChat' in cta && cta.isCrewChat
-                ? 'flex h-14 w-full items-center justify-center rounded-xl bg-neutral-900 text-base font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
-                : 'flex h-13 w-full items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-semibold text-white'
+              cta.isCrewChat
+                ? 'flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
+                : 'flex h-13 w-full items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
             }
           >
-            {'isCrewChat' in cta && cta.isCrewChat && (
+            {cta.isCrewChat && (
               <svg
-                className="mr-2.5 h-5 w-5 flex-none"
+                className="h-5 w-5 flex-none"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -331,7 +389,7 @@ export default async function ActionDetailPage({
         ) : (
           <button
             disabled
-            className="h-13 w-full cursor-not-allowed rounded-xl bg-neutral-200 text-[15px] font-semibold text-neutral-400"
+            className="flex h-13 w-full items-center justify-center cursor-not-allowed rounded-xl bg-neutral-200 text-[15px] font-semibold text-neutral-400"
           >
             {cta.label}
           </button>
