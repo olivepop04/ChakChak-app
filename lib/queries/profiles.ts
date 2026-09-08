@@ -13,6 +13,7 @@ import type { ProfileData, UserSummary, ActionCardData } from '@/lib/types/view'
 import type { TimePref, NotificationType } from '@/lib/constants';
 import { getUserSummaries } from '@/lib/queries/participations';
 import { getActionCardsByIds } from '@/lib/queries/actions';
+import { getPublicParticipatedActionIds } from '@/lib/queries/public-stats';
 import { sortProfileActionsByLatestActivity } from '@/lib/utils/profile-actions';
 
 type DB = SupabaseClient<Database>;
@@ -80,16 +81,12 @@ export async function getParticipatedActions(
   userId: string,
   viewerId: string | null,
 ): Promise<ActionCardData[]> {
-  const { data: parts } = await supabase
-    .from('participations')
-    .select('action_id')
-    .eq('user_id', userId)
-    .eq('status', 'ACTUALLY_PARTICIPATED');
-
-  const ids = (parts ?? []).map((p) => p.action_id);
+  // participations 를 직접 읽으면 RLS 때문에 남의 참여가 안 보입니다 (16).
+  const ids = await getPublicParticipatedActionIds(supabase, userId);
   if (ids.length === 0) return [];
 
   const cards = await getActionCardsByIds(supabase, ids, viewerId);
+  // 함수가 이미 ENDED · COMPLETED 만 주지만, 카드 쪽 규칙도 그대로 둡니다.
   return sortProfileActionsByLatestActivity(
     cards.filter(
       (action) => action.status === 'COMPLETED' || action.status === 'ENDED',

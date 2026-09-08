@@ -51,6 +51,12 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 | 각자 고른 **사람 항목** | ❌ | ❌ | ✅ | ✅ |
 | 각자 고른 **물품 수량** | ❌ | ❌ | 본인 것만 | ✅ |
 | 게시판 | ❌ | ❌ | ✅ | ✅ |
+| 남의 **참여 완료 수·목록** | ✅ | ✅ | ✅ | ✅ |
+
+마지막 줄만 다릅니다 — **참여 완료(소감까지 쓴 것)는 누구에게나 공개**입니다.
+프로필의 "참여 액션 N" 이 그 값입니다. 다만 `participations` 를 직접 세면 RLS 때문에
+남의 것은 0 으로 나오니, `lib/queries/public-stats.ts` 를 쓰세요 (`supabase/16_update.sql`).
+**참여 예정·나간 기록은 여전히 비공개**입니다.
 
 **"명단은 안 보여도 숫자는 보인다"** 를 기억하세요. 비회원에게 참여 현황을 보여줘야 하면
 `crewCount` 를 쓰면 됩니다. 물품 수량을 크루끼리 숨긴 이유는 누가 얼마나 냈는지
@@ -192,7 +198,7 @@ const cta = getActionCta({
 npm run verify:db
 ```
 
-스키마를 바꾼 뒤 돌리세요. 권한·정원·성별·생애주기·나가기·조기 종료·카테고리까지 107가지 동작을 실제 계정으로 확인합니다. 로컬 전용이고, 테스트 계정을 만들었다가 끝나면 지웁니다.
+스키마를 바꾼 뒤 돌리세요. 권한·정원·성별·생애주기·나가기·조기 종료·카테고리·공개 통계까지 112가지 동작을 실제 계정으로 확인합니다. 로컬 전용이고, 테스트 계정을 만들었다가 끝나면 지웁니다.
 
 ```bash
 npm run seed
@@ -246,6 +252,7 @@ npm run seed
 | `getActionResult` | 결과 + 소감 |
 | `getChatPosts` | 게시판 (원글 + 댓글) |
 | `getProfile` / `getFollowers` / `getFollowing` / `searchUsers` | 프로필·팔로우 |
+| `getPublicParticipationCounts` / `getPublicParticipatedActionIds` | 남에게도 보이는 참여 통계 |
 | `getNotifications` | 알림 |
 
 ### 쓰기 — 전부 `lib/mutations.ts`
