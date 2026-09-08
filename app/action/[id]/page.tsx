@@ -14,6 +14,7 @@ import { QuotaProgress } from '@/components/action/QuotaProgress';
 import { ActionGallery } from '@/components/action/ActionGallery';
 import { AddressBox } from '@/components/action/AddressBox';
 import { ActionCrewSection } from '@/components/action/ActionCrewSection';
+import { ActionHostActions } from '@/components/action/ActionHostActions';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
 import { CrewAnchorButton, LikeButton, SaveButton, ShareButton, FollowButton } from '@/components/ui/ToggleButtons';
@@ -113,7 +114,16 @@ export default async function ActionDetailPage({
 
     // 3. 호스트일 때 (action.isOwner === true)
     if (action.isOwner) {
-      // 활동 종료일이 지남 (결과 아직 미작성)
+      // 조기 종료된 액션 (earlyEndReason 존재): 결과 작성 비노출 & 단일 크루 채팅 버튼
+      if (action.earlyEndReason) {
+        return {
+          type: 'link',
+          label: '함께하는 크루와 이야기하기',
+          href: `/action/${id}/chat`,
+          isCrewChat: true,
+        };
+      }
+      // 활동 종료일이 지남 (정상 종료, 결과 아직 미작성)
       if (action.status === 'ENDED' || isPastActivityEnd) {
         return {
           type: 'host_ended_write_result',
@@ -124,7 +134,7 @@ export default async function ActionDetailPage({
       // 활동 종료 전 (모집 중 · 마감 · 활동 중 전부)
       return {
         type: 'link',
-        label: 'CREW CHAT',
+        label: '함께하는 크루와 이야기하기',
         href: `/action/${id}/chat`,
         isCrewChat: true,
       };
@@ -153,6 +163,17 @@ export default async function ActionDetailPage({
       <Header
         back
         backHref="/"
+        right={
+          action.isOwner ? (
+            <ActionHostActions
+              actionId={action.id}
+              status={action.status}
+              activityStartAt={action.activityStartAt}
+              activityEndAt={action.activityEndAt}
+              variant="header"
+            />
+          ) : undefined
+        }
       />
 
       <ActionGallery
@@ -162,6 +183,30 @@ export default async function ActionDetailPage({
       />
 
       <div className="flex flex-col gap-6 px-5 pt-5">
+        {/* 조기 종료 사유 */}
+        {action.earlyEndReason && (
+          <div className="rounded-xl border border-red-100 bg-red-50 p-4">
+            <p className="text-sm font-semibold text-red-800">
+              이 액션은 조기 종료되었어요
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-red-700 break-words whitespace-pre-wrap">
+              {action.earlyEndReason}
+            </p>
+          </div>
+        )}
+
+        {/* 취소 사유 */}
+        {action.status === 'CANCELLED' && action.cancelReason && (
+          <div className="rounded-xl border border-red-100 bg-red-50 p-4">
+            <p className="text-sm font-semibold text-red-800">
+              이 액션은 취소되었어요
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-red-700 break-words whitespace-pre-wrap">
+              {action.cancelReason}
+            </p>
+          </div>
+        )}
+
         {/* 제목 영역 */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -184,26 +229,24 @@ export default async function ActionDetailPage({
           </h1>
 
           {canEditActionText && (
-            <Link
-              href={`/action/${id}/edit`}
-              className="mt-1 inline-flex self-start rounded-lg border border-neutral-200 px-3 py-2 text-[12px] font-semibold text-neutral-700 hover:bg-neutral-50"
-            >
-              소개·안내 수정
-            </Link>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <Link
+                href={`/action/${id}/edit`}
+                className="inline-flex self-start rounded-lg border border-neutral-200 px-3 py-2 text-[12px] font-semibold text-neutral-700 hover:bg-neutral-50"
+              >
+                소개·안내 수정
+              </Link>
+              {action.isOwner && (
+                <ActionHostActions
+                  actionId={action.id}
+                  status={action.status}
+                  activityStartAt={action.activityStartAt}
+                  activityEndAt={action.activityEndAt}
+                />
+              )}
+            </div>
           )}
         </div>
-
-        {/* 취소 사유 */}
-        {action.status === 'CANCELLED' && action.cancelReason && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-            <p className="text-sm font-semibold text-red-800">
-              이 액션은 취소되었어요
-            </p>
-            <p className="mt-1 text-sm leading-relaxed text-red-700">
-              {action.cancelReason}
-            </p>
-          </div>
-        )}
 
         {/* 만든 사람 */}
         <div className="flex items-center gap-3">
@@ -334,10 +377,10 @@ export default async function ActionDetailPage({
           <div className="flex w-full items-center gap-2">
             <Link
               href={cta.chatHref}
-              className="flex h-13 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-neutral-300 bg-white text-[14px] font-bold text-neutral-800 shadow-sm transition-colors active:bg-neutral-50 whitespace-nowrap"
+              className="flex h-12 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-neutral-300 bg-white px-2 text-xs sm:text-sm font-medium text-neutral-800 shadow-sm transition-colors active:bg-neutral-50 whitespace-nowrap"
             >
               <svg
-                className="h-4.5 w-4.5 flex-none text-neutral-700"
+                className="h-4 w-4 flex-none text-neutral-700"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -354,7 +397,7 @@ export default async function ActionDetailPage({
             </Link>
             <Link
               href={cta.writeHref}
-              className="flex h-13 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-neutral-900 text-[14px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800 whitespace-nowrap"
+              className="flex h-12 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-neutral-900 px-2 text-xs sm:text-sm font-medium text-white shadow-sm transition-colors active:bg-neutral-800 whitespace-nowrap"
             >
               <span>결과 작성</span>
             </Link>
