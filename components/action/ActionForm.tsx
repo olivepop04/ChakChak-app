@@ -26,6 +26,7 @@ import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { CATEGORIES, UPLOAD, type Category } from '@/lib/constants';
+import { getPlaceErrors } from '@/lib/utils/place-validation';
 import type { ReviewResult } from '@/lib/openai';
 
 /** ISO 문자열 → datetime-local 입력값 (2026-08-30T14:00) */
@@ -104,7 +105,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const [thumbnailIndex, setThumbnailIndex] = useState(initial.thumbnailIndex);
   // F32 — 입력칸은 개발 B 가 만듭니다. 배선은 되어 있으니 setPlaceName 만 연결하면 됩니다.
   const [placeName, setPlaceName] = useState(initial.placeName);
-  const [placeNameError, setPlaceNameError] = useState('');
+  const [placeError, setPlaceError] = useState('');
   const [address, setAddress] = useState(initial.address);
   const [notice, setNotice] = useState(initial.notice);
   const [recruitEnd, setRecruitEnd] = useState(toLocalInput(initial.recruitEndAt));
@@ -129,6 +130,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const recruitEndRef = useRef<HTMLInputElement>(null);
   const activityStartRef = useRef<HTMLInputElement>(null);
   const activityEndRef = useRef<HTMLInputElement>(null);
+  const placeSectionRef = useRef<HTMLDivElement>(null);
   const placeNameRef = useRef<HTMLInputElement>(null);
   const pendingReviewTargetRef = useRef<HTMLElement | null>(null);
 
@@ -284,21 +286,26 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     if (id) toast('저장했어요. 이어서 작성할 수 있어요.', 'success');
   }
 
-  function showPlaceNameError() {
-    setPlaceNameError('장소명을 입력해주세요.');
+  function validatePlace(): boolean {
+    const errors = getPlaceErrors({ address, placeName });
+    if (errors.length === 0) {
+      setPlaceError('');
+      return true;
+    }
+
+    const message = errors[0];
+    setPlaceError(message);
     setReview(null);
     pendingReviewTargetRef.current = null;
-    window.requestAnimationFrame(() => scrollAndFocus(placeNameRef.current));
+    const target = message.includes('주소') ? placeSectionRef.current : placeNameRef.current;
+    window.requestAnimationFrame(() => scrollAndFocus(target));
+    return false;
   }
 
   /** 1차: 저장 + 검수 요청 */
   async function handleReview() {
     if (busy) return;
-    if (!placeName.trim()) {
-      showPlaceNameError();
-      return;
-    }
-    setPlaceNameError('');
+    if (!validatePlace()) return;
     setBusy(true);
     setReview(null);
     pendingReviewTargetRef.current = null;
@@ -337,10 +344,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       toast('검수 내용을 수정한 뒤 다시 확인해주세요.', 'error');
       return;
     }
-    if (!placeName.trim()) {
-      showPlaceNameError();
-      return;
-    }
+    if (!validatePlace()) return;
     if (!actionId) return;
     setBusy(true);
 
@@ -381,6 +385,8 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
     setCategories([...categories, nextCategory]);
   }
+
+  const isPlaceNameError = placeError.includes('장소 이름');
 
   return (
     <div className="flex flex-col gap-6 px-5 pb-32 pt-4">
@@ -552,10 +558,17 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       </div>
 
       {/* 주소 · 장소명 */}
-      <div className="flex flex-col gap-3">
+      <div ref={placeSectionRef} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <span className={label}>주소</span>
-          <AddressSearch value={address} onChange={setAddress} inputClassName={input} />
+          <AddressSearch
+            value={address}
+            onChange={(value) => {
+              setAddress(value);
+              if (placeError) setPlaceError('');
+            }}
+            inputClassName={input}
+          />
         </div>
 
         <label className="flex flex-col gap-1.5">
@@ -567,19 +580,19 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             value={placeName}
             onChange={(e) => {
               setPlaceName(e.target.value);
-              if (placeNameError) setPlaceNameError('');
+              if (placeError) setPlaceError('');
             }}
             placeholder="예) 신라목욕탕"
-            aria-invalid={!!placeNameError}
-            aria-describedby={placeNameError ? 'place-name-error' : undefined}
+            aria-invalid={isPlaceNameError}
+            aria-describedby={isPlaceNameError ? 'place-error' : undefined}
             className={input}
           />
-          {placeNameError && (
-            <span id="place-name-error" className="text-[12px] text-red-600" role="alert">
-              {placeNameError}
-            </span>
-          )}
         </label>
+        {placeError && (
+          <p id="place-error" className="text-[12px] text-red-600" role="alert">
+            {placeError}
+          </p>
+        )}
       </div>
 
       {/* 안내사항 */}
