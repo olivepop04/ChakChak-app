@@ -129,6 +129,10 @@ export default async function ActionDetailPage({
   const reactionDisabledReason =
     action.status === 'CANCELLED' ? 'cancelled' : 'ended';
 
+  // 이미 누른 것은 풀 수 있어야 합니다 — 막는 것은 새로 누르는 것뿐입니다 (2026-09-10).
+  const likeDisabled = reactionDisabled && !action.likedByMe;
+  const saveDisabled = reactionDisabled && !action.savedByMe;
+
   return (
     <main className="pb-52">
       <Header
@@ -259,7 +263,7 @@ export default async function ActionDetailPage({
             actionId={action.id}
             initialLiked={action.likedByMe}
             initialCount={action.likeCount}
-            disabled={reactionDisabled}
+            disabled={likeDisabled}
             disabledReason={reactionDisabledReason}
             className="px-1 py-0.5 text-xs gap-1"
           />
@@ -267,7 +271,7 @@ export default async function ActionDetailPage({
             actionId={action.id}
             initialSaved={action.savedByMe}
             initialCount={action.saveCount}
-            disabled={reactionDisabled}
+            disabled={saveDisabled}
             disabledReason={reactionDisabledReason}
             className="px-1 py-0.5 text-xs gap-1"
           />
