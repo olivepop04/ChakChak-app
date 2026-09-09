@@ -89,25 +89,25 @@ export function ActionCard({
                 이미지 없음
               </div>
             )}
-            <div className="absolute left-1.5 top-1.5 z-10 inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/50 px-2 py-0.5 backdrop-blur-md shrink-0 whitespace-nowrap">
-              <span className="text-[10px] font-medium text-white">
-                {primaryCategory}
-              </span>
-              {extraCount > 0 && (
-                <>
-                  <span className="text-[10px] font-normal text-white/70">
-                    +{extraCount}
-                  </span>
-                </>
-              )}
-            </div>
           </div>
 
           {/* 우측 정보 */}
           <div className="flex flex-1 flex-col justify-between min-w-0">
             <div>
+              {/* 카테고리 — 썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어남. 좁은 폭이라 대표+n 형태 유지 */}
+              <div className="mb-1.5 flex flex-wrap items-center gap-1">
+                <span className="inline-flex items-center whitespace-nowrap rounded-full bg-neutral-900 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  {primaryCategory}
+                </span>
+                {extraCount > 0 && (
+                  <span className="inline-flex items-center whitespace-nowrap rounded-full border border-neutral-300 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
+                    +{extraCount}
+                  </span>
+                )}
+              </div>
+
               {/* 상태 뱃지 + 제목 수평(인라인) 배치 */}
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-start gap-2 min-w-0">
                 {showStatus && (
                   <div className="shrink-0">
                     <StatusBadge
@@ -116,7 +116,7 @@ export function ActionCard({
                     />
                   </div>
                 )}
-                <h3 className="flex-1 truncate text-[15px] font-bold leading-snug text-neutral-900 min-w-0">
+                <h3 className="flex-1 text-[15px] font-bold leading-snug text-neutral-900 min-w-0 break-keep">
                   {action.title}
                 </h3>
               </div>
@@ -134,8 +134,8 @@ export function ActionCard({
                 {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
               </p>
 
-              {/* 통계 + 아바타 */}
-              <div className="flex items-center justify-between w-full min-w-0 pt-2 mt-1.5 border-t border-neutral-100">
+              {/* 통계 + 아바타 — 고배율에서 한 줄에 못 담으면 통계가 아래로 내려가게 flex-wrap */}
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 w-full min-w-0 pt-2 mt-1.5 border-t border-neutral-100">
                 <Link
                   href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
                   onClick={(e) => e.stopPropagation()}

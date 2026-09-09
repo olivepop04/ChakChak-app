@@ -159,7 +159,7 @@ export function LikeButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby="like-login-title"
-              className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
               onClick={(event) => event.stopPropagation()}
             >
               <span
@@ -305,7 +305,7 @@ export function SaveButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby="save-login-title"
-              className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
               onClick={(event) => event.stopPropagation()}
             >
               <span
