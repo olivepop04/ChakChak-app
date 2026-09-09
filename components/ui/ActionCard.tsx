@@ -50,6 +50,14 @@ export function ActionCard({
     action.recruitClosed ??
     (action.recruitEndAt ? new Date(action.recruitEndAt) < new Date() : false);
 
+  // 취소·종료·완료된 액션은 좋아요·저장·공유를 못 누르게 막는다 (누르면 안내 팝업)
+  const reactionDisabled =
+    action.status === 'CANCELLED' ||
+    action.status === 'ENDED' ||
+    action.status === 'COMPLETED';
+  const reactionDisabledReason =
+    action.status === 'CANCELLED' ? 'cancelled' : 'ended';
+
   const primaryCategory =
     action.category ||
     (action.categories && action.categories[0]) ||
@@ -89,25 +97,25 @@ export function ActionCard({
                 이미지 없음
               </div>
             )}
-            <div className="absolute left-1.5 top-1.5 z-10 inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/50 px-2 py-0.5 backdrop-blur-md shrink-0 whitespace-nowrap">
-              <span className="text-[10px] font-medium text-white">
-                {primaryCategory}
-              </span>
-              {extraCount > 0 && (
-                <>
-                  <span className="text-[10px] font-normal text-white/70">
-                    +{extraCount}
-                  </span>
-                </>
-              )}
-            </div>
           </div>
 
           {/* 우측 정보 */}
           <div className="flex flex-1 flex-col justify-between min-w-0">
             <div>
+              {/* 카테고리 — 썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어남. 좁은 폭이라 대표+n 형태 유지 */}
+              <div className="mb-1.5 flex flex-wrap items-center gap-1">
+                <span className="inline-flex items-center whitespace-nowrap rounded-full bg-neutral-900 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  {primaryCategory}
+                </span>
+                {extraCount > 0 && (
+                  <span className="inline-flex items-center whitespace-nowrap rounded-full border border-neutral-300 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
+                    +{extraCount}
+                  </span>
+                )}
+              </div>
+
               {/* 상태 뱃지 + 제목 수평(인라인) 배치 */}
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-start gap-2 min-w-0">
                 {showStatus && (
                   <div className="shrink-0">
                     <StatusBadge
@@ -116,13 +124,13 @@ export function ActionCard({
                     />
                   </div>
                 )}
-                <h3 className="flex-1 truncate text-[15px] font-bold leading-snug text-neutral-900 min-w-0">
+                <h3 className="flex-1 text-[15px] font-bold leading-snug text-neutral-900 min-w-0 break-keep">
                   {action.title}
                 </h3>
               </div>
 
               {action.summary && (
-                <p className="line-clamp-2 mt-1 text-xs text-neutral-500">
+                <p className="mt-1 text-xs leading-relaxed text-neutral-500">
                   {action.summary}
                 </p>
               )}
@@ -134,8 +142,8 @@ export function ActionCard({
                 {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
               </p>
 
-              {/* 통계 + 아바타 */}
-              <div className="flex items-center justify-between w-full min-w-0 pt-2 mt-1.5 border-t border-neutral-100">
+              {/* 통계 + 아바타 — 고배율에서 한 줄에 못 담으면 통계가 아래로 내려가게 flex-wrap */}
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 w-full min-w-0 pt-2 mt-1.5 border-t border-neutral-100">
                 <Link
                   href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
                   onClick={(e) => e.stopPropagation()}
@@ -158,6 +166,8 @@ export function ActionCard({
                     actionId={action.id}
                     initialLiked={action.likedByMe}
                     initialCount={action.likeCount ?? 0}
+                    disabled={reactionDisabled}
+                    disabledReason={reactionDisabledReason}
                     className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
@@ -165,6 +175,8 @@ export function ActionCard({
                     actionId={action.id}
                     initialSaved={action.savedByMe}
                     initialCount={action.saveCount ?? 0}
+                    disabled={reactionDisabled}
+                    disabledReason={reactionDisabledReason}
                     className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
@@ -172,6 +184,8 @@ export function ActionCard({
                     actionId={action.id}
                     actionTitle={action.title}
                     count={action.shareCount ?? 0}
+                    disabled={reactionDisabled}
+                    disabledReason={reactionDisabledReason}
                     className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
@@ -247,12 +261,13 @@ export function ActionCard({
             ))}
           </div>
 
-          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-neutral-900">
+          {/* 고배율에서 잘리지 않게 말줄임 없이 전체 노출. 카드가 길어지는 건 감수 (배율 확대 사용자는 전부 보길 원함) */}
+          <h3 className="text-[15px] font-semibold leading-snug text-neutral-900 break-keep">
             {action.title}
           </h3>
 
           {action.summary && (
-            <p className="line-clamp-2 text-[13px] leading-relaxed text-neutral-500">
+            <p className="text-[13px] leading-relaxed text-neutral-500">
               {action.summary}
             </p>
           )}
@@ -262,8 +277,11 @@ export function ActionCard({
             {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
           </p>
 
-          {/* 3. 인터랙티브 요소들 & 통계 4종 */}
-          <div className="pointer-events-auto mt-1 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
+          {/* 3. 인터랙티브 요소들 & 통계 4종
+              고배율에서 작성자 아이디가 잘리지 않게 하고(말줄임 제거), 한 줄에 못 담으면
+              flex-wrap 으로 통계 4종이 아래 줄로 내려가게 한다. 배율 감지는 필요 없다 —
+              글자가 커지면 자리가 모자라 자동으로 줄바꿈된다. */}
+          <div className="pointer-events-auto mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-2 border-t border-neutral-100 pt-3">
             {/* 작성자 프로필 링크 */}
             <Link
               href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
@@ -271,7 +289,7 @@ export function ActionCard({
               className="pointer-events-auto cursor-pointer flex items-center gap-1.5 min-w-0 flex-1 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
             >
               <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-              <span className="truncate text-xs text-neutral-600">
+              <span className="min-w-0 break-all text-xs text-neutral-600">
                 @{action.owner?.nickname ?? '호스트'}
               </span>
             </Link>
@@ -286,18 +304,24 @@ export function ActionCard({
                 actionId={action.id}
                 initialLiked={action.likedByMe}
                 initialCount={action.likeCount ?? 0}
+                disabled={reactionDisabled}
+                disabledReason={reactionDisabledReason}
                 className="px-1 py-0.5 text-xs gap-1"
               />
               <SaveButton
                 actionId={action.id}
                 initialSaved={action.savedByMe}
                 initialCount={action.saveCount ?? 0}
+                disabled={reactionDisabled}
+                disabledReason={reactionDisabledReason}
                 className="px-1 py-0.5 text-xs gap-1"
               />
               <ShareButton
                 actionId={action.id}
                 actionTitle={action.title}
                 count={action.shareCount ?? 0}
+                disabled={reactionDisabled}
+                disabledReason={reactionDisabledReason}
                 className="px-1 py-0.5 text-xs gap-1"
               />
             </div>

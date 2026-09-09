@@ -9,11 +9,11 @@
  */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Heart, Star, UsersRound, Share2 } from 'lucide-react';
+import { Ban, Heart, Star, UsersRound, Share2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toggleLike, toggleSave, toggleFollow } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
@@ -60,6 +60,103 @@ function useOptimisticToggle(
   return { on, count, busy, handle };
 }
 
+/** 좋아요·저장·공유를 못 누르는 이유. 문구가 달라집니다 */
+export type ReactionDisabledReason = 'cancelled' | 'ended';
+
+const REACTION_DISABLED_TEXT: Record<
+  ReactionDisabledReason,
+  { title: string; body: string }
+> = {
+  cancelled: {
+    title: '취소된 액션이에요',
+    body: '취소된 액션에는 좋아요·저장·공유를 할 수 없어요.',
+  },
+  ended: {
+    title: '이미 종료된 액션이에요',
+    body: '종료된 액션에는 좋아요·저장·공유를 할 수 없어요.',
+  },
+};
+
+/**
+ * 취소·종료된 액션에서 좋아요·저장·공유를 누르면 뜨는 안내 팝업.
+ * 로그인 안내 팝업과 같은 틀(가운데 흰 카드 + 확인 버튼)을 씁니다.
+ */
+function DisabledNoticeModal({
+  open,
+  reason,
+  onClose,
+}: {
+  open: boolean;
+  reason: ReactionDisabledReason;
+  onClose: () => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function closeWithEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', closeWithEscape);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.removeEventListener('keydown', closeWithEscape);
+    };
+  }, [open, onClose]);
+
+  if (!mounted || !open) return null;
+
+  const { title, body } = REACTION_DISABLED_TEXT[reason];
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reaction-disabled-title"
+        className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <span
+          aria-hidden="true"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100"
+        >
+          <Ban className="h-6 w-6 text-neutral-500" />
+        </span>
+        <h2
+          id="reaction-disabled-title"
+          className="mt-4 text-[17px] font-bold text-neutral-900"
+        >
+          {title}
+        </h2>
+        <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+          {body}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          autoFocus
+          className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-neutral-900 text-[14px] font-semibold text-white"
+        >
+          확인
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 // ─────────────────────────────────────────────────────────────
 export function LikeButton({
   actionId,
@@ -67,17 +164,25 @@ export function LikeButton({
   initialCount,
   className,
   iconClassName,
+  disabled = false,
+  disabledReason = 'cancelled',
 }: {
   actionId: string;
   initialLiked: boolean;
   initialCount: number;
   className?: string;
   iconClassName?: string;
+  /** 취소·종료된 액션 등에서 못 누르게 막고, 누르면 안내 팝업을 띄운다 */
+  disabled?: boolean;
+  /** 못 누르는 이유(팝업 문구가 달라짐). 기본은 '취소' */
+  disabledReason?: ReactionDisabledReason;
 }) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(false);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const closeNotice = useCallback(() => setNoticeOpen(false), []);
   const { on, count, handle } = useOptimisticToggle(
     initialLiked,
     initialCount,
@@ -107,6 +212,10 @@ export function LikeButton({
 
   async function handleLike(e: React.MouseEvent) {
     e.stopPropagation();
+    if (disabled) {
+      setNoticeOpen(true);
+      return;
+    }
     if (checkingAuth) return;
     setCheckingAuth(true);
     try {
@@ -131,10 +240,15 @@ export function LikeButton({
         disabled={checkingAuth}
         aria-busy={checkingAuth}
         aria-pressed={on}
+        aria-disabled={disabled || undefined}
         aria-label="좋아요"
         className={cn(
           'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
-          on ? 'text-red-500' : 'text-neutral-500 hover:bg-neutral-100',
+          disabled
+            ? 'cursor-not-allowed text-neutral-400 opacity-50'
+            : on
+              ? 'text-red-500'
+              : 'text-neutral-500 hover:bg-neutral-100',
           className,
         )}
       >
@@ -142,7 +256,9 @@ export function LikeButton({
           className={cn(
             iconClassName || 'h-4 w-4',
             'shrink-0 transition-colors',
-            on ? 'fill-red-500 text-red-500' : 'fill-none text-neutral-400',
+            !disabled && on
+              ? 'fill-red-500 text-red-500'
+              : 'fill-none text-neutral-400',
           )}
         />
         <span className="tabular-nums">{count}</span>
@@ -159,7 +275,7 @@ export function LikeButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby="like-login-title"
-              className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
               onClick={(event) => event.stopPropagation()}
             >
               <span
@@ -196,6 +312,12 @@ export function LikeButton({
           </div>,
           document.body,
         )}
+
+      <DisabledNoticeModal
+        open={noticeOpen}
+        reason={disabledReason}
+        onClose={closeNotice}
+      />
     </>
   );
 }
@@ -207,17 +329,25 @@ export function SaveButton({
   initialCount,
   className,
   iconClassName,
+  disabled = false,
+  disabledReason = 'cancelled',
 }: {
   actionId: string;
   initialSaved: boolean;
   initialCount?: number;
   className?: string;
   iconClassName?: string;
+  /** 취소·종료된 액션 등에서 못 누르게 막고, 누르면 안내 팝업을 띄운다 */
+  disabled?: boolean;
+  /** 못 누르는 이유(팝업 문구가 달라짐). 기본은 '취소' */
+  disabledReason?: ReactionDisabledReason;
 }) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(false);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const closeNotice = useCallback(() => setNoticeOpen(false), []);
   const { on, count, handle } = useOptimisticToggle(
     initialSaved,
     initialCount,
@@ -247,6 +377,10 @@ export function SaveButton({
 
   async function handleSave(e: React.MouseEvent) {
     e.stopPropagation();
+    if (disabled) {
+      setNoticeOpen(true);
+      return;
+    }
     if (checkingAuth) return;
     setCheckingAuth(true);
 
@@ -275,10 +409,15 @@ export function SaveButton({
         disabled={checkingAuth}
         aria-busy={checkingAuth}
         aria-pressed={on}
+        aria-disabled={disabled || undefined}
         aria-label="저장"
         className={cn(
           'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
-          on ? 'text-amber-600' : 'text-neutral-500 hover:bg-neutral-100',
+          disabled
+            ? 'cursor-not-allowed text-neutral-400 opacity-50'
+            : on
+              ? 'text-amber-600'
+              : 'text-neutral-500 hover:bg-neutral-100',
           className,
         )}
       >
@@ -286,7 +425,9 @@ export function SaveButton({
           className={cn(
             iconClassName || 'h-4 w-4',
             'shrink-0 transition-colors',
-            on ? 'fill-amber-500 text-amber-500' : 'fill-none text-neutral-400',
+            !disabled && on
+              ? 'fill-amber-500 text-amber-500'
+              : 'fill-none text-neutral-400',
           )}
         />
         {initialCount !== undefined && (
@@ -305,7 +446,7 @@ export function SaveButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby="save-login-title"
-              className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
               onClick={(event) => event.stopPropagation()}
             >
               <span
@@ -343,6 +484,12 @@ export function SaveButton({
           </div>,
           document.body,
         )}
+
+      <DisabledNoticeModal
+        open={noticeOpen}
+        reason={disabledReason}
+        onClose={closeNotice}
+      />
     </>
   );
 }
@@ -429,6 +576,8 @@ export function ShareButton({
   count,
   className,
   iconClassName,
+  disabled = false,
+  disabledReason = 'cancelled',
 }: {
   actionId: string;
   actionTitle?: string;
@@ -437,11 +586,21 @@ export function ShareButton({
   count?: number;
   className?: string;
   iconClassName?: string;
+  /** 취소·종료된 액션 등에서 못 누르게 막고, 누르면 안내 팝업을 띄운다 */
+  disabled?: boolean;
+  /** 못 누르는 이유(팝업 문구가 달라짐). 기본은 '취소' */
+  disabledReason?: ReactionDisabledReason;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const closeNotice = useCallback(() => setNoticeOpen(false), []);
 
   function handleShare(e: React.MouseEvent) {
     e.stopPropagation();
+    if (disabled) {
+      setNoticeOpen(true);
+      return;
+    }
     setModalOpen(true);
   }
 
@@ -450,9 +609,13 @@ export function ShareButton({
       <button
         type="button"
         onClick={handleShare}
+        aria-disabled={disabled || undefined}
         aria-label="공유"
         className={cn(
-          'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900',
+          'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium transition-colors',
+          disabled
+            ? 'cursor-not-allowed text-neutral-400 opacity-50'
+            : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900',
           className,
         )}
       >
@@ -471,6 +634,12 @@ export function ShareButton({
           viewerId={viewerId ?? null}
         />
       )}
+
+      <DisabledNoticeModal
+        open={noticeOpen}
+        reason={disabledReason}
+        onClose={closeNotice}
+      />
     </>
   );
 }

@@ -93,7 +93,7 @@ export function LeaveButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby="leave-modal-title"
-              className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+              className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
             >
               <h2 id="leave-modal-title" className="text-[17px] font-bold text-neutral-900">
                 참여를 취소할까요?
