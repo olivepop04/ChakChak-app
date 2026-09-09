@@ -38,8 +38,13 @@ export default async function FollowingPage({
       {following.length === 0 ? (
         <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
           <UserRoundX className="h-12 w-12 text-neutral-400 stroke-[1.5]" />
-          <p className="mt-3 text-base font-semibold text-neutral-900">
-            아직 팔로우하는 사람이 없어요.
+          <p className="mt-3 text-base font-bold text-neutral-900">
+            아직 팔로우하는 사람이 없어요
+          </p>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500 break-keep">
+            마음에 드는 호스트나 크루를 팔로우하면,
+            <br />
+            새 액션을 가장 먼저 알 수 있어요
           </p>
         </div>
       ) : (
