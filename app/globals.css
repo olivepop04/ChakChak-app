@@ -11,6 +11,17 @@ body {
   @apply bg-neutral-100;
 }
 
+/*
+  폰 설정의 글자 크기 배율을 따르게 한다.
+  Tailwind preflight 가 html 에 -webkit-text-size-adjust: 100% 를 넣어
+  안드로이드에서 폰의 글자 크기 설정이 먹지 않는다. auto 로 되돌린다.
+  주의: 글자만 커지고 컨테이너는 안 커져서 좁은 화면 일부가 밀릴 수 있다 — 실기기 확인 필요.
+*/
+html {
+  -webkit-text-size-adjust: auto;
+  text-size-adjust: auto;
+}
+
 /* The app is a mobile web app; the shell caps the width and centers it. */
 .app-shell {
   @apply mx-auto min-h-dvh max-w-app bg-white;
