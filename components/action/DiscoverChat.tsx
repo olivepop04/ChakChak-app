@@ -1,8 +1,8 @@
 /**
  * Discover — 사용자 선택에 맞춘 다섯 답변으로 액션을 추천합니다.
  *
- * AI는 질문과 조건 해석, 추천 이유만 담당합니다.
- * 실제 후보 제외·완화·점수·순위는 서버 코드가 결정합니다.
+ * AI는 조건 해석과 추천 이유를 담당합니다.
+ * 질문 문구와 실제 후보 제외·완화·점수·순위는 서버 코드가 결정합니다.
  */
 'use client';
 
@@ -156,7 +156,7 @@ export function DiscoverChat({
         </div>
         {items === null && (
           <span className="text-[11px] tabular-nums text-neutral-400">
-            답변 {answeredCount}개 반영 · 총 5개
+            맞춤 추천 준비 중 · {answeredCount}/5
           </span>
         )}
       </div>
@@ -191,7 +191,7 @@ export function DiscoverChat({
       {loading && (
         <Bubble>
           <span className="inline-flex items-center gap-2">
-            착착 AI가 다음 말을 고르고 있어요
+            착착 AI가 답변을 살펴보고 있어요
             <span className="inline-flex gap-0.5">
               <Dot /> <Dot /> <Dot />
             </span>
@@ -212,7 +212,8 @@ export function DiscoverChat({
         <div className="flex flex-col gap-4">
           {relaxation.length > 0 && (
             <p className="rounded-xl bg-violet-50 px-4 py-3 text-[12px] leading-relaxed text-violet-700">
-              {relaxation.join(' ')} 조건을 넓힌 사실을 숨기지 않고 알려드려요.
+              말씀해주신 조건에 맞는 액션이 많지 않아 비슷한 조건까지 조금
+              넓혀서 찾아봤어요. 최대한 비슷한 액션부터 보여드릴게요.
             </p>
           )}
 
@@ -251,7 +252,7 @@ function Bubble({ children }: { children: React.ReactNode }) {
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-bold text-white">
         착
       </span>
-      <p className="max-w-[80%] rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2.5 text-[14px] leading-relaxed text-neutral-800">
+      <p className="max-w-[80%] whitespace-pre-line rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2.5 text-[14px] leading-relaxed text-neutral-800">
         {children}
       </p>
     </div>

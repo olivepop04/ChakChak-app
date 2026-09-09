@@ -5,9 +5,92 @@ import {
   DISCOVER_RECOMMENDATION_REPLY,
   extractAdaptiveAnswers,
   getDiscoverReply,
+  getQuestionOptions,
+  getQuestionReply,
+  getRecommendationReply,
   getRemainingQuestionKeys,
   shouldRecommendNow,
 } from '../app/api/ai/discover/interview.ts';
+import { SKILLS } from '../lib/constants/index.ts';
+
+test('Discover 재능 선택지는 프로필의 공통 재능 목록을 그대로 사용한다', () => {
+  assert.deepEqual(getQuestionOptions('skills', SKILLS), [...SKILLS]);
+});
+
+test('첫 질문 전에 닉네임을 넣어 Discover 역할을 편안하게 안내한다', () => {
+  assert.equal(
+    getQuestionReply('talent_preference', {
+      nickname: '지수',
+      answers: {},
+      profileSkills: [],
+      selectedSkills: [],
+      fieldReferenceCategories: [],
+      hasHistory: false,
+    }),
+    [
+      '반가워요, 지수님. 😊',
+      '몇 가지만 편하게 알려주시면 지수님에게 잘 맞는 액션을 찾아볼게요.',
+      '먼저, 이번에는 가진 재능을 활용할 수 있는 액션을 찾아볼까요?',
+    ].join('\n'),
+  );
+});
+
+test('재능을 사용하지 않는 답변을 받아주고 참여 방식으로 연결한다', () => {
+  assert.equal(
+    getQuestionReply('participation_mode', {
+      nickname: '지수',
+      answers: { talentPreference: 'any' },
+      profileSkills: [],
+      selectedSkills: [],
+      fieldReferenceCategories: [],
+      hasHistory: false,
+    }),
+    [
+      '괜찮아요. 특별한 재능이 없어도 참여할 수 있는 액션이 많아요.',
+      '시간, 물건, 직접 행동 중 어떤 방식이 가장 편하세요?',
+    ].join('\n'),
+  );
+});
+
+test('기존 회원의 실제 참여 분야를 받아주며 분야 선택을 묻는다', () => {
+  assert.equal(
+    getQuestionReply('field_preference', {
+      nickname: '지수',
+      answers: {
+        talentPreference: 'use',
+        groupSizePreference: 'small',
+      },
+      profileSkills: ['사진 촬영'],
+      selectedSkills: ['사진 촬영'],
+      fieldReferenceCategories: ['동물', '환경'],
+      hasHistory: true,
+    }),
+    [
+      '작은 모임이 더 편하시군요.',
+      '최근 동물·환경 분야 액션에 참여하셨네요. 이번에도 비슷한 활동을 이어가볼까요, 아니면 새로운 분야를 찾아볼까요?',
+    ].join('\n'),
+  );
+});
+
+test('추천 시작 문장에 대화에서 확인한 성향을 자연스럽게 연결한다', () => {
+  assert.equal(
+    getRecommendationReply({
+      nickname: '지수',
+      answers: {
+        talentPreference: 'use',
+        groupSizePreference: 'small',
+        fieldPreference: 'new',
+        travelRange: 'province',
+      },
+      selectedSkills: ['사진 촬영'],
+      fieldReferenceCategories: ['동물'],
+    }),
+    [
+      '지수님은 사진 촬영 재능을 활용하면서 10명 이내의 작은 모임에서 새로운 분야에 도전해보고 싶으시군요.',
+      '말씀해주신 내용을 바탕으로 잘 맞는 액션을 골라봤어요.',
+    ].join('\n'),
+  );
+});
 
 test('프로필 재능 유무와 관계없이 첫 질문은 재능 활용 여부다', () => {
   const remaining = getRemainingQuestionKeys({
