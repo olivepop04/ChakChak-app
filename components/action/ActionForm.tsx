@@ -262,12 +262,13 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         if (!activityStart) return activityStartRef.current;
         return activityEndRef.current;
       }
-      if (message.includes('활동 종료') || message.includes('이미 지난 날짜')) {
+      if (message.includes('활동 종료') || message.includes('이미 지났')) {
         return activityEndRef.current;
       }
       if (message.includes('모집 마감')) return recruitEndRef.current;
       if (message.includes('대표 이미지')) return imageSectionRef.current;
-      if (message.includes('모집 항목')) return itemsSectionRef.current;
+      if (message.includes('모집 항목') || message.includes('함께할 사람'))
+        return itemsSectionRef.current;
       if (message.includes('본문')) return descriptionRef.current;
     }
     return null;
@@ -328,7 +329,8 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       if (data.error) {
         toast(data.error, 'error');
       } else {
-        const target = findReviewErrorTarget(data.hard_errors);
+        // REVISE 는 hard_errors 가 비어 있고 warnings 에만 내용이 있습니다
+        const target = findReviewErrorTarget([...data.hard_errors, ...data.warnings]);
         pendingReviewTargetRef.current = target;
         target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setReview(data);
@@ -339,11 +341,18 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     setBusy(false);
   }
 
-  /** 2차: Owner 가 최종 공개 */
+  /**
+   * 2차: 호스트가 최종 공개.
+   *
+   * BLOCK 만 막습니다. REVISE 는 "이대로는 참여자가 움직이기 어렵다" 는
+   * 알림이지 공개 금지가 아닙니다 — 보고 나서 공개할지는 호스트가 정합니다
+   * (2026-09-09 Review AI 개선). AI 가 실패했을 때도 REVISE 로 오는데,
+   * 예전에는 그 경우 공개 자체가 막혀 있었습니다.
+   */
   async function handlePublish() {
     if (busy) return;
-    if (!review || review.decision !== 'PASS') {
-      toast('검수 내용을 수정한 뒤 다시 확인해주세요.', 'error');
+    if (!review || review.decision === 'BLOCK') {
+      toast('위에 적힌 것을 고친 뒤 다시 확인해주세요.', 'error');
       return;
     }
     if (!validatePlace()) return;
@@ -746,19 +755,21 @@ function ReviewPanel({
   onPublish: () => void;
   busy: boolean;
 }) {
-  const canPublish = review.decision === 'PASS';
+  // BLOCK 만 공개를 막습니다. REVISE 는 알려주고 호스트가 정합니다.
   const blocked = review.decision === 'BLOCK';
+  const needsWork = review.decision === 'REVISE';
+  const canPublish = !blocked;
 
   const tone = blocked
     ? 'border-red-200 bg-red-50'
-    : review.decision === 'REVISE'
+    : needsWork
       ? 'border-amber-200 bg-amber-50'
       : 'border-emerald-200 bg-emerald-50';
 
   const heading = blocked
     ? '공개하기 전에 고쳐야 할 것이 있어요'
-    : review.decision === 'REVISE'
-      ? '공개하기 전에 내용을 조금 수정해주세요'
+    : needsWork
+      ? '조금만 더 적어주시면 참여가 훨씬 쉬워져요'
       : '확인했어요. 공개할 준비가 됐어요';
 
   return (
@@ -804,15 +815,16 @@ function ReviewPanel({
 
       {canPublish && (
         <Button type="button" onClick={onPublish} loading={busy} fullWidth>
-          액션 공개하기
+          {needsWork ? '이대로 공개하기' : '액션 공개하기'}
         </Button>
       )}
-      {!canPublish && (
-        <p
-          className={`text-[12px] ${
-            blocked ? 'text-red-700' : 'text-amber-800'
-          }`}
-        >
+      {needsWork && (
+        <p className="text-[12px] text-amber-800">
+          고치고 싶으면 닫고 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
+        </p>
+      )}
+      {blocked && (
+        <p className="text-[12px] text-red-700">
           위 내용을 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러 검수해주세요.
         </p>
       )}
