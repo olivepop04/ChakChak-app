@@ -7,7 +7,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { ActionCard } from '@/components/ui/ActionCard';
 import type { ActionCardData } from '@/lib/types/view';
 
@@ -39,11 +38,6 @@ export function MySavedSection({ saved }: { saved: ActionCardData[] }) {
           내가 저장한 액션{' '}
           <span className="text-neutral-400">{saved.length}</span>
         </h2>
-        {saved.length > 2 && (
-          <Link href="/my/saved" className="text-[12px] text-neutral-500 hover:text-neutral-900">
-            모두 보기 ›
-          </Link>
-        )}
       </div>
 
       <div className="flex flex-col gap-3 px-5">

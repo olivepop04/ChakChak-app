@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getFollowing, getProfile } from '@/lib/queries/profiles';
 import { UserList } from '@/components/ui/UserList';
 import { Header } from '@/components/layout/Header';
+import { shouldShowFollowEmptyHint } from '@/lib/utils/profile-display';
 
 export default async function FollowingPage({
   params,
@@ -41,11 +42,13 @@ export default async function FollowingPage({
           <p className="mt-3 text-base font-bold text-neutral-900">
             아직 팔로우하는 사람이 없어요
           </p>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500 break-keep">
-            마음에 드는 호스트나 크루를 팔로우하면,
-            <br />
-            새 액션을 가장 먼저 알 수 있어요
-          </p>
+          {shouldShowFollowEmptyHint(user?.id, id) && (
+            <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500 break-keep">
+              마음에 드는 호스트나 크루를 팔로우하면,
+              <br />
+              새 액션을 가장 먼저 알 수 있어요
+            </p>
+          )}
         </div>
       ) : (
         <UserList users={following} />
