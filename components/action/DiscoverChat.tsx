@@ -1,5 +1,5 @@
 /**
- * Discover — AI가 부족한 성향만 골라 최대 4번 묻는 액션 탐색.
+ * Discover — 사용자 선택에 맞춘 다섯 답변으로 액션을 추천합니다.
  *
  * AI는 질문과 조건 해석, 추천 이유만 담당합니다.
  * 실제 후보 제외·완화·점수·순위는 서버 코드가 결정합니다.
@@ -120,7 +120,7 @@ export function DiscoverChat({
           <ul className="mt-3 flex flex-col gap-2 text-[13px] leading-relaxed text-neutral-600">
             <li>· 내 지역과 가능한 시간에 맞춰 추천해요.</li>
             <li>· 이미 참여한 액션과 내가 만든 액션은 자동으로 빼요.</li>
-            <li>· 필요한 것만 묻고, 최대 4번 안에 후보를 보여줘요.</li>
+            <li>· 다섯 가지 답변을 바탕으로 후보를 골라드려요.</li>
           </ul>
           <Link
             href="/login?next=/discover"
@@ -156,7 +156,7 @@ export function DiscoverChat({
         </div>
         {items === null && (
           <span className="text-[11px] tabular-nums text-neutral-400">
-            답변 {answeredCount}개 반영 · 최대 4개
+            답변 {answeredCount}개 반영 · 총 5개
           </span>
         )}
       </div>

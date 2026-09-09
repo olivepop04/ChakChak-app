@@ -1,16 +1,21 @@
 export type QuestionKey =
   | 'skills'
   | 'talent_preference'
+  | 'participation_mode'
   | 'group_size'
   | 'field_preference'
   | 'travel_range';
 
 export interface AdaptiveAnswers {
   talentPreference?: 'use' | 'any' | null;
+  participationMode?: 'time' | 'goods' | 'direct' | null;
   groupSizePreference?: 'small' | 'any' | null;
   fieldPreference?: 'familiar' | 'new' | 'any' | null;
   travelRange?: 'exact' | 'province' | 'any' | null;
 }
+
+export const DISCOVER_RECOMMENDATION_REPLY =
+  '좋아요. 지금까지 알려주신 성향을 바탕으로 잘 맞는 액션을 골라봤어요.';
 
 export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
   const text = messages.join(' ');
@@ -20,6 +25,14 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.talentPreference = 'use';
   } else if (/재능.*상관|재능 없이도/.test(text)) {
     answers.talentPreference = 'any';
+  }
+
+  if (/물건|물품/.test(text)) {
+    answers.participationMode = 'goods';
+  } else if (/직접 행동|몸으로|몸을 움직/.test(text)) {
+    answers.participationMode = 'direct';
+  } else if (/시간을 내|시간으로/.test(text)) {
+    answers.participationMode = 'time';
   }
 
   if (/10명 이내|소규모/.test(text)) {
@@ -48,30 +61,26 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
 }
 
 export function getRemainingQuestionKeys({
-  skills,
   skillsAnswered = false,
-  hasHistory,
   answers,
 }: {
-  skills: string[] | null;
   skillsAnswered?: boolean;
-  hasHistory: boolean;
   answers: AdaptiveAnswers;
 }): QuestionKey[] {
+  if (!answers.talentPreference) return ['talent_preference'];
+
   const remaining: QuestionKey[] = [];
 
-  if (skills === null && !skillsAnswered) remaining.push('skills');
-  if (
-    skills !== null &&
-    skills.length > 0 &&
-    !answers.talentPreference
+  if (answers.talentPreference === 'use' && !skillsAnswered) {
+    remaining.push('skills');
+  } else if (
+    answers.talentPreference === 'any' &&
+    !answers.participationMode
   ) {
-    remaining.push('talent_preference');
-  }
-  if (hasHistory && !answers.fieldPreference) {
-    remaining.push('field_preference');
+    remaining.push('participation_mode');
   }
   if (!answers.groupSizePreference) remaining.push('group_size');
+  if (!answers.fieldPreference) remaining.push('field_preference');
   if (!answers.travelRange) remaining.push('travel_range');
 
   return remaining;
@@ -79,12 +88,18 @@ export function getRemainingQuestionKeys({
 
 export function shouldRecommendNow({
   userTurnCount,
-  enough,
-  remainingCount,
 }: {
   userTurnCount: number;
-  enough: boolean;
-  remainingCount: number;
 }): boolean {
-  return remainingCount === 0 || userTurnCount >= 4 || (enough && userTurnCount > 0);
+  return userTurnCount >= 5;
+}
+
+export function getDiscoverReply({
+  recommendNow,
+  conversationReply,
+}: {
+  recommendNow: boolean;
+  conversationReply: string;
+}): string {
+  return recommendNow ? DISCOVER_RECOMMENDATION_REPLY : conversationReply;
 }
