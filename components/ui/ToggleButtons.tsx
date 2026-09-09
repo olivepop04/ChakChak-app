@@ -20,7 +20,17 @@ import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils/cn';
 import { ShareModal } from '@/components/action/ShareModal';
 
-/** 세 버튼이 공유하는 로직 */
+/**
+ * 세 버튼이 공유하는 로직.
+ *
+ * `onChange` 는 **바깥 화면이 같은 숫자를 들고 있을 때만** 씁니다.
+ * 켜짐이 바뀌는 순간(되돌릴 때 포함) 불러줍니다.
+ *
+ * ★ 여기에 `router.refresh()` 를 넣지 마세요 (2026-09-10).
+ *   이 훅을 좋아요·저장·팔로우가 함께 씁니다. 훅에서 새로고침하면
+ *   피드에서 하트를 누를 때마다 서버 왕복이 생겨 목록이 깜빡입니다.
+ *   바깥 숫자를 맞춰야 하면 `onChange` 로 받아서 그 화면에서 더하고 빼세요.
+ */
 function useOptimisticToggle(
   initialOn: boolean,
   initialCount: number | undefined,
@@ -28,6 +38,7 @@ function useOptimisticToggle(
     supabase: ReturnType<typeof createClient>,
     currentlyOn: boolean,
   ) => Promise<{ ok: true; data: boolean } | { ok: false; message: string }>,
+  onChange?: (nextOn: boolean) => void,
 ) {
   const [on, setOn] = useState(initialOn);
   const [count, setCount] = useState(initialCount ?? 0);
@@ -44,6 +55,7 @@ function useOptimisticToggle(
     // 1) 화면을 먼저 바꾼다
     setOn(!on);
     setCount(on ? count - 1 : count + 1);
+    onChange?.(!prevOn);
 
     // 2) 서버에 보낸다
     const res = await run(createClient(), prevOn);
@@ -52,6 +64,7 @@ function useOptimisticToggle(
     if (!res.ok) {
       setOn(prevOn);
       setCount(prevCount);
+      onChange?.(prevOn);
       toast(res.message, 'error');
     }
     setBusy(false);
@@ -495,19 +508,39 @@ export function SaveButton({
 }
 
 // ─────────────────────────────────────────────────────────────
+/**
+ * 팔로우 버튼.
+ *
+ * 프로필 화면의 팔로워 **숫자**는 서버에서 그린 값이라, 이 버튼만으로는
+ * 새로고침 전까지 안 바뀝니다. 숫자를 같이 움직이려면 `onToggled` 를 받아
+ * 그 화면에서 더하고 빼세요 (2026-09-10, 개발 A 요청).
+ *
+ *   const [followers, setFollowers] = useState(profile.followerCount);
+ *   <FollowButton
+ *     targetUserId={id}
+ *     initialFollowing={profile.followedByMe}
+ *     onToggled={(now) => setFollowers((n) => (now ? n + 1 : n - 1))}
+ *   />
+ *
+ * 실패해서 되돌아갈 때도 한 번 더 불러주므로 숫자가 어긋나지 않습니다.
+ */
 export function FollowButton({
   targetUserId,
   initialFollowing,
   className,
+  onToggled,
 }: {
   targetUserId: string;
   initialFollowing: boolean;
   className?: string;
+  /** 팔로우 상태가 바뀔 때마다 (되돌릴 때도) 불립니다 */
+  onToggled?: (nowFollowing: boolean) => void;
 }) {
   const { on, handle } = useOptimisticToggle(
     initialFollowing,
     undefined,
     (sb, cur) => toggleFollow(sb, targetUserId, cur),
+    onToggled,
   );
 
   return (
