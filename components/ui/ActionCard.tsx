@@ -218,18 +218,6 @@ export function ActionCard({
               이미지 없음
             </div>
           )}
-          <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-2.5 py-1 backdrop-blur-md shrink-0 whitespace-nowrap">
-            <span className="text-xs font-medium text-white">
-              {primaryCategory}
-            </span>
-            {extraCount > 0 && (
-              <>
-                <span className="text-[11px] font-normal text-white/70">
-                  +{extraCount}
-                </span>
-              </>
-            )}
-          </div>
           {showStatus && (
             <div className="absolute right-3 top-3 z-10">
               <StatusBadge
@@ -242,6 +230,23 @@ export function ActionCard({
         </div>
 
         <div className="flex flex-col gap-2 p-4">
+          {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
+          <div className="flex flex-wrap gap-1">
+            {allCategories.map((c, i) => (
+              <span
+                key={c}
+                className={cn(
+                  'inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium',
+                  i === 0
+                    ? 'bg-neutral-900 text-white'
+                    : 'border border-neutral-300 text-neutral-600',
+                )}
+              >
+                {c}
+              </span>
+            ))}
+          </div>
+
           <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-neutral-900">
             {action.title}
           </h3>
