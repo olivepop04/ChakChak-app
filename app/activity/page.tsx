@@ -33,8 +33,8 @@ const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 function JoinedFooter({ item }: { item: JoinedActionData }) {
   if (item.status === 'CANCELLED') {
     return (
-      <div className="flex items-center gap-2 w-full">
-        <Link href={`/action/${item.id}`} className={`${secondary} flex-1`}>
+      <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}`} className={secondary}>
           취소 사유 보기
         </Link>
       </div>
@@ -43,8 +43,8 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
 
   if (item.status === 'ACTIVE') {
     return (
-      <div className="flex items-center gap-2 w-full">
-        <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
+      <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}/chat`} className={secondary}>
           CREW CHAT
         </Link>
         {item.participationStatus === 'BEFORE_ACTION' && (
@@ -55,13 +55,13 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
   }
 
   // ENDED / COMPLETED ('소감 작성 필요' 상태 포함):
-  // [CREW CHAT] 과 [결과 보기] 2개의 버튼으로 통일 (flex-1 적용 5:5 비율 수평 배치)
+  // [CREW CHAT] 과 [결과 보기] 2개 버튼. '호스트한 액션' 탭과 같은 크기(내용 너비 · flex-wrap)로 통일
   return (
-    <div className="flex items-center gap-2 w-full">
-      <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
+    <div className="flex flex-wrap gap-1.5">
+      <Link href={`/action/${item.id}/chat`} className={secondary}>
         CREW CHAT
       </Link>
-      <Link href={`/action/${item.id}/result`} className={`${secondary} flex-1`}>
+      <Link href={`/action/${item.id}/result`} className={secondary}>
         결과 보기
       </Link>
     </div>
@@ -232,7 +232,7 @@ export default async function ActivityPage({
       <div className="flex border-b border-neutral-200 px-5">
         {[
           { label: '참여한 액션', href: '/activity', active: !isCreated },
-          { label: '만든 액션', href: '/activity?tab=created', active: isCreated },
+          { label: '호스트한 액션', href: '/activity?tab=created', active: isCreated },
         ].map((t) => (
           <Link
             key={t.href}
@@ -254,7 +254,7 @@ export default async function ActivityPage({
         created.length === 0 ? (
           <EmptyState
             icon="✏️"
-            title="아직 만든 액션이 없어요"
+            title="아직 호스트한 액션이 없어요"
             description="함께할 사람을 모아보세요."
             action={{ label: '액션 만들기', href: '/action/create' }}
           />

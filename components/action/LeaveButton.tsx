@@ -24,8 +24,10 @@ import { createClient } from '@/lib/supabase/client';
 import { leaveActionWithReason } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
 
-const danger =
-  'inline-flex h-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 text-[12px] font-semibold text-red-600 transition-colors';
+// 카드 하단 트리거 버튼은 CREW CHAT 등 다른 버튼과 같은 중립 스타일(하양 바탕 · 회색 글씨).
+// 실제 파괴적 확인은 아래 모달의 빨강 '나가기 진행' 버튼에서 받는다.
+const trigger =
+  'inline-flex h-9 items-center justify-center rounded-lg border border-neutral-300 bg-white px-3 text-[12px] font-semibold text-neutral-700 transition-colors';
 
 export function LeaveButton({ actionId }: { actionId: string }) {
   const router = useRouter();
@@ -62,7 +64,7 @@ export function LeaveButton({ actionId }: { actionId: string }) {
 
   return (
     <>
-      <button type="button" onClick={openModal} disabled={busy} className={danger}>
+      <button type="button" onClick={openModal} disabled={busy} className={trigger}>
         나가기
       </button>
 
