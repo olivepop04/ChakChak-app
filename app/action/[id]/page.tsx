@@ -121,6 +121,14 @@ export default async function ActionDetailPage({
       ? action.categories
       : [action.category];
 
+  // 취소·종료·완료된 액션은 좋아요·저장·공유를 못 누르게 막는다 (누르면 안내 팝업)
+  const reactionDisabled =
+    action.status === 'CANCELLED' ||
+    action.status === 'ENDED' ||
+    action.status === 'COMPLETED';
+  const reactionDisabledReason =
+    action.status === 'CANCELLED' ? 'cancelled' : 'ended';
+
   return (
     <main className="pb-52">
       <Header
@@ -251,12 +259,16 @@ export default async function ActionDetailPage({
             actionId={action.id}
             initialLiked={action.likedByMe}
             initialCount={action.likeCount}
+            disabled={reactionDisabled}
+            disabledReason={reactionDisabledReason}
             className="px-1 py-0.5 text-xs gap-1"
           />
           <SaveButton
             actionId={action.id}
             initialSaved={action.savedByMe}
             initialCount={action.saveCount}
+            disabled={reactionDisabled}
+            disabledReason={reactionDisabledReason}
             className="px-1 py-0.5 text-xs gap-1"
           />
           <ShareButton
@@ -264,6 +276,8 @@ export default async function ActionDetailPage({
             actionTitle={action.title}
             viewerId={user?.id ?? null}
             count={action.shareCount}
+            disabled={reactionDisabled}
+            disabledReason={reactionDisabledReason}
             className="px-1 py-0.5 text-xs gap-1"
           />
         </div>

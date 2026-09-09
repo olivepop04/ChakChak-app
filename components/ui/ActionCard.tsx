@@ -50,6 +50,14 @@ export function ActionCard({
     action.recruitClosed ??
     (action.recruitEndAt ? new Date(action.recruitEndAt) < new Date() : false);
 
+  // 취소·종료·완료된 액션은 좋아요·저장·공유를 못 누르게 막는다 (누르면 안내 팝업)
+  const reactionDisabled =
+    action.status === 'CANCELLED' ||
+    action.status === 'ENDED' ||
+    action.status === 'COMPLETED';
+  const reactionDisabledReason =
+    action.status === 'CANCELLED' ? 'cancelled' : 'ended';
+
   const primaryCategory =
     action.category ||
     (action.categories && action.categories[0]) ||
@@ -158,6 +166,8 @@ export function ActionCard({
                     actionId={action.id}
                     initialLiked={action.likedByMe}
                     initialCount={action.likeCount ?? 0}
+                    disabled={reactionDisabled}
+                    disabledReason={reactionDisabledReason}
                     className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
@@ -165,6 +175,8 @@ export function ActionCard({
                     actionId={action.id}
                     initialSaved={action.savedByMe}
                     initialCount={action.saveCount ?? 0}
+                    disabled={reactionDisabled}
+                    disabledReason={reactionDisabledReason}
                     className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
@@ -172,6 +184,8 @@ export function ActionCard({
                     actionId={action.id}
                     actionTitle={action.title}
                     count={action.shareCount ?? 0}
+                    disabled={reactionDisabled}
+                    disabledReason={reactionDisabledReason}
                     className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
@@ -290,18 +304,24 @@ export function ActionCard({
                 actionId={action.id}
                 initialLiked={action.likedByMe}
                 initialCount={action.likeCount ?? 0}
+                disabled={reactionDisabled}
+                disabledReason={reactionDisabledReason}
                 className="px-1 py-0.5 text-xs gap-1"
               />
               <SaveButton
                 actionId={action.id}
                 initialSaved={action.savedByMe}
                 initialCount={action.saveCount ?? 0}
+                disabled={reactionDisabled}
+                disabledReason={reactionDisabledReason}
                 className="px-1 py-0.5 text-xs gap-1"
               />
               <ShareButton
                 actionId={action.id}
                 actionTitle={action.title}
                 count={action.shareCount ?? 0}
+                disabled={reactionDisabled}
+                disabledReason={reactionDisabledReason}
                 className="px-1 py-0.5 text-xs gap-1"
               />
             </div>
