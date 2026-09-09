@@ -425,8 +425,19 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             return (
               <div
                 key={c}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
                 onClick={() => handleCategoryClick(c)}
-                className={`inline-flex items-center gap-1.5 cursor-pointer rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all ${
+                onKeyDown={(e) => {
+                  if (e.target !== e.currentTarget) return;
+
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleCategoryClick(c);
+                  }
+                }}
+                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 ${
                   isSelected
                     ? 'border-neutral-900 bg-neutral-900 text-white shadow-xs'
                     : 'border-neutral-300 bg-white text-neutral-600 hover:border-neutral-400'
