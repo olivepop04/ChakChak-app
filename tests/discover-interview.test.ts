@@ -2,79 +2,99 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  DISCOVER_RECOMMENDATION_REPLY,
   extractAdaptiveAnswers,
+  getDiscoverReply,
   getRemainingQuestionKeys,
   shouldRecommendNow,
 } from '../app/api/ai/discover/interview.ts';
 
-test('프로필에 재능이 있으면 재능 보유 여부를 다시 묻지 않는다', () => {
+test('프로필 재능 유무와 관계없이 첫 질문은 재능 활용 여부다', () => {
   const remaining = getRemainingQuestionKeys({
-    skills: ['사진 촬영'],
-    hasHistory: false,
+    skillsAnswered: false,
     answers: {},
   });
 
+  assert.deepEqual(remaining, ['talent_preference']);
+});
+
+test('재능 활용을 선택하면 재능 질문 뒤 공통 세 질문을 묻는다', () => {
+  const remaining = getRemainingQuestionKeys({
+    skillsAnswered: false,
+    answers: { talentPreference: 'use' },
+  });
+
+  assert.deepEqual(remaining, [
+    'skills',
+    'group_size',
+    'field_preference',
+    'travel_range',
+  ]);
+});
+
+test('재능 미사용을 선택하면 재능 대신 참여 방식을 묻는다', () => {
+  const remaining = getRemainingQuestionKeys({
+    skillsAnswered: false,
+    answers: { talentPreference: 'any' },
+  });
+
+  assert.deepEqual(remaining, [
+    'participation_mode',
+    'group_size',
+    'field_preference',
+    'travel_range',
+  ]);
   assert.equal(remaining.includes('skills'), false);
-  assert.equal(remaining.includes('talent_preference'), true);
 });
 
-test('재능이 없다고 답한 사용자는 재능 활용 선호도 묻지 않는다', () => {
+test('재능 답변을 받으면 신규 회원도 분야 선호를 포함한 공통 질문을 이어간다', () => {
   const remaining = getRemainingQuestionKeys({
-    skills: [],
-    hasHistory: false,
-    answers: {},
-  });
-
-  assert.equal(remaining.includes('skills'), false);
-  assert.equal(remaining.includes('talent_preference'), false);
-});
-
-test('과거 참여 이력이 없으면 기존 분야 유지 여부를 억지로 묻지 않는다', () => {
-  const remaining = getRemainingQuestionKeys({
-    skills: null,
-    hasHistory: false,
-    answers: {},
-  });
-
-  assert.equal(remaining.includes('field_preference'), false);
-});
-
-test('재능을 아직 모르겠다고 답한 같은 대화에서는 재능을 다시 묻지 않는다', () => {
-  const remaining = getRemainingQuestionKeys({
-    skills: null,
     skillsAnswered: true,
-    hasHistory: false,
-    answers: {},
+    answers: { talentPreference: 'use' },
   });
 
-  assert.equal(remaining.includes('skills'), false);
+  assert.deepEqual(remaining, [
+    'group_size',
+    'field_preference',
+    'travel_range',
+  ]);
 });
 
-test('정보가 충분하거나 네 번 답했으면 추천으로 전환한다', () => {
+test('추천은 앞선 정보가 충분해도 다섯 번째 답변 뒤에만 시작한다', () => {
+  assert.equal(shouldRecommendNow({ userTurnCount: 0 }), false);
+  assert.equal(shouldRecommendNow({ userTurnCount: 4 }), false);
+  assert.equal(shouldRecommendNow({ userTurnCount: 5 }), true);
+});
+
+test('추천 전환 때 AI가 만든 다음 질문을 고정 추천 안내로 교체한다', () => {
   assert.equal(
-    shouldRecommendNow({ userTurnCount: 1, enough: true, remainingCount: 2 }),
-    true,
+    getDiscoverReply({
+      recommendNow: true,
+      conversationReply: '활동 장소는 어디까지 이동할 수 있나요?',
+    }),
+    DISCOVER_RECOMMENDATION_REPLY,
   );
   assert.equal(
-    shouldRecommendNow({ userTurnCount: 4, enough: false, remainingCount: 3 }),
-    true,
-  );
-  assert.equal(
-    shouldRecommendNow({ userTurnCount: 0, enough: true, remainingCount: 0 }),
-    true,
+    getDiscoverReply({
+      recommendNow: false,
+      conversationReply: '어떤 방식으로 참여하고 싶으세요?',
+    }),
+    '어떤 방식으로 참여하고 싶으세요?',
   );
 });
 
-test('선택지 답변에서 네 가지 성향을 누적해 읽는다', () => {
+test('선택지 답변에서 참여 방식을 포함한 다섯 가지 성향을 누적해 읽는다', () => {
   const answers = extractAdaptiveAnswers([
-    '재능을 활용하고 싶어요',
+    '재능과 상관없어요',
+    '물건으로',
     '10명 이내가 좋아요',
     '새로운 분야',
     '같은 시·도까지',
   ]);
 
   assert.deepEqual(answers, {
-    talentPreference: 'use',
+    talentPreference: 'any',
+    participationMode: 'goods',
     groupSizePreference: 'small',
     fieldPreference: 'new',
     travelRange: 'province',
