@@ -8,10 +8,16 @@ export const metadata: Metadata = {
   description: '좋은 일을 찾고, 함께하고, 다시 나누는 곳',
 };
 
+/**
+ * maximumScale 을 두지 않습니다 (2026-09-09 회의).
+ *
+ * 전에는 maximumScale: 1 이 있어서 안드로이드에서 두 손가락으로 벌려도
+ * 화면이 커지지 않았습니다. 글자가 작다고 느끼는 사람이 손쓸 방법이 없었습니다.
+ * 확대를 막지 않는 것이 접근성 기준이기도 합니다.
+ */
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   themeColor: '#ffffff',
 };
 
