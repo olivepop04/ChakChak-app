@@ -38,8 +38,13 @@ export default async function FollowersPage({
       {followers.length === 0 ? (
         <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
           <UserRoundX className="h-12 w-12 text-neutral-400 stroke-[1.5]" />
-          <p className="mt-3 text-base font-semibold text-neutral-900">
-            아직 팔로워가 없어요.
+          <p className="mt-3 text-base font-bold text-neutral-900">
+            아직 팔로워가 없어요
+          </p>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500 break-keep">
+            함께한 크루에게 좋은 소감을 남기면,
+            <br />
+            자연스럽게 팔로워가 늘어나요
           </p>
         </div>
       ) : (

@@ -33,8 +33,8 @@ const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 function JoinedFooter({ item }: { item: JoinedActionData }) {
   if (item.status === 'CANCELLED') {
     return (
-      <div className="flex items-center gap-2 w-full">
-        <Link href={`/action/${item.id}`} className={`${secondary} flex-1`}>
+      <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}`} className={secondary}>
           취소 사유 보기
         </Link>
       </div>
@@ -47,8 +47,8 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
       : false;
 
     return (
-      <div className="flex items-center gap-2 w-full">
-        <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
+      <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}/chat`} className={secondary}>
           CREW CHAT
         </Link>
         {!isStarted && item.participationStatus === 'BEFORE_ACTION' && (
@@ -63,8 +63,8 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
   // 헛걸음하게 됩니다. 상태별 가이드대로 CREW CHAT 만 둡니다.
   if (item.status === 'ENDED') {
     return (
-      <div className="flex items-center gap-2 w-full">
-        <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
+      <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}/chat`} className={secondary}>
           CREW CHAT
         </Link>
       </div>
@@ -72,14 +72,17 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
   }
 
   // COMPLETED: 결과가 나왔습니다. 소감은 결과 화면 아래에서 씁니다.
-  // 버튼 두 개를 5:5 로 나란히 둡니다.
+  //
+  // 버튼 크기는 「호스트한 액션」 탭과 맞춥니다 — 내용 너비 · flex-wrap.
+  // 전에는 5:5 로 늘렸는데, 두 탭을 나란히 보면 같은 버튼이 서로 다른
+  // 크기로 보였습니다. 글자 배율을 키우면 이쪽이 줄바꿈으로 안전하게 흐릅니다.
   if (item.status === 'COMPLETED') {
     return (
-      <div className="flex items-center gap-2 w-full">
-        <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
+      <div className="flex flex-wrap gap-1.5">
+        <Link href={`/action/${item.id}/chat`} className={secondary}>
           CREW CHAT
         </Link>
-        <Link href={`/action/${item.id}/result`} className={`${secondary} flex-1`}>
+        <Link href={`/action/${item.id}/result`} className={secondary}>
           결과 보기
         </Link>
       </div>
@@ -88,8 +91,8 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
 
   // 위에서 안 걸린 상태 (지금은 없습니다)
   return (
-    <div className="flex items-center gap-2 w-full">
-      <Link href={`/action/${item.id}/chat`} className={`${secondary} flex-1`}>
+    <div className="flex flex-wrap gap-1.5">
+      <Link href={`/action/${item.id}/chat`} className={secondary}>
         CREW CHAT
       </Link>
     </div>
@@ -261,7 +264,7 @@ export default async function ActivityPage({
       <div className="flex border-b border-neutral-200 px-5">
         {[
           { label: '참여한 액션', href: '/activity', active: !isCreated },
-          { label: '만든 액션', href: '/activity?tab=created', active: isCreated },
+          { label: '호스트한 액션', href: '/activity?tab=created', active: isCreated },
         ].map((t) => (
           <Link
             key={t.href}
@@ -283,7 +286,7 @@ export default async function ActivityPage({
         created.length === 0 ? (
           <EmptyState
             icon="✏️"
-            title="아직 만든 액션이 없어요"
+            title="아직 호스트한 액션이 없어요"
             description="함께할 사람을 모아보세요."
             action={{ label: '액션 만들기', href: '/action/create' }}
           />
