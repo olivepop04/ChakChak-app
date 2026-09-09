@@ -122,7 +122,7 @@ export function ActionCard({
               </div>
 
               {action.summary && (
-                <p className="line-clamp-2 mt-1 text-xs text-neutral-500">
+                <p className="mt-1 text-xs leading-relaxed text-neutral-500">
                   {action.summary}
                 </p>
               )}
@@ -247,12 +247,13 @@ export function ActionCard({
             ))}
           </div>
 
-          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-neutral-900">
+          {/* 고배율에서 잘리지 않게 말줄임 없이 전체 노출. 카드가 길어지는 건 감수 (배율 확대 사용자는 전부 보길 원함) */}
+          <h3 className="text-[15px] font-semibold leading-snug text-neutral-900 break-keep">
             {action.title}
           </h3>
 
           {action.summary && (
-            <p className="line-clamp-2 text-[13px] leading-relaxed text-neutral-500">
+            <p className="text-[13px] leading-relaxed text-neutral-500">
               {action.summary}
             </p>
           )}
@@ -262,8 +263,11 @@ export function ActionCard({
             {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
           </p>
 
-          {/* 3. 인터랙티브 요소들 & 통계 4종 */}
-          <div className="pointer-events-auto mt-1 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
+          {/* 3. 인터랙티브 요소들 & 통계 4종
+              고배율에서 작성자 아이디가 잘리지 않게 하고(말줄임 제거), 한 줄에 못 담으면
+              flex-wrap 으로 통계 4종이 아래 줄로 내려가게 한다. 배율 감지는 필요 없다 —
+              글자가 커지면 자리가 모자라 자동으로 줄바꿈된다. */}
+          <div className="pointer-events-auto mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-2 border-t border-neutral-100 pt-3">
             {/* 작성자 프로필 링크 */}
             <Link
               href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
@@ -271,7 +275,7 @@ export function ActionCard({
               className="pointer-events-auto cursor-pointer flex items-center gap-1.5 min-w-0 flex-1 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
             >
               <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-              <span className="truncate text-xs text-neutral-600">
+              <span className="min-w-0 break-all text-xs text-neutral-600">
                 @{action.owner?.nickname ?? '호스트'}
               </span>
             </Link>
