@@ -2,14 +2,14 @@
  * AI Agent #3 — 대화형 맞춤 추천.
  *
  * AI가 하는 일
- *   1) 서버가 정한 다섯 질문을 사용자 선택에 맞춰 순서대로 묻는다
- *   2) 다섯 답변에서 허용된 추천 조건만 뽑는다
- *   3) 코드가 고른 후보를 설명하는 이유를 쓴다
+ *   1) 다섯 답변에서 허용된 추천 조건만 뽑는다
+ *   2) 코드가 고른 후보를 설명하는 이유를 쓴다
  *
  * 코드가 하는 일
- *   1) 마감·내 액션·이미 참여한 액션을 제외한다
- *   2) 지역과 카테고리를 단계적으로 완화한다
- *   3) 고정 점수로 상위 3개를 고른다
+ *   1) 사용자 선택에 맞춰 다섯 질문과 자연스러운 연결 문장을 고른다
+ *   2) 마감·내 액션·이미 참여한 액션을 제외한다
+ *   3) 지역과 카테고리를 단계적으로 완화한다
+ *   4) 고정 점수로 상위 3개를 고른다
  *
  * AI가 실패해도 고정 질문과 코드 추천은 계속 동작합니다.
  */
@@ -32,7 +32,9 @@ import {
 import { sameProvince, totalGroupSize } from '@/lib/utils/discover-ranking';
 import {
   extractAdaptiveAnswers,
-  getDiscoverReply,
+  getQuestionOptions,
+  getQuestionReply,
+  getRecommendationReply,
   getRemainingQuestionKeys,
   shouldRecommendNow,
   type QuestionKey,
@@ -40,8 +42,8 @@ import {
 import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 
-const CHAT_PROMPT_VERSION = 'discover-chat-v4-fixed-five';
-const REASON_PROMPT_VERSION = 'discover-reason-v4-fixed-five';
+const CHAT_PROMPT_VERSION = 'discover-chat-v5-conversation-copy';
+const REASON_PROMPT_VERSION = 'discover-reason-v5-conversation-copy';
 const MAX_USER_TURNS = 5;
 const PARTICIPATION_MODES = [
   '시간을 내서',
@@ -95,6 +97,10 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 추천 대화 �
 - 서버가 준 남은 질문의 첫 번째 question_key만 사용하세요.
 - 첫 질문은 재능 활용 여부입니다. 활용한다고 답하면 재능을, 아니라고 답하면 참여 방식을 묻습니다.
 - 그 다음 모임 규모, 익숙한 분야/새로운 분야, 이동 가능 범위를 순서대로 묻습니다.
+- 첫 질문에서는 짧게 환영하고 몇 가지 답변으로 잘 맞는 액션을 찾는다는 역할을 알려주세요.
+- 다음 질문에서는 직전 답변을 한 문장으로 자연스럽게 받아준 뒤 질문하세요.
+- 실제 프로필이나 참여 이력에 있는 정보만 개인화에 사용하고, 없는 정보를 아는 것처럼 말하지 마세요.
+- 과도하게 칭찬하지 말고 친절하고 편안하며 신뢰감 있는 어투를 사용하세요.
 - 추상적인 가치관, 뿌듯한 순간, 성격, 일회성/꾸준함은 묻지 마세요.
 - 한 번에 질문은 하나만 하고 선택지는 2~4개만 만드세요.
 - 다섯 번째 답변 전에는 enough를 false로 유지하세요.
@@ -135,60 +141,22 @@ function extractSkillsAnswer(messages: ChatMessage[]): string[] | null {
   return selected.length > 0 ? selected : null;
 }
 
-const QUESTION_OPTIONS: Record<QuestionKey, string[]> = {
-  skills: [
-    '사진·영상·디자인',
-    '글쓰기·SNS 홍보',
-    '요리·운전',
-    '교육·통역',
-    '재능 없음',
-    '아직 모르겠음',
-  ],
-  talent_preference: ['재능을 활용하고 싶어요', '재능과 상관없어요'],
-  participation_mode: ['시간을 내서', '물건으로', '직접 행동으로'],
-  group_size: ['10명 이내가 좋아요', '인원이 많아도 괜찮아요'],
-  field_preference: ['비슷한 분야', '새로운 분야', '둘 다 좋아요'],
-  travel_range: ['선택 지역만', '같은 시·도까지', '지역 상관없음'],
-};
-
-function questionReply(
-  key: QuestionKey,
-  fieldReferenceCategories: Category[],
-  hasHistory: boolean,
-): string {
-  if (key === 'skills') {
-    return '어떤 재능을 활용하고 싶으세요? 가장 가까운 항목을 골라주세요.';
-  }
-  if (key === 'talent_preference') {
-    return '이번에는 가진 재능을 활용하는 액션을 우선해서 찾아볼까요?';
-  }
-  if (key === 'participation_mode') {
-    return '재능과 상관없이 참여한다면 어떤 방식이 가장 편한가요?';
-  }
-  if (key === 'group_size') {
-    return '10명 이내의 작은 모임이 편한가요, 인원이 많아도 괜찮은가요?';
-  }
-  if (key === 'field_preference') {
-    const category = fieldReferenceCategories[0];
-    if (category && hasHistory) {
-      return `최근 ${category} 분야에 참여하셨네요. 비슷한 분야를 이어갈까요, 새로운 분야도 찾아볼까요?`;
-    }
-    if (category) {
-      return `프로필에 ${category} 분야를 관심사로 등록하셨네요. 익숙한 분야를 찾을까요, 새로운 분야에도 도전해볼까요?`;
-    }
-    return '익숙한 분야의 액션을 찾을까요, 새로운 분야에도 도전해볼까요?';
-  }
-  return '활동 장소는 어느 정도까지 이동할 수 있나요?';
-}
-
 function fallbackConversation({
   messages,
+  nickname,
+  answers,
+  profileSkills,
+  selectedSkills,
   fieldReferenceCategories,
   hasHistory,
   profileCategories,
   questionKey,
 }: {
   messages: ChatMessage[];
+  nickname: string;
+  answers: ReturnType<typeof extractAdaptiveAnswers>;
+  profileSkills: readonly string[];
+  selectedSkills: readonly string[];
   fieldReferenceCategories: Category[];
   hasHistory: boolean;
   profileCategories: string[];
@@ -226,23 +194,28 @@ function fallbackConversation({
 
   if (questionKey) {
     return {
-      reply: questionReply(
-        questionKey,
+      reply: getQuestionReply(questionKey, {
+        nickname,
+        answers,
+        profileSkills,
+        selectedSkills,
         fieldReferenceCategories,
         hasHistory,
-      ),
+      }),
       question_key: questionKey,
       enough: false,
-      options: QUESTION_OPTIONS[questionKey],
+      options: getQuestionOptions(questionKey, SKILLS),
       categories,
       participation_mode: participationMode,
     };
   }
 
   return {
-    reply: getDiscoverReply({
-      recommendNow: true,
-      conversationReply: '',
+    reply: getRecommendationReply({
+      nickname,
+      answers,
+      selectedSkills,
+      fieldReferenceCategories,
     }),
     question_key: null,
     enough: true,
@@ -309,6 +282,10 @@ export async function POST(request: Request) {
   const adaptiveAnswers = extractAdaptiveAnswers(userAnswers);
   const inferredSkills = extractSkillsAnswer(messages);
   const effectiveSkills = inferredSkills ?? profile.skills;
+  const selectedSkills =
+    adaptiveAnswers.talentPreference === 'use'
+      ? (inferredSkills ?? profile.skills ?? [])
+      : [];
   const skillsAnswered =
     adaptiveAnswers.talentPreference === 'use' && userTurnCount >= 2;
   const remainingQuestionKeys = getRemainingQuestionKeys({
@@ -346,6 +323,10 @@ export async function POST(request: Request) {
   } catch {
     conversation = fallbackConversation({
       messages,
+      nickname: profile.nickname,
+      answers: adaptiveAnswers,
+      profileSkills: profile.skills ?? [],
+      selectedSkills,
       fieldReferenceCategories,
       hasHistory,
       profileCategories: profile.categories,
@@ -361,18 +342,19 @@ export async function POST(request: Request) {
   if (!recommendNow && chosenQuestionKey) {
     const fallback = fallbackConversation({
       messages,
+      nickname: profile.nickname,
+      answers: adaptiveAnswers,
+      profileSkills: profile.skills ?? [],
+      selectedSkills,
       fieldReferenceCategories,
       hasHistory,
       profileCategories: profile.categories,
       questionKey: chosenQuestionKey,
     });
-    const aiAskedChosenQuestion =
-      conversation.question_key === chosenQuestionKey;
-
     return NextResponse.json({
       done: false,
-      reply: aiAskedChosenQuestion ? conversation.reply : fallback.reply,
-      options: QUESTION_OPTIONS[chosenQuestionKey],
+      reply: fallback.reply,
+      options: getQuestionOptions(chosenQuestionKey, SKILLS),
       questionKey: chosenQuestionKey,
       answeredCount: userTurnCount,
       maxQuestions: MAX_USER_TURNS,
@@ -391,14 +373,20 @@ export async function POST(request: Request) {
 
   const fallback = fallbackConversation({
     messages,
+    nickname: profile.nickname,
+    answers: adaptiveAnswers,
+    profileSkills: profile.skills ?? [],
+    selectedSkills,
     fieldReferenceCategories,
     hasHistory,
     profileCategories: profile.categories,
     questionKey: null,
   });
-  const finalReply = getDiscoverReply({
-    recommendNow: true,
-    conversationReply: conversation.reply || fallback.reply,
+  const finalReply = getRecommendationReply({
+    nickname: profile.nickname,
+    answers: adaptiveAnswers,
+    selectedSkills,
+    fieldReferenceCategories,
   });
   let filterCategories = allowedCategories(conversation.categories);
   if (filterCategories.length === 0) {
