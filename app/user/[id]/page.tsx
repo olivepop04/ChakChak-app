@@ -76,6 +76,7 @@ export default async function UserProfilePage({
         title="호스트한 액션"
         emptyText="아직 호스트한 액션이 없어요."
         actions={created}
+        href={`/user/${id}/created`}
       />
 
       <ProfileActionSection
@@ -83,6 +84,7 @@ export default async function UserProfilePage({
         emptyText="아직 완료한 액션이 없어요."
         description="활동이 끝나고 소감까지 작성한 액션만 보여요."
         actions={joined}
+        href={`/user/${id}/joined`}
       />
     </main>
   );

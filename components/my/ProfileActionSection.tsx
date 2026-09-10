@@ -1,6 +1,4 @@
-'use client';
-
-import { useState } from 'react';
+import Link from 'next/link';
 import { ActionCard } from '@/components/ui/ActionCard';
 import type { ActionCardData } from '@/lib/types/view';
 import { selectProfileActionPreview } from '@/lib/utils/profile-actions';
@@ -10,21 +8,29 @@ export function ProfileActionSection({
   emptyText,
   actions,
   description,
+  href,
 }: {
   title: string;
   emptyText: string;
   actions: ActionCardData[];
   description?: string;
+  href: string;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const visibleActions = selectProfileActionPreview(actions, expanded);
-  const hiddenCount = Math.max(actions.length - 2, 0);
+  const visibleActions = selectProfileActionPreview(actions);
 
   return (
     <section className="mt-7">
-      <h2 className="px-5 pb-1 text-[15px] font-bold text-neutral-900">
-        {title} <span className="text-neutral-400">{actions.length}</span>
-      </h2>
+      <div className="flex items-center justify-between px-5 pb-1">
+        <h2 className="text-[15px] font-bold text-neutral-900">
+          {title} <span className="text-neutral-400">{actions.length}</span>
+        </h2>
+        <Link
+          href={href}
+          className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-900"
+        >
+          모두 보기 ›
+        </Link>
+      </div>
       {description && (
         <p className="px-5 pb-3 text-[11px] text-neutral-400">{description}</p>
       )}
@@ -43,18 +49,6 @@ export function ProfileActionSection({
               showStatus
             />
           ))}
-
-          {hiddenCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setExpanded((current) => !current)}
-              className="mt-1 flex h-11 w-full items-center justify-center rounded-xl border border-neutral-200 bg-white text-[13px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
-            >
-              {expanded
-                ? `${title} 접기 ▲`
-                : `+ 더보기 (${hiddenCount}개 더보기)`}
-            </button>
-          )}
         </div>
       )}
     </section>
