@@ -108,9 +108,8 @@ export default async function HomePage({
           ))}
         </div>
 
-        {/* 정렬 필터 칩 */}
+        {/* 정렬 필터 칩 — 칩이 맨 앞(왼쪽)에서 시작 */}
         <div className="flex items-center gap-2 border-t border-neutral-100 pt-3">
-          <span className="mr-1 text-xs font-semibold text-neutral-400">정렬</span>
           <Link href={makeSortUrl('DEADLINE')} scroll={false}>
             <Chip selected={currentSort === 'DEADLINE'} as="span">
               마감 임박
