@@ -42,6 +42,8 @@ export function UserProfileSummary({
     participatedCount,
     followerCount,
     followingCount,
+    ledHref: `/user/${id}/created`,
+    participatedHref: `/user/${id}/joined`,
     followersHref: `/user/${id}/followers`,
     followingHref: `/user/${id}/following`,
   });
