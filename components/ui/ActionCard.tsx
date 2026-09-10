@@ -65,6 +65,13 @@ export function ActionCard({
   const likeDisabled = reactionDisabled && !action.likedByMe;
   const saveDisabled = reactionDisabled && !action.savedByMe;
 
+  // 공유는 기준이 다릅니다 (2026-09-10 회의).
+  //   가능  ACTIVE · ENDED · COMPLETED  — 끝난 액션의 결과를 보내는 건 오히려 반가운 일
+  //   불가  DRAFT · CANCELLED           — 아직 공개 안 했거나 없던 일이 된 것
+  const shareDisabled =
+    action.status === 'DRAFT' || action.status === 'CANCELLED';
+  const shareDisabledReason = action.status === 'DRAFT' ? 'draft' : 'cancelled';
+
   const primaryCategory =
     action.category ||
     (action.categories && action.categories[0]) ||
@@ -200,8 +207,8 @@ export function ActionCard({
                     actionId={action.id}
                     actionTitle={action.title}
                     count={action.shareCount ?? 0}
-                    disabled={reactionDisabled}
-                    disabledReason={reactionDisabledReason}
+                    disabled={shareDisabled}
+                    disabledReason={shareDisabledReason}
                     className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
@@ -336,8 +343,8 @@ export function ActionCard({
                 actionId={action.id}
                 actionTitle={action.title}
                 count={action.shareCount ?? 0}
-                disabled={reactionDisabled}
-                disabledReason={reactionDisabledReason}
+                disabled={shareDisabled}
+                disabledReason={shareDisabledReason}
                 className="px-1 py-0.5 text-xs gap-1"
               />
             </div>

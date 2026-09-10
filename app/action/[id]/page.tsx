@@ -25,7 +25,7 @@ import {
   timeUntilDeadline,
 } from '@/lib/utils/date';
 import { getActionCta } from '@/lib/utils/action-cta';
-import type { UserSummary, CrewMember } from '@/lib/types/view';
+import type { CrewMember } from '@/lib/types/view';
 
 export default async function ActionDetailPage({
   params,
@@ -51,31 +51,25 @@ export default async function ActionDetailPage({
     action.isOwner ||
     (!!action.myParticipation && action.myParticipation !== 'LEFT');
 
-  let crewOwner: UserSummary | null = null;
   let crew: CrewMember[] = [];
 
   try {
     const res = await getActionCrew(supabase, id, user?.id ?? null);
-    crewOwner = res.owner;
     crew = res.crew;
   } catch {
     // Crew 조회 실패 시 기본값 fallback
   }
 
-  let displayMembers: UserSummary[] = crewOwner ? [crewOwner, ...crew] : crew;
-  if (displayMembers.length === 0 && action.owner) {
-    displayMembers = [
-      {
-        id: action.owner.id,
-        nickname: action.owner.nickname,
-        bio: action.owner.bio ?? null,
-        participatedCount: 0,
-        ledCount: 0,
-        followedByMe: action.followingOwner ?? false,
-      },
-    ];
-  }
-  const summaryMembers = displayMembers.slice(0, 4);
+  /**
+   * 아이콘 줄에는 **크루만** 넣습니다 (2026-09-10 회의).
+   *
+   * 전에는 `[호스트, ...크루]` 로 만들었는데 옆의 숫자(`crewCount`)는 크루만 세서,
+   * 크루가 2명이면 「아이콘 3개 · 2명 참여 중」 이 되어 헷갈렸습니다.
+   * 크루가 없으면 아이콘도 없고 「0명 참여 중」 입니다 — 숫자와 그림이 늘 같습니다.
+   *
+   * 호스트는 크루 전체 목록(`/action/[id]/crew`)에서 「호스트」로 따로 보여줍니다.
+   */
+  const summaryMembers = crew.slice(0, 4);
 
   const deadline = timeUntilDeadline(action.recruitEndAt);
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
@@ -132,6 +126,13 @@ export default async function ActionDetailPage({
   // 이미 누른 것은 풀 수 있어야 합니다 — 막는 것은 새로 누르는 것뿐입니다 (2026-09-10).
   const likeDisabled = reactionDisabled && !action.likedByMe;
   const saveDisabled = reactionDisabled && !action.savedByMe;
+
+  // 공유는 기준이 다릅니다 (2026-09-10 회의).
+  //   가능  ACTIVE · ENDED · COMPLETED  — 끝난 액션의 결과를 보내는 건 오히려 반가운 일
+  //   불가  DRAFT · CANCELLED           — 아직 공개 안 했거나 없던 일이 된 것
+  const shareDisabled =
+    action.status === 'DRAFT' || action.status === 'CANCELLED';
+  const shareDisabledReason = action.status === 'DRAFT' ? 'draft' : 'cancelled';
 
   return (
     <main className="pb-52">
@@ -280,8 +281,8 @@ export default async function ActionDetailPage({
             actionTitle={action.title}
             viewerId={user?.id ?? null}
             count={action.shareCount}
-            disabled={reactionDisabled}
-            disabledReason={reactionDisabledReason}
+            disabled={shareDisabled}
+            disabledReason={shareDisabledReason}
             className="px-1 py-0.5 text-xs gap-1"
           />
         </div>
