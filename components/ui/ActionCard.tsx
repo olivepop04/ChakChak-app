@@ -115,12 +115,9 @@ export function ActionCard({
           {/* 우측 정보 */}
           <div className="flex flex-1 flex-col justify-between min-w-0">
             <div>
-              {/*
-                카테고리 — 썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어납니다.
-                2026-09-10 회의: 「+1」로 뭉치지 않고 이름을 그대로 다 보여줍니다.
-                세로형과 같은 규칙 — 대표는 채운 칩, 나머지는 외곽선 칩.
-                가로형은 폭이 좁아 글자만 한 단계 작게 씁니다.
-              */}
+              {/* 카테고리 1~3개 전부 노출 — 세로형 피드와 동일. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩.
+                  좁은 폭이면 flex-wrap 으로 다음 줄로 내려간다. (대표+n 표기로 되돌리기 쉬움)
+                  썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어난다. 2026-09-10 회의 */}
               <div className="mb-1.5 flex flex-wrap items-center gap-1">
                 {allCategories.map((c, i) => (
                   <span
@@ -153,7 +150,9 @@ export function ActionCard({
               </div>
 
               {action.summary && (
-                <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                // 가로형은 소개글을 2줄까지만, 넘치면 말줄임(…). 전체 내용은 액션 상세에서 본다.
+                // (세로형 피드는 말줄임 없이 전체 노출 — 의도적으로 다르다)
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-500">
                   {action.summary}
                 </p>
               )}
