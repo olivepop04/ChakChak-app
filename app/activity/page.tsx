@@ -13,6 +13,7 @@ import { getMyCreatedActions } from '@/lib/queries/actions';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ParticipationBadge } from '@/components/ui/Badge';
+import { Chip } from '@/components/ui/Chip';
 import { Header } from '@/components/layout/Header';
 import {
   LeaveButton,
@@ -58,25 +59,14 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
     );
   }
 
-  // ENDED: 호스트가 아직 결과를 안 올렸습니다.
-  // 결과가 없는데 「결과 보기」를 띄우면 "아직 결과가 등록되지 않았어요" 화면으로
-  // 헛걸음하게 됩니다. 상태별 가이드대로 CREW CHAT 만 둡니다.
-  if (item.status === 'ENDED') {
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        <Link href={`/action/${item.id}/chat`} className={secondary}>
-          CREW CHAT
-        </Link>
-      </div>
-    );
-  }
-
-  // COMPLETED: 결과가 나왔습니다. 소감은 결과 화면 아래에서 씁니다.
-  //
-  // 버튼 크기는 「호스트한 액션」 탭과 맞춥니다 — 내용 너비 · flex-wrap.
-  // 전에는 5:5 로 늘렸는데, 두 탭을 나란히 보면 같은 버튼이 서로 다른
-  // 크기로 보였습니다. 글자 배율을 키우면 이쪽이 줄바꿈으로 안전하게 흐릅니다.
-  if (item.status === 'COMPLETED') {
+  // ENDED / COMPLETED (소감 작성 필요 · 참여 완료):
+  // 동일한 '소감 작성 필요' 상태에서 일관되게 CREW CHAT 과 결과 보기 버튼을 모두 제공합니다.
+  // ENDED 상태에서 결과를 누르면 "아직 결과가 등록되지 않았어요" 안내 화면으로 연결됩니다.
+  if (
+    item.participationStatus === 'AFTER_ACTION' ||
+    item.status === 'ENDED' ||
+    item.status === 'COMPLETED'
+  ) {
     return (
       <div className="flex flex-wrap gap-1.5">
         <Link href={`/action/${item.id}/chat`} className={secondary}>
@@ -177,13 +167,88 @@ function CreatedFooter({
   );
 }
 
+type CreatedFilter =
+  | 'all'
+  | 'active'
+  | 'ended'
+  | 'completed'
+  | 'draft'
+  | 'cancelled';
+
+type JoinedFilter =
+  | 'all'
+  | 'before'
+  | 'after'
+  | 'completed'
+  | 'cancelled';
+
+const CREATED_FILTERS: { key: CreatedFilter; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'active', label: '모집/진행중' },
+  { key: 'ended', label: '결과작성필요' },
+  { key: 'completed', label: '완료' },
+  { key: 'draft', label: '작성중' },
+  { key: 'cancelled', label: '취소됨' },
+];
+
+const JOINED_FILTERS: { key: JoinedFilter; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'before', label: '참여예정' },
+  { key: 'after', label: '소감작성필요' },
+  { key: 'completed', label: '참여 완료' },
+  { key: 'cancelled', label: '취소됨' },
+];
+
+function filterCreatedAction(a: ActionCardData, f: CreatedFilter): boolean {
+  switch (f) {
+    case 'active':
+      return a.status === 'ACTIVE';
+    case 'ended':
+      return a.status === 'ENDED';
+    case 'completed':
+      return a.status === 'COMPLETED';
+    case 'draft':
+      return a.status === 'DRAFT';
+    case 'cancelled':
+      return a.status === 'CANCELLED';
+    case 'all':
+    default:
+      return true;
+  }
+}
+
+function filterJoinedAction(a: JoinedActionData, f: JoinedFilter): boolean {
+  switch (f) {
+    case 'before':
+      return a.status !== 'CANCELLED' && a.participationStatus === 'BEFORE_ACTION';
+    case 'after':
+      return a.status !== 'CANCELLED' && a.participationStatus === 'AFTER_ACTION';
+    case 'completed':
+      return a.status !== 'CANCELLED' && a.participationStatus === 'ACTUALLY_PARTICIPATED';
+    case 'cancelled':
+      return a.status === 'CANCELLED' || a.participationStatus === 'LEFT';
+    case 'all':
+    default:
+      return true;
+  }
+}
+
 export default async function ActivityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; filter?: string }>;
 }) {
-  const { tab } = await searchParams;
-  const isCreated = tab === 'created';
+  const { tab, filter } = await searchParams;
+  // 기본값(/activity) 및 ?tab=created 는 호스트한 액션, ?tab=joined 는 참여한 액션
+  const isCreated = tab !== 'joined';
+
+  const createdFilter: CreatedFilter = CREATED_FILTERS.some((f) => f.key === filter)
+    ? (filter as CreatedFilter)
+    : 'all';
+
+  const joinedFilter: JoinedFilter = JOINED_FILTERS.some((f) => f.key === filter)
+    ? (filter as JoinedFilter)
+    : 'all';
 
   const supabase = await createClient();
   const {
@@ -237,9 +302,13 @@ export default async function ActivityPage({
     }
   }
 
-  const joined = isCreated ? [] : await getMyJoinedActions(supabase, user.id);
+  // 액션 생성일 최신순 (actions.created_at DESC)
   const created = isCreated ? await getMyCreatedActions(supabase, user.id) : [];
+  // 참여 생성일 최신순 (participations.created_at DESC)
+  const joined = isCreated ? [] : await getMyJoinedActions(supabase, user.id);
 
+  const filteredCreated = created.filter((a) => filterCreatedAction(a, createdFilter));
+  const filteredJoined = joined.filter((a) => filterJoinedAction(a, joinedFilter));
 
   const expiredActiveIds = isCreated
     ? created
@@ -256,15 +325,23 @@ export default async function ActivityPage({
     ? await getShortfallActionIds(supabase, expiredActiveIds)
     : new Set<string>();
 
+  function makeCreatedFilterUrl(key: CreatedFilter) {
+    return key === 'all' ? '/activity' : `/activity?filter=${key}`;
+  }
+
+  function makeJoinedFilterUrl(key: JoinedFilter) {
+    return key === 'all' ? '/activity?tab=joined' : `/activity?tab=joined&filter=${key}`;
+  }
+
   return (
     <main className="pb-24">
       <Header title="내 활동" back backHref="/" sticky />
 
-      {/* 탭 */}
+      {/* 탭: 호스트한 액션 / 참여한 액션 */}
       <div className="flex border-b border-neutral-200 px-5">
         {[
-          { label: '참여한 액션', href: '/activity', active: !isCreated },
-          { label: '호스트한 액션', href: '/activity?tab=created', active: isCreated },
+          { label: '호스트한 액션', href: '/activity', active: isCreated },
+          { label: '참여한 액션', href: '/activity?tab=joined', active: !isCreated },
         ].map((t) => (
           <Link
             key={t.href}
@@ -281,6 +358,43 @@ export default async function ActivityPage({
         ))}
       </div>
 
+      {/* 상태 필터 탭 */}
+      <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto border-b border-neutral-100 bg-white px-5 py-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {isCreated
+          ? CREATED_FILTERS.map((f) => (
+              <Link
+                key={f.key}
+                href={makeCreatedFilterUrl(f.key)}
+                scroll={false}
+                className="shrink-0"
+              >
+                <Chip
+                  selected={createdFilter === f.key}
+                  as="span"
+                  className="whitespace-nowrap px-3.5 py-1.5 text-[12px]"
+                >
+                  {f.label}
+                </Chip>
+              </Link>
+            ))
+          : JOINED_FILTERS.map((f) => (
+              <Link
+                key={f.key}
+                href={makeJoinedFilterUrl(f.key)}
+                scroll={false}
+                className="shrink-0"
+              >
+                <Chip
+                  selected={joinedFilter === f.key}
+                  as="span"
+                  className="whitespace-nowrap px-3.5 py-1.5 text-[12px]"
+                >
+                  {f.label}
+                </Chip>
+              </Link>
+            ))}
+      </div>
+
       {/* 목록 */}
       {isCreated ? (
         created.length === 0 ? (
@@ -290,9 +404,16 @@ export default async function ActivityPage({
             description="함께할 사람을 모아보세요."
             action={{ label: '액션 만들기', href: '/action/create' }}
           />
+        ) : filteredCreated.length === 0 ? (
+          <EmptyState
+            icon="🔍"
+            title="해당 상태의 액션이 없어요"
+            description="다른 상태 필터를 선택해 보세요."
+            action={{ label: '전체 보기', href: '/activity' }}
+          />
         ) : (
           <div className="flex flex-col gap-4 px-5 py-5">
-            {created.map((a) => (
+            {filteredCreated.map((a) => (
               <ActionCard
                 key={a.id}
                 action={a}
@@ -314,9 +435,16 @@ export default async function ActivityPage({
           description="마음에 드는 액션을 찾아보세요."
           action={{ label: '액션 찾아보기', href: '/discover' }}
         />
+      ) : filteredJoined.length === 0 ? (
+        <EmptyState
+          icon="🔍"
+          title="해당 상태의 참여 내역이 없어요"
+          description="다른 상태 필터를 선택해 보세요."
+          action={{ label: '전체 보기', href: '/activity?tab=joined' }}
+        />
       ) : (
         <div className="flex flex-col gap-4 px-5 py-5">
-          {joined.map((a) => (
+          {filteredJoined.map((a) => (
             <div key={a.id} className="relative">
               <ActionCard action={a} footer={<JoinedFooter item={a} />} />
               {a.status !== 'CANCELLED' && (

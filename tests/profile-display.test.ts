@@ -13,8 +13,8 @@ test('프로필 통계는 호스트한 액션을 맨 앞에 두고 참여 문구
     participatedCount: 7,
     followerCount: 2,
     followingCount: 3,
-    ledHref: '/activity?tab=created',
-    participatedHref: '/activity',
+    ledHref: '/activity',
+    participatedHref: '/activity?tab=joined',
     followersHref: '/followers',
     followingHref: '/following',
   });
@@ -22,8 +22,8 @@ test('프로필 통계는 호스트한 액션을 맨 앞에 두고 참여 문구
   assert.deepEqual(
     stats.map(({ label, value, href }) => ({ label, value, href })),
     [
-      { label: '호스트한 액션', value: 4, href: '/activity?tab=created' },
-      { label: '참여한 액션', value: 7, href: '/activity' },
+      { label: '호스트한 액션', value: 4, href: '/activity' },
+      { label: '참여한 액션', value: 7, href: '/activity?tab=joined' },
       { label: '팔로워', value: 2, href: '/followers' },
       { label: '팔로잉', value: 3, href: '/following' },
     ],

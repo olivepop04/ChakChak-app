@@ -75,8 +75,8 @@ export default async function MyPage() {
           participatedCount: profile.participatedCount,
           followerCount: profile.followerCount,
           followingCount: profile.followingCount,
-          ledHref: '/activity?tab=created',
-          participatedHref: '/activity',
+          ledHref: '/activity',
+          participatedHref: '/activity?tab=joined',
           followersHref: `/user/${user.id}/followers`,
           followingHref: `/user/${user.id}/following`,
         })}
