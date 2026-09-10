@@ -50,18 +50,24 @@ export function ActionCard({
     action.recruitClosed ??
     (action.recruitEndAt ? new Date(action.recruitEndAt) < new Date() : false);
 
-  // 취소·종료·완료된 액션은 좋아요·저장·공유를 못 누르게 막는다 (누르면 안내 팝업)
+  // 좋아요·저장: 초안·취소·종료·완료에서 "새로" 누르는 것을 막는다 (기획 결정 2026-09-10).
+  //   이미 누른 것은 풀 수 있어야 한다 — 끝난 액션이 「저장한 액션」에 영영 남아
+  //   목록이 정리 안 되던 문제 때문. 막는 것은 새로 누르는 것뿐이다.
   const reactionDisabled =
+    action.status === 'DRAFT' ||
     action.status === 'CANCELLED' ||
     action.status === 'ENDED' ||
     action.status === 'COMPLETED';
+  // 공유: 초안·취소만 막는다. 종료·완료된 액션도 공유는 가능 (기획 결정 2026-09-10).
+  const shareDisabled =
+    action.status === 'DRAFT' || action.status === 'CANCELLED';
   const reactionDisabledReason =
-    action.status === 'CANCELLED' ? 'cancelled' : 'ended';
+    action.status === 'DRAFT'
+      ? 'draft'
+      : action.status === 'CANCELLED'
+        ? 'cancelled'
+        : 'ended';
 
-  // 다만 **이미 누른 것은 풀 수 있어야 합니다** (2026-09-10).
-  // 저장해 둔 액션이 끝나면 「저장한 액션」에서 뺄 방법이 없어져서,
-  // 목록이 종료된 액션으로만 차고 정리가 안 됐습니다.
-  // 막는 것은 새로 누르는 것뿐입니다.
   const likeDisabled = reactionDisabled && !action.likedByMe;
   const saveDisabled = reactionDisabled && !action.savedByMe;
 
@@ -198,7 +204,7 @@ export function ActionCard({
                     actionId={action.id}
                     actionTitle={action.title}
                     count={action.shareCount ?? 0}
-                    disabled={reactionDisabled}
+                    disabled={shareDisabled}
                     disabledReason={reactionDisabledReason}
                     className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
@@ -334,7 +340,7 @@ export function ActionCard({
                 actionId={action.id}
                 actionTitle={action.title}
                 count={action.shareCount ?? 0}
-                disabled={reactionDisabled}
+                disabled={shareDisabled}
                 disabledReason={reactionDisabledReason}
                 className="px-1 py-0.5 text-xs gap-1"
               />

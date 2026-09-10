@@ -74,7 +74,7 @@ function useOptimisticToggle(
 }
 
 /** 좋아요·저장·공유를 못 누르는 이유. 문구가 달라집니다 */
-export type ReactionDisabledReason = 'cancelled' | 'ended';
+export type ReactionDisabledReason = 'cancelled' | 'ended' | 'draft';
 
 const REACTION_DISABLED_TEXT: Record<
   ReactionDisabledReason,
@@ -86,7 +86,11 @@ const REACTION_DISABLED_TEXT: Record<
   },
   ended: {
     title: '이미 종료된 액션이에요',
-    body: '종료된 액션에는 좋아요·저장·공유를 할 수 없어요.',
+    body: '종료된 액션에는 좋아요·저장을 할 수 없어요.',
+  },
+  draft: {
+    title: '아직 공개 전인 액션이에요',
+    body: '공개하기 전에는 좋아요·저장·공유를 할 수 없어요.',
   },
 };
 
