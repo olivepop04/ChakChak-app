@@ -26,6 +26,7 @@ import { TalentPreferenceEditor } from '@/app/my/_components/TalentPreferenceEdi
 import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
 import { isNicknameTaken, updateProfile } from '@/lib/mutations';
 import { getBioValidationError } from '@/lib/utils/profile-validation';
+import { getSignupProfileSaveError } from '@/lib/utils/signup-completion';
 import {
   CATEGORIES,
   GENDER_LABEL,
@@ -255,13 +256,19 @@ function SignUpForm() {
     if (user) {
       // 공용 함수로 저장합니다. timePrefs 를 넘기면 옛 available_times 도
       // 함께 채워져서, 나중에 F38 화면이 생겨도 이 회원의 설정이 보입니다.
-      await updateProfile(supabase, user.id, {
+      const result = await updateProfile(supabase, user.id, {
         bio,
         categories,
         regions,
         timePrefs,
         skills,
       });
+      const profileSaveError = getSignupProfileSaveError(result);
+      if (profileSaveError) {
+        setBusy(false);
+        setError(profileSaveError);
+        return;
+      }
     }
 
     if (typeof window !== 'undefined') {

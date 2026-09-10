@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { emailExistsByPage } from '../lib/auth/email-availability.ts';
 import { getBioValidationError } from '../lib/utils/profile-validation.ts';
+import { getSignupProfileSaveError } from '../lib/utils/signup-completion.ts';
 
 test('자기소개는 300자까지 허용하고 301자부터 거절한다', () => {
   assert.equal(getBioValidationError('가'.repeat(300)), null);
@@ -51,4 +52,15 @@ test('모든 페이지를 확인해도 없으면 가입 가능한 이메일이�
   }));
 
   assert.equal(exists, false);
+});
+
+test('가입 마지막 단계의 취향 저장 실패 문구를 그대로 사용자에게 전달한다', () => {
+  assert.equal(
+    getSignupProfileSaveError({
+      ok: false,
+      message: '활동 가능 지역 저장에 실패했어요.',
+    }),
+    '활동 가능 지역 저장에 실패했어요.',
+  );
+  assert.equal(getSignupProfileSaveError({ ok: true, data: undefined }), null);
 });

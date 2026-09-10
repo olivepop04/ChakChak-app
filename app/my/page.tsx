@@ -13,33 +13,9 @@ import { getSavedActions } from '@/lib/queries/actions';
 import { Avatar } from '@/components/ui/Avatar';
 import { LogoutButton } from '@/components/ui/LogoutButton';
 import { MySavedSection } from '@/components/my/MySavedSection';
+import { ProfileStats } from '@/components/my/ProfileStats';
 import { Header } from '@/components/layout/Header';
-
-function Stat({
-  value,
-  label,
-  href,
-}: {
-  value: number;
-  label: string;
-  href?: string;
-}) {
-  const inner = (
-    <div className="flex flex-1 flex-col items-center gap-0.5 py-3">
-      <span className="text-[19px] font-bold tabular-nums text-neutral-900">
-        {value}
-      </span>
-      <span className="text-[11px] text-neutral-500">{label}</span>
-    </div>
-  );
-  return href ? (
-    <Link href={href} className="flex flex-1">
-      {inner}
-    </Link>
-  ) : (
-    inner
-  );
-}
+import { buildProfileStats } from '@/lib/utils/profile-display';
 
 export default async function MyPage() {
   const supabase = await createClient();
@@ -93,28 +69,18 @@ export default async function MyPage() {
       </section>
 
       {/* 통계 */}
-      <section className="mx-5 flex rounded-xl border border-neutral-200">
-        <Stat
-          value={profile.participatedCount}
-          label="참여 액션"
-          href="/activity"
-        />
-        <Stat
-          value={profile.ledCount}
-          label="호스트한 액션"
-          href="/activity?tab=created"
-        />
-        <Stat
-          value={profile.followerCount}
-          label="팔로워"
-          href={`/user/${user.id}/followers`}
-        />
-        <Stat
-          value={profile.followingCount}
-          label="팔로잉"
-          href={`/user/${user.id}/following`}
-        />
-      </section>
+      <ProfileStats
+        stats={buildProfileStats({
+          ledCount: profile.ledCount,
+          participatedCount: profile.participatedCount,
+          followerCount: profile.followerCount,
+          followingCount: profile.followingCount,
+          ledHref: '/activity?tab=created',
+          participatedHref: '/activity',
+          followersHref: `/user/${user.id}/followers`,
+          followingHref: `/user/${user.id}/following`,
+        })}
+      />
 
       {/* 관심 카테고리 */}
       {profile.categories.length > 0 && (
@@ -138,11 +104,8 @@ export default async function MyPage() {
       {/* 내가 저장한 액션 */}
       <MySavedSection saved={saved} />
 
-      {/* 계정 설정 */}
+      {/* 설정 */}
       <section className="mt-8">
-        <h2 className="px-5 pb-2 text-[12px] font-semibold tracking-wide text-neutral-400">
-          계정 설정
-        </h2>
         <div className="divide-y divide-neutral-100 border-y border-neutral-100">
           <Link
             href="/my/edit#notification-settings"

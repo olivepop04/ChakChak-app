@@ -8,33 +8,13 @@
  * "참여 예정" 을 노출하면 이 사람이 언제 어디에 갈지가 공개됩니다.
  * getParticipatedActions 가 완료된 것만 돌려주므로 직접 쿼리하지 마세요.
  */
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfile, getParticipatedActions } from '@/lib/queries/profiles';
 import { getPublicActionsByOwner } from '@/lib/queries/actions';
-import { Avatar } from '@/components/ui/Avatar';
-import { FollowButton } from '@/components/ui/ToggleButtons';
 import { Header } from '@/components/layout/Header';
 import { ProfileActionSection } from '@/components/my/ProfileActionSection';
-
-function Stat({ value, label, href }: { value: number; label: string; href?: string }) {
-  const inner = (
-    <div className="flex flex-1 flex-col items-center gap-0.5 py-3">
-      <span className="text-[19px] font-bold tabular-nums text-neutral-900">
-        {value}
-      </span>
-      <span className="text-[11px] text-neutral-500">{label}</span>
-    </div>
-  );
-  return href ? (
-    <Link href={href} className="flex flex-1">
-      {inner}
-    </Link>
-  ) : (
-    inner
-  );
-}
+import { UserProfileSummary } from './UserProfileSummary';
 
 export default async function UserProfilePage({
   params,
@@ -61,50 +41,18 @@ export default async function UserProfilePage({
     <main className="pb-24">
       <Header title="프로필" back sticky />
 
-      <section className="flex items-center gap-4 px-5 py-5">
-        <Avatar name={profile.nickname} size="lg" />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[17px] font-bold text-neutral-900">
-            @{profile.nickname}
-          </p>
-          {profile.bio && (
-            <p className="mt-1 line-clamp-3 text-[13px] leading-relaxed text-neutral-500">
-              {profile.bio}
-            </p>
-          )}
-        </div>
-        {profile.isMe ? (
-          <Link
-            href="/my/edit"
-            className="shrink-0 rounded-lg border border-neutral-300 px-3 py-2 text-[12px] font-semibold text-neutral-700"
-          >
-            프로필 수정
-          </Link>
-        ) : (
-          user && (
-            <FollowButton
-              targetUserId={profile.id}
-              initialFollowing={profile.followedByMe}
-              className="shrink-0"
-            />
-          )
-        )}
-      </section>
-
-      <section className="mx-5 flex rounded-xl border border-neutral-200">
-        <Stat value={profile.participatedCount} label="참여 액션" />
-        <Stat value={profile.ledCount} label="호스트한 액션" />
-        <Stat
-          value={profile.followerCount}
-          label="팔로워"
-          href={`/user/${id}/followers`}
-        />
-        <Stat
-          value={profile.followingCount}
-          label="팔로잉"
-          href={`/user/${id}/following`}
-        />
-      </section>
+      <UserProfileSummary
+        id={profile.id}
+        nickname={profile.nickname}
+        bio={profile.bio}
+        isMe={profile.isMe}
+        canFollow={Boolean(user)}
+        followedByMe={profile.followedByMe}
+        ledCount={profile.ledCount}
+        participatedCount={profile.participatedCount}
+        initialFollowerCount={profile.followerCount}
+        followingCount={profile.followingCount}
+      />
 
       {profile.categories.length > 0 && (
         <section className="mt-7 px-5">
