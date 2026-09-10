@@ -73,8 +73,15 @@ function useOptimisticToggle(
   return { on, count, busy, handle };
 }
 
-/** 좋아요·저장·공유를 못 누르는 이유. 문구가 달라집니다 */
-export type ReactionDisabledReason = 'cancelled' | 'ended';
+/**
+ * 좋아요·저장·공유를 못 누르는 이유. 문구가 달라집니다.
+ *
+ * 2026-09-10 회의로 **공유만 규칙이 달라졌습니다.**
+ *   공유 가능  ACTIVE · ENDED · COMPLETED
+ *   공유 불가  DRAFT · CANCELLED
+ * 그래서 종료된 액션 문구에서는 공유를 빼야 맞습니다 — 종료 뒤에도 공유는 됩니다.
+ */
+export type ReactionDisabledReason = 'cancelled' | 'ended' | 'draft';
 
 const REACTION_DISABLED_TEXT: Record<
   ReactionDisabledReason,
@@ -86,7 +93,11 @@ const REACTION_DISABLED_TEXT: Record<
   },
   ended: {
     title: '이미 종료된 액션이에요',
-    body: '종료된 액션에는 좋아요·저장·공유를 할 수 없어요.',
+    body: '종료된 액션에는 좋아요·저장을 새로 할 수 없어요. 공유는 할 수 있어요.',
+  },
+  draft: {
+    title: '아직 공개하지 않은 액션이에요',
+    body: '공개한 뒤에 공유할 수 있어요.',
   },
 };
 
