@@ -115,12 +115,15 @@ export default async function ActionDetailPage({
       ? action.categories
       : [action.category];
 
-  // 취소·종료·완료된 액션은 좋아요·저장·공유를 못 누르게 막는다 (누르면 안내 팝업)
+  // 좋아요·저장: 초안·취소·종료·완료된 액션에서 "새로" 누르는 것을 막는다 (누르면 안내 팝업).
+  // 공유: 초안·취소만 막는다 — 종료·완료된 액션도 공유는 가능 (기획 결정 2026-09-10).
   const reactionDisabled =
     action.status === 'DRAFT' ||
     action.status === 'CANCELLED' ||
     action.status === 'ENDED' ||
     action.status === 'COMPLETED';
+  const shareDisabled =
+    action.status === 'DRAFT' || action.status === 'CANCELLED';
   const reactionDisabledReason =
     action.status === 'DRAFT'
       ? 'draft'
@@ -131,13 +134,6 @@ export default async function ActionDetailPage({
   // 이미 누른 것은 풀 수 있어야 합니다 — 막는 것은 새로 누르는 것뿐입니다 (2026-09-10).
   const likeDisabled = reactionDisabled && !action.likedByMe;
   const saveDisabled = reactionDisabled && !action.savedByMe;
-
-  // 공유는 기준이 다릅니다 (2026-09-10 회의).
-  //   가능  ACTIVE · ENDED · COMPLETED  — 끝난 액션의 결과를 보내는 건 오히려 반가운 일
-  //   불가  DRAFT · CANCELLED           — 아직 공개 안 했거나 없던 일이 된 것
-  const shareDisabled =
-    action.status === 'DRAFT' || action.status === 'CANCELLED';
-  const shareDisabledReason = action.status === 'DRAFT' ? 'draft' : 'cancelled';
 
   return (
     <main className="pb-52">
@@ -287,7 +283,7 @@ export default async function ActionDetailPage({
             viewerId={user?.id ?? null}
             count={action.shareCount}
             disabled={shareDisabled}
-            disabledReason={shareDisabledReason}
+            disabledReason={reactionDisabledReason}
             className="px-1 py-0.5 text-xs gap-1"
           />
         </div>
