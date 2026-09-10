@@ -49,6 +49,8 @@ function SignUpForm() {
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  /** 계정을 이미 만들었는가. 취향 저장만 실패했을 때 다시 누를 수 있게 합니다 */
+  const [accountCreated, setAccountCreated] = useState(false);
 
   // 1단계
   const [email, setEmail] = useState('');
@@ -229,23 +231,32 @@ function SignUpForm() {
     setBusy(true);
     const supabase = createClient();
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        // 이 값들을 DB 트리거가 읽어서 profiles 행을 만듭니다
-        data: { name: name.trim(), nickname: nickname.trim(), gender },
-      },
-    });
+    // 계정은 한 번만 만듭니다.
+    //
+    // 아래 취향 저장이 실패하면 화면에 머무는데, 그때 버튼을 다시 누르면
+    // signUp 이 "이미 가입된 이메일" 로 막혀서 빠져나갈 길이 없어집니다.
+    // 계정이 이미 만들어졌으면 이 단계를 건너뛰고 취향 저장만 다시 합니다.
+    if (!accountCreated) {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          // 이 값들을 DB 트리거가 읽어서 profiles 행을 만듭니다
+          data: { name: name.trim(), nickname: nickname.trim(), gender },
+        },
+      });
 
-    if (signUpError) {
-      setBusy(false);
-      setError(
-        signUpError.message.includes('already')
-          ? '이미 가입된 이메일이에요.'
-          : '가입에 실패했어요. 잠시 후 다시 시도해주세요.',
-      );
-      return;
+      if (signUpError) {
+        setBusy(false);
+        setError(
+          signUpError.message.includes('already')
+            ? '이미 가입된 이메일이에요.'
+            : '가입에 실패했어요. 잠시 후 다시 시도해주세요.',
+        );
+        return;
+      }
+
+      setAccountCreated(true);
     }
 
     // 트리거가 만들지 못하는 취향 정보는 여기서 채웁니다
