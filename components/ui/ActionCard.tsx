@@ -52,11 +52,16 @@ export function ActionCard({
 
   // 취소·종료·완료된 액션은 좋아요·저장·공유를 못 누르게 막는다 (누르면 안내 팝업)
   const reactionDisabled =
+    action.status === 'DRAFT' ||
     action.status === 'CANCELLED' ||
     action.status === 'ENDED' ||
     action.status === 'COMPLETED';
   const reactionDisabledReason =
-    action.status === 'CANCELLED' ? 'cancelled' : 'ended';
+    action.status === 'DRAFT'
+      ? 'draft'
+      : action.status === 'CANCELLED'
+        ? 'cancelled'
+        : 'ended';
 
   // 다만 **이미 누른 것은 풀 수 있어야 합니다** (2026-09-10).
   // 저장해 둔 액션이 끝나면 「저장한 액션」에서 뺄 방법이 없어져서,
