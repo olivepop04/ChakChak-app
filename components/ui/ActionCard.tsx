@@ -142,7 +142,9 @@ export function ActionCard({
               </div>
 
               {action.summary && (
-                <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                // 가로형은 소개글을 2줄까지만, 넘치면 말줄임(…). 전체 내용은 액션 상세에서 본다.
+                // (세로형 피드는 말줄임 없이 전체 노출 — 의도적으로 다르다)
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-500">
                   {action.summary}
                 </p>
               )}
