@@ -97,7 +97,7 @@ const REACTION_DISABLED_TEXT: Record<
   },
   draft: {
     title: '아직 공개하지 않은 액션이에요',
-    body: '공개한 뒤에 공유할 수 있어요.',
+    body: '공개한 뒤에 좋아요·저장·공유를 할 수 있어요.',
   },
 };
 

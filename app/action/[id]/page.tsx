@@ -117,11 +117,16 @@ export default async function ActionDetailPage({
 
   // 취소·종료·완료된 액션은 좋아요·저장·공유를 못 누르게 막는다 (누르면 안내 팝업)
   const reactionDisabled =
+    action.status === 'DRAFT' ||
     action.status === 'CANCELLED' ||
     action.status === 'ENDED' ||
     action.status === 'COMPLETED';
   const reactionDisabledReason =
-    action.status === 'CANCELLED' ? 'cancelled' : 'ended';
+    action.status === 'DRAFT'
+      ? 'draft'
+      : action.status === 'CANCELLED'
+        ? 'cancelled'
+        : 'ended';
 
   // 이미 누른 것은 풀 수 있어야 합니다 — 막는 것은 새로 누르는 것뿐입니다 (2026-09-10).
   const likeDisabled = reactionDisabled && !action.likedByMe;
