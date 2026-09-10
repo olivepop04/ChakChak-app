@@ -73,7 +73,6 @@ export function ActionCard({
     action.categories && action.categories.length > 0
       ? action.categories
       : [primaryCategory];
-  const extraCount = allCategories.length - 1;
 
   if (variant === 'horizontal') {
     return (
@@ -109,16 +108,26 @@ export function ActionCard({
           {/* 우측 정보 */}
           <div className="flex flex-1 flex-col justify-between min-w-0">
             <div>
-              {/* 카테고리 — 썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어남. 좁은 폭이라 대표+n 형태 유지 */}
+              {/*
+                카테고리 — 썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어납니다.
+                2026-09-10 회의: 「+1」로 뭉치지 않고 이름을 그대로 다 보여줍니다.
+                세로형과 같은 규칙 — 대표는 채운 칩, 나머지는 외곽선 칩.
+                가로형은 폭이 좁아 글자만 한 단계 작게 씁니다.
+              */}
               <div className="mb-1.5 flex flex-wrap items-center gap-1">
-                <span className="inline-flex items-center whitespace-nowrap rounded-full bg-neutral-900 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                  {primaryCategory}
-                </span>
-                {extraCount > 0 && (
-                  <span className="inline-flex items-center whitespace-nowrap rounded-full border border-neutral-300 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
-                    +{extraCount}
+                {allCategories.map((c, i) => (
+                  <span
+                    key={c}
+                    className={cn(
+                      'inline-flex items-center whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                      i === 0
+                        ? 'bg-neutral-900 text-white'
+                        : 'border border-neutral-300 text-neutral-500',
+                    )}
+                  >
+                    {c}
                   </span>
-                )}
+                ))}
               </div>
 
               {/* 상태 뱃지 + 제목 수평(인라인) 배치 */}

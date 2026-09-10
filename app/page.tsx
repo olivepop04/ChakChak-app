@@ -108,9 +108,11 @@ export default async function HomePage({
           ))}
         </div>
 
-        {/* 정렬 필터 칩 */}
+        {/*
+          정렬 칩 — 2026-09-10 회의로 앞의 「정렬」 라벨을 뺐습니다.
+          칩 이름만으로 무엇인지 알 수 있어서 라벨이 자리만 차지했습니다.
+        */}
         <div className="flex items-center gap-2 border-t border-neutral-100 pt-3">
-          <span className="mr-1 text-xs font-semibold text-neutral-400">정렬</span>
           <Link href={makeSortUrl('DEADLINE')} scroll={false}>
             <Chip selected={currentSort === 'DEADLINE'} as="span">
               마감 임박
