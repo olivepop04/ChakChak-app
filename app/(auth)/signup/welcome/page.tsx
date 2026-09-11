@@ -1,8 +1,19 @@
 import Link from 'next/link';
 
-export default function SignupWelcomePage() {
+import { getSignupWelcomeReturnPath } from '../../auth-navigation';
+
+export default async function SignupWelcomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
+  const { next } = await searchParams;
+  const returnPath = getSignupWelcomeReturnPath(
+    Array.isArray(next) ? next[0] : (next ?? null),
+  );
+
   return (
-    <main className="flex min-h-dvh flex-col px-6 pb-28 pt-20">
+    <main className="flex min-h-dvh flex-col px-6 pb-28 pt-10">
       <div className="flex flex-col items-center text-center">
         <span className="text-5xl" aria-hidden="true">
           🎉
@@ -20,7 +31,15 @@ export default function SignupWelcomePage() {
         </p>
       </div>
 
-      <div className="mt-auto flex flex-col gap-2 pt-12">
+      <div className="mt-auto flex flex-col gap-2 pt-6">
+        {returnPath ? (
+          <Link
+            href={returnPath}
+            className="flex h-13 w-full items-center justify-center rounded-xl border border-neutral-900 bg-white px-5 text-[15px] font-semibold text-neutral-900 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+          >
+            방금 보던 액션으로
+          </Link>
+        ) : null}
         <Link
           href="/action/create"
           className="flex h-13 w-full items-center justify-center rounded-xl bg-neutral-900 px-5 text-[15px] font-semibold text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
