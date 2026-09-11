@@ -360,8 +360,10 @@ export default async function ActionDetailPage({
       </div>
 
       {/* 하단 고정 버튼 */}
-      {/* bottom-14 = 하단 탭 위로 띄웁니다. 이 화면은 탭이 보입니다 */}
-      <div className="fixed inset-x-0 bottom-14 z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
+      {/* 하단 탭(56px) 위로 띄웁니다. 이 화면은 탭이 보입니다.
+          아이폰 홈 인디케이터(safe-area)만큼 탭이 56px보다 커지므로 그만큼 더해서 띄웁니다.
+          ChatBoard.tsx 하단 버튼과 같은 계산입니다. */}
+      <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
         {cta.type === 'host_ended_write_result' ? (
           <div className="flex w-full items-center gap-2">
             <Link
