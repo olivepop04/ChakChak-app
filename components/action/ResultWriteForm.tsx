@@ -4,7 +4,7 @@
  * 집계 숫자는 자동으로 계산된 값이라 수정할 수 없습니다.
  * 호스트가 채우는 건 추가 내용 · 사진 · 호스트의 한마디 세 가지입니다.
  *
- * ★ 사진은 최소 1장이 필수입니다 (DB CHECK 로도 막혀 있습니다).
+ * ★ 임시저장은 사진 없이도 가능하고, 공개할 때 completeAction 이 사진 최소 1장을 검사합니다.
  * ★ "결과 공개하기" 를 누르면 completeAction 이 상태를 COMPLETED 로 바꾸고
  *   참여자 전원에게 알림을 보냅니다. 알림은 따로 만들 필요가 없습니다.
  */
@@ -38,6 +38,27 @@ export function ResultWriteForm({
   const [ownerVoice, setOwnerVoice] = useState(initial?.ownerVoice ?? '');
   const [busy, setBusy] = useState(false);
 
+  async function handleSave() {
+    if (busy) return;
+
+    setBusy(true);
+    const supabase = createClient();
+    const saved = await saveActionResult(supabase, actionId, {
+      content,
+      imageUrls,
+      ownerVoice,
+    });
+
+    if (!saved.ok) {
+      toast(saved.message, 'error');
+      setBusy(false);
+      return;
+    }
+
+    toast('결과를 임시저장했어요.', 'success');
+    setBusy(false);
+  }
+
   async function handlePublish() {
     if (busy) return;
 
@@ -50,8 +71,7 @@ export function ResultWriteForm({
     const supabase = createClient();
 
     // 결과를 먼저 저장하고, 그 다음에 상태를 바꿉니다.
-    // completeAction 이 "결과가 없으면" 거절하기 때문에 순서가 중요합니다.
-    // 사진 장수 검사는 saveActionResult 안에 있습니다.
+    // completeAction 이 결과 사진 최소 1장을 최종 검사하므로 순서가 중요합니다.
     const saved = await saveActionResult(supabase, actionId, {
       content,
       imageUrls,
@@ -160,15 +180,28 @@ export function ResultWriteForm({
       </label>
 
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
-        <Button
-          type="button"
-          size="lg"
-          fullWidth
-          loading={busy}
-          onClick={handlePublish}
-        >
-          결과 공개하기
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            onClick={handleSave}
+            loading={busy}
+            className="shrink-0 min-w-[76px] whitespace-nowrap flex-row"
+          >
+            저장
+          </Button>
+          <Button
+            type="button"
+            size="lg"
+            fullWidth
+            onClick={handlePublish}
+            loading={busy}
+            className="shrink flex-1 min-w-0 whitespace-nowrap flex-row"
+          >
+            결과 공개하기
+          </Button>
+        </div>
         <p className="mt-2 text-center text-[11px] text-neutral-400">
           공개하면 참여한 크루들에게 알림이 가고, 소감을 남길 수 있게 돼요.
         </p>
