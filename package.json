@@ -11,8 +11,7 @@
     "typecheck": "tsc --noEmit",
     "verify:db": "node --env-file=.env.local scripts/verify-db.mjs",
     "seed": "node --env-file=.env.local scripts/seed.mjs",
-    "seed:clean": "node --env-file=.env.local scripts/seed.mjs --clean",
-    "seed:101": "node --env-file=.env.local scripts/seed_101_demo.mjs"
+    "seed:clean": "node --env-file=.env.local scripts/seed.mjs --clean"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
