@@ -83,7 +83,7 @@ export default async function WelcomePage({
       </p>
 
       {/* 하단 고정 버튼 (action/[id]/page.tsx의 크루 챗 버튼과 같은 위치 및 간격) */}
-      <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
         <Link
           href={`/action/${id}/chat`}
           className="flex min-h-14 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-base font-bold text-white shadow-sm transition-colors active:bg-neutral-800"
