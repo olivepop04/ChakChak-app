@@ -62,19 +62,31 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 `crewCount` 를 쓰면 됩니다. 물품 수량을 크루끼리 숨긴 이유는 누가 얼마나 냈는지
 서로 비교하게 되기 때문입니다 (`supabase/07_update.sql`).
 
-**4. 데이터는 공용 함수로만** — 아래 5번 참고.
+**4. 「참여한 액션」 은 두 곳에서 다른 것을 셉니다** — 이름을 갈라 뒀습니다 (2026-09-11).
 
-**5. 진행률은 뷰에서 읽으세요** — `action_item_progress`. 카드마다 합계 쿼리를 돌리면 피드에서 쿼리가 수십 번 나갑니다. (`lib/queries/`가 이미 그렇게 하고 있습니다)
+| 어디 | 이름 | 세는 것 |
+|---|---|---|
+| Activity 탭 | **참여한 액션** | 참여 예정 + 소감작성필요 + 참여 완료 + 취소됨 (전부) |
+| 프로필 통계 | **참여 완료 액션** | 소감까지 쓴 것(`ACTUALLY_PARTICIPATED`)만 |
 
-**6. 뷰에서 온 값은 타입이 전부 `| null`입니다** — Postgres가 뷰의 NOT NULL 여부를 보장하지 못해서, 원본이 NOT NULL이어도 생성된 타입은 nullable이 됩니다. 실제로 비는 일은 없지만 타입 검사는 통과해야 하니 `?? 기본값`으로 받으세요. 이미 `lib/queries/`에서 처리했으니 화면에서는 신경 쓰지 않아도 됩니다.
+전에는 둘 다 「참여한 액션」 이라, 참여 예정만 있는 사람이
+**목록에는 1개인데 통계는 0** 인 화면을 보고 버그로 신고했습니다. 버그가 아니라 이름 문제였습니다.
+통계 라벨은 `lib/utils/profile-display.ts` 의 `buildProfileStats` 한 곳에서 나옵니다 —
+내 프로필과 타인 프로필이 같은 함수를 씁니다.
 
-**7. DB 타입 이름은 `lib/types/db.ts`에서 가져오세요** — `database.ts`는 자동 생성 파일이라 스키마를 바꿀 때마다 통째로 덮어써집니다. 손으로 아무것도 적지 마세요.
+**5. 데이터는 공용 함수로만** — 아래 6번 참고.
+
+**6. 진행률은 뷰에서 읽으세요** — `action_item_progress`. 카드마다 합계 쿼리를 돌리면 피드에서 쿼리가 수십 번 나갑니다. (`lib/queries/`가 이미 그렇게 하고 있습니다)
+
+**7. 뷰에서 온 값은 타입이 전부 `| null`입니다** — Postgres가 뷰의 NOT NULL 여부를 보장하지 못해서, 원본이 NOT NULL이어도 생성된 타입은 nullable이 됩니다. 실제로 비는 일은 없지만 타입 검사는 통과해야 하니 `?? 기본값`으로 받으세요. 이미 `lib/queries/`에서 처리했으니 화면에서는 신경 쓰지 않아도 됩니다.
+
+**8. DB 타입 이름은 `lib/types/db.ts`에서 가져오세요** — `database.ts`는 자동 생성 파일이라 스키마를 바꿀 때마다 통째로 덮어써집니다. 손으로 아무것도 적지 마세요.
 
 ```ts
 import type { ActionRow, ProfileRow } from '@/lib/types/db';
 ```
 
-**8. 여러 행을 한 번에 insert할 때 DB 기본값이 안 먹습니다** — PostgREST가 컬럼 목록을 하나로 합쳐서, 어떤 행에만 없는 키를 "생략"이 아니라 **명시적 NULL**로 보냅니다. `DEFAULT`가 적용되지 않아 NOT NULL 위반이 납니다.
+**9. 여러 행을 한 번에 insert할 때 DB 기본값이 안 먹습니다** — PostgREST가 컬럼 목록을 하나로 합쳐서, 어떤 행에만 없는 키를 "생략"이 아니라 **명시적 NULL**로 보냅니다. `DEFAULT`가 적용되지 않아 NOT NULL 위반이 납니다.
 
 ```ts
 // ❌ 두 번째 행의 gender_requirement 가 NULL 로 전송되어 실패
@@ -86,7 +98,7 @@ await supabase.from('action_items').insert([
 
 여러 행을 넣을 때는 **모든 컬럼을 빠짐없이 채우세요.** 모집 항목은 `saveActionItems()`가 이미 처리합니다.
 
-**9. 공개된 액션에 `saveActionItems()` 를 부르면 안 됩니다** — 그 함수는 "전부 지우고 다시 넣기" 방식입니다.
+**10. 공개된 액션에 `saveActionItems()` 를 부르면 안 됩니다** — 그 함수는 "전부 지우고 다시 넣기" 방식입니다.
 
 `participation_items` 가 `ON DELETE CASCADE` 라, 항목을 지우면 **그 항목을 고른 크루들의 참여 기록이 함께 사라집니다.** 에러도 나지 않습니다.
 
@@ -101,7 +113,7 @@ await addActionItems(supabase, actionId, newItems);
 DB 트리거(`supabase/10`)가 막아주지만, **애초에 맞는 함수를 쓰세요.**
 DRAFT 는 무엇이든 가능하고, 공개된 뒤에는 수정·삭제가 거절됩니다.
 
-**10. `profiles.skills` 는 `null` 과 빈 배열이 다릅니다**
+**11. `profiles.skills` 는 `null` 과 빈 배열이 다릅니다**
 
 ```
 null      아직 안 물어봤음  → AI 가 물어봐도 됨
@@ -112,7 +124,7 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 `?? []` 로 받으면 이 구분이 사라져서, **재능이 없는 사람에게 AI 가 계속 재능을 묻습니다.**
 재능은 자유 입력이 아니라 `lib/constants` 의 `SKILLS` 목록에서 고릅니다.
 
-**11. 취소와 조기 종료는 다른 일입니다** — 상태도 카운팅도 다릅니다.
+**12. 취소와 조기 종료는 다른 일입니다** — 상태도 카운팅도 다릅니다.
 
 | 언제 | 무엇을 쓰나 | 결과 | 내가 만든 액션에 |
 |---|---|---|---|
@@ -132,9 +144,9 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 처음엔 크루챗에만 남겼는데, 크루챗은 참여한 사람만 읽을 수 있어서
 액션 상세 상단에 띄울 수가 없었습니다. 화면에서는 `action.earlyEndReason` 을 쓰세요.
 
-다만 **버튼을 고를 때는 쓰면 안 됩니다.** 사유를 띄우는 용도일 뿐입니다 — 아래 13번.
+다만 **버튼을 고를 때는 쓰면 안 됩니다.** 사유를 띄우는 용도일 뿐입니다 — 아래 14번.
 
-**12. 액션은 카테고리를 여러 개 가집니다** — `category` 를 직접 쓰지 마세요.
+**13. 액션은 카테고리를 여러 개 가집니다** — `category` 를 직접 쓰지 마세요.
 
 ```
 categories  ['환경','교육']   ← 진짜 값. 1~3개
@@ -160,7 +172,7 @@ DB 가 **1~3개 · 중복 금지 · 목록에 있는 값만** 을 막습니다. 
 > 화면 작업이 다 끝나면 `category` 컬럼을 지웁니다. 그때까지는 두 값이
 > 트리거로 붙어 있어서, 아직 안 고친 화면도 안 깨집니다.
 
-**13. 액션 상세 맨 아래 큰 버튼은 `getActionCta()` 가 정합니다** — 화면에서 if 를 쌓지 마세요.
+**14. 액션 상세 맨 아래 큰 버튼은 `getActionCta()` 가 정합니다** — 화면에서 if 를 쌓지 마세요.
 
 ```ts
 import { getActionCta } from '@/lib/utils/action-cta';
@@ -186,7 +198,7 @@ const cta = getActionCta({
 | 그 밖 | 활동 끝남 / 모집 마감 / 정원 참 | 각각 다른 안내 문구 |
 | 그 밖 | 모집 중 | `참여하기` |
 
-**`earlyEndReason` 이 있다고 갈래를 나누지 마세요.** 조기 종료도 결과를 씁니다(규칙 11).
+**`earlyEndReason` 이 있다고 갈래를 나누지 마세요.** 조기 종료도 결과를 씁니다(규칙 12).
 2026-09-08에 여기서 갈래가 갈려서, 배지는 "결과 작성 필요" 인데 누를 것이 없는 화면이
 나온 적이 있습니다. `tests/action-cta.test.ts` 가 이 표를 그대로 지키고 있습니다.
 
@@ -292,11 +304,17 @@ const res = await joinAction(supabase, actionId, items);
 if (!res.ok) { setError(res.message); return; }
 ```
 
-`joinAction` · `leaveAction` · `leaveActionWithReason` · `submitCrewVoice` ·
+`joinAction` · `leaveActionWithReason` · `submitCrewVoice` ·
 `postChatMessage` · `deleteChatMessage` ·
 `saveActionDraft` · `updateActionText` · `saveActionItems` · **`addActionItems`** · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · **`endActionEarly`** · `deleteDraft` ·
 `updateProfile` · `isNicknameTaken` · `updateNotifySettings` ·
 `toggleLike` · `toggleSave` · `toggleFollow` · `shareToUser` · `markNotificationRead`
+
+**나가기는 `leaveActionWithReason` 하나뿐입니다.** 사유 없이 나가는 `leaveAction` 은
+2026-09-11에 뺐습니다 — 그 함수는 `participations` 를 `LEFT` 로 바꾸기만 해서
+크루챗에 사유도 안 남고 **호스트에게 알림도 가지 않았습니다.** 호스트는 크루가 빠진 것을
+모른 채 모집 현황만 줄어드는 것을 보게 됩니다. DB 의 `leave_action` RPC 는
+시간 검사 테스트(`verify:db`)가 쓰고 있어 남겨 뒀습니다.
 
 **필요한 함수가 없으면 직접 추가하지 말고 민호에게 요청하세요.** `lib/`은 공유 구역입니다.
 

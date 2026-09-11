@@ -14,11 +14,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
+import { getLoginNotice } from '@/lib/utils/auth-notice';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = safeNextPath(searchParams.get('next'));
+  // middleware 가 막아서 온 경우, 왜 로그인 화면이 떴는지 한 줄 알려줍니다.
+  // 그냥 눌러서 온 경우(next 가 '/')에는 null 이라 아무것도 안 나옵니다. (2026-09-11 회의)
+  const notice = getLoginNotice(next);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,6 +62,12 @@ function LoginForm() {
           <br />
           함께하고, 다시 나누는 곳
         </p>
+
+        {notice && (
+          <p className="mt-5 rounded-xl bg-neutral-100 px-4 py-3 text-[13px] leading-relaxed text-neutral-700">
+            {notice}
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">

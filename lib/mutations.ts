@@ -405,17 +405,14 @@ export async function joinAction(
   return { ok: true, data: data as string };
 }
 
-/** 나가기. 활동 시작 전에만 가능하다. */
-export async function leaveAction(
-  supabase: DB,
-  actionId: string,
-): Promise<Result> {
-  const { error } = await supabase.rpc('leave_action', {
-    p_action_id: actionId,
-  });
-  if (error) return { ok: false, message: toMessage(error, '나가기에 실패했어요.') };
-  return { ok: true, data: undefined };
-}
+// 사유 없이 나가는 leaveAction() 은 뺐습니다 (2026-09-11).
+//
+// 그 함수는 participations 를 LEFT 로 바꾸기만 해서,
+// 크루챗에 사유도 안 남고 **호스트에게 알림도 가지 않았습니다.**
+// 호스트는 크루가 빠진 것을 모른 채 모집 현황만 줄어드는 것을 보게 됩니다.
+//
+// 나가기는 아래 leaveActionWithReason() 하나로만 하세요.
+// DB 의 leave_action RPC 는 시간 검사 테스트(verify:db)가 쓰고 있어 남겨둡니다.
 
 /**
  * 사유를 남기고 나가기 (2026-09-01 개편 · F40)
