@@ -23,7 +23,11 @@ import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
 import { TimePreferenceEditor } from '@/app/my/_components/TimePreferenceEditor';
 import { TalentPreferenceEditor } from '@/app/my/_components/TalentPreferenceEditor';
-import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
+import {
+  getSignupCompletionPath,
+  safeNextPath,
+  withNext,
+} from '@/app/(auth)/auth-navigation';
 import { isNicknameTaken, updateProfile } from '@/lib/mutations';
 import { getBioValidationError } from '@/lib/utils/profile-validation';
 import { getSignupProfileSaveError } from '@/lib/utils/signup-completion';
@@ -286,7 +290,7 @@ function SignUpForm() {
       sessionStorage.removeItem(DRAFT_KEY);
     }
 
-    router.push(next);
+    router.push(getSignupCompletionPath(next));
     router.refresh();
   }
 
