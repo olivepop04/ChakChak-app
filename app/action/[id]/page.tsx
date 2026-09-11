@@ -404,8 +404,8 @@ export default async function ActionDetailPage({
             href={cta.href}
             className={
               cta.isCrewChat
-                ? 'flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
-                : 'flex h-13 w-full items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
+                ? 'flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
+                : 'flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
             }
           >
             {cta.isCrewChat && (
@@ -429,7 +429,7 @@ export default async function ActionDetailPage({
         ) : (
           <button
             disabled
-            className="flex h-13 w-full items-center justify-center cursor-not-allowed rounded-xl bg-neutral-200 text-[15px] font-semibold text-neutral-400"
+            className="flex min-h-13 w-full items-center justify-center cursor-not-allowed rounded-xl bg-neutral-200 py-3 text-[15px] font-semibold text-neutral-400"
           >
             {cta.label}
           </button>
