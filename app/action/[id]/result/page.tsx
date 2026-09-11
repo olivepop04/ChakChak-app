@@ -179,10 +179,10 @@ export default async function ResultPage({
 
       {/* 소감 작성하기 */}
       {canWriteVoice && (
-        <div className="fixed inset-x-0 bottom-14 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
           <Link
             href={`/action/${id}/voice`}
-            className="flex h-13 w-full items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-semibold text-white transition-colors active:bg-neutral-800"
+            className="flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[15px] font-semibold text-white transition-colors active:bg-neutral-800"
           >
             소감 작성하기
           </Link>
