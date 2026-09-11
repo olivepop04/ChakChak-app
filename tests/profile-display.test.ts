@@ -7,7 +7,10 @@ import {
   shouldShowFollowEmptyHint,
 } from '../lib/utils/profile-display.ts';
 
-test('프로필 통계는 호스트한 액션을 맨 앞에 두고 참여 문구를 완성형으로 표시한다', () => {
+// 「참여 완료 액션」 입니다 — 「참여한 액션」 이 아닙니다 (2026-09-11 회의).
+// 이 숫자는 소감까지 쓴 것만 세는데 Activity 탭의 「참여한 액션」 은 참여 예정까지
+// 전부 보여줍니다. 두 곳이 같은 이름이라 "목록엔 1개인데 숫자는 0" 으로 보였습니다.
+test('프로필 통계는 호스트한 액션을 맨 앞에 두고 참여는 「참여 완료 액션」 으로 표시한다', () => {
   const stats = buildProfileStats({
     ledCount: 4,
     participatedCount: 7,
@@ -23,7 +26,7 @@ test('프로필 통계는 호스트한 액션을 맨 앞에 두고 참여 문구
     stats.map(({ label, value, href }) => ({ label, value, href })),
     [
       { label: '호스트한 액션', value: 4, href: '/activity' },
-      { label: '참여한 액션', value: 7, href: '/activity?tab=joined' },
+      { label: '참여 완료 액션', value: 7, href: '/activity?tab=joined' },
       { label: '팔로워', value: 2, href: '/followers' },
       { label: '팔로잉', value: 3, href: '/following' },
     ],
