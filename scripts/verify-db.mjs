@@ -533,12 +533,45 @@ try {
   rNoResult.error ? ok('결과 없이는 완료 불가', rNoResult.error.message.slice(0, 32))
                   : no('결과 없이 완료됨 !!');
 
-  // 6) 결과 저장 → 완료
+  // 6) 사진 없이 임시저장 (18) — 결과 작성을 한 번에 못 끝내는 경우
+  const { error: draftErr } = await cA.from('action_results').upsert({
+    action_id: lcAct.id, content: '글은 써뒀고 사진은 나중에 올릴게요.',
+    image_urls: [], owner_voice: null,
+  }, { onConflict: 'action_id' });
+  draftErr ? no('사진 0장 임시저장 실패 — supabase/18 을 실행했는가', draftErr.message.slice(0, 50))
+           : ok('사진 0장으로도 결과 임시저장됨 (18)');
+
+  // 6-1) 임시저장 상태로 공개하려 하면 막혀야 한다
+  const rNoImg = await cA.rpc('complete_action', { p_action_id: lcAct.id });
+  rNoImg.error ? ok('사진 0장으로는 공개 불가 (18)', rNoImg.error.message.slice(0, 34))
+               : no('사진 없이 결과가 공개됨 !! — 「결과 사진 최소 1장」 결정이 뚫림');
+
+  // 6-2) 임시저장 중인 결과가 남에게 보이면 안 된다 (18)
+  //      결과 보기(/result)는 비회원도 들어오는 화면이다.
+  const { data: peekAnon } = await anon.from('action_results')
+    .select('content').eq('action_id', lcAct.id);
+  (peekAnon ?? []).length === 0
+    ? ok('임시저장 결과는 비회원에게 안 보임 (18)')
+    : no('쓰다 만 결과가 비회원에게 보임 !!', String((peekAnon ?? []).length) + '건');
+
+  const { data: peekOther } = await cB.from('action_results')
+    .select('content').eq('action_id', lcAct.id);
+  (peekOther ?? []).length === 0
+    ? ok('임시저장 결과는 호스트 말고는 안 보임 (18)')
+    : no('쓰다 만 결과가 남에게 보임 !!', String((peekOther ?? []).length) + '건');
+
+  const { data: peekOwner } = await cA.from('action_results')
+    .select('content').eq('action_id', lcAct.id);
+  (peekOwner ?? []).length === 1
+    ? ok('호스트는 자기 임시저장을 읽음 — 이어쓰기 가능')
+    : no('호스트가 자기 임시저장을 못 읽음', String((peekOwner ?? []).length) + '건');
+
+  // 6-3) 사진을 붙이면 공개된다
   const { error: resErr } = await cA.from('action_results').upsert({
     action_id: lcAct.id, content: '잘 마쳤습니다.',
     image_urls: ['https://example.com/r.jpg'], owner_voice: '고맙습니다',
   }, { onConflict: 'action_id' });
-  resErr ? no('결과 저장 실패', resErr.message.slice(0, 50)) : ok('결과 저장');
+  resErr ? no('결과 저장 실패', resErr.message.slice(0, 50)) : ok('결과 저장 (사진 1장)');
 
   const rDone = await cA.rpc('complete_action', { p_action_id: lcAct.id });
   rDone.error ? no('complete_action 실패', rDone.error.message.slice(0, 50))

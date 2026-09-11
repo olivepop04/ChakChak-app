@@ -203,7 +203,7 @@ export async function updateActionText(
 
 export interface ActionResultInput {
   content?: string | null;
-  /** 결과 사진. 최소 1장 필수 */
+  /** 결과 사진. 임시저장은 0장도 되고, 공개할 때 1장 이상이 필요합니다 */
   imageUrls: string[];
   /** 호스트가 남기는 한마디 */
   ownerVoice?: string | null;
@@ -212,22 +212,29 @@ export interface ActionResultInput {
 /**
  * 결과 저장 (있으면 덮어씁니다).
  *
+ * **임시저장용입니다.** 사진이 0장이어도, 글이 비어 있어도 저장됩니다.
+ * 결과 작성을 한 번에 못 끝내는 경우가 있어서 그렇게 뒀습니다 (2026-09-11 회의).
+ * 사진 정리가 늦어지는 것이 가장 흔한 이유라, 여기서 사진을 요구하면
+ * 「글만 써두고 나가기」 가 안 됩니다.
+ *
+ * 액션 만들기와 같은 모양입니다.
+ *
+ *   saveActionResult()  저장 — 비어 있어도 된다
+ *   completeAction()    공개 — 사진 1장 이상이 없으면 거절 (supabase/18)
+ *
  * ★ 저장한 다음에 completeAction() 을 부르세요. 순서를 바꾸면
  *   "결과를 먼저 작성해주세요" 로 거절됩니다.
  *
- * 사진 최소 1장은 DB CHECK 로도 막혀 있지만, 여기서 먼저 걸러
- * 한국어로 알려줍니다.
+ * ★ 임시저장한 결과는 호스트 본인에게만 보입니다. RLS 가 공개된 결과
+ *   (COMPLETED)와 내 결과만 읽게 막아 둡니다 (supabase/18). 결과 보기 화면은
+ *   비회원도 들어오는 곳이라, 쓰다 만 결과가 새면 안 됩니다.
  */
 export async function saveActionResult(
   supabase: DB,
   actionId: string,
   input: ActionResultInput,
 ): Promise<Result> {
-  if (input.imageUrls.length < UPLOAD.RESULT_IMAGE_MIN)
-    return {
-      ok: false,
-      message: `결과 사진을 최소 ${UPLOAD.RESULT_IMAGE_MIN}장 올려주세요. 활동을 보여주는 사진이 있어야 크루들이 결과를 확인할 수 있어요.`,
-    };
+  // 최소 장수는 여기서 보지 않습니다 — 공개할 때 complete_action() 이 봅니다.
   if (input.imageUrls.length > UPLOAD.RESULT_IMAGE_MAX)
     return {
       ok: false,
@@ -472,7 +479,13 @@ export async function publishAction(
   return { ok: true, data: undefined };
 }
 
-/** ENDED → COMPLETED. 결과를 먼저 저장해야 한다. */
+/**
+ * ENDED → COMPLETED (결과 공개). 결과를 먼저 저장해야 한다.
+ *
+ * **사진 1장 이상을 여기서 봅니다** (supabase/18). 사진이 없으면
+ * 「결과 사진을 최소 1장 올려주세요」 가 그대로 돌아오니 res.message 를 띄우면 됩니다.
+ * 임시저장(saveActionResult)은 0장도 통과하므로, 공개 직전에 이 함수가 마지막 관문입니다.
+ */
 export async function completeAction(
   supabase: DB,
   actionId: string,
