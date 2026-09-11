@@ -133,8 +133,10 @@ export function ActionCard({
                 ))}
               </div>
 
-              {/* 상태 뱃지 + 제목 수평(인라인) 배치 */}
-              <div className="flex items-start gap-2 min-w-0">
+              {/* 상태 뱃지 + 제목 수평(인라인) 배치.
+                  배지가 길어지면(예: "결과 작성 필요") 제목 자리가 모자라 잘리므로,
+                  자리가 부족하면 제목이 다음 줄로 내려가게 하고 최소 폭을 보장한다. */}
+              <div className="flex flex-wrap items-start gap-x-2 gap-y-1 min-w-0">
                 {showStatus && (
                   <div className="shrink-0">
                     <StatusBadge
@@ -143,7 +145,7 @@ export function ActionCard({
                     />
                   </div>
                 )}
-                <h3 className="flex-1 text-[15px] font-bold leading-snug text-neutral-900 min-w-0 break-keep">
+                <h3 className="flex-1 min-w-[8rem] text-[15px] font-bold leading-snug text-neutral-900 break-keep">
                   {action.title}
                 </h3>
               </div>
