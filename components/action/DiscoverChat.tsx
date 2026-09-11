@@ -109,10 +109,6 @@ export function DiscoverChat({
   if (!authenticated) {
     return (
       <div className="flex flex-col gap-5 px-5 pb-24 pt-6">
-        <Bubble>
-          로그인하고 나에게 맞는 활동을 추천받아 보세요.
-          <br />질문을 통해 사용자의 성향에 맞춘 후보를 보여줘요.
-        </Bubble>
         <div className="rounded-2xl border border-neutral-200 bg-white p-5">
           <p className="text-[14px] font-semibold text-neutral-900">
             로그인하면 이런 점이 좋아요
@@ -120,7 +116,7 @@ export function DiscoverChat({
           <ul className="mt-3 flex flex-col gap-2 text-[13px] leading-relaxed text-neutral-600">
             <li>· 내 지역과 가능한 시간에 맞춰 추천해요.</li>
             <li>· 이미 참여한 액션과 내가 만든 액션은 자동으로 빼요.</li>
-            <li>· 질문을 통해 사용자의 성향에 맞춘 후보를 보여줘요.</li>
+            <li>· Discover AI로 내게 맞는 액션을 찾아보세요.</li>
           </ul>
           <Link
             href="/login?next=/discover"

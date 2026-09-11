@@ -360,10 +360,16 @@ export default async function ActionDetailPage({
       </div>
 
       {/* 하단 고정 버튼 */}
-      {/* 하단 탭(56px) 위로 띄웁니다. 이 화면은 탭이 보입니다.
-          아이폰 홈 인디케이터(safe-area)만큼 탭이 56px보다 커지므로 그만큼 더해서 띄웁니다.
-          ChatBoard.tsx 하단 버튼과 같은 계산입니다. */}
-      <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
+      {/* 하단 탭 위로 띄웁니다. 이 화면은 탭이 보입니다.
+          아이폰 홈 인디케이터(safe-area)만큼 탭이 더 커지므로 그만큼 더해서 띄웁니다.
+          ChatBoard.tsx 하단 버튼과 같은 계산입니다.
+
+          ★ 3.5rem(56px) 이 아니라 4rem(64px) 입니다.
+            하단 탭의 실제 높이는 56px 이 아니라 **62px** 입니다 —
+            아이콘 24px + 라벨 + py-2.5 로 그만큼 됩니다 (실측).
+            56px 으로 두면 6px 겹쳐서 CTA 바 아래쪽이 탭에 먹힙니다.
+            탭 높이를 바꾸면 여기와 ChatBoard 두 곳을 같이 고쳐야 합니다. */}
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
         {cta.type === 'host_ended_write_result' ? (
           <div className="flex w-full items-center gap-2">
             <Link
@@ -398,8 +404,8 @@ export default async function ActionDetailPage({
             href={cta.href}
             className={
               cta.isCrewChat
-                ? 'flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
-                : 'flex h-13 w-full items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
+                ? 'flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
+                : 'flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
             }
           >
             {cta.isCrewChat && (
@@ -423,7 +429,7 @@ export default async function ActionDetailPage({
         ) : (
           <button
             disabled
-            className="flex h-13 w-full items-center justify-center cursor-not-allowed rounded-xl bg-neutral-200 text-[15px] font-semibold text-neutral-400"
+            className="flex min-h-13 w-full items-center justify-center cursor-not-allowed rounded-xl bg-neutral-200 py-3 text-[15px] font-semibold text-neutral-400"
           >
             {cta.label}
           </button>

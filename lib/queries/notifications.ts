@@ -36,11 +36,14 @@ export const NOTIFICATION_TEMPLATE: Record<
     cta: '결과 확인하고 소감 남기기',
     href: (id) => `/action/${id}/result`,
   },
+  // 소감 작성 화면으로 바로 보내지 않습니다 (2026-09-11 회의).
+  // 결과를 먼저 보고 나서 소감을 쓰는 순서가 자연스럽습니다.
+  // 결과 보기 화면 안에 소감 쓰기가 들어 있습니다.
   VOICE_REQUEST: {
     icon: '✍️',
     title: '소감을 작성해서 참여한 액션을 마무리하세요.',
-    cta: '소감 남기기',
-    href: (id) => `/action/${id}/voice`,
+    cta: '결과 보고 소감 남기기',
+    href: (id) => `/action/${id}/result`,
   },
   CANCELLED: {
     icon: '🚫',
@@ -54,11 +57,15 @@ export const NOTIFICATION_TEMPLATE: Record<
     cta: '초대 확인하기',
     href: (id) => `/action/${id}`,
   },
+  // 크루챗으로 바로 보냅니다 (2026-09-11 회의 · 옵션 1).
+  // 나가는 사유가 크루챗에 LEFT_NOTICE 로 남으므로,
+  // 액션 상세로 보내면 호스트가 한 번 더 눌러 들어가야 합니다.
+  // 조기 종료 알림(EARLY_END)도 같은 이유로 크루챗으로 갑니다.
   LEFT_CREW: {
     icon: '👋',
     title: '크루 한 분이 참여를 취소했어요',
-    cta: '모집 현황 보기',
-    href: (id) => `/action/${id}`,
+    cta: '나간 사유 보기',
+    href: (id) => `/action/${id}/chat`,
   },
   SHORTFALL: {
     icon: '📉',

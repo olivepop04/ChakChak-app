@@ -362,37 +362,37 @@ export default async function ActivityPage({
       <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto border-b border-neutral-100 bg-white px-5 py-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {isCreated
           ? CREATED_FILTERS.map((f) => (
-              <Link
-                key={f.key}
-                href={makeCreatedFilterUrl(f.key)}
-                scroll={false}
-                className="shrink-0"
+            <Link
+              key={f.key}
+              href={makeCreatedFilterUrl(f.key)}
+              scroll={false}
+              className="shrink-0"
+            >
+              <Chip
+                selected={createdFilter === f.key}
+                as="span"
+                className="whitespace-nowrap px-3.5 py-1.5 text-[12px]"
               >
-                <Chip
-                  selected={createdFilter === f.key}
-                  as="span"
-                  className="whitespace-nowrap px-3.5 py-1.5 text-[12px]"
-                >
-                  {f.label}
-                </Chip>
-              </Link>
-            ))
+                {f.label}
+              </Chip>
+            </Link>
+          ))
           : JOINED_FILTERS.map((f) => (
-              <Link
-                key={f.key}
-                href={makeJoinedFilterUrl(f.key)}
-                scroll={false}
-                className="shrink-0"
+            <Link
+              key={f.key}
+              href={makeJoinedFilterUrl(f.key)}
+              scroll={false}
+              className="shrink-0"
+            >
+              <Chip
+                selected={joinedFilter === f.key}
+                as="span"
+                className="whitespace-nowrap px-3.5 py-1.5 text-[12px]"
               >
-                <Chip
-                  selected={joinedFilter === f.key}
-                  as="span"
-                  className="whitespace-nowrap px-3.5 py-1.5 text-[12px]"
-                >
-                  {f.label}
-                </Chip>
-              </Link>
-            ))}
+                {f.label}
+              </Chip>
+            </Link>
+          ))}
       </div>
 
       {/* 목록 */}
@@ -407,8 +407,8 @@ export default async function ActivityPage({
         ) : filteredCreated.length === 0 ? (
           <EmptyState
             icon="🔍"
-            title="해당 상태의 액션이 없어요"
-            description="다른 상태 필터를 선택해 보세요."
+            title="아직 해당 액션이 없어요"
+
             action={{ label: '전체 보기', href: '/activity' }}
           />
         ) : (
@@ -438,8 +438,8 @@ export default async function ActivityPage({
       ) : filteredJoined.length === 0 ? (
         <EmptyState
           icon="🔍"
-          title="해당 상태의 참여 내역이 없어요"
-          description="다른 상태 필터를 선택해 보세요."
+          title="아직 해당 액션이 없어요"
+
           action={{ label: '전체 보기', href: '/activity?tab=joined' }}
         />
       ) : (

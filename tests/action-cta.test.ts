@@ -119,3 +119,36 @@ test('now 를 넘기면 그 시각 기준으로 판단한다', () => {
   const cta = getActionCta(입력({ isOwner: true, now: 끝난뒤 }));
   assert.equal(cta.type, 'host_ended_write_result');
 });
+
+// ── DRAFT (2026-09-11 추가) ────────────────────────────────
+// 전에는 DRAFT 가 호스트 갈래로 떨어져서 「함께하는 크루와 이야기하기」 가 나왔습니다.
+// 누르면 크루가 없는 빈 게시판이 열리고, 그 화면 안내는
+// 「완료된 액션이라 새 글을 쓸 수 없어요」 였습니다 — 「작성 중」 인데요.
+
+test('아직 공개 전(DRAFT)이면 호스트를 이어서 쓰는 화면으로 보낸다', () => {
+  const cta = getActionCta(입력({ status: 'DRAFT', isOwner: true }));
+  assert.equal(cta.type, 'link');
+  assert.equal(문구(cta), '이어서 작성하기');
+  // Activity 「작성중」 탭의 「계속 작성하기」 와 같은 곳
+  assert.equal(cta.type === 'link' ? cta.href : '', `/action/create?id=${ID}`);
+});
+
+test('DRAFT 에서는 크루챗으로 보내지 않는다 — 크루가 있을 수 없다', () => {
+  const cta = getActionCta(입력({ status: 'DRAFT', isOwner: true }));
+  assert.notEqual(문구(cta), '함께하는 크루와 이야기하기');
+  assert.equal('isCrewChat' in cta ? cta.isCrewChat : false, false);
+});
+
+test('남의 DRAFT 는 막는다 (RLS 가 먼저 가리지만 규칙도 둔다)', () => {
+  assert.equal(
+    문구(getActionCta(입력({ status: 'DRAFT', isOwner: false }))),
+    '아직 공개 전인 액션이에요',
+  );
+});
+
+test('DRAFT 는 활동 종료 시각이 지나도 결과 작성으로 넘어가지 않는다', () => {
+  // 공개한 적이 없으니 결과를 쓸 일이 없습니다
+  const 끝난뒤 = new Date(Date.now() + 1000 * 60 * 60 * 48);
+  const cta = getActionCta(입력({ status: 'DRAFT', isOwner: true, now: 끝난뒤 }));
+  assert.equal(문구(cta), '이어서 작성하기');
+});

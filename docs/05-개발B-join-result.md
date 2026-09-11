@@ -146,7 +146,7 @@ import { getActionCrew, groupCrewByItem, getActionResult }
 import { getChatPosts, canWriteChat } from '@/lib/queries/chat';
 
 // 쓰기
-import { joinAction, leaveAction, leaveActionWithReason, submitCrewVoice,
+import { joinAction, leaveActionWithReason, submitCrewVoice,
          postChatMessage, deleteChatMessage, completeAction } from '@/lib/mutations';
 
 // 액션 만들기 (새로 이관받은 화면)
@@ -377,7 +377,7 @@ components/action/ (ActionForm · ItemEditor · JoinForm · ChatBoard · ResultW
 
 3. 쓰기 함수는 { ok: true, data } 또는 { ok: false, message } 를 돌려준다.
    message 는 그대로 사용자에게 보여주면 되는 한국어다. try/catch 를 쓰지 않는다.
-   joinAction · leaveAction · leaveActionWithReason · submitCrewVoice ·
+   joinAction · leaveActionWithReason · submitCrewVoice ·
    postChatMessage · deleteChatMessage · completeAction ·
    saveActionDraft · saveActionItems · saveActionResult · publishAction · deleteDraft
 

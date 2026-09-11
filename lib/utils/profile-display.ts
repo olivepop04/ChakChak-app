@@ -28,7 +28,11 @@ export function buildProfileStats({
 }: BuildProfileStatsInput): ProfileStatItem[] {
   return [
     { value: ledCount, label: '호스트한 액션', href: ledHref },
-    { value: participatedCount, label: '참여한 액션', href: participatedHref },
+    // 「참여한 액션」 이 아니라 「참여 완료 액션」 입니다 (2026-09-11 회의).
+    // 이 숫자는 소감까지 쓴 것(ACTUALLY_PARTICIPATED)만 셉니다.
+    // Activity 탭의 「참여한 액션」 은 참여 예정까지 전부 보여주므로 이름이 다릅니다 —
+    // 두 곳이 같은 이름이라 "목록엔 있는데 숫자는 0" 으로 보였습니다.
+    { value: participatedCount, label: '참여 완료 액션', href: participatedHref },
     { value: followerCount, label: '팔로워', href: followersHref },
     { value: followingCount, label: '팔로잉', href: followingHref },
   ];
