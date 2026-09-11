@@ -12,11 +12,11 @@ import { HouseHeart, SearchCheck, Plus, Grid2x2Plus, UserCircle } from 'lucide-r
 import { cn } from '@/lib/utils/cn';
 
 const TABS = [
-  { href: '/', label: 'HOME', icon: HouseHeart },
-  { href: '/discover', label: 'DISCOVER', icon: SearchCheck },
-  { href: '/action/create', label: 'CREATE', icon: Plus },
-  { href: '/activity', label: 'ACTIVITY', icon: Grid2x2Plus },
-  { href: '/my', label: 'MY', icon: UserCircle },
+  { href: '/', label: '홈', icon: HouseHeart },
+  { href: '/discover', label: '액션 찾기', icon: SearchCheck },
+  { href: '/action/create', label: '액션 만들기', icon: Plus },
+  { href: '/activity', label: '내 액션', icon: Grid2x2Plus },
+  { href: '/my', label: '프로필', icon: UserCircle },
 ] as const;
 
 function isActive(pathname: string, href: string) {
@@ -74,7 +74,7 @@ export function BottomNav() {
                   active ? 'text-neutral-900' : 'text-neutral-400',
                 )}
               >
-                <Icon size={22} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
+                <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
                 <span className="text-[10px] font-semibold tracking-wide">
                   {tab.label}
                 </span>

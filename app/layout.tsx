@@ -19,6 +19,9 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: '#ffffff',
+  // BottomNav·ChatBoard 의 env(safe-area-inset-bottom) 이 실제 값을 받으려면 필요합니다.
+  // 이게 없으면 iOS Safari가 노치·홈 인디케이터 아래로 화면을 확장하지 않아 0으로 계산됩니다.
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
