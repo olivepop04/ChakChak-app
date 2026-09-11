@@ -71,7 +71,29 @@ export function getActionCta({
     return { type: 'link', label: '결과 보기', href: `/action/${actionId}/result` };
   }
 
-  // ③ 호스트
+  // ③ 아직 공개 전 (DRAFT) — 2026-09-11 추가
+  //
+  //    DRAFT 는 크루가 있을 수 없습니다. 그런데 아래 ④ 호스트 갈래로 떨어지면
+  //    「함께하는 크루와 이야기하기」 가 나와서, 누르면 **빈 게시판**이 열렸습니다.
+  //    게다가 그 화면의 안내가 「완료된 액션이라 새 글을 쓸 수 없어요」 였습니다
+  //    (app/action/[id]/chat/page.tsx 가 CANCELLED 와 그 밖만 나눕니다).
+  //    「작성 중」 이라고 위에 적혀 있는데 아래는 「완료된 액션」 이라고 하는 화면이었습니다.
+  //
+  //    DRAFT 에서 호스트가 할 일은 이어서 쓰는 것입니다. Activity 「작성중」 탭의
+  //    「계속 작성하기」 와 같은 곳으로 보냅니다.
+  //
+  //    남의 DRAFT 는 RLS 가 아예 안 보여주지만(02_rls.sql), 규칙은 여기에도 적어 둡니다.
+  if (status === 'DRAFT') {
+    return isOwner
+      ? {
+          type: 'link',
+          label: '이어서 작성하기',
+          href: `/action/create?id=${actionId}`,
+        }
+      : { type: 'disabled', label: '아직 공개 전인 액션이에요' };
+  }
+
+  // ④ 호스트
   if (isOwner) {
     // 활동이 끝났다면(조기 종료 포함) 결과를 쓸 길이 반드시 있어야 한다
     if (status === 'ENDED' || isPastActivityEnd) {
@@ -84,12 +106,12 @@ export function getActionCta({
     return crewChat;
   }
 
-  // ④ 참여한 크루 — 나간 사람은 제외
+  // ⑤ 참여한 크루 — 나간 사람은 제외
   if (myParticipation && myParticipation !== 'LEFT') {
     return crewChat;
   }
 
-  // ⑤ 참여하지 않은 사람
+  // ⑥ 참여하지 않은 사람
   if (status === 'ENDED' || isPastActivityEnd) {
     return { type: 'disabled', label: '활동이 끝났어요' };
   }
