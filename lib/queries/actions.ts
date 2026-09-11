@@ -214,16 +214,28 @@ export async function getActionFeed(
   // 상태(ENDED) 전환은 누군가 그 액션을 열어야 일어나기 때문에,
   // 그때까지 DB 상으로는 ACTIVE 로 남아 있습니다.
   //
+  // 모집이 이미 마감된 액션도 뺍니다 (2026-09-11 결정).
+  // 홈은 「오늘 함께할 수 있는 좋은 일」 이라, 눌러도 참여할 수 없는 카드가
+  // 있으면 안 됩니다. 게다가 「마감 임박」 정렬이 recruit_end_at 오름차순이라
+  // **가장 오래 마감된 것이 맨 위로** 왔습니다 — 들어가면 「모집이 마감되었어요」
+  // 만 나오는 카드가 첫 화면을 채웠습니다.
+  //
+  // 마감된 액션 자체는 사라지지 않습니다. 주소로 들어가면 그대로 보이고,
+  // 호스트는 내 활동에서, 참여한 크루는 내 활동·알림에서 계속 볼 수 있습니다.
+  // 홈 피드에서만 빠집니다.
+  //
   // 인기 점수는 DB 가 아니라 뷰에서 따로 가져오기 때문에 SQL 로 정렬할 수 없습니다.
   // 그래서 마감 임박 순으로 넉넉히 받아온 뒤 여기서 다시 줄을 세웁니다.
   // (limit 만큼만 받아오면 인기순일 때 뒤쪽에 있는 인기 액션을 놓칩니다)
   const fetchCount = Math.min(limit * 3, 90);
+  const nowIso = new Date().toISOString();
 
   let q = supabase
     .from('actions')
     .select(ACTION_COLUMNS)
     .eq('status', 'ACTIVE')
-    .gt('activity_end_at', new Date().toISOString())
+    .gt('activity_end_at', nowIso)
+    .gt('recruit_end_at', nowIso)
     .order('recruit_end_at', { ascending: true, nullsFirst: false })
     .limit(fetchCount);
 

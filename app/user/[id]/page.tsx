@@ -79,8 +79,10 @@ export default async function UserProfilePage({
         href={`/user/${id}/created`}
       />
 
+      {/* 통계 숫자와 같은 것을 가리키므로 이름을 맞춥니다 (2026-09-11 회의).
+          내 활동의 「참여한 액션」 탭은 참여 예정까지 전부 보여주므로 이름이 다릅니다. */}
       <ProfileActionSection
-        title="참여한 액션"
+        title="참여 완료 액션"
         emptyText="아직 완료한 액션이 없어요."
         description="활동이 끝나고 소감까지 작성한 액션만 보여요."
         actions={joined}

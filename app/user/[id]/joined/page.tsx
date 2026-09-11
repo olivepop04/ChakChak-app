@@ -23,8 +23,9 @@ export default async function JoinedActionsPage({
 
   return (
     <main className="min-h-screen pb-24">
+      {/* 통계 숫자·프로필 섹션과 같은 이름 (2026-09-11 회의) */}
       <Header
-        title="참여한 액션"
+        title="참여 완료 액션"
         back
         backHref={`/user/${id}`}
         sticky
