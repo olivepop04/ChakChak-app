@@ -14,8 +14,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { markNotificationRead } from '@/lib/mutations';
+import { markNotificationReadAction } from '@/lib/notifications/actions';
 import { NOTIFICATION_TEMPLATE } from '@/lib/queries/notifications';
 import { formatRelative } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
@@ -45,13 +44,16 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
 
   async function handleClick(n: NotificationData) {
     if (!n.isRead) {
-      await markNotificationRead(createClient(), n.id);
+      // ★ 반드시 await 하고 나서 이동하세요. 순서를 바꾸거나 await 를 빼면
+      //   「읽었는데 뒤로 오면 안 읽은 상태」 가 다시 나타납니다.
+      //   이 액션이 읽음 표시와 화면 캐시 무효화를 함께 처리합니다 —
+      //   왜 이렇게 해야 하는지는 lib/notifications/actions.ts 에 적어 뒀습니다.
+      await markNotificationReadAction(n.id);
     }
+
     const template = NOTIFICATION_TEMPLATE[n.type];
     if (n.actionId) {
       router.push(template.href(n.actionId));
-    } else {
-      router.refresh();
     }
   }
 
