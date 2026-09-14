@@ -561,7 +561,7 @@ export function FollowButton({
       }}
       aria-pressed={on}
       className={cn(
-        'inline-flex h-9 items-center rounded-lg px-3.5 text-[13px] font-semibold transition-colors',
+        'inline-flex min-h-9 items-center rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-colors',
         on
           ? 'border border-neutral-300 bg-white text-neutral-600'
           : 'bg-neutral-900 text-white',

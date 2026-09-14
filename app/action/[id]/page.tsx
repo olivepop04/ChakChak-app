@@ -250,7 +250,7 @@ export default async function ActionDetailPage({
             <FollowButton
               targetUserId={action.owner.id}
               initialFollowing={action.followingOwner}
-              className="ml-auto"
+              className="ml-auto shrink-0"
             />
           )}
         </div>
