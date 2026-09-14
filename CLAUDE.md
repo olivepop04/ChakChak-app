@@ -354,6 +354,21 @@ if (!res.ok) { setError(res.message); return; }
 모른 채 모집 현황만 줄어드는 것을 보게 됩니다. DB 의 `leave_action` RPC 는
 시간 검사 테스트(`verify:db`)가 쓰고 있어 남겨 뒀습니다.
 
+**서버 액션은 딱 하나 있습니다** — `lib/notifications/actions.ts` 의 `markNotificationReadAction`
+(2026-09-14). 나머지는 전부 위의 `lib/mutations.ts` 를 쓰세요.
+
+알림을 누르면 **읽음 표시 + 화면 이동**을 같이 해야 하는데, `router.push` 로 이동하면
+알림 목록이 클라이언트 라우터 캐시에 남아서 **뒤로 왔을 때 안 읽은 모습이 그대로 보였습니다.**
+`router.refresh()` 를 `push` 앞에 넣는 것으로는 안 됩니다 — 이동이 무효화를 중단시킵니다
+(실측: 즉시 push 하면 안 고쳐지고, 600ms 두면 고쳐짐). 서버 액션 응답에
+`revalidatePath` 가 실려 오므로 `await` 가 끝난 시점엔 이미 캐시가 버려져 있습니다.
+
+쓰기 로직 자체는 `lib/mutations.ts` 의 `markNotificationRead` 를 그대로 씁니다.
+서버 액션이 하는 일은 서버 supabase 클라이언트를 넘기고 무효화를 붙이는 것뿐입니다.
+
+> **「눌러서 DB 는 바뀌는데 뒤로 오면 옛 화면」 이 또 나오면 같은 원인입니다.**
+> 서버에서 그린 목록을 바꾸고 곧바로 이동하는 자리라면 이 방식을 쓰세요.
+
 **필요한 함수가 없으면 직접 추가하지 말고 민호에게 요청하세요.** `lib/`은 공유 구역입니다.
 
 ---

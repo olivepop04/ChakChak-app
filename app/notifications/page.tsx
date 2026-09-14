@@ -32,7 +32,8 @@ export default async function NotificationsPage() {
 
   return (
     <main className="pb-24">
-      <Header title="NOTIFICATIONS" back backHref="/" sticky />
+      {/* 2026-09-14 수정 NO9 — 화면 제목을 한글로 통일 */}
+      <Header title="알림" back backHref="/" sticky />
 
       {items.length === 0 ? (
         <EmptyState
