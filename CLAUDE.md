@@ -452,12 +452,43 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 | 파일 | 담당 |
 |---|---|
-| ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm · **LeaveButton** | 개발 B |
+| ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm · **LeaveButton** · **AddressSearch** · **ActionHostActions** | 개발 B |
 | ActivityButtons | 조장 |
 | DiscoverChat | 개발 A |
 | SharePanel | 민호 |
 | ActionGallery · AddressBox | 디자이너 |
 | QuotaProgress | **공유** — 상세(디자이너)와 참여(개발 B)가 같이 씁니다. 고치기 전에 말하기 |
+
+`AddressSearch` 와 `ActionHostActions` 는 이 표에 없어서 담당이 비어 있었습니다 (2026-09-14에 채웠습니다).
+쓰이는 곳으로 갈랐습니다 — `AddressSearch` 는 `ActionForm` 에서만, `ActionHostActions` 는
+액션 상세에서만 씁니다. `ActionHostActions` 는 호출하는 화면이 디자이너 구역이지만
+**내용이 취소·조기 종료 모달**이라 개발 B 로 두었습니다 (형제 파일 `LeaveButton` 과 같은 성격).
+
+### 여러 구역에 걸친 변경은 한 사람이 전부 맡습니다 (2026-09-14)
+
+> **스타일·문구·제목을 통일하는 일은 폴더로 나눠지지 않습니다.**
+> 한 사람이 전부 맡고, 그동안 그 파일은 아무도 건드리지 않습니다. **한 PR 로 올립니다.**
+
+폴더 담당은 「각자 자기 화면을 만든다」에는 잘 맞지만, **위치가 아니라 패턴을 따라가는 변경**에는
+맞지 않습니다. 실제로 두 번 겪었습니다.
+
+| 요청 | 걸친 범위 |
+|---|---|
+| 화면 제목 한글로 통일 | 4명 · 7파일 |
+| 버튼 높이 고정 해제 (글자 200%) | 5명 · 21파일 |
+
+번지는 이유는 **공통 컴포넌트를 거치지 않는 것**입니다. `Button.tsx` 를 쓰는 파일은 15개인데
+버튼 스타일을 손으로 적은 파일은 25개이고, **입력칸 공통 컴포넌트는 아예 없어서** 같은
+`h-12 rounded-xl border border-neutral-300 …` 이 16개 파일에 복사돼 있습니다.
+새 화면을 만들 때는 **`components/ui/` 의 것을 먼저 찾아 쓰세요.** 없으면 만들자고 말해주세요 —
+그 한 번이 다음 통일 작업의 21파일을 1파일로 줄입니다.
+
+절차는 이렇게 합니다.
+
+1. **시작 전에 민호에게 알립니다.** 어떤 파일을 건드릴지 목록으로 주세요.
+2. 민호가 공지하고, 그 기간에는 **다른 사람이 그 파일을 건드리지 않습니다.**
+3. **파일별로 쪼개 나눠 고치지 마세요.** 세 명이 나누면 같은 패턴이 세 가지로 갈립니다.
+4. 한 PR 로 올리면 민호가 점검하고 병합합니다.
 
 **`components/ui/`와 `lib/`은 공유 구역입니다.** 고칠 때는 먼저 말해주세요.
 예외 — 위 표에 적힌 `lib/` 파일 4개(`stats.ts` · `regions.ts` · `scoring.ts` · `discover-ranking.ts`)는 각 담당이 바로 고쳐도 됩니다.
