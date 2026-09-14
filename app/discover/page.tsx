@@ -12,7 +12,7 @@ export default async function DiscoverPage() {
 
   return (
     <main className="pb-24">
-      <Header title="DISCOVER" back backHref="/" sticky />
+      <Header title="액션 찾기" back backHref="/" sticky />
       <DiscoverChat
         nickname={profile?.nickname ?? '회원'}
         authenticated={Boolean(user)}
