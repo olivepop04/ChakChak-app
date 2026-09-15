@@ -354,6 +354,35 @@ if (!res.ok) { setError(res.message); return; }
 모른 채 모집 현황만 줄어드는 것을 보게 됩니다. DB 의 `leave_action` RPC 는
 시간 검사 테스트(`verify:db`)가 쓰고 있어 남겨 뒀습니다.
 
+**쓰고 나서 곧바로 다른 화면으로 이동한다면 `router.refresh()` 를 `push` 뒤에 두세요**
+(2026-09-14). 순서가 중요합니다.
+
+```ts
+// ❌ 뒤로 왔을 때 바뀐 것이 안 보입니다
+router.refresh();
+router.push(href);
+
+// ✅
+router.push(href);
+router.refresh();
+```
+
+알림 목록에서 이것 때문에 버그가 있었습니다. 알림을 누르면 DB 는 읽음으로 바뀌는데
+**뒤로 오면 안 읽은 모습(노란 배경·빨간 점)이 그대로 보였습니다.** 새로고침하면 그때 바뀝니다.
+서버에서 그린 화면이 클라이언트 라우터 캐시에 남아 있어서, 이동만 하면 캐시가 다시 그려집니다.
+
+`refresh` 를 `push` **앞에** 두면 안 됩니다 — 이동이 무효화를 중단시킵니다.
+실측: 즉시 push 하면 안 고쳐지고, 600ms 두면 고쳐졌습니다.
+
+`refresh` 는 라우터 캐시를 **전부** 버리므로, 알림 목록만이 아니라
+**홈 화면 안 읽음 배지(`app/page.tsx`)까지 같이 살아납니다.** 두 곳을 따로 고칠 필요가 없습니다.
+
+> **주의 — `revalidatePath` 를 쓰는 서버 액션으로 해결하려 하지 마세요.** 한 번 그렇게 만들어
+> 배포까지 해봤는데, 그 응답이 **해당 페이지를 다시 그리는 것까지 기다립니다.** `/notifications`
+> 는 열 때마다 lazy 알림 두 종을 만들어서 배포 환경에서 2.8~6.1초 걸리는 화면입니다.
+> 그 비용이 이동 앞에 붙어 **누르고 4~9초 뒤에 이동**했습니다. `push` 뒤의 `refresh` 는
+> 같은 일을 이동 뒤로 미룹니다.
+
 **필요한 함수가 없으면 직접 추가하지 말고 민호에게 요청하세요.** `lib/`은 공유 구역입니다.
 
 ---
@@ -423,12 +452,43 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 | 파일 | 담당 |
 |---|---|
-| ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm · **LeaveButton** | 개발 B |
+| ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm · **LeaveButton** · **AddressSearch** · **ActionHostActions** | 개발 B |
 | ActivityButtons | 조장 |
 | DiscoverChat | 개발 A |
 | SharePanel | 민호 |
 | ActionGallery · AddressBox | 디자이너 |
 | QuotaProgress | **공유** — 상세(디자이너)와 참여(개발 B)가 같이 씁니다. 고치기 전에 말하기 |
+
+`AddressSearch` 와 `ActionHostActions` 는 이 표에 없어서 담당이 비어 있었습니다 (2026-09-14에 채웠습니다).
+쓰이는 곳으로 갈랐습니다 — `AddressSearch` 는 `ActionForm` 에서만, `ActionHostActions` 는
+액션 상세에서만 씁니다. `ActionHostActions` 는 호출하는 화면이 디자이너 구역이지만
+**내용이 취소·조기 종료 모달**이라 개발 B 로 두었습니다 (형제 파일 `LeaveButton` 과 같은 성격).
+
+### 여러 구역에 걸친 변경은 한 사람이 전부 맡습니다 (2026-09-14)
+
+> **스타일·문구·제목을 통일하는 일은 폴더로 나눠지지 않습니다.**
+> 한 사람이 전부 맡고, 그동안 그 파일은 아무도 건드리지 않습니다. **한 PR 로 올립니다.**
+
+폴더 담당은 「각자 자기 화면을 만든다」에는 잘 맞지만, **위치가 아니라 패턴을 따라가는 변경**에는
+맞지 않습니다. 실제로 두 번 겪었습니다.
+
+| 요청 | 걸친 범위 |
+|---|---|
+| 화면 제목 한글로 통일 | 4명 · 7파일 |
+| 버튼 높이 고정 해제 (글자 200%) | 5명 · 21파일 |
+
+번지는 이유는 **공통 컴포넌트를 거치지 않는 것**입니다. `Button.tsx` 를 쓰는 파일은 15개인데
+버튼 스타일을 손으로 적은 파일은 25개이고, **입력칸 공통 컴포넌트는 아예 없어서** 같은
+`h-12 rounded-xl border border-neutral-300 …` 이 16개 파일에 복사돼 있습니다.
+새 화면을 만들 때는 **`components/ui/` 의 것을 먼저 찾아 쓰세요.** 없으면 만들자고 말해주세요 —
+그 한 번이 다음 통일 작업의 21파일을 1파일로 줄입니다.
+
+절차는 이렇게 합니다.
+
+1. **시작 전에 민호에게 알립니다.** 어떤 파일을 건드릴지 목록으로 주세요.
+2. 민호가 공지하고, 그 기간에는 **다른 사람이 그 파일을 건드리지 않습니다.**
+3. **파일별로 쪼개 나눠 고치지 마세요.** 세 명이 나누면 같은 패턴이 세 가지로 갈립니다.
+4. 한 PR 로 올리면 민호가 점검하고 병합합니다.
 
 **`components/ui/`와 `lib/`은 공유 구역입니다.** 고칠 때는 먼저 말해주세요.
 예외 — 위 표에 적힌 `lib/` 파일 4개(`stats.ts` · `regions.ts` · `scoring.ts` · `discover-ranking.ts`)는 각 담당이 바로 고쳐도 됩니다.

@@ -362,7 +362,13 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
 
 액션의 처음부터 끝까지 — 만들기 → 참여 → 활동 → 결과 → 소감.
 app/action/create/ · app/action/[id]/ 하위 (join · welcome · crew · chat · result · voice)
-components/action/ (ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm)
+components/action/ (ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm
+                    · LeaveButton · AddressSearch · ActionHostActions)
+
+AddressSearch 와 ActionHostActions 는 2026-09-14에 내 담당이 됐다. 담당 표에 없던 파일이다.
+  AddressSearch       ActionForm 에서만 쓴다 (주소 검색 버튼)
+  ActionHostActions   액션 상세에서만 쓴다. 호출하는 화면은 디자이너 구역이지만
+                      내용이 취소·조기 종료 모달이라 LeaveButton 과 같은 성격이다.
 
 화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
 

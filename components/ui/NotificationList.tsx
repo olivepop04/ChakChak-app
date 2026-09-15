@@ -44,13 +44,21 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
   const hiddenCount = items.length - visible.length;
 
   async function handleClick(n: NotificationData) {
-    if (!n.isRead) {
+    const justRead = !n.isRead;
+    if (justRead) {
       await markNotificationRead(createClient(), n.id);
     }
+
     const template = NOTIFICATION_TEMPLATE[n.type];
     if (n.actionId) {
       router.push(template.href(n.actionId));
-    } else {
+    }
+
+    // ★ 지우지 마세요 — 이것이 없으면 읽음 표시가 화면에 안 남습니다. (2026-09-14)
+    //
+    // ★ push 뒤에 두는 것이 중요합니다. 앞에 두면 이동이 무효화를 중단시켜 안 먹습니다.
+    //   실측: refresh 직후 곧바로 push -> 안 고쳐짐 / 600ms 두고 push -> 고쳐짐
+    if (justRead) {
       router.refresh();
     }
   }
