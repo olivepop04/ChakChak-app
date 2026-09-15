@@ -32,7 +32,7 @@ export default async function MyPage() {
   return (
     <main className="pb-24">
       <Header
-        title="MY"
+        title="내 프로필"
         back
         backHref="/"
         right={
