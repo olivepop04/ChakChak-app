@@ -47,7 +47,7 @@ export default async function ChatPage({
   if (!isOwner && !isCrew) {
     return (
       <main>
-        <Header title="CREW CHAT" back backHref={`/action/${id}`} />
+        <Header title="크루 채팅" back backHref={`/action/${id}`} />
         <EmptyState
           icon="🔒"
           title="참여한 사람만 볼 수 있어요"
@@ -64,7 +64,7 @@ export default async function ChatPage({
 
   return (
     <main>
-      <Header title="CREW CHAT" back backHref={`/action/${id}`} sticky />
+      <Header title="크루 채팅" back backHref={`/action/${id}`} sticky />
 
       <div className="border-b border-neutral-100 px-5 py-4">
         <h1 className="line-clamp-1 text-[15px] font-bold text-neutral-900">

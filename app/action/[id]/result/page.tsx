@@ -67,7 +67,7 @@ export default async function ResultPage({
   if (!result) {
     return (
       <main>
-        <Header title="결과" back backHref={`/action/${id}`} />
+        <Header title="액션 결과" back backHref={`/action/${id}`} />
         <EmptyState
           icon="📝"
           title="아직 결과가 등록되지 않았어요"
@@ -80,7 +80,7 @@ export default async function ResultPage({
 
   return (
     <main className={canWriteVoice ? 'pb-52' : 'pb-24'}>
-      <Header title="ACTION RESULT" back backHref={`/action/${id}`} sticky />
+      <Header title="액션 결과" back backHref={`/action/${id}`} sticky />
 
       <div className="flex flex-col gap-7 px-5 py-6">
         {/* 제목 */}
