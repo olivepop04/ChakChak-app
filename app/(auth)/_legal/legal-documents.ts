@@ -10,6 +10,7 @@ export type LegalSection = {
 
 export type LegalDocument = {
   title: string;
+  headerTitle: '약관' | '개인정보';
   version: string;
   intro: string;
   sections: LegalSection[];
@@ -20,6 +21,7 @@ const b = (text: string): LegalBlock => ({ type: 'bullet', text });
 
 const terms: LegalDocument = {
   title: '착착 이용약관',
+  headerTitle: '약관',
   version: '버전 0.1 · MVP용',
   intro:
     '본 문서는 현재 착착 MVP의 서비스 구조를 기준으로 작성한 초안입니다. 실제 상용 서비스 출시 전에는 사업자 정보, 회원 연령, 개인정보 처리, 오프라인 활동의 안전·책임 범위, 분쟁처리 절차 등을 확정하고 법률 전문가의 검토를 거쳐 최종 확정하는 것을 권장합니다.',
@@ -213,6 +215,7 @@ const terms: LegalDocument = {
 
 const privacy: LegalDocument = {
   title: '착착 개인정보 처리방침',
+  headerTitle: '개인정보',
   version: '버전 0.1 · MVP용',
   intro:
     '본 개인정보 처리방침은 착착 MVP의 현재 서비스 구조를 기준으로 작성한 초안입니다. 실제 서비스 공개 전에는 실제 수집 항목, 보유기간, 개인정보 처리 위탁·제3자 제공, AI 서비스 이용 방식, 쿠키·로그 수집, 사업자 및 개인정보 보호책임자 정보를 확정하고 법률 전문가의 검토를 거쳐 최종 확정하는 것을 권장합니다.',

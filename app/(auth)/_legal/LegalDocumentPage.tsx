@@ -13,7 +13,7 @@ type LegalDocumentPageProps = {
   };
 };
 
-function LegalHeader() {
+function LegalHeader({ title }: { title: LegalDocument['headerTitle'] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get('from');
@@ -42,8 +42,8 @@ function LegalHeader() {
       >
         ‹
       </Link>
-      <p className="absolute left-1/2 -translate-x-1/2 text-[15px] font-semibold text-neutral-900">
-        약관 안내
+      <p className="ml-2 text-[15px] font-semibold text-neutral-900">
+        {title}
       </p>
     </header>
   );
@@ -105,13 +105,13 @@ export function LegalDocumentPage({
             >
               ‹
             </Link>
-            <p className="absolute left-1/2 -translate-x-1/2 text-[15px] font-semibold text-neutral-900">
-              약관 안내
+            <p className="ml-2 text-[15px] font-semibold text-neutral-900">
+              {document.headerTitle}
             </p>
           </header>
         }
       >
-        <LegalHeader />
+        <LegalHeader title={document.headerTitle} />
       </Suspense>
 
       <article className="px-5 pb-8 pt-8">
