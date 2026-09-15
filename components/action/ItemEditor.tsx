@@ -11,6 +11,7 @@
  */
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import {
   PERSON_UNIT,
   GENDER_REQUIREMENTS,
@@ -53,6 +54,52 @@ const emptyGoods = (): ActionItemInput => ({
 
 const inputSm =
   'h-10 rounded-lg border border-neutral-300 px-3 text-sm outline-none focus:border-neutral-900';
+
+function DeferredNumberInput({
+  value,
+  min,
+  onCommit,
+  className,
+}: {
+  value: number;
+  min: number;
+  onCommit: (value: number) => void;
+  className?: string;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  const focused = useRef(false);
+
+  useEffect(() => {
+    if (!focused.current) setDraft(String(value));
+  }, [value]);
+
+  function commit() {
+    focused.current = false;
+
+    const parsed = Number(draft);
+    const normalized = Number.isFinite(parsed) ? Math.max(min, Math.trunc(parsed)) : min;
+
+    setDraft(String(normalized));
+    onCommit(normalized);
+  }
+
+  return (
+    <input
+      type="number"
+      min={min}
+      value={draft}
+      onFocus={() => {
+        focused.current = true;
+      }}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+      className={className}
+    />
+  );
+}
 
 export function ItemEditor({
   items,
@@ -152,28 +199,22 @@ export function ItemEditor({
 
             {item.targetType === 'RANGE' && (
               <div className="flex items-center gap-2 pl-6">
-                <input
-                  type="number"
+                <DeferredNumberInput
                   min={1}
                   value={item.minRequired}
-                  onChange={(e) =>
-                    update(i, { minRequired: Math.max(1, Number(e.target.value) || 1) })
+                  onCommit={(minRequired) =>
+                    update(i, {
+                      minRequired,
+                      maxAllowed: Math.max(minRequired, item.maxAllowed ?? minRequired),
+                    })
                   }
                   className={`${inputSm} w-20`}
                 />
                 <span className="text-[13px] text-neutral-500">~</span>
-                <input
-                  type="number"
+                <DeferredNumberInput
                   min={item.minRequired}
                   value={item.maxAllowed ?? item.minRequired}
-                  onChange={(e) =>
-                    update(i, {
-                      maxAllowed: Math.max(
-                        item.minRequired,
-                        Number(e.target.value) || item.minRequired,
-                      ),
-                    })
-                  }
+                  onCommit={(maxAllowed) => update(i, { maxAllowed })}
                   className={`${inputSm} w-20`}
                 />
                 <span className="text-[13px] text-neutral-500">
@@ -197,13 +238,10 @@ export function ItemEditor({
             {item.targetType === 'MINIMUM' && (
               <div className="flex items-center gap-2 pl-6">
                 <span className="text-[13px] text-neutral-500">최소</span>
-                <input
-                  type="number"
+                <DeferredNumberInput
                   min={1}
                   value={item.minRequired}
-                  onChange={(e) =>
-                    update(i, { minRequired: Math.max(1, Number(e.target.value) || 1) })
-                  }
+                  onCommit={(minRequired) => update(i, { minRequired })}
                   className={`${inputSm} w-20`}
                 />
                 <span className="text-[13px] text-neutral-500">
