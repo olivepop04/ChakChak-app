@@ -138,6 +138,7 @@ export default async function ActionDetailPage({
   return (
     <main className="pb-52">
       <Header
+        title="액션 상세"
         back
         backHref="/"
         right={
