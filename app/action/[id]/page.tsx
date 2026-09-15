@@ -138,6 +138,7 @@ export default async function ActionDetailPage({
   return (
     <main className="pb-52">
       <Header
+        title="액션 상세"
         back
         backHref="/"
         right={
@@ -250,7 +251,7 @@ export default async function ActionDetailPage({
             <FollowButton
               targetUserId={action.owner.id}
               initialFollowing={action.followingOwner}
-              className="ml-auto"
+              className="ml-auto shrink-0"
             />
           )}
         </div>
@@ -374,7 +375,7 @@ export default async function ActionDetailPage({
           <div className="flex w-full items-center gap-2">
             <Link
               href={cta.chatHref}
-              className="flex h-12 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-neutral-300 bg-white px-2 text-xs sm:text-sm font-medium text-neutral-800 shadow-sm transition-colors active:bg-neutral-50 whitespace-nowrap"
+              className="flex min-h-13 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-neutral-300 bg-white px-2 py-3 text-xs sm:text-sm font-medium text-neutral-800 shadow-sm transition-colors active:bg-neutral-50 whitespace-nowrap"
             >
               <svg
                 className="h-4 w-4 flex-none text-neutral-700"
@@ -394,7 +395,7 @@ export default async function ActionDetailPage({
             </Link>
             <Link
               href={cta.writeHref}
-              className="flex h-12 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-neutral-900 px-2 text-xs sm:text-sm font-medium text-white shadow-sm transition-colors active:bg-neutral-800 whitespace-nowrap"
+              className="flex min-h-13 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-neutral-900 px-2 py-3 text-xs sm:text-sm font-medium text-white shadow-sm transition-colors active:bg-neutral-800 whitespace-nowrap"
             >
               <span>결과 작성</span>
             </Link>

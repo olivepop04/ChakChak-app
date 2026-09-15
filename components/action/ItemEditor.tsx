@@ -53,7 +53,7 @@ const emptyGoods = (): ActionItemInput => ({
 });
 
 const inputSm =
-  'h-10 rounded-lg border border-neutral-300 px-3 text-sm outline-none focus:border-neutral-900';
+  'min-h-11 rounded-lg border border-neutral-300 px-3 py-3 text-sm outline-none focus:border-neutral-900';
 
 function DeferredNumberInput({
   value,

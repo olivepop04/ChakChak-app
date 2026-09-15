@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils/cn';
 // 카드 하단 트리거 버튼은 CREW CHAT 등 다른 버튼과 같은 중립 스타일(하양 바탕 · 회색 글씨).
 // 실제 파괴적 확인은 아래 모달의 빨강 '나가기 진행' 버튼에서 받습니다.
 const secondary =
-  'inline-flex h-9 items-center justify-center rounded-lg border border-neutral-300 bg-white px-3 text-[12px] font-semibold text-neutral-700 transition-colors';
+  'inline-flex min-h-9 items-center justify-center rounded-lg border border-neutral-300 bg-white px-3 py-2 text-[12px] font-semibold text-neutral-700 transition-colors';
 
 export function LeaveButton({
   actionId,
@@ -138,7 +138,7 @@ export function LeaveButton({
                   type="button"
                   onClick={closeModal}
                   disabled={busy}
-                  className="flex h-11 flex-1 items-center justify-center rounded-xl border border-neutral-300 text-sm font-semibold text-neutral-700 disabled:opacity-50"
+                  className="flex min-h-11 flex-1 items-center justify-center rounded-xl border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 disabled:opacity-50"
                 >
                   취소
                 </button>
@@ -146,7 +146,7 @@ export function LeaveButton({
                   type="button"
                   onClick={handleLeave}
                   disabled={busy || reason.trim().length < 5}
-                  className="flex h-11 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-red-600 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {busy ? '처리 중...' : '나가기 진행'}
                 </button>

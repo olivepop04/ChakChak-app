@@ -12,7 +12,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="mt-3 inline-flex h-11 items-center justify-center rounded-xl bg-neutral-900 px-5 text-sm font-semibold text-white transition-colors active:bg-neutral-800"
+        className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl bg-neutral-900 px-5 py-3 text-sm font-semibold text-white transition-colors active:bg-neutral-800"
       >
         홈으로 돌아가기
       </Link>

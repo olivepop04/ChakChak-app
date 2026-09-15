@@ -44,7 +44,7 @@ const CATEGORY_OPTIONS = ['전체', ...CATEGORIES] as const;
 const DRAFT_KEY = 'chak_signup_draft';
 
 const inputClass =
-  'h-12 rounded-xl border border-neutral-300 px-4 text-[15px] outline-none focus:border-neutral-900';
+  'min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900';
 
 function SignUpForm() {
   const router = useRouter();
@@ -453,7 +453,7 @@ function SignUpForm() {
                     key={g}
                     type="button"
                     onClick={() => setGender(g)}
-                    className={`h-12 flex-1 rounded-xl border text-[15px] font-medium ${
+                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-[15px] font-medium ${
                       gender === g
                         ? 'border-neutral-900 bg-neutral-900 text-white'
                         : 'border-neutral-300 bg-white text-neutral-600'

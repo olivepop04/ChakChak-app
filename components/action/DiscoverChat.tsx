@@ -120,13 +120,13 @@ export function DiscoverChat({
           </ul>
           <Link
             href="/login?next=/discover"
-            className="mt-5 flex h-12 items-center justify-center rounded-xl bg-neutral-900 text-[15px] font-semibold text-white"
+            className="mt-5 flex min-h-13 items-center justify-center rounded-xl bg-neutral-900 py-3 text-[15px] font-semibold text-white"
           >
             로그인하고 추천받기
           </Link>
           <Link
             href="/signup"
-            className="mt-2 flex h-11 items-center justify-center rounded-xl border border-neutral-300 text-[13px] font-semibold text-neutral-700"
+            className="mt-2 flex min-h-11 items-center justify-center rounded-xl border border-neutral-300 py-3 text-[13px] font-semibold text-neutral-700"
           >
             처음이라면 가입하기
           </Link>

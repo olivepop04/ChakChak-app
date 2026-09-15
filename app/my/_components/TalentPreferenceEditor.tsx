@@ -82,7 +82,7 @@ export function TalentPreferenceEditor({
             maxLength={40}
             onChange={(event) => commit(selected, event.target.value)}
             placeholder="예: 수어 통역"
-            className="h-11 rounded-xl border border-neutral-300 px-4 text-[14px] outline-none focus:border-neutral-900"
+            className="min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[14px] outline-none focus:border-neutral-900"
           />
           <span className="text-right text-[11px] text-neutral-400">
             {other.length} / 40
