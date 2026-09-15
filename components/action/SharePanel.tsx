@@ -116,7 +116,7 @@ export function SharePanel({
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="이름 또는 닉네임 (2자 이상)"
-            className="h-11 flex-1 rounded-xl border border-neutral-300 px-4 text-[14px] outline-none focus:border-neutral-900"
+            className="min-h-11 flex-1 rounded-xl border border-neutral-300 px-4 py-3 text-[14px] outline-none focus:border-neutral-900"
           />
           <Button onClick={handleSearch} loading={searching}>
             검색
@@ -166,7 +166,7 @@ export function SharePanel({
             readOnly
             value={shareUrl}
             onFocus={(e) => e.currentTarget.select()}
-            className="h-11 flex-1 rounded-xl border border-neutral-300 bg-neutral-50 px-4 text-[13px] text-neutral-600 outline-none"
+            className="min-h-11 flex-1 rounded-xl border border-neutral-300 bg-neutral-50 px-4 py-3 text-[13px] text-neutral-600 outline-none"
           />
           <Button variant="secondary" onClick={handleCopy}>
             복사

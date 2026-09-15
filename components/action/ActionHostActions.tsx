@@ -243,7 +243,7 @@ export function ActionHostActions({
                 type="button"
                 onClick={closeModal}
                 disabled={busy}
-                className="flex h-11 flex-1 items-center justify-center rounded-xl border border-neutral-300 text-sm font-semibold text-neutral-700 disabled:opacity-50"
+                className="flex min-h-11 flex-1 items-center justify-center rounded-xl border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 disabled:opacity-50"
               >
                 닫기
               </button>
@@ -251,7 +251,7 @@ export function ActionHostActions({
                 type="button"
                 onClick={handleSubmit}
                 disabled={busy || reason.trim().length < 5}
-                className="flex h-11 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-red-600 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? '처리 중...' : mode === 'early_end' ? '조기 종료 진행' : '취소 진행'}
               </button>

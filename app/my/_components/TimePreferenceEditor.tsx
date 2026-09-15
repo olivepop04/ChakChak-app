@@ -105,7 +105,7 @@ export function TimePreferenceEditor({
                     disabled={usedByOther}
                     aria-pressed={pref.day === day}
                     onClick={() => changeDay(index, day)}
-                    className={`h-10 flex-1 rounded-xl border text-[12px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-[12px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
                       pref.day === day
                         ? 'border-neutral-900 bg-neutral-900 text-white'
                         : 'border-neutral-300 bg-white text-neutral-600'
@@ -141,7 +141,7 @@ export function TimePreferenceEditor({
         <button
           type="button"
           onClick={addPreference}
-          className="h-11 rounded-xl border border-dashed border-neutral-300 text-[13px] font-semibold text-neutral-600 hover:bg-neutral-50"
+          className="flex min-h-11 items-center justify-center rounded-xl border border-dashed border-neutral-300 py-3 text-[13px] font-semibold text-neutral-600 hover:bg-neutral-50"
         >
           + 선호시간 추가
         </button>

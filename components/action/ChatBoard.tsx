@@ -192,7 +192,7 @@ export function ChatBoard({
                         }}
                         maxLength={LIMITS.CHAT_MAX}
                         placeholder="댓글을 입력하세요"
-                        className="h-9 flex-1 rounded-lg border border-neutral-300 px-3 text-[13px] outline-none focus:border-neutral-900"
+                        className="min-h-9 flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-[13px] outline-none focus:border-neutral-900"
                       />
                       <Button
                         size="sm"

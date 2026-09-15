@@ -169,7 +169,7 @@ function DisabledNoticeModal({
           type="button"
           onClick={onClose}
           autoFocus
-          className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-neutral-900 text-[14px] font-semibold text-white"
+          className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[14px] font-semibold text-white"
         >
           확인
         </button>
@@ -319,14 +319,14 @@ export function LikeButton({
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
                 autoFocus
-                className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-neutral-900 text-[14px] font-semibold text-white"
+                className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[14px] font-semibold text-white"
               >
                 로그인하고 계속하기
               </Link>
               <button
                 type="button"
                 onClick={() => setLoginPromptOpen(false)}
-                className="mt-2 h-11 w-full rounded-xl text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
+                className="mt-2 min-h-11 w-full rounded-xl py-3 text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
               >
                 다음에 할게요
               </button>
@@ -491,14 +491,14 @@ export function SaveButton({
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
                 autoFocus
-                className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-neutral-900 text-[14px] font-semibold text-white"
+                className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[14px] font-semibold text-white"
               >
                 로그인하고 계속하기
               </Link>
               <button
                 type="button"
                 onClick={() => setLoginPromptOpen(false)}
-                className="mt-2 h-11 w-full rounded-xl text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
+                className="mt-2 min-h-11 w-full rounded-xl py-3 text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
               >
                 다음에 할게요
               </button>

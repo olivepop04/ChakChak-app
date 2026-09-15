@@ -79,7 +79,7 @@ function LoginForm() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-12 rounded-xl border border-neutral-300 px-4 text-[15px] outline-none focus:border-neutral-900"
+            className="min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900"
           />
         </label>
 
@@ -91,7 +91,7 @@ function LoginForm() {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="h-12 rounded-xl border border-neutral-300 px-4 text-[15px] outline-none focus:border-neutral-900"
+            className="min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900"
           />
         </label>
 

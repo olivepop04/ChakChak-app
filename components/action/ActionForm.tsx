@@ -80,7 +80,7 @@ export interface ActionFormInitial {
 }
 
 const input =
-  'h-12 rounded-xl border border-neutral-300 px-4 text-[15px] outline-none focus:border-neutral-900';
+  'min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900';
 const label = 'text-[13px] font-medium text-neutral-700';
 const RECRUIT_END_ERROR =
   '모집 마감은 활동 시작보다 앞서야 해요. 마감일을 활동 시작일 이전으로 바꿔주세요.';

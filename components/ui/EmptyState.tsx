@@ -59,7 +59,7 @@ export function EmptyState({
       {action && (
         <Link
           href={action.href}
-          className="mt-3 inline-flex h-10 items-center rounded-xl bg-neutral-900 px-4 text-[13px] font-semibold text-white"
+          className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-neutral-900 px-4 py-3 text-[13px] font-semibold text-white"
         >
           {action.label}
         </Link>
@@ -73,7 +73,7 @@ export function EmptyState({
                 key={act.href + act.label}
                 href={act.href}
                 className={cn(
-                  'inline-flex h-10 w-32 items-center justify-center whitespace-nowrap rounded-xl text-[13px] font-semibold transition-colors',
+                  'inline-flex min-h-11 w-32 items-center justify-center whitespace-nowrap rounded-xl py-3 text-[13px] font-semibold transition-colors',
                   isSecondary
                     ? 'border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50'
                     : 'bg-neutral-900 text-white hover:bg-neutral-800',

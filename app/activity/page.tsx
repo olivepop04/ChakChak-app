@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils/cn';
 import type { JoinedActionData, ActionCardData } from '@/lib/types/view';
 
 const btn =
-  'inline-flex h-9 items-center justify-center rounded-lg px-3 text-[12px] font-semibold';
+  'inline-flex min-h-9 items-center justify-center rounded-lg px-3 py-2 text-[12px] font-semibold';
 const primary = `${btn} bg-neutral-900 text-white`;
 const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 

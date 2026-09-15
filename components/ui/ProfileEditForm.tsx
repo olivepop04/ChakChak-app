@@ -42,7 +42,7 @@ interface Initial {
 
 const label = 'text-[13px] font-medium text-neutral-700';
 const locked =
-  'flex h-12 items-center justify-between rounded-xl bg-neutral-100 px-4 text-[15px] text-neutral-500';
+  'flex min-h-11 items-center justify-between rounded-xl bg-neutral-100 px-4 py-3 text-[15px] text-neutral-500';
 
 export function ProfileEditForm({
   userId,
@@ -181,7 +181,7 @@ export function ProfileEditForm({
         <input
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          className="h-12 rounded-xl border border-neutral-300 px-4 text-[15px] outline-none focus:border-neutral-900"
+          className="min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900"
         />
       </label>
 

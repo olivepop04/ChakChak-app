@@ -157,7 +157,7 @@ export function JoinForm({
                     min={1}
                     value={sel.quantity}
                     onChange={(e) => setQuantity(item.id, Number(e.target.value) || 1)}
-                    className="h-9 w-20 rounded-lg border border-neutral-300 px-3 text-center text-sm outline-none focus:border-neutral-900"
+                    className="min-h-9 w-20 rounded-lg border border-neutral-300 px-3 py-2 text-center text-sm outline-none focus:border-neutral-900"
                   />
                   <span className="text-sm text-neutral-600">{item.unit}</span>
                   <button
