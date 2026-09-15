@@ -335,7 +335,7 @@ export default async function ActivityPage({
 
   return (
     <main className="pb-24">
-      <Header title="내 활동" back backHref="/" sticky />
+      <Header title="내 액션" back backHref="/" sticky />
 
       {/* 탭: 호스트한 액션 / 참여한 액션 */}
       <div className="flex border-b border-neutral-200 px-5">
