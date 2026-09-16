@@ -80,11 +80,14 @@ export function getQuotaState(item: QuotaItem, current: number): QuotaState {
     const hint = !isMinMet
       ? `목표까지 ${remaining}${unit} 남았어요`
       : type === 'PERSON'
-        ? '더 많은 크루가 참여할수록 좋아요'
-        : '더 많은 수량이 모일수록 좋아요';
+        ? '최소 인원은 채웠지만 더 많이 참여할수록 좋아요.'
+        : '최소 수량을 채웠지만 더 많이 모일수록 좋아요';
 
     return {
-      countLabel: `${current}${unit} 참여`,
+      countLabel:
+        type === 'PERSON'
+          ? `${current}${unit} 참여`
+          : `${current}${unit} 모집`,
       hint,
       ratio: isMinMet ? 1 : current / min_required,
       showPercent: false,
@@ -106,8 +109,8 @@ export function getQuotaState(item: QuotaItem, current: number): QuotaState {
     const left = max - current;
     hint =
       type === 'PERSON'
-        ? `최소 인원을 채웠어요. ${left}${unit} 더 함께할 수 있어요`
-        : `최소 수량을 채웠어요. ${left}${unit} 더 신청할 수 있어요`;
+        ? `최소 인원을 채웠지만 ${left}${unit} 더 함께할 수 있어요`
+        : `최소 수량을 채웠지만 ${left}${unit} 더 신청할 수 있어요`;
   } else {
     const need = min_required - current;
     hint = `목표까지 ${need}${unit} 남았어요`;

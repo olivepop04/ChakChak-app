@@ -63,7 +63,7 @@ export default async function HomePage({
         <div>
           <p className="text-xl font-bold tracking-tight text-neutral-900">착착</p>
           <p className="mt-0.5 text-[13px] text-neutral-500">
-            오늘 함께할 수 있는 좋은 일
+            착한 일을 착착, 쉽고 즐겁게!
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export default async function HomePage({
         <EmptyState
           icon="🌱"
           title={
-            selected ? `${selected} 액션이 아직 없어요` : '아직 열린 액션이 없어요'
+            selected ? `${selected} 액션이 아직 없어요` : '아직 해당 액션이 없어요'
           }
           description="첫 번째 액션을 만들어 함께할 사람을 모아보세요."
           action={{ label: '액션 만들기', href: '/action/create' }}

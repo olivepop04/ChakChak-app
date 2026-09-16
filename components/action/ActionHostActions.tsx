@@ -197,7 +197,7 @@ export function ActionHostActions({
             </h2>
             <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
               {mode === 'early_end'
-                ? '조기 종료 사유는 크루들에게 공지로 전달되며, 활동이 일찍 종료됩니다.'
+                ? '조기 종료 사유는 크루들에게 알림으로 전달됩니다. 활동이 일찍 끝났더라도 결과를 남겨주시면 완료 액션으로 인정돼요.'
                 : '취소 사유는 참여자 전원에게 알림으로 전달됩니다.'}
             </p>
             <p className="mt-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-[13px] font-semibold leading-relaxed text-red-800">
@@ -218,7 +218,7 @@ export function ActionHostActions({
                 placeholder={
                   mode === 'early_end'
                     ? '크루들이 상황을 이해할 수 있도록 사유를 적어주세요.'
-                    : '참여자가 상황을 이해할 수 있도록 사유를 적어주세요.'
+                    : '크루들이 상황을 이해할 수 있도록 사유를 적어주세요.'
                 }
                 className="resize-none rounded-xl border border-neutral-300 p-3 text-sm leading-relaxed outline-none focus:border-neutral-900 disabled:bg-neutral-50"
               />
@@ -232,7 +232,7 @@ export function ActionHostActions({
                 }
               >
                 {reason.trim().length > 0 && reason.trim().length < 5
-                  ? '사유를 5자 이상 적어주세요.'
+                  ? '5자 이상 입력해주세요.'
                   : '5자 이상 입력해주세요.'}
               </span>
               <span className="text-neutral-400">{reason.length}/1000</span>

@@ -103,7 +103,7 @@ export function ResultWriteForm({
         <div>
           <h2 className="text-[15px] font-bold text-neutral-900">자동 집계</h2>
           <p className="mt-0.5 text-[12px] text-neutral-500">
-            참여 기록으로 자동 계산된 값이에요. 수정할 수 없어요.
+            참여 기록으로 자동 계산되어 수정할 수 없어요. 실제 활동 내용이 다를 경우 아래 입력칸에 적어주세요.
           </p>
         </div>
 
@@ -203,7 +203,7 @@ export function ResultWriteForm({
           </Button>
         </div>
         <p className="mt-2 text-center text-[11px] text-neutral-400">
-          공개하면 참여한 크루들에게 알림이 가고, 소감을 남길 수 있게 돼요.
+          공개하면 참여한 크루들에게 알림이 가고, 크루들도 소감을 남길 수 있게 돼요.
         </p>
       </div>
     </div>

@@ -25,7 +25,7 @@ export function ActionCrewSection({
     if (canViewCrew) {
       router.push(`/action/${actionId}/crew`);
     } else {
-      toast('참여 후 전체 크루 목록을 확인할 수 있습니다');
+      toast('액션에 참여하신 분만 크루 목록을 확인할 수 있어요');
     }
   }
 

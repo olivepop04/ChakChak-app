@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     // 오류 메시지로 흘리면 안 되기 때문입니다.
     console.error('[check-email] 이메일 확인 실패:', err);
     return json(
-      { error: '이메일을 확인하지 못했어요. 잠시 후 다시 시도해주세요.' },
+      { error: '일시적인 오류로 이메일 중복 확인을 완료하지 못했어요. 잠시 후 다시 시도해주세요.' },
       503,
     );
   }

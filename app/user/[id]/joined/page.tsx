@@ -42,7 +42,7 @@ export default async function JoinedActionsPage({
 
       <ProfileActionList
         actions={actions}
-        emptyText="아직 완료한 액션이 없어요."
+        emptyText="아직 참여 완료한 액션이 없어요."
       />
     </main>
   );

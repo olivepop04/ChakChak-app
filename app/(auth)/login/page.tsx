@@ -58,9 +58,9 @@ function LoginForm() {
       <div className="mb-10">
         <p className="text-2xl font-bold tracking-tight text-neutral-900">착착</p>
         <p className="mt-2 text-sm leading-relaxed text-neutral-500">
-          좋은 일을 찾고,
+          착한 일을 착착,
           <br />
-          함께하고, 다시 나누는 곳
+          쉽고 즐겁게!
         </p>
 
         {notice && (

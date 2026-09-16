@@ -51,7 +51,7 @@ export function ActionTextEditForm({
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           rows={9}
-          placeholder="액션을 소개해주세요."
+          placeholder="어떤 활동인지, 참여하면 무엇을 하게 되는지 적어주세요."
           className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
         />
       </label>
@@ -62,7 +62,7 @@ export function ActionTextEditForm({
           value={notice}
           onChange={(event) => setNotice(event.target.value)}
           rows={6}
-          placeholder="참여자가 알아야 할 내용을 적어주세요."
+          placeholder="예: 편한 옷차림으로 와주세요. 물은 준비되어 있습니다."
           className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
         />
       </label>
