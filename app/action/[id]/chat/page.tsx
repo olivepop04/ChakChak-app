@@ -11,7 +11,7 @@ import { getChatPosts, canWriteChat } from '@/lib/queries/chat';
 import { ChatBoard } from '@/components/action/ChatBoard';
 import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ACTION_STATUS_LABEL, type ActionStatus } from '@/lib/constants';
+import { type ActionStatus } from '@/lib/constants';
 
 export default async function ChatPage({
   params,
@@ -71,7 +71,7 @@ export default async function ChatPage({
           {action.title}
         </h1>
         <p className="mt-0.5 text-[12px] text-neutral-500">
-          {ACTION_STATUS_LABEL[status]} · 글 {posts.length}개
+          글 {posts.length}개
         </p>
       </div>
 
@@ -80,9 +80,11 @@ export default async function ChatPage({
         posts={posts}
         canWrite={writable}
         readOnlyReason={
-          status === 'CANCELLED'
-            ? '취소된 액션이라 새 글을 쓸 수 없어요.'
-            : '완료된 액션이라 새 글을 쓸 수 없어요. 읽기는 계속 가능해요.'
+          status === 'DRAFT'
+            ? '아직 공개 전이라 크루가 없어요.'
+            : status === 'CANCELLED'
+              ? '취소된 액션이라 새 글을 쓸 수 없어요.'
+              : '완료된 액션이라 새 글을 쓸 수 없어요. 읽기는 계속 가능해요.'
         }
       />
     </main>
