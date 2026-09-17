@@ -40,6 +40,7 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
    components/ui/     Button Badge Chip EmptyState Toast Avatar ActionCard
                       ImageUploader RegionPicker UserList LogoutButton
                       ToggleButtons(LikeButton SaveButton FollowButton)
+                      NotificationList ProfileEditForm
    components/layout/ Header BottomNav
    components/action/ QuotaProgress ActionGallery AddressBox ItemEditor 등
    components/my/     MySavedSection ProfileActionList ProfileActionSection ProfileStats
