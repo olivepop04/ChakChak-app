@@ -33,8 +33,9 @@ git merge origin/dev        # ← 이 줄을 빼면 안 됩니다
 | 함께하는 사람들 | `/action/[id]/crew` | `app/action/[id]/crew/page.tsx` |
 | 크루 게시판 | `/action/[id]/chat` | `app/action/[id]/chat/page.tsx` + `components/action/ChatBoard.tsx` |
 | 결과 작성 | `/action/[id]/result/write` | `app/action/[id]/result/write/page.tsx` + `components/action/ResultWriteForm.tsx` |
-| 결과 보기 | `/action/[id]/result` | `app/action/[id]/result/page.tsx` |
+| 결과 보기 | `/action/[id]/result` | `app/action/[id]/result/page.tsx` + `components/action/CrewVoiceList.tsx` |
 | 소감 작성 | `/action/[id]/voice` | `app/action/[id]/voice/page.tsx` + `components/action/VoiceForm.tsx` |
+| 액션 수정 (공개 후) | `/action/[id]/edit` | `app/action/[id]/edit/page.tsx` + `components/action/ActionTextEditForm.tsx` · `AddActionItemsForm.tsx` |
 
 ---
 
@@ -361,14 +362,24 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
 ## 내 담당
 
 액션의 처음부터 끝까지 — 만들기 → 참여 → 활동 → 결과 → 소감.
-app/action/create/ · app/action/[id]/ 하위 (join · welcome · crew · chat · result · voice)
+app/action/create/ · app/action/[id]/ 하위 (join · welcome · crew · chat · edit · result · voice)
 components/action/ (ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm
-                    · LeaveButton · AddressSearch · ActionHostActions)
+                    · LeaveButton · AddressSearch · ActionHostActions
+                    · ActionTextEditForm · AddActionItemsForm · CrewVoiceList)
 
 AddressSearch 와 ActionHostActions 는 2026-09-14에 내 담당이 됐다. 담당 표에 없던 파일이다.
   AddressSearch       ActionForm 에서만 쓴다 (주소 검색 버튼)
   ActionHostActions   액션 상세에서만 쓴다. 호출하는 화면은 디자이너 구역이지만
                       내용이 취소·조기 종료 모달이라 LeaveButton 과 같은 성격이다.
+
+ActionTextEditForm · AddActionItemsForm · CrewVoiceList 는 2026-09-17에 내 담당이 됐다.
+app/action/[id]/edit/ 폴더도 같이 채웠다 — 실재하는 화면인데 위 괄호 목록에서 빠져 있었다.
+  ActionTextEditForm  app/action/[id]/edit/ 에서만 쓴다. 공개 뒤 소개·안내사항 수정 폼이다.
+                      updateActionText() 를 쓴다 — saveActionDraft() 가 아니다.
+  AddActionItemsForm  같은 화면. 안에서 ItemEditor 를 쓰고 addActionItems() 를 부른다.
+                      공개된 액션에 saveActionItems() 를 쓰면 크루들의 참여 기록이
+                      함께 사라진다 (CLAUDE.md 규칙 10). 반드시 addActionItems() 다.
+  CrewVoiceList       app/action/[id]/result/ 에서만 쓴다. 소감 2개 + 「더보기」 목록이다.
 
 화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
 
