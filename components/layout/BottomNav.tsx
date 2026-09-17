@@ -66,9 +66,27 @@ export function BottomNav() {
     return null;
   }
 
+  // ★ 배경을 불투명하게 둡니다. backdrop-blur 를 다시 넣지 마세요. (2026-09-17)
+  //
+  //   전에는 `bg-white/95 backdrop-blur` 였습니다. 그런데 아이폰에서
+  //   **하단 탭이 화면 중간에 떠 있는** 제보가 왔습니다 (성은님).
+  //     · 아이폰 크롬 — iOS 크롬은 내부가 WebKit 이라 사파리와 같은 렌더 엔진입니다
+  //     · 그때그때 다르고, 브라우저를 끄고 다시 들어오면 풀립니다
+  //     · 민호 폰·소정님 폰에서는 안 났습니다
+  //
+  //   CSS 규칙이 틀린 것은 아닙니다 — html·body·ToastProvider 어디에도
+  //   transform·filter·contain 이 없어서 고정 기준은 화면(뷰포트)이 맞습니다.
+  //   375×812 측정에서도 탭은 750~812 에 정확히 붙어 있었습니다.
+  //
+  //   간헐적이고 재시작으로 풀리는 것은 **합성 레이어 상태가 틀어지는 것**입니다.
+  //   반투명 배경 + backdrop-filter 가 걸린 position:fixed 요소는 iOS WebKit 에서
+  //   스크롤 직후 옛 자리에 그려지는 알려진 문제가 있습니다.
+  //   앱 전체에서 fixed + backdrop-blur 조합은 **이 요소 하나뿐**이었습니다 (전수 확인).
+  //
+  //   원래 95% 불투명이라 눈에 보이는 차이는 거의 없습니다.
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-app border-t border-neutral-200 bg-white/95 backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-app border-t border-neutral-200 bg-white"
       aria-label="주요 메뉴"
     >
       <ul className="flex">
