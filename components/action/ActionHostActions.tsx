@@ -197,7 +197,7 @@ export function ActionHostActions({
             </h2>
             <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
               {mode === 'early_end'
-                ? '조기 종료 사유는 크루들에게 알림으로 전달됩니다. 활동이 일찍 끝났더라도 결과를 남겨주시면 완료 액션으로 인정돼요.'
+                ? '조기 종료 사유는 크루들에게 알림으로 전달됩니다. 일찍 끝난 활동이라도 결과를 남겨주시면 크루들이 소감을 남길 수 있어요.'
                 : '취소 사유는 참여자 전원에게 알림으로 전달됩니다.'}
             </p>
             <p className="mt-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-[13px] font-semibold leading-relaxed text-red-800">

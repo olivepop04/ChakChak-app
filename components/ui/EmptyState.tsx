@@ -52,7 +52,7 @@ export function EmptyState({
       )}
       <p className="text-[15px] font-semibold text-neutral-800">{title}</p>
       {description && (
-        <p className="text-[13px] leading-relaxed text-neutral-500 whitespace-pre-line">
+        <p className="text-[13px] leading-relaxed text-neutral-500">
           {description}
         </p>
       )}
