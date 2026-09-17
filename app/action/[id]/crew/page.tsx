@@ -61,10 +61,33 @@ export default async function CrewPage({
 
   const { data: action } = await supabase
     .from('actions')
-    .select('id, title, activity_start_at, activity_end_at')
+    .select('id, title, owner_id, activity_start_at, activity_end_at')
     .eq('id', id)
     .maybeSingle();
   if (!action) notFound();
+
+  const isOwner = action.owner_id === user.id;
+  const { data: participation } = await supabase
+    .from('participations')
+    .select('status')
+    .eq('action_id', id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const isCrew = !!participation && participation.status !== 'LEFT';
+
+  if (!isOwner && !isCrew) {
+    return (
+      <main>
+        <Header title="함께하는 크루" back backHref={`/action/${id}`} />
+        <EmptyState
+          icon="🔒"
+          title="참여한 사람만 볼 수 있어요"
+          description="이 액션에 참여하면 함께하는 크루를 볼 수 있어요."
+          action={{ label: '액션 보러 가기', href: `/action/${id}` }}
+        />
+      </main>
+    );
+  }
 
   const { owner, crew } = await getActionCrew(supabase, id, user.id);
   const personGroups = groupCrewByItem(crew).filter((group) => group.type === 'PERSON');
