@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { cancelAction, endActionEarly } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils/cn';
+import { ReasonModal } from '@/components/action/ReasonModal';
 import type { ActionStatus } from '@/lib/constants';
 
 interface ActionHostActionsProps {
@@ -31,7 +32,6 @@ export function ActionHostActions({
   const toast = useToast();
 
   const [mode, setMode] = useState<ModalMode>(null);
-  const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -62,7 +62,6 @@ export function ActionHostActions({
   }
 
   function openModal(targetMode: 'cancel' | 'early_end') {
-    setReason('');
     setMenuOpen(false);
     setMode(targetMode);
   }
@@ -70,11 +69,10 @@ export function ActionHostActions({
   function closeModal() {
     if (!busy) {
       setMode(null);
-      setReason('');
     }
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(reason: string) {
     const trimmed = reason.trim();
     if (busy || trimmed.length < 5) return;
 
@@ -88,7 +86,6 @@ export function ActionHostActions({
       } else {
         toast('활동을 일찍 종료했어요. 크루들에게 알림이 갔어요.');
         setMode(null);
-        setReason('');
         router.refresh();
       }
     } else if (mode === 'cancel') {
@@ -98,7 +95,6 @@ export function ActionHostActions({
       } else {
         toast('액션을 취소했어요. 참여자에게 알림이 갔어요.');
         setMode(null);
-        setReason('');
         router.refresh();
       }
     }
@@ -175,89 +171,26 @@ export function ActionHostActions({
         </div>
       )}
 
-      {/* 사유 작성 모달 */}
       {mode && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeModal();
+        <ReasonModal
+          open
+          title={mode === 'early_end' ? '활동을 조기 종료할까요?' : '액션을 취소할까요?'}
+          description={
+            mode === 'early_end'
+              ? '조기 종료 사유는 크루들에게 알림으로 전달됩니다. 일찍 끝난 활동이라도 결과를 남겨주시면 크루들이 소감을 남길 수 있어요.'
+              : '취소 사유는 참여자 전원에게 알림으로 전달됩니다.'
+          }
+          warning={`이 내용은 ${mode === 'early_end' ? '크루' : '참여자'}에게 공개되며, 되돌릴 수 없습니다.`}
+          reason={{
+            label: mode === 'early_end' ? '조기 종료 사유' : '취소 사유',
+            placeholder: '크루들이 상황을 이해할 수 있도록 사유를 적어주세요.',
           }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="host-action-modal-title"
-            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
-          >
-            <h2
-              id="host-action-modal-title"
-              className="text-[17px] font-bold text-neutral-900"
-            >
-              {mode === 'early_end' ? '활동을 조기 종료할까요?' : '액션을 취소할까요?'}
-            </h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
-              {mode === 'early_end'
-                ? '조기 종료 사유는 크루들에게 알림으로 전달됩니다. 일찍 끝난 활동이라도 결과를 남겨주시면 크루들이 소감을 남길 수 있어요.'
-                : '취소 사유는 참여자 전원에게 알림으로 전달됩니다.'}
-            </p>
-            <p className="mt-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-[13px] font-semibold leading-relaxed text-red-800">
-              이 내용은 {mode === 'early_end' ? '크루' : '참여자'}에게 공개되며, 되돌릴 수 없습니다.
-            </p>
-
-            <label className="mt-4 flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-neutral-700">
-                {mode === 'early_end' ? '조기 종료 사유' : '취소 사유'}
-              </span>
-              <textarea
-                autoFocus
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                rows={4}
-                maxLength={1000}
-                disabled={busy}
-                placeholder={
-                  mode === 'early_end'
-                    ? '크루들이 상황을 이해할 수 있도록 사유를 적어주세요.'
-                    : '크루들이 상황을 이해할 수 있도록 사유를 적어주세요.'
-                }
-                className="resize-none rounded-xl border border-neutral-300 p-3 text-sm leading-relaxed outline-none focus:border-neutral-900 disabled:bg-neutral-50"
-              />
-            </label>
-            <div className="mt-1 flex items-center justify-between gap-3 text-[11px]">
-              <span
-                className={
-                  reason.trim().length > 0 && reason.trim().length < 5
-                    ? 'text-red-600'
-                    : 'text-neutral-400'
-                }
-              >
-                {reason.trim().length > 0 && reason.trim().length < 5
-                  ? '5자 이상 입력해주세요.'
-                  : '5자 이상 입력해주세요.'}
-              </span>
-              <span className="text-neutral-400">{reason.length}/1000</span>
-            </div>
-
-            <div className="mt-5 flex gap-2">
-              <button
-                type="button"
-                onClick={closeModal}
-                disabled={busy}
-                className="flex min-h-11 flex-1 items-center justify-center rounded-xl border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 disabled:opacity-50"
-              >
-                닫기
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={busy || reason.trim().length < 5}
-                className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-red-600 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {busy ? '처리 중...' : mode === 'early_end' ? '조기 종료 진행' : '취소 진행'}
-              </button>
-            </div>
-          </div>
-        </div>
+          confirmLabel={mode === 'early_end' ? '조기 종료 진행' : '취소 진행'}
+          cancelLabel="닫기"
+          busy={busy}
+          onClose={closeModal}
+          onConfirm={handleSubmit}
+        />
       )}
     </>
   );
