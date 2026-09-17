@@ -187,7 +187,7 @@ function SignUpForm() {
       if (!response.ok) {
         setError(
           result.error ??
-            '이메일을 확인하지 못했어요. 잠시 후 다시 시도해주세요.',
+            '일시적인 오류로 이메일 중복 확인을 완료하지 못했어요. 잠시 후 다시 시도해주세요.',
         );
         return;
       }
@@ -255,7 +255,7 @@ function SignUpForm() {
         setError(
           signUpError.message.includes('already')
             ? '이미 가입된 이메일이에요.'
-            : '가입에 실패했어요. 잠시 후 다시 시도해주세요.',
+            : '일시적인 오류로 회원가입을 완료하지 못했어요. 잠시 후 다시 시도해주세요.',
         );
         return;
       }
@@ -315,9 +315,9 @@ function SignUpForm() {
       {step === 1 && (
         <>
           <h1 className="text-[22px] font-bold leading-snug tracking-tight text-neutral-900">
-            좋은 일을 찾고,
+            착한 일을 착착,
             <br />
-            함께하고, 다시 나누는 곳
+            쉽고 즐겁게!
           </h1>
           <p className="mt-2 text-[13px] text-neutral-500">
             이메일로 간단히 시작할 수 있어요.
@@ -358,7 +358,7 @@ function SignUpForm() {
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={LIMITS.BIO_MAX}
                 rows={3}
-                placeholder="어떤 활동에 관심이 있는지 짧게 알려주세요."
+                placeholder="어떤 활동에 관심이 있는지, 어떤 변화를 만들고 싶은지 등 자유롭게 적어보세요."
                 className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
               />
               <span className="text-right text-[11px] text-neutral-400">
@@ -479,12 +479,14 @@ function SignUpForm() {
       {step === 3 && (
         <>
           <h1 className="text-[22px] font-bold leading-snug tracking-tight text-neutral-900">
-            어떤 액션을
+            어떻게
             <br />
-            찾고 있나요?
+            활동하고 싶으세요?
           </h1>
           <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
-            나중에 프로필에서 언제든 바꿀 수 있어요.
+            알려주신 정보를 바탕으로 딱 맞는 액션을 찾아드려요.
+            <br />
+            나중에 프로필에서 언제든 바꿀 수 있으니 편하게 선택해 보세요.
           </p>
 
           <div className="mt-8 flex flex-col gap-6">
@@ -516,7 +518,7 @@ function SignUpForm() {
 
             <div className="flex flex-col gap-2.5">
               <span className="text-[13px] font-medium text-neutral-700">
-                활동 가능 지역
+                어느 지역이 편하세요?
               </span>
               <RegionPicker value={regions} onChange={setRegions} />
             </div>

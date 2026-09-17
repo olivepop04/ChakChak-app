@@ -127,7 +127,7 @@ export function LeaveButton({
                   }
                 >
                   {reason.trim().length > 0 && reason.trim().length < 5
-                    ? '사유를 5자 이상 적어주세요.'
+                    ? '5자 이상 입력해주세요.'
                     : '5자 이상 입력해주세요.'}
                 </span>
                 <span className="text-neutral-400">{reason.length}/1000</span>

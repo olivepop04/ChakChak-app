@@ -22,7 +22,7 @@ export default async function SavedPage() {
         <EmptyState
           icon="🔖"
           title="저장한 액션이 없어요"
-          description="마음에 드는 액션을 저장해두면 여기 모여요."
+          description="마음에 드는 액션을 저장해두고 다시 볼 수 있어요."
           action={{ label: '액션 찾아보기', href: '/discover' }}
         />
       ) : (

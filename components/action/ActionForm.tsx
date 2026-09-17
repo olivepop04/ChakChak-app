@@ -352,7 +352,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   async function handlePublish() {
     if (busy) return;
     if (!review || review.decision === 'BLOCK') {
-      toast('위에 적힌 것을 고친 뒤 다시 확인해주세요.', 'error');
+      toast('내용을 수정한 뒤 다시 "액션 생성하기"를 눌러주세요.', 'error');
       return;
     }
     if (!validatePlace()) return;
@@ -770,7 +770,7 @@ function ReviewPanel({
     ? '공개하기 전에 고쳐야 할 것이 있어요'
     : needsWork
       ? '조금만 더 적어주시면 참여가 훨씬 쉬워져요'
-      : '확인했어요. 공개할 준비가 됐어요';
+      : '공개할 준비가 되었어요.';
 
   return (
     <div className={`flex flex-col gap-3 rounded-xl border p-4 ${tone}`}>
@@ -820,12 +820,12 @@ function ReviewPanel({
       )}
       {needsWork && (
         <p className="text-[12px] text-amber-800">
-          고치고 싶으면 닫고 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
+          수정하려면 창을 닫고 내용을 고친 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
         </p>
       )}
       {blocked && (
         <p className="text-[12px] text-red-700">
-          위 내용을 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러 검수해주세요.
+          창을 닫고 내용을 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
         </p>
       )}
     </div>

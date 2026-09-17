@@ -44,9 +44,9 @@ export default async function FollowingPage({
           </p>
           {shouldShowFollowEmptyHint(user?.id, id) && (
             <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500 break-keep">
-              마음에 드는 호스트나 크루를 팔로우하면,
+              함께하고 싶은 호스트나 크루를 팔로우해보세요.
               <br />
-              새 액션을 가장 먼저 알 수 있어요
+              새로 열리는 액션 소식을 놓치지 않고 확인할 수 있어요.
             </p>
           )}
         </div>

@@ -73,7 +73,7 @@ export default async function VoicePage({
         <EmptyState
           icon="⏳"
           title="활동이 끝난 뒤에 남길 수 있어요"
-          description="활동일이 지나면 소감을 남길 수 있게 열려요."
+          description="활동 후 호스트가 결과를 공개하면 소감 작성이 열려요."
           action={{ label: '액션 보러 가기', href: `/action/${id}` }}
         />
       </main>

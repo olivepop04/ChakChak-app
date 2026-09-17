@@ -192,7 +192,7 @@ export function ProfileEditForm({
           onChange={(e) => setBio(e.target.value)}
           maxLength={LIMITS.BIO_MAX}
           rows={3}
-          placeholder="어떤 활동에 관심이 있는지 짧게 적어보세요."
+          placeholder="어떤 활동에 관심이 있는지, 어떤 변화를 만들고 싶은지 등 자유롭게 적어보세요."
           className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
         />
         <span className="text-right text-[11px] text-neutral-400">
@@ -220,7 +220,7 @@ export function ProfileEditForm({
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <span className={label}>활동 가능 지역</span>
+        <span className={label}>어느 지역이 편하세요?</span>
         <RegionPicker value={regions} onChange={setRegions} />
       </div>
 
@@ -228,7 +228,7 @@ export function ProfileEditForm({
         <div>
           <h2 className="text-[15px] font-bold text-neutral-900">알림 설정</h2>
           <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">
-            끈 알림은 새로 만들어지지 않습니다. 이미 받은 알림은 그대로 남아요.
+            끈 알림은 더이상 받지 않아요. 이미 받은 알림은 그대로 남아요.
           </p>
         </div>
 

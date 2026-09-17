@@ -44,9 +44,9 @@ export default async function FollowersPage({
           </p>
           {shouldShowFollowEmptyHint(user?.id, id) && (
             <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500 break-keep">
-              함께한 크루에게 좋은 소감을 남기면,
+              함께한 크루들을 팔로우하고 소감을 나눠보세요.
               <br />
-              자연스럽게 팔로워가 늘어나요
+              자연스럽게 내 팔로워도 늘어나요.
             </p>
           )}
         </div>

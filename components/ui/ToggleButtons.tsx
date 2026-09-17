@@ -313,7 +313,7 @@ export function LikeButton({
                 로그인하고 관심을 표현해보세요
               </h2>
               <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-                로그인하고 나에게 맞는 활동을 추천받아 보세요. 마음에 든
+                로그인하고 나에게 맞는 액션을 찾아보세요. 마음에 든
                 액션에는 좋아요도 남길 수 있어요.
               </p>
               <Link
@@ -484,8 +484,8 @@ export function SaveButton({
                 로그인하고 액션을 저장해보세요
               </h2>
               <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
-                로그인하고 나에게 맞는 활동을 추천받아 보세요. 마음에 든 액션도
-                MY에 모아둘 수 있어요.
+                로그인하고 나에게 맞는 액션을 찾아보세요. 마음에 든 액션은
+                내 프로필에 모아둘 수 있어요.
               </p>
 
               <Link

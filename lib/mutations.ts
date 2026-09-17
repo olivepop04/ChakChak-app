@@ -571,8 +571,18 @@ export async function saveActionItems(
   supabase: DB,
   actionId: string,
   items: ActionItemInput[],
+  opts?: { requireAtLeastOne?: boolean },
 ): Promise<Result> {
-  if (items.length === 0)
+  // ★ 빈 배열은 「항목을 전부 지웠다」 는 뜻입니다. 거절하지 마세요. (2026-09-17)
+  //
+  //   전에는 여기서 무조건 거절했습니다. 그래서 임시저장 중에 항목을 X 로 다 지우면
+  //   **화면은 비었는데 DB 에는 그대로 남고, 그런데도 「저장했어요」 가 떴습니다.**
+  //   새로고침하거나 뒤로 갔다 오면 지운 항목이 되살아났습니다 (수정 NO10 3쪽).
+  //   호출하는 화면도 `items.length > 0` 일 때만 이 함수를 불러서, 두 겹으로 막혀 있었습니다.
+  //
+  //   공개할 때는 항목이 하나 이상 있어야 하므로, 그때만 requireAtLeastOne 을 넘기세요.
+  //   「저장은 되고, 공개는 막힌다」 — 결과의 저장/공개를 나눈 규칙 14 와 같은 모양입니다.
+  if (items.length === 0 && opts?.requireAtLeastOne)
     return { ok: false, message: '모집 항목을 하나 이상 추가해주세요.' };
 
   for (const it of items) {
@@ -582,7 +592,18 @@ export async function saveActionItems(
       return { ok: false, message: `「${it.name}」의 최대 인원이 최소보다 작습니다.` };
   }
 
-  await supabase.from('action_items').delete().eq('action_id', actionId);
+  // ★ 지우기 실패를 삼키지 마세요. (2026-09-17)
+  //   전에는 반환값을 안 받았습니다. 항목이 0개인 경로에서는 뒤에 insert 가 없어서
+  //   실패를 알아챌 곳이 아예 없어지고, 같은 증상(지운 항목이 되살아남)이 재발합니다.
+  const { error: deleteError } = await supabase
+    .from('action_items')
+    .delete()
+    .eq('action_id', actionId);
+  if (deleteError)
+    return {
+      ok: false,
+      message: toMessage(deleteError, '기존 모집 항목을 지우지 못했어요. 잠시 후 다시 시도해주세요.'),
+    };
 
   // 모든 컬럼을 명시적으로 채운다 (위 주석 참고)
   const rows = items.map((it, i) => ({
@@ -599,6 +620,10 @@ export async function saveActionItems(
     condition_desc: it.conditionDesc ?? null,
     sort_order: i,
   }));
+
+  // 전부 지운 상태가 최종이면 여기서 끝냅니다.
+  // PostgREST 에 빈 배열을 insert 하지 않습니다 — 보내봐야 할 일이 없습니다.
+  if (rows.length === 0) return { ok: true, data: undefined };
 
   const { error } = await supabase.from('action_items').insert(rows);
   if (error)
