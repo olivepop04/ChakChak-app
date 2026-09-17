@@ -42,6 +42,7 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
                       ToggleButtons(LikeButton SaveButton FollowButton)
    components/layout/ Header BottomNav
    components/action/ QuotaProgress ActionGallery AddressBox ItemEditor 등
+   components/my/     MySavedSection ProfileActionList ProfileActionSection ProfileStats
 
 8. lib/ 과 components/ui/ 는 다섯 명이 함께 쓰는 공유 구역이다.
    담당이 아니면 수정하지 않는다. 수정이 필요하면 "수정이 필요하다"고 알려준다.
@@ -55,6 +56,11 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
     에러 메시지는 무엇이 잘못됐고 어떻게 고치는지 알려준다. "오류가 발생했습니다" 금지.
 
 12. 새 파일·새 쿼리·새 상수를 만들기 전에, 이미 있는 것을 먼저 찾아 쓴다.
+
+13. 스타일·문구·제목을 여러 화면에서 통일하는 일은 폴더로 나눠지지 않는다.
+    그런 요청을 받으면 파일을 쪼개 고치지 말고, 걸치는 파일 목록을 먼저 뽑아
+    "이건 한 사람이 한 PR 로 해야 한다"고 알려준다.
+    실제로 화면 제목 한글화가 4명·7파일, 버튼 높이 통일이 5명·21파일이었다.
 ```
 
 ---
