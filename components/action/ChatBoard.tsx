@@ -21,7 +21,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import { formatRelative } from '@/lib/utils/date';
 import { LIMITS } from '@/lib/constants';
+import { ReasonModal } from '@/components/action/ReasonModal';
 import type { ChatPost } from '@/lib/types/view';
+
+type DeleteTarget = {
+  messageId: string;
+  isPost: boolean;
+} | null;
 
 export function ChatBoard({
   actionId,
@@ -42,6 +48,8 @@ export function ChatBoard({
   /** 어느 원글에 댓글을 다는 중인지 */
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   async function submitPost() {
     // 전송 버튼 중복 클릭 방지 — 빠르게 두 번 누르면 글이 두 개 올라갑니다
@@ -73,18 +81,18 @@ export function ChatBoard({
     setBusy(false);
   }
 
-  async function handleDelete(messageId: string, isPost: boolean) {
-    const msg = isPost
-      ? '이 글을 삭제할까요? 달린 댓글도 함께 사라집니다.'
-      : '이 댓글을 삭제할까요?';
-    if (!confirm(msg)) return;
+  async function handleDelete() {
+    if (!deleteTarget || deleteBusy) return;
 
-    const res = await deleteChatMessage(createClient(), messageId);
+    setDeleteBusy(true);
+    const res = await deleteChatMessage(createClient(), deleteTarget.messageId);
     if (!res.ok) {
       toast(res.message, 'error');
-      return;
+    } else {
+      setDeleteTarget(null);
+      router.refresh();
     }
-    router.refresh();
+    setDeleteBusy(false);
   }
 
   return (
@@ -121,7 +129,7 @@ export function ChatBoard({
                     {post.isMine && !post.deletedAt && post.kind !== 'LEFT_NOTICE' && (
                       <button
                         type="button"
-                        onClick={() => handleDelete(post.id, true)}
+                        onClick={() => setDeleteTarget({ messageId: post.id, isPost: true })}
                         className="ml-auto text-[11px] text-neutral-400 hover:text-red-500"
                       >
                         삭제
@@ -155,7 +163,9 @@ export function ChatBoard({
                           {reply.isMine && !reply.deletedAt && (
                             <button
                               type="button"
-                              onClick={() => handleDelete(reply.id, false)}
+                              onClick={() =>
+                                setDeleteTarget({ messageId: reply.id, isPost: false })
+                              }
                               className="ml-auto text-[11px] text-neutral-400 hover:text-red-500"
                             >
                               삭제
@@ -248,6 +258,18 @@ export function ChatBoard({
           </p>
         )}
       </div>
+
+      <ReasonModal
+        open={deleteTarget !== null}
+        title={deleteTarget?.isPost ? '이 글을 삭제할까요?' : '이 댓글을 삭제할까요?'}
+        description={deleteTarget?.isPost ? '달린 댓글도 함께 사라집니다.' : undefined}
+        confirmLabel="삭제"
+        busy={deleteBusy}
+        onClose={() => {
+          if (!deleteBusy) setDeleteTarget(null);
+        }}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
