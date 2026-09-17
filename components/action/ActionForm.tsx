@@ -242,13 +242,13 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
     // 모집 항목은 전용 함수로 저장합니다.
     // 여러 행을 한 번에 넣을 때 DB 기본값이 적용되지 않는 문제를 이 함수가 막습니다.
-    if (items.length > 0 || requireItems) {
-      const res = await saveActionItems(supabase, id, items);
-      if (!res.ok) {
-        toast(res.message, 'error');
-        scrollAndFocus(itemsSectionRef.current);
-        return null;
-      }
+    const res = await saveActionItems(supabase, id, items, {
+      requireAtLeastOne: requireItems,
+    });
+    if (!res.ok) {
+      toast(res.message, 'error');
+      scrollAndFocus(itemsSectionRef.current);
+      return null;
     }
 
     return id;
