@@ -484,7 +484,6 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 | SharePanel | **공유** — 공유 화면(민호)과 `ShareModal`(디자이너)이 같이 씁니다. 고치기 전에 말하기 |
 | ActionGallery · AddressBox · **ActionCrewSection** · **ShareModal** | 디자이너 |
 | QuotaProgress | **공유** — 상세(디자이너)와 참여(개발 B)가 같이 씁니다. 고치기 전에 말하기 |
-| ~~MessageAccessButton~~ | **삭제 예정** — 아무도 import 하지 않습니다. 담당을 주지 않습니다 (아래) |
 
 `AddressSearch` 와 `ActionHostActions` 는 이 표에 없어서 담당이 비어 있었습니다 (2026-09-14에 채웠습니다).
 쓰이는 곳으로 갈랐습니다 — `AddressSearch` 는 `ActionForm` 에서만, `ActionHostActions` 는
@@ -511,11 +510,11 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 > `ShareModal` 은 모달 제목 17px · 액션 제목 15px 을 들고 있어 **8쪽 타이포 전담 PR 의 대상**입니다.
 > 민호에게 주면 그 PR 이 담당 경계를 넘게 됩니다.
 
-**`MessageAccessButton` 에는 담당을 주지 않았습니다** — 저장소 전체에서 `import` 가 **0건**입니다.
+**`MessageAccessButton` 은 지웠습니다** (2026-09-17). 저장소 전체에서 `import` 가 **0건**이었습니다.
 F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `getActionCta()` 로 바뀌면서(규칙 15)
 호출이 끊겼습니다. 같은 문구는 지금 `getActionCta()` 가 냅니다.
-`app/action/[id]/page.tsx` 에 쓰이지 않는 지역변수 두 개(`canViewChat` · `showMessageAccessButton`)도
-같이 남아 있습니다. **지울 때 그 파일이 디자이너 구역이라 함께 합의가 필요합니다.**
+`app/action/[id]/page.tsx` 에 남아 있던 쓰이지 않는 지역변수 두 개
+(`canViewChat` · `showMessageAccessButton`)도 같이 지웠습니다.
 
 폴더 쪽도 세 군데가 비어 있었습니다.
 
