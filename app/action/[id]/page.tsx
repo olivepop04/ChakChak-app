@@ -73,13 +73,6 @@ export default async function ActionDetailPage({
 
   const deadline = timeUntilDeadline(action.recruitEndAt);
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
-  const canViewChat =
-    action.isOwner ||
-    !!(action.myParticipation && action.myParticipation !== 'LEFT');
-  const showMessageAccessButton =
-    action.isOwner &&
-    action.status !== 'CANCELLED' &&
-    action.status !== 'COMPLETED';
   const canEditActionText =
     action.isOwner &&
     (action.status === 'ACTIVE' ||
