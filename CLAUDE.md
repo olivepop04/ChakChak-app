@@ -127,10 +127,20 @@ await saveActionItems(supabase, id, items, { requireAtLeastOne: true });
 **화면은 비었는데 DB 에는 그대로 남고, 그런데도 「저장했어요」 가 떴습니다.**
 새로고침하거나 뒤로 갔다 오면 지운 항목이 되살아났습니다 (수정 NO10 3쪽).
 
-> **화면 쪽도 같이 고쳐야 합니다.** `components/action/ActionForm.tsx` 가
-> `if (items.length > 0 || requireItems)` 로 감싸고 있어서, 항목이 0개면
-> 이 함수를 **아예 부르지 않습니다.** 두 겹으로 막혀 있었습니다.
-> 조건을 없애고, 공개할 때만 `{ requireAtLeastOne: true }` 를 넘기세요.
+**두 겹으로 막혀 있었습니다.** 함수만 고쳐서는 안 고쳐졌습니다 —
+`components/action/ActionForm.tsx` 가 `if (items.length > 0 || requireItems)` 로 감싸서
+항목이 0개면 이 함수를 **아예 부르지 않았습니다.**
+2026-09-17에 화면 쪽도 고쳤습니다 (`ActionForm.tsx:245`) — 조건을 없애고 항상 부릅니다.
+
+```ts
+// 지금 — 임시저장은 통과, 공개(handleReview)만 거절
+const res = await saveActionItems(supabase, id, items, { requireAtLeastOne: requireItems });
+if (!res.ok) { toast(res.message, 'error'); scrollAndFocus(itemsSectionRef.current); return null; }
+```
+
+> **`requireItems` 를 임시저장 경로에 넘기면 이 버그가 그대로 되살아납니다.**
+> `handleSave` 는 `saveDraft()`, `handleReview` 만 `saveDraft({ requireItems: true })` 입니다.
+> 이 분기를 지키는 테스트가 아직 없습니다.
 
 **11. `profiles.skills` 는 `null` 과 빈 배열이 다릅니다**
 
