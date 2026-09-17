@@ -371,7 +371,8 @@ components/my/ · app/api/auth/check-email/ · lib/utils/discover-ranking.ts 는
 10. 이미 있는 공통 컴포넌트를 쓴다. 비슷한 것을 새로 만들지 않는다.
    Button Badge Chip ChipGroup EmptyState Toast Avatar ActionCard
    RegionPicker UserList LogoutButton ProfileEditForm
-   ToggleButtons(LikeButton SaveButton FollowButton) Header BottomNav
+   ToggleButtons(LikeButton SaveButton FollowButton) NotificationList ProfileEditForm
+   Header BottomNav
 
 11. lib/ 과 components/ui/ 는 다섯 명이 함께 쓰는 공유 구역이다.
     lib/constants/regions.ts · lib/utils/scoring.ts · lib/utils/discover-ranking.ts 는
