@@ -27,7 +27,7 @@ export default async function TrendsPage() {
   if (stats.totalActions === 0) {
     return (
       <main>
-        <Header title="TRENDS" back backHref="/" />
+        <Header title="트렌드" back backHref="/" />
         <EmptyState
           icon="📊"
           title="아직 보여드릴 활동이 없어요"
@@ -40,7 +40,7 @@ export default async function TrendsPage() {
 
   return (
     <main className="pb-24">
-      <Header title="TRENDS" back backHref="/" sticky />
+      <Header title="트렌드" back backHref="/" sticky />
 
       <div className="flex flex-col gap-5 px-5 py-5">
         <div>
