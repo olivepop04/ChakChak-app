@@ -545,6 +545,11 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
               {dateError.message}
             </span>
           )}
+          {!dateError || dateError.field !== 'recruitEnd' ? (
+            <span className="text-[11px] text-neutral-400">
+              모집 마감은 활동 시작보다 앞서야 해요.
+            </span>
+          ) : null}
         </label>
 
         <label className="flex flex-col gap-1.5">
@@ -606,11 +611,6 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             </span>
           )}
         </div>
-
-        <p className="text-[11px] text-neutral-400">
-          모집 마감은 활동 시작보다 앞서야 해요. 활동 종료 시각이 지나면 자동으로
-          &ldquo;결과 작성 필요&rdquo; 상태가 됩니다.
-        </p>
       </div>
 
       {/* 주소 · 장소명 */}
