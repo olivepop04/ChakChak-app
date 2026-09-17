@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { deleteDraft, cancelAction, endActionEarly } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
+import { ReasonModal } from '@/components/action/ReasonModal';
 
 const btn =
   'inline-flex min-h-9 items-center justify-center rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors';
@@ -27,25 +28,37 @@ export function DeleteDraftButton({ actionId }: { actionId: string }) {
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
 
   async function handle() {
     if (busy) return;
-    if (!confirm('작성 중인 액션을 삭제할까요?\n되돌릴 수 없습니다.')) return;
 
     setBusy(true);
     const res = await deleteDraft(createClient(), actionId);
     if (!res.ok) toast(res.message, 'error');
     else {
       toast('삭제했어요.');
+      setOpen(false);
       router.refresh();
     }
     setBusy(false);
   }
 
   return (
-    <button type="button" onClick={handle} disabled={busy} className={danger}>
-      삭제하기
-    </button>
+    <>
+      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={danger}>
+        삭제하기
+      </button>
+      <ReasonModal
+        open={open}
+        title="작성 중인 액션을 삭제할까요?"
+        description="되돌릴 수 없습니다."
+        confirmLabel="삭제 진행"
+        busy={busy}
+        onClose={() => setOpen(false)}
+        onConfirm={handle}
+      />
+    </>
   );
 }
 
@@ -54,29 +67,39 @@ export function CancelActionButton({ actionId }: { actionId: string }) {
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  async function handle() {
-    if (busy) return;
-
-    const reason = prompt(
-      '취소 사유를 적어주세요. 참여자에게 그대로 전달됩니다. (5자 이상)',
-    );
-    if (reason === null) return;
+  async function handle(reason: string) {
+    const trimmedReason = reason.trim();
+    if (busy || trimmedReason.length < 5) return;
 
     setBusy(true);
-    const res = await cancelAction(createClient(), actionId, reason);
+    const res = await cancelAction(createClient(), actionId, trimmedReason);
     if (!res.ok) toast(res.message, 'error');
     else {
       toast('액션을 취소했어요. 참여자에게 알림이 갔어요.');
+      setOpen(false);
       router.refresh();
     }
     setBusy(false);
   }
 
   return (
-    <button type="button" onClick={handle} disabled={busy} className={secondary}>
-      취소하기
-    </button>
+    <>
+      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={secondary}>
+        취소하기
+      </button>
+      <ReasonModal
+        open={open}
+        title="액션을 취소할까요?"
+        description="취소 사유는 참여자에게 그대로 전달됩니다."
+        reason={{ label: '취소 사유' }}
+        confirmLabel="취소 진행"
+        busy={busy}
+        onClose={() => setOpen(false)}
+        onConfirm={handle}
+      />
+    </>
   );
 }
 
@@ -85,28 +108,38 @@ export function EarlyEndButton({ actionId }: { actionId: string }) {
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  async function handle() {
-    if (busy) return;
-
-    const reason = prompt(
-      '조기 종료 사유를 적어주세요. 크루들에게 그대로 전달됩니다. (5자 이상)',
-    );
-    if (reason === null) return;
+  async function handle(reason: string) {
+    const trimmedReason = reason.trim();
+    if (busy || trimmedReason.length < 5) return;
 
     setBusy(true);
-    const res = await endActionEarly(createClient(), actionId, reason);
+    const res = await endActionEarly(createClient(), actionId, trimmedReason);
     if (!res.ok) toast(res.message, 'error');
     else {
       toast('활동을 일찍 종료했어요. 크루들에게 알림이 갔어요.');
+      setOpen(false);
       router.refresh();
     }
     setBusy(false);
   }
 
   return (
-    <button type="button" onClick={handle} disabled={busy} className={secondary}>
-      조기종료
-    </button>
+    <>
+      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={secondary}>
+        조기종료
+      </button>
+      <ReasonModal
+        open={open}
+        title="활동을 조기 종료할까요?"
+        description="조기 종료 사유는 크루들에게 그대로 전달됩니다."
+        reason={{ label: '조기 종료 사유' }}
+        confirmLabel="조기 종료 진행"
+        busy={busy}
+        onClose={() => setOpen(false)}
+        onConfirm={handle}
+      />
+    </>
   );
 }
