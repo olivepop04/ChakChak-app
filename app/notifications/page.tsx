@@ -39,7 +39,7 @@ export default async function NotificationsPage() {
         <EmptyState
           icon="🔔"
           title="새로운 알림이 없어요"
-          description="액션을 만들거나 참여해보세요. 일정과 결과를 알려드릴께요"
+          description="액션을 만들거나 참여해보세요. 일정과 결과를 알려드릴게요."
           actions={[
             { label: '액션 만들기', href: '/action/create', variant: 'secondary' },
             { label: '액션 찾아보기', href: '/discover', variant: 'secondary' },

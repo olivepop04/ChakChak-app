@@ -395,7 +395,7 @@ AddressSearch 와 ActionHostActions 는 2026-09-14에 내 담당이 됐다. 담�
 5. 모집 수량 표시는 lib/utils/quota.ts 의 함수를 쓴다. 숫자를 직접 조합하지 않는다.
    getQuotaState · describeTarget · describeResult · describeResultCount · meetsGender
    최소 인원형(MINIMUM)에는 퍼센트를 쓰지 않는다.
-   정해진 인원형(RANGE)은 최소를 넘기면 분모가 min 에서 max 로 바뀐다.
+   정해진 인원형(RANGE)의 분모는 "3~5명" 으로 끝까지 고정이다 (2026-09-01 결정).
    사람 항목은 수량이 항상 1이고, 물품만 수량을 입력받는다.
 
 6. 게시판은 원글 + 댓글 1단계다. 대댓글을 만들지 않는다 (DB 트리거가 막는다).
