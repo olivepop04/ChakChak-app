@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/ui/Avatar';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { useToast } from '@/components/ui/Toast';
 import type { UserSummary } from '@/lib/types/view';
 
@@ -31,7 +32,7 @@ export function ActionCrewSection({
 
   return (
     <section id="crew-section" className="flex flex-col gap-3 pt-2">
-      <h2 className="text-[15px] font-bold text-neutral-900">함께하는 크루</h2>
+      <SectionTitle>함께하는 크루</SectionTitle>
       <button
         type="button"
         onClick={handleClick}

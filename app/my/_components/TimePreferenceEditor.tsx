@@ -1,6 +1,7 @@
 'use client';
 
 import { ChipGroup } from '@/components/ui/Chip';
+import { FieldLabel } from '@/components/ui/FieldLabel';
 import {
   TIME_DAYS,
   TIME_SLOTS,
@@ -77,9 +78,7 @@ export function TimePreferenceEditor({
           className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4"
         >
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[12px] font-semibold text-neutral-500">
-              선호시간 {index + 1}
-            </span>
+            <FieldLabel>선호시간 {index + 1}</FieldLabel>
             {value.length > 1 && (
               <button
                 type="button"

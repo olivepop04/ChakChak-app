@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { ProfileActionList } from '@/components/my/ProfileActionList';
 import { getParticipatedActions, getProfile } from '@/lib/queries/profiles';
 import { createClient } from '@/lib/supabase/server';
@@ -32,9 +33,7 @@ export default async function JoinedActionsPage({
       />
 
       <div className="px-5 py-4">
-        <p className="text-[15px] font-bold text-neutral-900">
-          {actions.length}개
-        </p>
+        <SectionTitle>{actions.length}개</SectionTitle>
         <p className="mt-0.5 text-[12px] text-neutral-500">
           @{profile.nickname}님이 소감까지 작성한 액션
         </p>

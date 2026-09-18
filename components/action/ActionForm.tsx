@@ -24,6 +24,7 @@ import { AddressSearch } from '@/components/action/AddressSearch';
 import { ItemEditor } from '@/components/action/ItemEditor';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
+import { FieldLabel } from '@/components/ui/FieldLabel';
 import { useToast } from '@/components/ui/Toast';
 import { CATEGORIES, UPLOAD, type Category } from '@/lib/constants';
 import { getPlaceErrors } from '@/lib/utils/place-validation';
@@ -81,7 +82,6 @@ export interface ActionFormInitial {
 
 const input =
   'min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900';
-const label = 'text-[13px] font-medium text-neutral-700';
 const RECRUIT_END_ERROR =
   '모집 마감은 활동 시작보다 앞서야 해요. 마감일을 활동 시작일 이전으로 바꿔주세요.';
 const ACTIVITY_END_ERROR =
@@ -413,7 +413,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
     <div className="flex flex-col gap-6 px-5 pb-[calc(8rem+var(--nav-h))] pt-4">
       {/* 제목 */}
       <label className="flex flex-col gap-1.5">
-        <span className={label}>제목</span>
+        <FieldLabel>제목</FieldLabel>
         <input
           ref={titleRef}
           value={title}
@@ -425,7 +425,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
       {/* 카테고리 */}
       <div className="flex flex-col gap-2">
-        <span className={label}>카테고리</span>
+        <FieldLabel>카테고리</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => {
             const isSelected = categories.includes(c);
@@ -482,7 +482,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
       {/* 소개 */}
       <label className="flex flex-col gap-1.5">
-        <span className={label}>소개</span>
+        <FieldLabel>소개</FieldLabel>
         <textarea
           ref={descriptionRef}
           value={description}
@@ -498,7 +498,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
       {/* 이미지 — 액션이 저장된 뒤에 열립니다 */}
       <div ref={imageSectionRef} className="flex flex-col gap-2">
-        <span className={label}>대표 이미지</span>
+        <FieldLabel>대표 이미지</FieldLabel>
         {actionId ? (
           <ImageUploader
             bucket="action-images"
@@ -520,13 +520,13 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
       {/* 모집 항목 */}
       <div ref={itemsSectionRef} className="flex flex-col gap-2">
-        <span className={label}>무엇이 필요한가요?</span>
+        <FieldLabel>무엇이 필요한가요?</FieldLabel>
         <ItemEditor items={items} onChange={setItems} />
       </div>
 
       {/* 일정 */}
       <div className="flex flex-col gap-3">
-        <span className={label}>일정</span>
+        <FieldLabel>일정</FieldLabel>
 
         <label className="flex flex-col gap-1.5">
           <span className="text-[12px] text-neutral-500">모집 마감일 :</span>
@@ -616,7 +616,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       {/* 주소 · 장소명 */}
       <div ref={placeSectionRef} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <span className={label}>주소</span>
+          <FieldLabel>주소</FieldLabel>
           <AddressSearch
             value={address}
             onChange={(value) => {
@@ -628,9 +628,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         </div>
 
         <label className="flex flex-col gap-1.5">
-          <span className={label}>
-            장소명 <span className="text-red-600">*</span>
-          </span>
+          <FieldLabel required>장소명</FieldLabel>
           <input
             ref={placeNameRef}
             value={placeName}
@@ -653,7 +651,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
       {/* 안내사항 */}
       <label className="flex flex-col gap-1.5">
-        <span className={label}>안내사항</span>
+        <FieldLabel>안내사항</FieldLabel>
         <textarea
           value={notice}
           onChange={(e) => setNotice(e.target.value)}

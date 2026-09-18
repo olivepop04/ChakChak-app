@@ -15,6 +15,7 @@ import { searchUsers } from '@/lib/queries/profiles';
 import { shareToUser } from '@/lib/mutations';
 import { UserList } from '@/components/ui/UserList';
 import { Button } from '@/components/ui/Button';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { useToast } from '@/components/ui/Toast';
 import { LIMITS } from '@/lib/constants';
 import type { UserSummary } from '@/lib/types/view';
@@ -102,9 +103,7 @@ export function SharePanel({
       {/* 회원에게 보내기 */}
       <section className="flex flex-col gap-3">
         <div>
-          <h2 className="text-[15px] font-bold text-neutral-900">
-            착착 친구에게 보내기
-          </h2>
+          <SectionTitle>착착 친구에게 보내기</SectionTitle>
           <p className="mt-0.5 text-[12px] text-neutral-500">
             이름과 닉네임으로 친구를 찾을 수 있고, 상대방 알림으로 보내져요.
           </p>
@@ -155,7 +154,7 @@ export function SharePanel({
       {/* 링크 복사 */}
       <section className="flex flex-col gap-3 border-t border-neutral-100 pt-6">
         <div>
-          <h2 className="text-[15px] font-bold text-neutral-900">링크로 공유하기</h2>
+          <SectionTitle>링크로 공유하기</SectionTitle>
           <p className="mt-0.5 text-[12px] text-neutral-500">
             착착 회원이 아니어도 이 링크로 액션을 볼 수 있어요.
           </p>

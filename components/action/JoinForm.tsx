@@ -16,6 +16,7 @@ import { createClient } from '@/lib/supabase/client';
 import { joinAction, type JoinItemInput } from '@/lib/mutations';
 import { QuotaProgress } from '@/components/action/QuotaProgress';
 import { Button } from '@/components/ui/Button';
+import { FieldLabel } from '@/components/ui/FieldLabel';
 import { useToast } from '@/components/ui/Toast';
 import { meetsGender } from '@/lib/utils/quota';
 import { PERSON_UNIT, type Gender } from '@/lib/constants';
@@ -178,10 +179,10 @@ export function JoinForm({
       {/* 나의 참여 요약 */}
       {chosen.length > 0 && (
         <section className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-neutral-900">
-          <h3 className="text-[13px] font-semibold text-neutral-500">나의 참여</h3>
+          <FieldLabel>나의 참여</FieldLabel>
           <ul className="flex flex-col gap-1">
             {chosen.map((i) => (
-              <li key={i.id} className="text-sm font-semibold text-neutral-800">
+              <li key={i.id} className="text-sm font-medium text-neutral-800">
                 {i.type === 'PERSON'
                   ? `🙋 ${i.name} 1${PERSON_UNIT}`
                   : `📦 ${i.name} ${selection[i.id].quantity}${i.unit}`}

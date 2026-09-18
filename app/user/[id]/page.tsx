@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfile, getParticipatedActions } from '@/lib/queries/profiles';
 import { getPublicActionsByOwner } from '@/lib/queries/actions';
 import { Header } from '@/components/layout/Header';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { ProfileActionSection } from '@/components/my/ProfileActionSection';
 import { UserProfileSummary } from './UserProfileSummary';
 
@@ -56,9 +57,7 @@ export default async function UserProfilePage({
 
       {profile.categories.length > 0 && (
         <section className="mt-7 px-5">
-          <h2 className="pb-3 text-[15px] font-bold text-neutral-900">
-            관심 카테고리
-          </h2>
+          <SectionTitle className="pb-3">관심 카테고리</SectionTitle>
           <div className="flex flex-wrap gap-1.5">
             {profile.categories.map((c) => (
               <span

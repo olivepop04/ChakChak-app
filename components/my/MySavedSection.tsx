@@ -6,6 +6,7 @@
  */
 import Link from 'next/link';
 import { ActionCard } from '@/components/ui/ActionCard';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import type { ActionCardData } from '@/lib/types/view';
 import { selectProfileActionPreview } from '@/lib/utils/profile-actions';
 
@@ -15,10 +16,10 @@ export function MySavedSection({ saved }: { saved: ActionCardData[] }) {
   return (
     <section className="mt-7">
       <div className="flex items-center justify-between px-5 pb-3">
-        <h2 className="text-[15px] font-bold text-neutral-900">
+        <SectionTitle>
           내가 저장한 액션{' '}
           <span className="text-neutral-400">{saved.length}</span>
-        </h2>
+        </SectionTitle>
         <Link
           href="/my/saved"
           className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-900"

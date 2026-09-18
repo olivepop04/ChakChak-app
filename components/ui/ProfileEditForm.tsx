@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { SectionTitle } from '@/components/ui/SectionTitle';
+import { FieldLabel } from '@/components/ui/FieldLabel';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
 import { useToast } from '@/components/ui/Toast';
@@ -40,7 +42,6 @@ interface Initial {
   regions: string[];
 }
 
-const label = 'text-[13px] font-medium text-neutral-700';
 const locked =
   'flex min-h-11 items-center justify-between rounded-xl bg-neutral-100 px-4 py-3 text-[15px] text-neutral-500';
 
@@ -157,7 +158,7 @@ export function ProfileEditForm({
     <div className="flex flex-col gap-6 px-5 pb-[calc(7rem+var(--nav-h))] pt-5">
       {/* 수정 불가 항목 */}
       <div className="flex flex-col gap-1.5">
-        <span className={label}>이름</span>
+        <FieldLabel>이름</FieldLabel>
         <div className={locked}>
           {initial.name}
           <span className="text-[11px]">🔒 수정 불가</span>
@@ -165,7 +166,7 @@ export function ProfileEditForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <span className={label}>성별</span>
+        <FieldLabel>성별</FieldLabel>
         <div className={locked}>
           {GENDER_LABEL[initial.gender]}
           <span className="text-[11px]">🔒 수정 불가</span>
@@ -177,7 +178,7 @@ export function ProfileEditForm({
 
       {/* 수정 가능 항목 */}
       <label className="flex flex-col gap-1.5">
-        <span className={label}>닉네임</span>
+        <FieldLabel>닉네임</FieldLabel>
         <input
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
@@ -186,7 +187,7 @@ export function ProfileEditForm({
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className={label}>자기소개</span>
+        <FieldLabel>자기소개</FieldLabel>
         <textarea
           value={bio}
           onChange={(e) => setBio(e.target.value)}
@@ -201,12 +202,12 @@ export function ProfileEditForm({
       </label>
 
       <div className="flex flex-col gap-2.5">
-        <span className={label}>나눌 수 있는 재능</span>
+        <FieldLabel>나눌 수 있는 재능</FieldLabel>
         <TalentPreferenceEditor value={skills} onChange={setSkills} />
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <span className={label}>관심 카테고리</span>
+        <FieldLabel>관심 카테고리</FieldLabel>
         <ChipGroup
           options={CATEGORY_OPTIONS}
           selected={categories as (typeof CATEGORY_OPTIONS)[number][]}
@@ -215,18 +216,18 @@ export function ProfileEditForm({
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <span className={label}>보통 언제 참여할 수 있나요?</span>
+        <FieldLabel>보통 언제 참여할 수 있나요?</FieldLabel>
         <TimePreferenceEditor value={timePrefs} onChange={setTimePrefs} />
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <span className={label}>어느 지역이 편하세요?</span>
+        <FieldLabel>어느 지역이 편하세요?</FieldLabel>
         <RegionPicker value={regions} onChange={setRegions} />
       </div>
 
       <section id="notification-settings" className="flex flex-col gap-3 pt-2">
         <div>
-          <h2 className="text-[15px] font-bold text-neutral-900">알림 설정</h2>
+          <SectionTitle>알림 설정</SectionTitle>
           <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">
             끈 알림은 더이상 받지 않아요. 이미 받은 알림은 그대로 남아요.
           </p>
