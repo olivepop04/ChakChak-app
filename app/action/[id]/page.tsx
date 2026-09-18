@@ -358,12 +358,10 @@ export default async function ActionDetailPage({
           아이폰 홈 인디케이터(safe-area)만큼 탭이 더 커지므로 그만큼 더해서 띄웁니다.
           ChatBoard.tsx 하단 버튼과 같은 계산입니다.
 
-          ★ 3.5rem(56px) 이 아니라 4rem(64px) 입니다.
-            하단 탭의 실제 높이는 56px 이 아니라 **62px** 입니다 —
-            아이콘 24px + 라벨 + py-2.5 로 그만큼 됩니다 (실측).
-            56px 으로 두면 6px 겹쳐서 CTA 바 아래쪽이 탭에 먹힙니다.
-            탭 높이를 바꾸면 여기와 ChatBoard 두 곳을 같이 고쳐야 합니다. */}
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
+          ★ 탭 높이는 globals.css 의 --nav-h 변수를 씁니다 (2026-09-18).
+            숫자(4rem)를 직접 적지 마세요 — 탭 높이가 바뀌면 여기만 고쳐서는
+            안 되고 변수를 쓰는 10곳이 전부 같이 바뀌어야 합니다. */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
         {cta.type === 'host_ended_write_result' ? (
           <div className="flex w-full items-center gap-2">
             <Link

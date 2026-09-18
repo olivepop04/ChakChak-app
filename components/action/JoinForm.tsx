@@ -92,7 +92,7 @@ export function JoinForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-40 pt-4">
+    <div className="flex flex-col gap-6 px-5 pb-[calc(10rem+var(--nav-h))] pt-4">
       <div>
         <h2 className="text-[17px] font-bold text-neutral-900">
           내가 할 수 있는 일
@@ -197,7 +197,8 @@ export function JoinForm({
         </p>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
         <Button
           type="button"
           size="lg"

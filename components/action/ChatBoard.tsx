@@ -231,8 +231,8 @@ export function ChatBoard({
         </ul>
       )}
 
-      {/* 하단 입력창 */}
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      {/* 하단 입력창. 탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
         {canWrite ? (
           <div className="flex items-end gap-2">
             <textarea
