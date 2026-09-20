@@ -16,6 +16,8 @@ import { createClient } from '@/lib/supabase/client';
 import { saveActionResult, completeAction } from '@/lib/mutations';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
+import { SectionTitle } from '@/components/ui/SectionTitle';
+import { FieldLabel } from '@/components/ui/FieldLabel';
 import { useToast } from '@/components/ui/Toast';
 import { describeResult, describeResultCount } from '@/lib/utils/quota';
 import { UPLOAD } from '@/lib/constants';
@@ -97,11 +99,11 @@ export function ResultWriteForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-32 pt-5">
+    <div className="flex flex-col gap-6 px-5 pb-[calc(8rem+var(--nav-h))] pt-5">
       {/* 자동 집계 — 수정 불가 */}
       <section className="flex flex-col gap-3">
         <div>
-          <h2 className="text-[15px] font-bold text-neutral-900">자동 집계</h2>
+          <SectionTitle>자동 집계</SectionTitle>
           <p className="mt-0.5 text-[12px] text-neutral-500">
             참여 기록으로 자동 계산되어 수정할 수 없어요. 실제 활동 내용이 다를 경우 아래 입력칸에 적어주세요.
           </p>
@@ -114,10 +116,10 @@ export function ResultWriteForm({
             items.map((item) => (
               <div key={item.id} className="flex flex-col gap-0.5">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-semibold text-neutral-900">
+                  <span className="text-sm font-medium text-neutral-900">
                     {item.name}
                   </span>
-                  <span className="text-sm font-bold tabular-nums text-neutral-900">
+                  <span className="text-sm font-medium tabular-nums text-neutral-900">
                     {describeResultCount(item, item.currentCount)}
                   </span>
                 </div>
@@ -136,9 +138,7 @@ export function ResultWriteForm({
 
       {/* 결과 내용 */}
       <label className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-medium text-neutral-700">
-          이렇게 마무리했어요
-        </span>
+        <FieldLabel>이렇게 마무리했어요</FieldLabel>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -150,9 +150,7 @@ export function ResultWriteForm({
 
       {/* 결과 사진 */}
       <div className="flex flex-col gap-2">
-        <span className="text-[13px] font-medium text-neutral-700">
-          결과 사진 <span className="text-red-500">*</span>
-        </span>
+        <FieldLabel required>결과 사진</FieldLabel>
         <ImageUploader
           bucket="result-images"
           actionId={actionId}
@@ -167,9 +165,7 @@ export function ResultWriteForm({
 
       {/* 호스트의 한마디 */}
       <label className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-medium text-neutral-700">
-          호스트의 한마디
-        </span>
+        <FieldLabel>호스트의 한마디</FieldLabel>
         <textarea
           value={ownerVoice}
           onChange={(e) => setOwnerVoice(e.target.value)}
@@ -179,7 +175,8 @@ export function ResultWriteForm({
         />
       </label>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
         <div className="flex items-center gap-2">
           <Button
             type="button"

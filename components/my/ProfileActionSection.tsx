@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ActionCard } from '@/components/ui/ActionCard';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import type { ActionCardData } from '@/lib/types/view';
 import { selectProfileActionPreview } from '@/lib/utils/profile-actions';
 
@@ -21,9 +22,9 @@ export function ProfileActionSection({
   return (
     <section className="mt-7">
       <div className="flex items-center justify-between px-5 pb-1">
-        <h2 className="text-[15px] font-bold text-neutral-900">
+        <SectionTitle>
           {title} <span className="text-neutral-400">{actions.length}</span>
-        </h2>
+        </SectionTitle>
         <Link
           href={href}
           className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-900"

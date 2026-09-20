@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getActionResult } from '@/lib/queries/participations';
 import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { CrewVoiceList } from '@/components/action/CrewVoiceList';
 import { describeResult, describeResultCount } from '@/lib/utils/quota';
 import { formatActivityPeriod } from '@/lib/utils/date';
@@ -95,7 +96,7 @@ export default async function ResultPage({
 
         {/* 자동 집계 */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-[15px] font-bold text-neutral-900">함께 모은 것</h2>
+          <SectionTitle>함께 모은 것</SectionTitle>
           <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 p-4">
             {result.items.map((item) => (
               <div key={item.id} className="flex flex-col gap-0.5">
@@ -122,9 +123,7 @@ export default async function ResultPage({
         {/* 결과 내용 */}
         {result.content && (
           <section className="flex flex-col gap-2">
-            <h2 className="text-[15px] font-bold text-neutral-900">
-              이렇게 마무리했어요
-            </h2>
+            <SectionTitle>이렇게 마무리했어요</SectionTitle>
             <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-neutral-700">
               {result.content}
             </p>
@@ -163,9 +162,7 @@ export default async function ResultPage({
 
         {/* Crew Voice */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-[15px] font-bold text-neutral-900">
-            Crew Voice ({result.crewVoices.length})
-          </h2>
+          <SectionTitle>Crew Voice ({result.crewVoices.length})</SectionTitle>
 
           {result.crewVoices.length === 0 ? (
             <p className="rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] text-neutral-400">
@@ -177,9 +174,9 @@ export default async function ResultPage({
         </section>
       </div>
 
-      {/* 소감 작성하기 */}
+      {/* 소감 작성하기. 탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
       {canWriteVoice && (
-        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+        <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
           <Link
             href={`/action/${id}/voice`}
             className="flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[15px] font-semibold text-white transition-colors active:bg-neutral-800"

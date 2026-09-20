@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { FieldLabel } from '@/components/ui/FieldLabel';
 import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
 import { getLoginNotice } from '@/lib/utils/auth-notice';
 
@@ -72,7 +73,7 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label className="flex flex-col gap-1.5">
-          <span className="text-[13px] font-medium text-neutral-700">이메일</span>
+          <FieldLabel>이메일</FieldLabel>
           <input
             type="email"
             required
@@ -84,7 +85,7 @@ function LoginForm() {
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[13px] font-medium text-neutral-700">비밀번호</span>
+          <FieldLabel>비밀번호</FieldLabel>
           <input
             type="password"
             required

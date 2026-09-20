@@ -3,6 +3,7 @@ import { UserRoundX } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getFollowers, getProfile } from '@/lib/queries/profiles';
 import { UserList } from '@/components/ui/UserList';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { Header } from '@/components/layout/Header';
 import { shouldShowFollowEmptyHint } from '@/lib/utils/profile-display';
 
@@ -28,9 +29,7 @@ export default async function FollowersPage({
       <Header title="팔로워" back backHref={`/user/${id}`} sticky />
 
       <div className="px-5 py-4">
-        <p className="text-[15px] font-bold text-neutral-900">
-          {followers.length}명
-        </p>
+        <SectionTitle>{followers.length}명</SectionTitle>
         <p className="mt-0.5 text-[12px] text-neutral-500">
           @{profile.nickname}님을 팔로우하는 사람
         </p>
