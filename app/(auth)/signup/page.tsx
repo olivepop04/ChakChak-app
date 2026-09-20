@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { FieldLabel } from '@/components/ui/FieldLabel';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
 import { TimePreferenceEditor } from '@/app/my/_components/TimePreferenceEditor';
@@ -325,7 +326,7 @@ function SignUpForm() {
 
           <div className="mt-8 flex flex-col gap-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-neutral-700">이메일</span>
+              <FieldLabel>이메일</FieldLabel>
               <input
                 type="email"
                 autoComplete="email"
@@ -336,9 +337,7 @@ function SignUpForm() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-neutral-700">
-                비밀번호
-              </span>
+              <FieldLabel>비밀번호</FieldLabel>
               <input
                 type="password"
                 autoComplete="new-password"
@@ -350,9 +349,9 @@ function SignUpForm() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-neutral-700">
+              <FieldLabel>
                 자기소개 <span className="font-normal text-neutral-400">(선택)</span>
-              </span>
+              </FieldLabel>
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
@@ -425,7 +424,7 @@ function SignUpForm() {
 
           <div className="mt-8 flex flex-col gap-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-neutral-700">이름</span>
+              <FieldLabel>이름</FieldLabel>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -437,7 +436,7 @@ function SignUpForm() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-neutral-700">닉네임</span>
+              <FieldLabel>닉네임</FieldLabel>
               <input
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
@@ -449,7 +448,7 @@ function SignUpForm() {
             </label>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-neutral-700">성별</span>
+              <FieldLabel>성별</FieldLabel>
               <div className="flex gap-2">
                 {GENDERS.map((g) => (
                   <button
@@ -491,9 +490,7 @@ function SignUpForm() {
 
           <div className="mt-8 flex flex-col gap-6">
             <div className="flex flex-col gap-2.5">
-              <span className="text-[13px] font-medium text-neutral-700">
-                관심 카테고리
-              </span>
+              <FieldLabel>관심 카테고리</FieldLabel>
               <ChipGroup
                 options={CATEGORY_OPTIONS}
                 selected={categories as (typeof CATEGORY_OPTIONS)[number][]}
@@ -502,24 +499,20 @@ function SignUpForm() {
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <span className="text-[13px] font-medium text-neutral-700">
-                보통 언제 참여할 수 있나요?
-              </span>
+              <FieldLabel>보통 언제 참여할 수 있나요?</FieldLabel>
               <TimePreferenceEditor value={timePrefs} onChange={setTimePrefs} />
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <span className="text-[13px] font-medium text-neutral-700">
+              <FieldLabel>
                 나눌 수 있는 재능이 있으신가요?{' '}
                 <span className="font-normal text-neutral-400">(선택)</span>
-              </span>
+              </FieldLabel>
               <TalentPreferenceEditor value={skills} onChange={setSkills} />
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <span className="text-[13px] font-medium text-neutral-700">
-                어느 지역이 편하세요?
-              </span>
+              <FieldLabel>어느 지역이 편하세요?</FieldLabel>
               <RegionPicker value={regions} onChange={setRegions} />
             </div>
           </div>

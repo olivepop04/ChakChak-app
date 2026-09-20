@@ -12,6 +12,7 @@ import { getProfile } from '@/lib/queries/profiles';
 import { getSavedActions } from '@/lib/queries/actions';
 import { Avatar } from '@/components/ui/Avatar';
 import { LogoutButton } from '@/components/ui/LogoutButton';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { MySavedSection } from '@/components/my/MySavedSection';
 import { ProfileStats } from '@/components/my/ProfileStats';
 import { Header } from '@/components/layout/Header';
@@ -85,9 +86,7 @@ export default async function MyPage() {
       {/* 관심 카테고리 */}
       {profile.categories.length > 0 && (
         <section className="mt-7 px-5">
-          <h2 className="pb-3 text-[15px] font-bold text-neutral-900">
-            관심 카테고리
-          </h2>
+          <SectionTitle className="pb-3">관심 카테고리</SectionTitle>
           <div className="flex flex-wrap gap-1.5">
             {profile.categories.map((c) => (
               <span

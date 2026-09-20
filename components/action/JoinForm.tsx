@@ -16,6 +16,7 @@ import { createClient } from '@/lib/supabase/client';
 import { joinAction, type JoinItemInput } from '@/lib/mutations';
 import { QuotaProgress } from '@/components/action/QuotaProgress';
 import { Button } from '@/components/ui/Button';
+import { FieldLabel } from '@/components/ui/FieldLabel';
 import { useToast } from '@/components/ui/Toast';
 import { meetsGender } from '@/lib/utils/quota';
 import { PERSON_UNIT, type Gender } from '@/lib/constants';
@@ -92,7 +93,7 @@ export function JoinForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-40 pt-4">
+    <div className="flex flex-col gap-6 px-5 pb-[calc(10rem+var(--nav-h))] pt-4">
       <div>
         <h2 className="text-[17px] font-bold text-neutral-900">
           내가 할 수 있는 일
@@ -178,10 +179,10 @@ export function JoinForm({
       {/* 나의 참여 요약 */}
       {chosen.length > 0 && (
         <section className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-neutral-900">
-          <h3 className="text-[13px] font-semibold text-neutral-500">나의 참여</h3>
+          <FieldLabel>나의 참여</FieldLabel>
           <ul className="flex flex-col gap-1">
             {chosen.map((i) => (
-              <li key={i.id} className="text-sm font-semibold text-neutral-800">
+              <li key={i.id} className="text-sm font-medium text-neutral-800">
                 {i.type === 'PERSON'
                   ? `🙋 ${i.name} 1${PERSON_UNIT}`
                   : `📦 ${i.name} ${selection[i.id].quantity}${i.unit}`}
@@ -197,7 +198,8 @@ export function JoinForm({
         </p>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
         <Button
           type="button"
           size="lg"

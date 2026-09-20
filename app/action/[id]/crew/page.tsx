@@ -185,8 +185,8 @@ export default async function CrewPage({
         </section>
       )}
 
-      {/* 하단 고정 버튼 */}
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
+      {/* 하단 고정 버튼. 탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
         <Link
           href={`/action/${id}/chat`}
           className="flex min-h-14 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-base font-bold text-white shadow-sm transition-colors active:bg-neutral-800"

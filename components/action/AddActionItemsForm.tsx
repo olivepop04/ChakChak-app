@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { addActionItems, type ActionItemInput } from '@/lib/mutations';
 import { ItemEditor } from '@/components/action/ItemEditor';
 import { Button } from '@/components/ui/Button';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { useToast } from '@/components/ui/Toast';
 
 export function AddActionItemsForm({ actionId }: { actionId: string }) {
@@ -34,7 +35,7 @@ export function AddActionItemsForm({ actionId }: { actionId: string }) {
 
   return (
     <section className="border-t border-neutral-100 px-5 pb-28 pt-6">
-      <h2 className="text-[14px] font-bold text-neutral-900">모집 항목 추가</h2>
+      <SectionTitle>모집 항목 추가</SectionTitle>
       <p className="mb-4 mt-1 text-[12px] leading-relaxed text-neutral-500">
         새로 필요한 인원이나 물품만 추가할 수 있어요.
       </p>

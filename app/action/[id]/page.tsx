@@ -17,6 +17,7 @@ import { ActionCrewSection } from '@/components/action/ActionCrewSection';
 import { ActionHostActions } from '@/components/action/ActionHostActions';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { CrewAnchorButton, LikeButton, SaveButton, ShareButton, FollowButton } from '@/components/ui/ToggleButtons';
 import { Header } from '@/components/layout/Header';
 import {
@@ -291,7 +292,7 @@ export default async function ActionDetailPage({
 
         {/* 모집 현황 */}
         <section className="flex flex-col gap-4">
-          <h2 className="text-[15px] font-bold text-neutral-900">모집 현황</h2>
+          <SectionTitle>모집 현황</SectionTitle>
           {action.items.length === 0 ? (
             <p className="text-sm text-neutral-400">등록된 모집 항목이 없어요.</p>
           ) : (
@@ -311,7 +312,7 @@ export default async function ActionDetailPage({
 
         {/* 활동 일정 */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-[15px] font-bold text-neutral-900">활동 일정</h2>
+          <SectionTitle>활동 일정</SectionTitle>
           <div className="flex flex-col gap-1 rounded-xl bg-neutral-50 p-4">
             <p className="text-sm font-medium text-neutral-900">
               {formatActivityPeriod(action.activityStartAt, action.activityEndAt)}
@@ -327,7 +328,7 @@ export default async function ActionDetailPage({
         {/* 활동 장소 */}
         {(action.placeName || action.address) && (
           <section className="flex flex-col gap-3">
-            <h2 className="text-[15px] font-bold text-neutral-900">활동 장소</h2>
+            <SectionTitle>활동 장소</SectionTitle>
             <AddressBox
               placeName={action.placeName}
               address={action.address ?? action.placeName ?? ''}
@@ -338,7 +339,7 @@ export default async function ActionDetailPage({
         {/* 안내사항 */}
         {action.notice && (
           <section className="flex flex-col gap-2">
-            <h2 className="text-[15px] font-bold text-neutral-900">안내사항</h2>
+            <SectionTitle>안내사항</SectionTitle>
             <p className="whitespace-pre-wrap rounded-xl bg-amber-50 p-4 text-[13px] leading-relaxed text-amber-900">
               {action.notice}
             </p>
@@ -358,12 +359,10 @@ export default async function ActionDetailPage({
           아이폰 홈 인디케이터(safe-area)만큼 탭이 더 커지므로 그만큼 더해서 띄웁니다.
           ChatBoard.tsx 하단 버튼과 같은 계산입니다.
 
-          ★ 3.5rem(56px) 이 아니라 4rem(64px) 입니다.
-            하단 탭의 실제 높이는 56px 이 아니라 **62px** 입니다 —
-            아이콘 24px + 라벨 + py-2.5 로 그만큼 됩니다 (실측).
-            56px 으로 두면 6px 겹쳐서 CTA 바 아래쪽이 탭에 먹힙니다.
-            탭 높이를 바꾸면 여기와 ChatBoard 두 곳을 같이 고쳐야 합니다. */}
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
+          ★ 탭 높이는 globals.css 의 --nav-h 변수를 씁니다 (2026-09-18).
+            숫자(4rem)를 직접 적지 마세요 — 탭 높이가 바뀌면 여기만 고쳐서는
+            안 되고 변수를 쓰는 10곳이 전부 같이 바뀌어야 합니다. */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
         {cta.type === 'host_ended_write_result' ? (
           <div className="flex w-full items-center gap-2">
             <Link

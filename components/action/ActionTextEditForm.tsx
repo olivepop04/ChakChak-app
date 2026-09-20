@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { updateActionText } from '@/lib/mutations';
 import { Button } from '@/components/ui/Button';
+import { FieldLabel } from '@/components/ui/FieldLabel';
 import { useToast } from '@/components/ui/Toast';
 
 export function ActionTextEditForm({
@@ -46,7 +47,7 @@ export function ActionTextEditForm({
   return (
     <div className="flex flex-col gap-6 px-5 pb-24 pt-6">
       <label className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-medium text-neutral-700">소개</span>
+        <FieldLabel>소개</FieldLabel>
         <textarea
           value={description}
           onChange={(event) => setDescription(event.target.value)}
@@ -57,7 +58,7 @@ export function ActionTextEditForm({
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-medium text-neutral-700">안내사항</span>
+        <FieldLabel>안내사항</FieldLabel>
         <textarea
           value={notice}
           onChange={(event) => setNotice(event.target.value)}
