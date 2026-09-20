@@ -47,7 +47,7 @@ export function VoiceForm({
   }
 
   return (
-    <div className="flex flex-col gap-5 px-5 pb-[calc(8rem+var(--nav-h))] pt-6">
+    <div className="flex flex-col gap-5 px-5 pb-[calc(8rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-6">
       <div>
         <h1 className="text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
           함께한 소감을

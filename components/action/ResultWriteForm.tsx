@@ -99,7 +99,7 @@ export function ResultWriteForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-[calc(8rem+var(--nav-h))] pt-5">
+    <div className="flex flex-col gap-6 px-5 pb-[calc(9rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
       {/* 자동 집계 — 수정 불가 */}
       <section className="flex flex-col gap-3">
         <div>
@@ -119,7 +119,7 @@ export function ResultWriteForm({
                   <span className="text-sm font-medium text-neutral-900">
                     {item.name}
                   </span>
-                  <span className="text-sm font-medium tabular-nums text-neutral-900">
+                  <span className="text-sm font-semibold tabular-nums text-neutral-900">
                     {describeResultCount(item, item.currentCount)}
                   </span>
                 </div>

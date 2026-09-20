@@ -285,7 +285,7 @@ export function ActionCard({
           </div>
 
           {/* 고배율에서 잘리지 않게 말줄임 없이 전체 노출. 카드가 길어지는 건 감수 (배율 확대 사용자는 전부 보길 원함) */}
-          <h3 className="text-[15px] font-semibold leading-snug text-neutral-900 break-keep">
+          <h3 className="text-[15px] font-bold leading-snug text-neutral-900 break-keep">
             {action.title}
           </h3>
 
