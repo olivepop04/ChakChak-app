@@ -365,7 +365,8 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
 app/action/create/ · app/action/[id]/ 하위 (join · welcome · crew · chat · edit · result · voice)
 components/action/ (ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm
                     · LeaveButton · AddressSearch · ActionHostActions
-                    · ActionTextEditForm · AddActionItemsForm · CrewVoiceList)
+                    · ActionTextEditForm · AddActionItemsForm · CrewVoiceList
+                    · ReasonModal)
 
 AddressSearch 와 ActionHostActions 는 2026-09-14에 내 담당이 됐다. 담당 표에 없던 파일이다.
   AddressSearch       ActionForm 에서만 쓴다 (주소 검색 버튼)
@@ -380,6 +381,11 @@ app/action/[id]/edit/ 폴더도 같이 채웠다 — 실재하는 화면인데 �
                       공개된 액션에 saveActionItems() 를 쓰면 크루들의 참여 기록이
                       함께 사라진다 (CLAUDE.md 규칙 10). 반드시 addActionItems() 다.
   CrewVoiceList       app/action/[id]/result/ 에서만 쓴다. 소감 2개 + 「더보기」 목록이다.
+
+ReasonModal 은 2026-09-17에 내가 만든 공용 확인 모달이다 (취소 · 조기 종료 · 나가기 ·
+작성중 삭제 · 크루챗 글 삭제 · 로그아웃). createPortal(document.body) 로 최상위에 그린다 —
+카드 안에서 그리면 카드의 relative z-10 에 갇혀 하단 탭이 확인 버튼을 덮는다.
+components/ui/LogoutButton.tsx(디자이너)도 이것을 쓰므로 고치기 전에 말한다.
 
 화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
 
