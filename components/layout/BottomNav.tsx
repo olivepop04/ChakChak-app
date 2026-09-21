@@ -87,6 +87,14 @@ export function BottomNav() {
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-app border-t border-neutral-200 bg-white"
+      style={{
+        // 민호(성은님 PR, origin/dev 1c26890) — 글자 배율(200~300%)을 켜면 라벨이
+        // 커지면서 탭이 부풀어 다른 화면 하단 버튼을 덮는 버그가 있었다. 이 두 줄이
+        // 그 짝 수정 중 ①번 — 탭 라벨은 폰 글자 크기 설정을 따라가지 않게 막는다.
+        // 아래 <ul> 의 h-[var(--nav-h)] 와 반드시 같이 있어야 한다 (하나만 빼면 재발).
+        WebkitTextSizeAdjust: '100%',
+        textSizeAdjust: '100%',
+      }}
       aria-label="주요 메뉴"
     >
       {/*
@@ -94,19 +102,22 @@ export function BottomNav() {
         라벨을 영구히 지운 게 아니라 활성 상태에 따라 매번 바뀌는 것이 핵심(고정 삭제 아님).
         색은 브랜드 그린(#00A56E)인데, tailwind.config.ts 에 아직 brand 토큰이 없어서
         임시로 대괄호 값을 씀 — 토큰 정리(Day5 반영) 때 정식 색상으로 바꿔야 함.
+
+        아이콘·라벨 크기를 여기서 더 키운다면 app/globals.css 의 --nav-h(64px)도
+        같이 올릴 것 — 하단 고정 바가 있는 11개 화면이 전부 이 변수로 자기 위치를 잡는다.
       */}
-      <ul className="flex items-center justify-between px-4 py-2 w-full">
+      <ul className="flex h-[var(--nav-h)] items-center justify-between px-4">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           const Icon = tab.icon;
           return (
-            <li key={tab.href} className="flex items-center justify-center">
+            <li key={tab.href} className="flex min-w-0 items-center justify-center">
               <Link
                 href={tab.href}
                 aria-current={active ? 'page' : undefined}
                 aria-label={active ? undefined : tab.label}
                 className={cn(
-                  'flex items-center justify-center gap-1.5 rounded-full transition-all duration-300 ease-in-out',
+                  'flex min-w-0 items-center justify-center gap-1.5 rounded-full transition-all duration-300 ease-in-out',
                   // 터치 타겟 44px 이상 — 활성 캡슐은 py-2.5(10px×2)+아이콘 24px = 44px
                   active
                     ? 'bg-[#E9F9EF] px-4 py-2.5 text-[#00A56E]'
@@ -115,7 +126,7 @@ export function BottomNav() {
               >
                 <Icon className={cn(tab.iconClassName || 'h-6 w-6', 'shrink-0')} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
                 {active && (
-                  <span className="whitespace-nowrap text-[13px] font-bold">
+                  <span className="max-w-full truncate whitespace-nowrap text-[13px] font-bold">
                     {tab.label}
                   </span>
                 )}
