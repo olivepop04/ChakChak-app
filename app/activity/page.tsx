@@ -103,11 +103,28 @@ function CreatedFooter({
 
   return (
     <div className="flex flex-col gap-2.5">
-      {isShortfall && (
+      {/* 1. 모집 마감 ~ 활동 시작 전: 목표 미달 시에만 취소 안내 (F37) */}
+      {!isStarted && isShortfall && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] leading-relaxed text-amber-800">
-          <p className="font-semibold text-amber-900">⚠️ 모집 인원 미달 (마감됨)</p>
+          <p className="font-semibold text-amber-900">⚠️ 최소 목표 미달 (모집 마감)</p>
           <p className="mt-0.5 text-[11px] text-amber-700">
-            최소 모집 수량을 채우지 못했습니다. 그대로 계속 진행하시거나 아래 [취소하기] 버튼으로 액션을 취소해 주세요.
+            최소 모집 인원·수량을 채우지 못했습니다. 활동 시작 전까지 아래 [취소하기] 버튼으로 액션을 취소하실 수 있습니다.
+          </p>
+          <p className="mt-0.5 text-[11px] text-amber-600">
+            (시작 시각 이후에는 취소가 불가하며, 별도 조치가 없으면 예정대로 진행됩니다.)
+          </p>
+        </div>
+      )}
+
+      {/* 2. 활동 시작 ~ 활동 종료 전: 진행 중인 모든 액션에 조기종료 안내 */}
+      {item.status === 'ACTIVE' && isStarted && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-[12px] leading-relaxed text-blue-800">
+          <p className="font-semibold text-blue-900">💡 활동 조기종료 안내</p>
+          <p className="mt-0.5 text-[11px] text-blue-700">
+            활동 종료 시각 전까지 아래 [조기종료] 버튼으로 활동을 일찍 마칠 수 있습니다.
+          </p>
+          <p className="mt-0.5 text-[11px] text-blue-600">
+            (악천후, 장소 문제, 현저한 불참 등 부득이한 사정이 있거나 여러날 진행예정이었던 액션을 조기 달성한 경우 사용해 주세요.)
           </p>
         </div>
       )}

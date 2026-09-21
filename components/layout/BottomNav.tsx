@@ -87,9 +87,13 @@ export function BottomNav() {
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-app border-t border-neutral-200 bg-white"
+      style={{
+        WebkitTextSizeAdjust: '100%',
+        textSizeAdjust: '100%',
+      }}
       aria-label="주요 메뉴"
     >
-      <ul className="flex">
+      <ul className="flex h-[var(--nav-h)]">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           const Icon = tab.icon;
@@ -99,12 +103,12 @@ export function BottomNav() {
                 href={tab.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 py-2.5 transition-colors',
+                  'flex h-full flex-col items-center justify-center gap-0.5 px-1 py-1.5 transition-colors',
                   active ? 'text-neutral-900' : 'text-neutral-400',
                 )}
               >
-                <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-                <span className="text-[10px] font-semibold tracking-wide">
+                <Icon className="h-6 w-6 shrink-0" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
+                <span className="max-w-full truncate whitespace-nowrap text-[10px] font-semibold tracking-wide">
                   {tab.label}
                 </span>
               </Link>
