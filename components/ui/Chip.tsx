@@ -17,12 +17,20 @@ export function Chip({
   children,
   className,
   as: Component = 'button',
+  /**
+   * 기본값 'default' — 기존 모습(선택 시 검정) 그대로. 다른 화면(관심 카테고리·시간대 선택 등)이
+   * 이 값을 쓰고 있어서 손대지 않음.
+   * 'accent' / 'neutral' 은 2026-09-21 홈피드 개편에서 새로 추가한 옵션 —
+   * 명시적으로 지정한 곳(app/page.tsx 의 홈 필터)에만 적용되고 다른 화면엔 영향 없음.
+   */
+  tone = 'default',
 }: {
   selected?: boolean;
   onClick?: () => void;
   children: React.ReactNode;
   className?: string;
   as?: 'button' | 'span';
+  tone?: 'default' | 'accent' | 'neutral';
 }) {
   return (
     <Component
@@ -30,10 +38,22 @@ export function Chip({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors',
-        selected
-          ? 'border-neutral-900 bg-neutral-900 text-white'
-          : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50',
+        'inline-flex items-center justify-center whitespace-nowrap rounded-full border transition-colors',
+        tone === 'neutral'
+          ? 'gap-1 border-transparent px-3.5 py-2 text-[12px] font-medium'
+          : 'px-3.5 py-2 text-[13px] font-medium',
+        tone === 'default' &&
+          (selected
+            ? 'border-neutral-900 bg-neutral-900 text-white'
+            : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'),
+        tone === 'accent' &&
+          (selected
+            ? 'border-transparent bg-[#00A56E] text-white'
+            : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'),
+        tone === 'neutral' &&
+          (selected
+            ? 'bg-neutral-100 text-neutral-900'
+            : 'bg-white text-neutral-500 hover:bg-neutral-50'),
         className,
       )}
     >

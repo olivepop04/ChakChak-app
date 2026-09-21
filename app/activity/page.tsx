@@ -448,7 +448,10 @@ export default async function ActivityPage({
             <div key={a.id} className="relative">
               <ActionCard action={a} footer={<JoinedFooter item={a} />} />
               {a.status !== 'CANCELLED' && (
-                <div className="pointer-events-none absolute right-3 top-3 z-10">
+                // 2026-09-21: ActionCard 세로형이 작성자·공유 줄(56px)을 썸네일 위로 옮기면서
+                // 이 뱃지가 이미지 위가 아니라 카드 맨 위(작성자 줄)에 얹히던 회귀 버그 수정.
+                // top-3 → top-[72px](헤더 56px + 이미지 내부 여백 16px)로 이미지 위 자리로 되돌림.
+                <div className="pointer-events-none absolute right-4 top-[72px] z-10">
                   <ParticipationBadge
                     status={a.participationStatus}
                     className="rounded-md border border-neutral-200/60 px-2.5 py-1 text-[12px] font-bold shadow-md"

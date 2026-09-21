@@ -89,24 +89,36 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-app border-t border-neutral-200 bg-white"
       aria-label="주요 메뉴"
     >
+      {/*
+        2026-09-21 홈피드 개편 — 활성 탭만 캡슐 배경 + 라벨, 비활성 탭은 아이콘만.
+        라벨을 영구히 지운 게 아니라 활성 상태에 따라 매번 바뀌는 것이 핵심(고정 삭제 아님).
+        색은 브랜드 그린(#00A56E)인데, tailwind.config.ts 에 아직 brand 토큰이 없어서
+        임시로 대괄호 값을 씀 — 토큰 정리(Day5 반영) 때 정식 색상으로 바꿔야 함.
+      */}
       <ul className="flex">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           const Icon = tab.icon;
           return (
-            <li key={tab.href} className="flex-1">
+            <li key={tab.href} className="flex flex-1 items-center justify-center py-2">
               <Link
                 href={tab.href}
                 aria-current={active ? 'page' : undefined}
+                aria-label={active ? undefined : tab.label}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 py-2.5 transition-colors',
-                  active ? 'text-neutral-900' : 'text-neutral-400',
+                  'flex items-center justify-center gap-1.5 rounded-full transition-colors',
+                  // 터치 타겟 44px 이상 — 활성 캡슐은 py-2.5(10px×2)+아이콘 24px = 44px
+                  active
+                    ? 'bg-[#E9F9EF] px-4 py-2.5 text-[#00A56E]'
+                    : 'h-11 w-11 text-neutral-400',
                 )}
               >
                 <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-                <span className="text-[10px] font-semibold tracking-wide">
-                  {tab.label}
-                </span>
+                {active && (
+                  <span className="whitespace-nowrap text-[13px] font-bold">
+                    {tab.label}
+                  </span>
+                )}
               </Link>
             </li>
           );
