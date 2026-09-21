@@ -138,30 +138,60 @@ export function getQuotaState(item: QuotaItem, current: number): QuotaState {
 
 /** 결과 화면 문장 */
 export function describeResult(item: QuotaItem, final: number): string {
-  const { type, target_type, min_required, max_allowed, unit } = item;
+  const { type, target_type, min_required, max_allowed } = item;
   const noun = nounOf(type);
-  const short = min_required - final;
 
+  // 1. 미달 완료: final < min_required
   if (final < min_required) {
-    return `목표까지 ${short}${unit} 모자랐습니다.`;
+    return '아쉽지만 다 채우지 못했어요.';
   }
-  if (target_type === 'RANGE' && max_allowed === min_required) {
-    return `모집 ${noun}을 충족했습니다.`;
+
+  // 2. 초과 달성:
+  // RANGE인 경우 max_allowed 초과, MINIMUM인 경우 min_required 초과
+  const isOver =
+    target_type === 'RANGE' && max_allowed
+      ? final > max_allowed
+      : final > min_required;
+
+  if (isOver) {
+    return `최소 ${noun}을 초과 달성했어요.`;
   }
-  return `최소 ${noun}을 충족했습니다. 최종 ${final}${unit}.`;
+
+  // 3. 정상 충족:
+  return `모집 ${noun}을 충족했어요.`;
 }
 
-/** 결과 화면 상단 숫자: "15명" 또는 "3명 / 3~5명" */
+/** 결과 화면 수치 표기: 결과치 / 목표치 통일 (예: "18명 / 15명", "50개 / 50개", "4명 / 4~6명", "4명 / 5~8명") */
 export function describeResultCount(item: QuotaItem, final: number): string {
   const { target_type, min_required, max_allowed, unit } = item;
 
-  if (target_type === 'MINIMUM') {
-    return `${final}${unit}`;
-  }
-  const max = max_allowed ?? min_required;
   const denominator =
-    max === min_required ? `${min_required}${unit}` : `${min_required}~${max}${unit}`;
+    target_type === 'RANGE' && max_allowed && max_allowed !== min_required
+      ? `${min_required}~${max_allowed}${unit}`
+      : `${min_required}${unit}`;
+
   return `${final}${unit} / ${denominator}`;
+}
+
+/** 결과 화면 게이지(그래프) 비율 및 상태 */
+export function describeResultRatio(item: QuotaItem, final: number): {
+  ratio: number;
+  isMet: boolean;
+  isOver: boolean;
+} {
+  const { target_type, min_required, max_allowed } = item;
+  const isMet = final >= min_required;
+  const isOver =
+    target_type === 'RANGE' && max_allowed
+      ? final > max_allowed
+      : final > min_required;
+
+  let ratio = 1;
+  if (!isMet) {
+    ratio = Math.max(min_required > 0 ? final / min_required : 0, 0.08);
+  }
+
+  return { ratio: Math.min(ratio, 1), isMet, isOver };
 }
 
 /**

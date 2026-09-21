@@ -55,6 +55,22 @@ const USERS = [
   { nick: '하윤', gender: 'FEMALE', bio: '어르신들과 이야기 나누는 걸 좋아해요.' },
   { nick: '준서', gender: 'MALE', bio: '재능기부로 사진을 찍어드립니다.' },
   { nick: '수아', gender: 'FEMALE', bio: '작은 일이라도 꾸준히 하려고 해요.' },
+  { nick: '예준', gender: 'MALE', bio: '주말에 뜻깊은 시간을 보내고 싶어요.' },
+  { nick: '다은', gender: 'FEMALE', bio: '따뜻한 온기를 나누는 활동에 함께해요.' },
+  { nick: '시우', gender: 'MALE', bio: '이웃과 함께하는 봉사에 적극 참여합니다.' },
+  { nick: '채원', gender: 'FEMALE', bio: '동물과 자연을 사랑하는 사람입니다.' },
+  { nick: '유준', gender: 'MALE', bio: '작은 나눔이 큰 변화를 만든다고 믿어요.' },
+  { nick: '서아', gender: 'FEMALE', bio: '다양한 사람들과 소통하며 배우고 싶습니다.' },
+  { nick: '은우', gender: 'MALE', bio: '발로 뛰는 현장 봉사를 선호합니다.' },
+  { nick: '윤서', gender: 'FEMALE', bio: '깨끗한 환경을 만드는 일에 동참합니다.' },
+  { nick: '도윤', gender: 'MALE', bio: '지역사회 발전에 기여하고 싶습니다.' },
+  { nick: '소율', gender: 'FEMALE', bio: '아이들의 밝은 미소를 지켜주고 싶어요.' },
+  { nick: '재윤', gender: 'MALE', bio: '어르신들을 공경하고 돕는 일에 앞장섭니다.' },
+  { nick: '지아', gender: 'FEMALE', bio: '함께 만들어가는 따뜻한 세상을 꿈꿔요.' },
+  { nick: '선우', gender: 'MALE', bio: '주변의 작은 도움부터 실천합니다.' },
+  { nick: '하은', gender: 'FEMALE', bio: '의미 있는 나눔을 찾아 참여하고 있어요.' },
+  { nick: '정우', gender: 'MALE', bio: '에너지 넘치는 활동적인 봉사를 좋아해요.' },
+  { nick: '유나', gender: 'FEMALE', bio: '더 나은 내일을 위해 행동하는 크루입니다.' },
 ];
 
 const DEMO_USER = {
@@ -246,7 +262,7 @@ const ACTIONS = [
     {
       description: '부산 금정구 지역아동센터 아이들의 방과후 쉼터에 놓을 친환경 원목 책장을 함께 조립하고 기부받은 아동 도서를 채워 넣은 목공 나눔 활동이었습니다.',
       notice: '조립용 전동 드라이버와 사포는 현장에서 지급되었습니다.',
-      resultContent: '2단 원목 책장 3세트 조립을 완료하고, 기증받은 도서 200권을 분류하여 정리했습니다.',
+      resultContent: '2단 원목 책장 3세트 조립을 완료하고, 목표를 초과 달성하여 기증받은 도서 250권을 정성껏 분류하여 정리했습니다.',
       ownerVoice: '아이들이 새 책장을 보고 환호성을 지르던 모습이 눈에 선합니다. 뚝딱뚝딱 책장을 만들어주신 크루님들 멋졌습니다!'
     }],
 
@@ -371,7 +387,7 @@ const ACTIONS = [
     {
       description: '부평구 교육지원센터에서 도서벽지 및 다문화 아동들에게 보낼 국어·수학 홈스쿨링 학습지 키트를 월별로 포장하고 우체국 택배로 발송한 작업이었습니다.',
       notice: '상자 포장용 테이프와 운송장 출력 장비가 지원되었습니다.',
-      resultContent: '학습 교재 500세트 포장 및 주소 라벨 부착, 발송 접수까지 3시간 만에 오류 없이 완료했습니다.',
+      resultContent: '목표 인원보다 적은 5명의 크루가 모였지만, 손발을 척척 맞춰 학습 교재 500세트 포장과 발송 접수를 무사히 마쳤습니다.',
       ownerVoice: '아이들의 공부를 도울 교재 키트가 무사히 떠났습니다. 손발 맞춰 척척 작업해 주신 크루 여러분 고생 많으셨습니다.'
     }],
 
@@ -739,6 +755,7 @@ const ACTIONS = [
   ['영도 노후 주거지 희망 도색 나눔', '지역사회', IMG.community, '부산광역시 영도구 절영로', 'COMPLETED', 35, -24,
     [['페인트칠 봉사', 'PERSON', 'R', 5, 8, '명', 'ANY']], 1,
     {
+      owner: 'DEMO',
       isShortfall: true,
       description: '부산 영도구 절영로 일대의 비탈진 노후 주택 외벽을 밝은 파스텔톤 방수 페인트로 깨끗하게 단장해 드린 봉사였습니다.',
       ownerVoice: '모집 정원에는 다소 미치지 못했지만, 함께해 주신 크루분들 모두가 2인분 몫을 톡톡히 해내며 서로를 격려해 준 덕분에 훌륭하게 완공할 수 있었습니다.',
@@ -759,6 +776,7 @@ const ACTIONS = [
   ['남양주 유기견 보호소 방한 비닐막 설치', '동물', IMG.dog, '경기도 남양주시 화도읍', 'COMPLETED', 42, -30,
     [['비닐막 설치', 'PERSON', 'M', 6, null, '명', 'ANY'], ['보온 비닐', 'GOODS', 'M', 20, null, '롤', 'ANY']], 1,
     {
+      demoCrew: 'AFTER_ACTION',
       description: '남양주 야외 견사에 칼바람을 차단하기 위해 외곽 철조망을 따라 두꺼운 방풍 비닐막 20롤을 꼼꼼하게 시공했습니다.',
       ownerVoice: '견사에 칼바람이 불지 않도록 튼튼하게 막아주셔서 아이들이 올겨울 따뜻하게 보낼 수 있게 되었습니다.',
       resultContent: '보호소 견사 외곽에 방풍 비닐막 20롤을 모두 설치 완료하였습니다.',
@@ -777,6 +795,8 @@ const ACTIONS = [
   ['폐플라스틱 병뚜껑 업사이클링 키링 제작', '환경', IMG.env, '서울특별시 종로구 대학로', 'COMPLETED', 38, -26,
     [['제작 보조', 'PERSON', 'R', 4, 6, '명', 'ANY'], ['플라스틱 병뚜껑', 'GOODS', 'M', 500, null, '개', 'ANY']], 1,
     {
+      demoCrew: 'ACTUALLY_PARTICIPATED',
+      demoCrewVoice: '재활용의 소중함을 직접 깨닫고 예쁜 키링까지 완성할 수 있어 보람찼습니다.',
       description: '버려지는 플라스틱 병뚜껑 800개를 세척·사출하여 환경 메시지가 담긴 예쁜 업사이클링 키링 150개를 제작했습니다.',
       ownerVoice: '버려지는 플라스틱이 예쁜 키링으로 재탄생하는 과정을 함께해주신 분들께 감사드립니다.',
       resultContent: '수거된 병뚜껑 800여 개를 분류·세척 후 업사이클링 키링 150개를 제작하여 환경 캠페인용으로 기부했습니다.',
@@ -795,9 +815,10 @@ const ACTIONS = [
   ['사랑의 연탄 나눔 봉사', '지역사회', IMG.food, '서울특별시 성북구 정릉로', 'COMPLETED', 48, -35,
     [['연탄 배달', 'PERSON', 'M', 15, null, '명', 'ANY'], ['연탄', 'GOODS', 'M', 1000, null, '장', 'ANY']], 1,
     {
+      owner: 'DEMO',
       description: '정릉 골목길 고지대 난방 취약계층 5가구에 지게와 손수레를 이용해 연탄 1,000장을 창고에 차곡차곡 쌓아드렸습니다.',
       ownerVoice: '언덕길을 오르내리며 옷에 까만 탄가루가 묻어도 웃음을 잃지 않으셨던 모든 크루분들 최고입니다.',
-      resultContent: '고지대 취약계층 5가구에 총 1,000장의 연탄을 릴레이로 안전하게 적재해 드렸습니다.',
+      resultContent: '많은 크루분들이 동참해 주신 덕분에 당초 목표를 넘어 총 1,200장의 연탄을 고지대 취약계층 가구에 릴레이로 안전하게 적재해 드렸습니다.',
       comments: ['연탄 지게 메고 올라갈 땐 힘들었지만 창고 꽉 찬 거 보고 뭉클했습니다.']
     }],
 
@@ -840,9 +861,11 @@ const ACTIONS = [
   ['다문화 어린이 기초 한국어 동화 구연', '교육', IMG.book, '경기도 안산시 상록구 광덕로', 'COMPLETED', 46, -33,
     [['동화구연', 'PERSON', 'R', 3, 5, '명', 'ANY']], 1,
     {
+      demoCrew: 'ACTUALLY_PARTICIPATED',
+      demoCrewVoice: '인원은 적었지만 아이들과 1:1로 손을 맞잡고 동화를 읽어줄 수 있어서 더 깊이 교감할 수 있었습니다.',
       description: '안산 다문화센터에서 한국어가 서툰 다문화 어린이 12명과 전래동화를 손인형극으로 들려주고 단어 카드 게임을 진행했습니다.',
       ownerVoice: '한국어 표현이 낯선 다문화 가정 아이들이 눈높이 율동과 동화를 통해 자연스럽게 한글과 친해진 시간이었습니다.',
-      resultContent: '다문화 어린이 12명과 전래동화 구연 및 단어 카드 맞추기 놀이를 성공적으로 마쳤습니다.',
+      resultContent: '예상 인원보다 적은 2명의 크루가 참여했지만, 아이들과 1:1로 더 깊이 교감하며 전래동화 구연과 단어 카드 맞추기 놀이를 따뜻하게 마쳤습니다.',
       comments: ['처음엔 부끄러워하던 아이들이 끝날 땐 품에 안겨 안 놔주더라고요 ㅠㅠ']
     }],
 
@@ -1285,7 +1308,157 @@ async function seed() {
     }
 
     // 일반 참여자 시드
-    if (status !== 'CANCELLED') {
+    if (status === 'COMPLETED') {
+      // COMPLETED 액션: 초과 달성, 정상 충족, 미달 완료 상태가 골고루 분포되도록 시드 수량 산출
+      const getTargetCount = (it) => {
+        if (meta?.itemTargets && meta.itemTargets[it.name] !== undefined) {
+          return meta.itemTargets[it.name];
+        }
+        // 1. 미달 완료 액션 (~3개)
+        if (idx === 35) return 5; // 학습지 정리: 5명 (목표 6명 미달)
+        if (idx === 82) return 4; // 영도 도색: 4명 (목표 5~8명 미달)
+        if (idx === 93) return 2; // 동화 구연: 2명 (목표 3~5명 미달)
+        // 용인 유기묘: 5명 (목표 6~10명 미달).
+        // 이 액션의 ownerVoice 가 「모집 인원이 다소 부족했음에도」 라서
+        // 목표를 채우면 글과 숫자가 어긋납니다 (2026-09-22에 채웠습니다).
+        if (idx === 83) return 5;
+
+        // 2. 초과 달성 액션 (~7개)
+        if (idx === 15) return 12; // 제설 봉사: 12명 (목표 10명 초과)
+        if (idx === 18 && it.type === 'GOODS') return 250; // 도서 기부: 250권 (목표 200권 초과)
+        if (idx === 38 && it.type === 'GOODS') return 180; // 바자회 기부물품: 180점 (목표 150점 초과)
+        if (idx === 85) return 15; // 플로깅: 15명 (목표 12명 초과)
+        if (idx === 86 && it.type === 'GOODS') return 800; // 병뚜껑: 800개 (목표 500개 초과)
+        if (idx === 88 && it.type === 'PERSON') return 18; // 연탄 배달: 18명 (목표 15명 초과)
+        if (idx === 88 && it.type === 'GOODS') return 1200; // 연탄: 1200장 (목표 1000장 초과)
+        if (idx === 95 && it.type === 'PERSON') return 10; // 뜨개질: 10명 (목표 8명 초과)
+        if (idx === 95 && it.type === 'GOODS') return 65; // 뜨개실: 65볼 (목표 50볼 초과)
+
+        // 3. 정상 충족 액션 (나머지 16개)
+        return it.min_required;
+      };
+
+      const itemTotals = new Map();
+      const participatedUserIds = new Set(joinedCrews.map((u) => u.id));
+      participatedUserIds.add(owner.id);
+
+      // DEMO 유저가 이미 참여한 수량 집계
+      if (meta?.demoCrew) {
+        const okItems = createdItems.filter(
+          (it) => it.gender_requirement === 'ANY' || it.gender_requirement === demoUser.gender,
+        );
+        if (okItems.length > 0) {
+          const target = okItems[0];
+          const qty = target.type === 'PERSON' ? 1 : 5;
+          itemTotals.set(target.id, qty);
+        }
+      }
+
+      // 1. PERSON 항목: 1인 1수량이므로 각 항목의 목표치만큼 서로 다른 크루 참여
+      for (const it of createdItems.filter((i) => i.type === 'PERSON')) {
+        const current = itemTotals.get(it.id) ?? 0;
+        const target = getTargetCount(it);
+        const needed = target - current;
+        if (needed <= 0) continue;
+
+        const availableUsers = users.filter(
+          (u) =>
+            !participatedUserIds.has(u.id) &&
+            (it.gender_requirement === 'ANY' || it.gender_requirement === u.gender),
+        );
+
+        const assigned = availableUsers.slice(0, needed);
+        for (let j = 0; j < assigned.length; j++) {
+          const joiner = assigned[j];
+          participatedUserIds.add(joiner.id);
+
+          const { data: part } = await admin
+            .from('participations')
+            .insert({ action_id: action.id, user_id: joiner.id, status: 'ACTUALLY_PARTICIPATED' })
+            .select('id')
+            .single();
+
+          if (!part) continue;
+          partCount++;
+          joinedCrews.push(joiner);
+          itemTotals.set(it.id, (itemTotals.get(it.id) ?? 0) + 1);
+
+          await admin.from('participation_items').insert({
+            participation_id: part.id,
+            action_item_id: it.id,
+            quantity: 1,
+          });
+
+          // 소감 작성 (최대 3개)
+          if (j < 3) {
+            const voiceContent = meta?.crewVoices?.[j] ?? pick(CREW_VOICES, idx + j);
+            await admin.from('crew_voices').insert({
+              action_id: action.id,
+              user_id: joiner.id,
+              content: voiceContent,
+            });
+            voiceCount++;
+          }
+        }
+      }
+
+      // 2. GOODS 항목: 2~5명의 참여자에게 목표 수량을 나누어 배정
+      for (const it of createdItems.filter((i) => i.type === 'GOODS')) {
+        const current = itemTotals.get(it.id) ?? 0;
+        const target = getTargetCount(it);
+        const needed = target - current;
+        if (needed <= 0) continue;
+
+        // 이미 참여한 크루 우선 배정, 부족하면 추가 유저 영입
+        const potentialDonors = [...joinedCrews.filter((u) => u.id !== owner.id)];
+        for (const u of users) {
+          if (potentialDonors.length >= 4) break;
+          if (u.id !== owner.id && !potentialDonors.some((d) => d.id === u.id)) {
+            potentialDonors.push(u);
+          }
+        }
+
+        const donors = potentialDonors.slice(0, Math.min(5, Math.max(2, potentialDonors.length)));
+        const base = Math.floor(needed / donors.length);
+        const rem = needed % donors.length;
+
+        for (let dIdx = 0; dIdx < donors.length; dIdx++) {
+          const donor = donors[dIdx];
+          const addQty = base + (dIdx < rem ? 1 : 0);
+          if (addQty <= 0) continue;
+
+          let partId;
+          const { data: existingPart } = await admin
+            .from('participations')
+            .select('id')
+            .eq('action_id', action.id)
+            .eq('user_id', donor.id)
+            .maybeSingle();
+
+          if (existingPart) {
+            partId = existingPart.id;
+          } else {
+            const { data: newPart } = await admin
+              .from('participations')
+              .insert({ action_id: action.id, user_id: donor.id, status: 'ACTUALLY_PARTICIPATED' })
+              .select('id')
+              .single();
+            if (!newPart) continue;
+            partId = newPart.id;
+            partCount++;
+            joinedCrews.push(donor);
+            participatedUserIds.add(donor.id);
+          }
+
+          await admin.from('participation_items').insert({
+            participation_id: partId,
+            action_item_id: it.id,
+            quantity: addQty,
+          });
+          itemTotals.set(it.id, (itemTotals.get(it.id) ?? 0) + addQty);
+        }
+      }
+    } else if (status !== 'CANCELLED') {
       const joinerCount = Math.min(2 + (idx % 4), users.length - 1);
 
       for (let j = 1; j <= joinerCount; j++) {
@@ -1299,11 +1472,7 @@ async function seed() {
 
         let pStatus = 'BEFORE_ACTION';
         if (isPast) {
-          if (wroteResult) {
-            pStatus = j % 3 !== 0 ? 'ACTUALLY_PARTICIPATED' : 'AFTER_ACTION';
-          } else {
-            pStatus = 'AFTER_ACTION';
-          }
+          pStatus = 'AFTER_ACTION';
         }
 
         const { data: part } = await admin

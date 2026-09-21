@@ -182,6 +182,7 @@ export function ActionCard({
                 <div className="flex items-center gap-0.5 min-[410px]:gap-1 sm:gap-1.5 shrink-0 ml-auto pointer-events-auto text-[10px] min-[410px]:text-[11px] sm:text-xs font-medium text-neutral-500">
                   <CrewAnchorButton
                     count={action.crewCount ?? 0}
+                    actionId={action.id}
                     className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
@@ -321,6 +322,7 @@ export function ActionCard({
             <div className="pointer-events-auto flex items-center justify-start gap-1 shrink-0 text-xs tabular-nums text-neutral-500">
               <CrewAnchorButton
                 count={action.crewCount ?? 0}
+                actionId={action.id}
                 className="px-1 py-0.5 text-xs gap-1"
               />
               <LikeButton

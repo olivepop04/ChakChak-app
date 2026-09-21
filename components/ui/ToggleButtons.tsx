@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Ban, Heart, Star, UsersRound, Share2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toggleLike, toggleSave, toggleFollow } from '@/lib/mutations';
@@ -576,20 +576,26 @@ export function FollowButton({
 // ─────────────────────────────────────────────────────────────
 export function CrewAnchorButton({
   count,
+  actionId,
   targetId = 'crew-section',
   className,
   iconClassName,
 }: {
   count: number;
+  actionId?: string;
   targetId?: string;
   className?: string;
   iconClassName?: string;
 }) {
+  const router = useRouter();
+
   function handleClick(e: React.MouseEvent) {
+    e.stopPropagation();
     const el = document.getElementById(targetId);
     if (el) {
-      e.stopPropagation();
       el.scrollIntoView({ behavior: 'smooth' });
+    } else if (actionId) {
+      router.push(`/action/${actionId}#${targetId}`);
     }
   }
 

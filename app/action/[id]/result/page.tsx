@@ -12,7 +12,8 @@ import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { CrewVoiceList } from '@/components/action/CrewVoiceList';
-import { describeResult, describeResultCount } from '@/lib/utils/quota';
+import { describeResult, describeResultCount, describeResultRatio } from '@/lib/utils/quota';
+import { cn } from '@/lib/utils/cn';
 import { formatActivityPeriod } from '@/lib/utils/date';
 
 export default async function ResultPage({
@@ -97,26 +98,48 @@ export default async function ResultPage({
         {/* 자동 집계 */}
         <section className="flex flex-col gap-3">
           <SectionTitle>함께 모은 것</SectionTitle>
-          <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 p-4">
-            {result.items.map((item) => (
-              <div key={item.id} className="flex flex-col gap-0.5">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-semibold text-neutral-900">
-                    {item.name}
-                  </span>
-                  <span className="text-[17px] font-bold tabular-nums text-neutral-900">
-                    {describeResultCount(item, item.currentCount)}
-                  </span>
+          <div className="flex flex-col gap-3.5 rounded-xl border border-neutral-200 p-4">
+            {result.items.map((item) => {
+              const { ratio, isMet } = describeResultRatio(item, item.currentCount);
+              return (
+                <div key={item.id} className="flex flex-col gap-1.5">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-semibold text-neutral-900">
+                      {item.name}
+                    </span>
+                    <span className="text-[15px] font-bold tabular-nums text-neutral-900">
+                      {describeResultCount(item, item.currentCount)}
+                    </span>
+                  </div>
+
+                  {/* 게이지(그래프) */}
+                  <div
+                    className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100"
+                    role="progressbar"
+                    aria-valuenow={Math.round(ratio * 100)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all duration-300',
+                        isMet ? 'bg-emerald-500' : 'bg-neutral-400',
+                      )}
+                      style={{ width: `${Math.round(ratio * 100)}%` }}
+                    />
+                  </div>
+
+                  <p
+                    className={cn(
+                      'text-[12px] font-medium',
+                      isMet ? 'text-emerald-700' : 'text-neutral-500',
+                    )}
+                  >
+                    {describeResult(item, item.currentCount)}
+                  </p>
                 </div>
-                <p
-                  className={`text-[12px] ${
-                    item.isMinMet ? 'text-emerald-700' : 'text-neutral-500'
-                  }`}
-                >
-                  {describeResult(item, item.currentCount)}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
