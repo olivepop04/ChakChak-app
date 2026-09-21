@@ -5,7 +5,7 @@
  * user!.id 처럼 강제로 단언하지 마세요. 비회원이 열면 터집니다.
  */
 import Link from 'next/link';
-import { Bell, Check } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getActionFeed } from '@/lib/queries/actions';
 import { getUnreadCount } from '@/lib/queries/notifications';
@@ -59,10 +59,10 @@ export default async function HomePage({
   return (
     <main className="pb-24">
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-5 pb-3 pt-6">
+      <header className="flex items-center justify-between px-5 pb-4 pt-6">
         <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/chakchak-wordmark.png" alt="착착" className="h-[18px] w-auto" />
+          <img src="/brand/chakchak-wordmark.png" alt="착착" className="h-[24px] w-auto" />
           <p className="mt-1 text-[13px] text-neutral-500">
             착착 쌓이는 착한 일
           </p>
@@ -84,7 +84,7 @@ export default async function HomePage({
         ) : (
           <Link
             href="/login"
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-[13px] font-semibold text-neutral-700"
+            className="rounded-lg px-3 py-2 text-[13px] font-semibold text-neutral-700"
           >
             로그인
           </Link>
@@ -109,18 +109,15 @@ export default async function HomePage({
           ))}
         </div>
 
-        {/* 정렬 필터 칩 — 칩이 맨 앞(왼쪽)에서 시작 */}
-        {/* 앞의 「정렬」 라벨은 2026-09-10 회의로 뺐습니다. */}
-        <div className="flex items-center gap-2 border-t border-neutral-100 pt-3">
-          <Link href={makeSortUrl('DEADLINE')} scroll={false}>
-            <Chip selected={currentSort === 'DEADLINE'} as="span" tone="neutral">
-              {currentSort === 'DEADLINE' && <Check className="h-3 w-3" strokeWidth={2.5} />}
+        {/* 정렬 필터 — 세그먼트 컨트롤. 앞의 「정렬」 라벨은 2026-09-10 회의로 뺐습니다. */}
+        <div className="flex items-center gap-1 rounded-full bg-[#F5F5F7] p-1">
+          <Link href={makeSortUrl('DEADLINE')} scroll={false} className="flex-1">
+            <Chip selected={currentSort === 'DEADLINE'} as="span" tone="neutral" className="w-full">
               마감 임박
             </Chip>
           </Link>
-          <Link href={makeSortUrl('POPULAR')} scroll={false}>
-            <Chip selected={currentSort === 'POPULAR'} as="span" tone="neutral">
-              {currentSort === 'POPULAR' && <Check className="h-3 w-3" strokeWidth={2.5} />}
+          <Link href={makeSortUrl('POPULAR')} scroll={false} className="flex-1">
+            <Chip selected={currentSort === 'POPULAR'} as="span" tone="neutral" className="w-full">
               인기순
             </Chip>
           </Link>

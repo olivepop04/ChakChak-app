@@ -253,7 +253,7 @@ export function ActionCard({
       {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
       <div className="relative z-10 flex flex-col pointer-events-none">
         {/* 작성자 + 공유 — 썸네일 위 줄 */}
-        <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between gap-2 pt-4 pb-2">
           <Link
             href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
             onClick={(e) => e.stopPropagation()}
@@ -301,7 +301,7 @@ export function ActionCard({
           )}
         </div>
 
-        <div className="flex flex-col gap-2 p-4">
+        <div className="flex flex-col gap-2 pt-3 pb-4">
           {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
           <div className="flex flex-wrap gap-1">
             {allCategories.map((c, i) => (
@@ -325,26 +325,26 @@ export function ActionCard({
           </h3>
 
           {action.summary && (
-            <p className="font-sans text-[13px] font-medium leading-relaxed text-neutral-500">
+            <p className="font-sans text-[15px] font-semibold leading-relaxed text-neutral-500">
               {action.summary}
             </p>
           )}
 
           {/* 참여인원 + 날짜 + 장소 — "활동에 대한 사실 정보"로 한 줄에 묶음 (좋아요·저장은 "내 반응"이라 아래 줄로 분리).
-              세 항목 전부 같은 굵기(bold)·같은 크기의 아이콘으로 통일 (2026-09-21, 목업 참고) */}
-          <div className="pointer-events-auto flex flex-wrap items-center gap-3 text-[11px] font-bold text-neutral-500">
+              세 항목 전부 같은 굵기(medium)·13px 로 설정 */}
+          <div className="pointer-events-auto flex flex-wrap items-center gap-3 font-sans text-[13px] font-medium text-neutral-500">
             <CrewAnchorButton
               count={action.crewCount ?? 0}
               suffixLabel="명 참여 중"
-              className="!min-h-0 !gap-1 !p-0 !text-[11px] !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
+              className="!min-h-0 !gap-1 !p-0 !font-sans !text-[13px] !font-medium !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
               iconClassName="h-3.5 w-3.5 text-neutral-400"
             />
-            <span className="inline-flex items-center gap-1 whitespace-nowrap">
+            <span className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-[13px] font-medium text-neutral-500">
               <Calendar className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
               {formatDate(action.activityStartAt)}
             </span>
             {action.address && (
-              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-[13px] font-medium text-neutral-500">
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
                 {action.address.split(' ').slice(0, 2).join(' ')}
               </span>

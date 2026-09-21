@@ -40,7 +40,7 @@ export function Chip({
       className={cn(
         'inline-flex items-center justify-center whitespace-nowrap rounded-full border transition-colors',
         tone === 'neutral'
-          ? 'gap-1 border-transparent px-3.5 py-2 text-[12px] font-medium'
+          ? 'gap-1 border-transparent px-3.5 py-2 text-[12px]'
           : 'px-3.5 py-2 text-[13px] font-medium',
         tone === 'default' &&
           (selected
@@ -50,10 +50,14 @@ export function Chip({
           (selected
             ? 'border-transparent bg-[#00A56E] text-white'
             : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'),
+        // 세그먼트 컨트롤(정렬 필터) — 바깥 컨테이너가 #F5F5F7 배경을 이미 깔고 있어서
+        // 선택 안 된 세그먼트는 투명, 선택된 세그먼트만 흰 배경으로 떠 보이게 한다.
+        tone === 'neutral' &&
+          'flex-1 justify-center',
         tone === 'neutral' &&
           (selected
-            ? 'bg-neutral-100 text-neutral-900'
-            : 'bg-white text-neutral-500 hover:bg-neutral-50'),
+            ? 'bg-white font-bold text-[#00A56E] shadow-sm'
+            : 'bg-transparent font-medium text-neutral-500 hover:text-neutral-700'),
         className,
       )}
     >

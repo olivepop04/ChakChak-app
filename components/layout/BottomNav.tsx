@@ -8,15 +8,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { HouseHeart, SearchCheck, Plus, Grid2x2Plus, UserCircle } from 'lucide-react';
+import { House, SearchCheck, Plus, LayersPlus, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const TABS = [
-  { href: '/', label: '홈', icon: HouseHeart },
-  { href: '/discover', label: '액션 찾기', icon: SearchCheck },
-  { href: '/action/create', label: '액션 만들기', icon: Plus },
-  { href: '/activity', label: '내 액션', icon: Grid2x2Plus },
-  { href: '/my', label: '프로필', icon: UserCircle },
+  { href: '/', label: '홈', icon: House, iconClassName: 'h-6 w-6' },
+  { href: '/discover', label: '액션 찾기', icon: SearchCheck, iconClassName: 'h-6 w-6' },
+  { href: '/action/create', label: '액션 만들기', icon: Plus, iconClassName: 'h-6 w-6' },
+  { href: '/activity', label: '내 액션', icon: LayersPlus, iconClassName: 'h-5 w-5' },
+  { href: '/my', label: '프로필', icon: UserCircle, iconClassName: 'h-5.5 w-5.5' },
 ] as const;
 
 function isActive(pathname: string, href: string) {
@@ -95,25 +95,25 @@ export function BottomNav() {
         색은 브랜드 그린(#00A56E)인데, tailwind.config.ts 에 아직 brand 토큰이 없어서
         임시로 대괄호 값을 씀 — 토큰 정리(Day5 반영) 때 정식 색상으로 바꿔야 함.
       */}
-      <ul className="flex">
+      <ul className="flex items-center justify-between px-4 py-2 w-full">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           const Icon = tab.icon;
           return (
-            <li key={tab.href} className="flex flex-1 items-center justify-center py-2">
+            <li key={tab.href} className="flex items-center justify-center">
               <Link
                 href={tab.href}
                 aria-current={active ? 'page' : undefined}
                 aria-label={active ? undefined : tab.label}
                 className={cn(
-                  'flex items-center justify-center gap-1.5 rounded-full transition-colors',
+                  'flex items-center justify-center gap-1.5 rounded-full transition-all duration-300 ease-in-out',
                   // 터치 타겟 44px 이상 — 활성 캡슐은 py-2.5(10px×2)+아이콘 24px = 44px
                   active
                     ? 'bg-[#E9F9EF] px-4 py-2.5 text-[#00A56E]'
-                    : 'h-11 w-11 text-neutral-400',
+                    : 'h-11 w-11 text-neutral-400 hover:text-neutral-600',
                 )}
               >
-                <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
+                <Icon className={cn(tab.iconClassName || 'h-6 w-6', 'shrink-0')} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
                 {active && (
                   <span className="whitespace-nowrap text-[13px] font-bold">
                     {tab.label}
