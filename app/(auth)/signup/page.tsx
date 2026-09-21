@@ -374,7 +374,7 @@ function SignUpForm() {
                     onChange={(e) => setAgreeTerms(e.target.checked)}
                     className="h-4 w-4 shrink-0 accent-neutral-900"
                   />
-                  <span className="font-semibold text-neutral-500">[필수]</span>
+                  <span className="shrink-0 font-semibold text-neutral-500">[필수]</span>
                   <span>이용약관에 동의합니다.</span>
                 </label>
                 <Link
@@ -393,7 +393,7 @@ function SignUpForm() {
                     onChange={(e) => setAgreePrivacy(e.target.checked)}
                     className="h-4 w-4 shrink-0 accent-neutral-900"
                   />
-                  <span className="font-semibold text-neutral-500">[필수]</span>
+                  <span className="shrink-0 font-semibold text-neutral-500">[필수]</span>
                   <span>개인정보 처리방침에 동의합니다.</span>
                 </label>
                 <Link
