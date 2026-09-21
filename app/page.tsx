@@ -92,9 +92,9 @@ export default async function HomePage({
       </header>
 
       {/* 필터 영역 (카테고리 + 정렬) */}
-      <div className="flex flex-col gap-3 px-5 pb-4">
+      <div className="flex flex-col gap-5 px-5 pb-1">
         {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다 */}
-        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-5 px-5 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-5 px-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link href={makeCategoryUrl(undefined)} scroll={false} className="shrink-0">
             <Chip selected={!selected} as="span" tone="accent" className="whitespace-nowrap">
               전체
@@ -109,7 +109,7 @@ export default async function HomePage({
           ))}
         </div>
 
-        {/* 정렬 필터 — 세그먼트 컨트롤. 앞의 「정렬」 라벨은 2026-09-10 회의로 뺐습니다. */}
+        {/* 정렬 필터 — 세그먼트 컨트롤 */}
         <div className="flex items-center gap-1 rounded-full bg-[#F5F5F7] p-1">
           <Link href={makeSortUrl('DEADLINE')} scroll={false} className="flex-1">
             <Chip selected={currentSort === 'DEADLINE'} as="span" tone="neutral" className="w-full">

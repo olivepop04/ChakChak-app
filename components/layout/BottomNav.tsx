@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils/cn';
 const TABS = [
   { href: '/', label: '홈', icon: House, iconClassName: 'h-6 w-6' },
   { href: '/discover', label: '액션 찾기', icon: SearchCheck, iconClassName: 'h-6 w-6' },
-  { href: '/action/create', label: '액션 만들기', icon: Plus, iconClassName: 'h-6 w-6' },
+  { href: '/action/create', label: '액션 만들기', icon: Plus, iconClassName: 'h-7 w-7' },
   { href: '/activity', label: '내 액션', icon: LayersPlus, iconClassName: 'h-5 w-5' },
   { href: '/my', label: '프로필', icon: UserCircle, iconClassName: 'h-5.5 w-5.5' },
 ] as const;
