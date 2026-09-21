@@ -19,7 +19,8 @@ import { Button } from '@/components/ui/Button';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { useToast } from '@/components/ui/Toast';
-import { describeResult, describeResultCount } from '@/lib/utils/quota';
+import { describeResult, describeResultCount, describeResultRatio } from '@/lib/utils/quota';
+import { cn } from '@/lib/utils/cn';
 import { UPLOAD } from '@/lib/constants';
 import type { ActionItemWithProgress } from '@/lib/types/view';
 
@@ -113,25 +114,47 @@ export function ResultWriteForm({
           {items.length === 0 ? (
             <p className="text-[13px] text-neutral-400">모집 항목이 없어요.</p>
           ) : (
-            items.map((item) => (
-              <div key={item.id} className="flex flex-col gap-0.5">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-medium text-neutral-900">
-                    {item.name}
-                  </span>
-                  <span className="text-sm font-semibold tabular-nums text-neutral-900">
-                    {describeResultCount(item, item.currentCount)}
-                  </span>
+            items.map((item) => {
+              const { ratio, isMet } = describeResultRatio(item, item.currentCount);
+              return (
+                <div key={item.id} className="flex flex-col gap-1.5">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-semibold text-neutral-900">
+                      {item.name}
+                    </span>
+                    <span className="text-[15px] font-bold tabular-nums text-neutral-900">
+                      {describeResultCount(item, item.currentCount)}
+                    </span>
+                  </div>
+
+                  {/* 게이지(그래프) */}
+                  <div
+                    className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200"
+                    role="progressbar"
+                    aria-valuenow={Math.round(ratio * 100)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all duration-300',
+                        isMet ? 'bg-emerald-500' : 'bg-neutral-400',
+                      )}
+                      style={{ width: `${Math.round(ratio * 100)}%` }}
+                    />
+                  </div>
+
+                  <p
+                    className={cn(
+                      'text-[12px] font-medium',
+                      isMet ? 'text-emerald-700' : 'text-neutral-500',
+                    )}
+                  >
+                    {describeResult(item, item.currentCount)}
+                  </p>
                 </div>
-                <p
-                  className={`text-[12px] ${
-                    item.isMinMet ? 'text-emerald-700' : 'text-neutral-500'
-                  }`}
-                >
-                  {describeResult(item, item.currentCount)}
-                </p>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>

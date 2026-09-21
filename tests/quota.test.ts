@@ -19,6 +19,7 @@ import {
   describeTarget,
   describeResult,
   describeResultCount,
+  describeResultRatio,
   meetsGender,
 } from '../lib/utils/quota.ts';
 import type { QuotaItem } from '../lib/utils/quota.ts';
@@ -176,13 +177,54 @@ test('describeTarget — 모집 방식을 한 줄로', () => {
   assert.equal(describeTarget(사람정확), '정확히 3명');
 });
 
-test('describeResult · describeResultCount — 끝난 뒤 표시', () => {
-  assert.equal(typeof describeResult(사람범위, 4), 'string');
-  assert.equal(typeof describeResultCount(사람범위, 4), 'string');
-  assert.ok(
-    describeResultCount(사람범위, 4).includes('4'),
-    '최종 수량이 문장에 들어가야 합니다',
-  );
+test('describeResult · describeResultCount · describeResultRatio — 첨부 표 명세 검증', () => {
+  const 사람8명최소: QuotaItem = {
+    type: 'PERSON',
+    name: '봉사자',
+    target_type: 'MINIMUM',
+    min_required: 8,
+    max_allowed: null,
+    unit: '명',
+  };
+
+  const 물품50개최소: QuotaItem = {
+    type: 'GOODS',
+    name: '물품',
+    target_type: 'MINIMUM',
+    min_required: 50,
+    max_allowed: null,
+    unit: '개',
+  };
+
+  // ① 초과 달성 (예: 18명 / 15명, 1200장 / 1000장, 12명 / 8명)
+  assert.equal(describeResult(사람8명최소, 12), '최소 인원을 초과 달성했어요.');
+  assert.equal(describeResultCount(사람8명최소, 12), '12명 / 8명');
+  const 초과비율 = describeResultRatio(사람8명최소, 12);
+  assert.equal(초과비율.ratio, 1);
+  assert.equal(초과비율.isMet, true);
+  assert.equal(초과비율.isOver, true);
+
+  // ② 정상 충족 (예: 50개 / 50개, 3명 / 3~5명)
+  assert.equal(describeResult(물품50개최소, 50), '모집 수량을 충족했어요.');
+  assert.equal(describeResultCount(물품50개최소, 50), '50개 / 50개');
+  const 충족비율1 = describeResultRatio(물품50개최소, 50);
+  assert.equal(충족비율1.ratio, 1);
+  assert.equal(충족비율1.isMet, true);
+  assert.equal(충족비율1.isOver, false);
+
+  assert.equal(describeResult(사람범위, 3), '모집 인원을 충족했어요.');
+  assert.equal(describeResultCount(사람범위, 3), '3명 / 3~5명');
+  const 충족비율2 = describeResultRatio(사람범위, 3);
+  assert.equal(충족비율2.ratio, 1);
+  assert.equal(충족비율2.isMet, true);
+
+  // ③ 미달 완료 (예: 6명 / 8명, 2명 / 3~5명)
+  assert.equal(describeResult(사람8명최소, 6), '아쉽지만 다 채우지 못했어요.');
+  assert.equal(describeResultCount(사람8명최소, 6), '6명 / 8명');
+  const 미달비율 = describeResultRatio(사람8명최소, 6);
+  assert.equal(미달비율.ratio, 0.75);
+  assert.equal(미달비율.isMet, false);
+  assert.equal(미달비율.isOver, false);
 });
 
 // ─────────────────────────────────────────────────────────────
