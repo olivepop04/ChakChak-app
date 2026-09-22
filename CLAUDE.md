@@ -41,6 +41,17 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
 **3. 데이터가 빈 배열로만 나온다면 RLS입니다** — 에러가 안 나고 조용히 빈 결과가 옵니다. `supabase/02_rls.sql`에서 해당 테이블 정책을 확인하세요.
 
+**단, `02` 가 끝이 아닙니다** (2026-09-22에 확인). 번호가 큰 파일이 이깁니다.
+
+| | |
+|---|---|
+| `02` 의 정책을 **덮어쓴** 것 | `participation_items_select` → `07` · `action_results_select` → `18` · `likes_insert`·`saves_insert` → `13` |
+| `02` 에 **아예 없는** 것 | `shares` 는 테이블째로 `10` 에서 생기고, `action_ai_metadata` 의 INSERT 는 `05` 에서 처음 생깁니다 |
+
+**빈 배열(SELECT) 증상은 `participation_items`(07) 와 `action_results`(18) 를 먼저 보세요.**
+특히 `action_results` 는 `18` 에서 `COMPLETED 이거나 호스트` 로 좁혀졌습니다 —
+`02` 의 `is_action_public`(ENDED 포함) 만 읽으면 **ENDED 액션의 결과가 왜 비는지 못 찾습니다.**
+
 **자주 걸리는 것만 표로 적어둡니다.** 실제로 확인한 결과입니다.
 
 | 무엇 | 비회원 | 로그인·미참여 | 참여한 크루 | 호스트 |
@@ -54,8 +65,9 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 | 남의 **참여 완료 수·목록** | ✅ | ✅ | ✅ | ✅ |
 
 마지막 줄만 다릅니다 — **참여 완료(소감까지 쓴 것)는 누구에게나 공개**입니다.
-프로필의 "참여 액션 N" 이 그 값입니다. 다만 `participations` 를 직접 세면 RLS 때문에
-남의 것은 0 으로 나오니, `lib/queries/public-stats.ts` 를 쓰세요 (`supabase/16_update.sql`).
+프로필 통계의 **"참여 완료 액션 N"** 이 그 값입니다 (아래 규칙 4 와 같은 이름입니다). 다만 `participations` 를 직접 세면 RLS 때문에
+남의 것은 **0 이나 일부만** 나오니(내가 만든 액션·내가 속한 크루와 겹치는 것만 보입니다),
+`lib/queries/public-stats.ts` 를 쓰세요 (`supabase/16_update.sql`).
 **참여 예정·나간 기록은 여전히 비공개**입니다.
 
 **"명단은 안 보여도 숫자는 보인다"** 를 기억하세요. 비회원에게 참여 현황을 보여줘야 하면
@@ -150,8 +162,14 @@ if (!res.ok) { toast(res.message, 'error'); scrollAndFocus(itemsSectionRef.curre
 | 화면 — 항목 0개에서도 함수를 부른다 | `ActionForm.tsx` 소스에 `items.length` 검사가 생기면 깨집니다 |
 | 임시저장·공개 경로가 갈려 있다 | `saveDraft()` / `saveDraft({ requireItems: true })` 를 각각 확인합니다 |
 
-`lib/mutations.ts` 는 `@/` 별칭을 써서 **Node 테스트 러너가 import 하지 못합니다.**
-그래서 검사만 별칭 없는 파일로 떼어냈습니다 — 다른 검사 로직도 테스트를 붙이려면 같은 방법을 쓰세요.
+`lib/mutations.ts` 는 `@/` 별칭을 써서 **Node 테스트 러너가 import 하지 못합니다**
+(`ERR_MODULE_NOT_FOUND`). 그래서 검사만 떼어냈습니다.
+
+**정확히는 「별칭이 없는 파일」 이 아니라 「런타임에 `@/` 를 안 타는 파일」 입니다** —
+`lib/utils/action-items-validation.ts` 도 `import type { ActionItemInput } from '@/lib/mutations'` 를
+씁니다. **`import type` 은 타입만 가져와서 실행 시점에 지워지기 때문에** 별칭을 풀 일이 없습니다.
+값을 하나라도 `@/` 로 가져오면 그 순간 import 가 깨집니다. 다른 검사 로직에 테스트를 붙일 때도
+같은 선을 지키세요.
 **버그를 일부러 되살려 두 변이 모두 테스트가 깨지는 것을 확인했습니다.**
 
 **11. `profiles.skills` 는 `null` 과 빈 배열이 다릅니다**
@@ -163,7 +181,11 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 ```
 
 `?? []` 로 받으면 이 구분이 사라져서, **재능이 없는 사람에게 AI 가 계속 재능을 묻습니다.**
-재능은 자유 입력이 아니라 `lib/constants` 의 `SKILLS` 목록에서 고릅니다.
+재능은 `lib/constants` 의 `SKILLS` 목록에서 고르고, **목록에 없으면 「기타」 한 칸에 직접 적습니다** —
+`app/my/_components/skill-selection.ts` 의 `buildStoredSkills()` 가 그 값을 `profiles.skills` 에
+그대로 넣습니다. **그래서 목록 밖 값이 DB 에 있을 수 있습니다.**
+다만 **추천·매칭은 고정 목록 값으로만 합니다** — 같은 재능이 「사진 / 사진 찍기 / 사진 촬영」 으로
+갈리면 액션과 연결이 안 되기 때문입니다 (`lib/constants/index.ts` 주석).
 
 **12. 취소와 조기 종료는 다른 일입니다** — 상태도 카운팅도 다릅니다.
 
@@ -306,7 +328,8 @@ DRAFT · CANCELLED · 그 밖을 각각 나누고, DRAFT 는 「아직 공개 �
 npm run verify:db
 ```
 
-스키마를 바꾼 뒤 돌리세요. 권한·정원·성별·생애주기·나가기·조기 종료·카테고리·공개 통계까지 112가지 동작을 실제 계정으로 확인합니다. 로컬 전용이고, 테스트 계정을 만들었다가 끝나면 지웁니다.
+스키마를 바꾼 뒤 돌리세요. 권한·정원·성별·생애주기·나가기·조기 종료·카테고리·공개 통계를 **실제 계정으로** 확인합니다
+(검사 호출이 113곳. 일부가 반복문 안이라 실행 수는 그보다 많습니다 — **숫자를 문서에 박지 마세요, 계속 늘어납니다**). 로컬 전용이고, 테스트 계정을 만들었다가 끝나면 지웁니다.
 
 ```bash
 npm run seed
@@ -317,19 +340,24 @@ npm run seed
 **2026-09-11에 41개 판을 101개로 교체했습니다** (성은님). 앞 41개는 제목과 목록 순서를 그대로 두었기 때문에 **그때 만들어진 액션 주소가 살아 있습니다.** 액션 하나만 제목이 바뀌었습니다 — 「[모집미달 테스트] 동네 플로깅 모집」 → 「동네 플로깅 모집」. 제목에 "테스트" 가 박힌 카드가 홈 피드 맨 위에 뜨고 있었습니다.
 
 계정은 **25개**입니다 — `seed1@good.seed` ~ `seed24@good.seed` 와 `demo@good.seed`. 비밀번호는 모두 `good1234!`.
-2026-09-22에 8명에서 24명으로 늘렸습니다 — 연탄 나눔(15명)처럼 인원이 많은 액션과 성별 제한 항목을 태우려면 8명으로는 모자랐습니다. `demo` 는 관심 카테고리·지역·시간대가 전부 채워져 있어 Discover 추천과 호스트·크루 시나리오를 한 계정으로 보여줄 때 씁니다.
+2026-09-21에 8명에서 24명으로 늘렸습니다 — 연탄 나눔(15명)처럼 인원이 많은 액션과 성별 제한 항목을 태우려면 8명으로는 모자랐습니다. `demo` 는 관심 카테고리·지역·시간대가 전부 채워져 있어 Discover 추천과 호스트·크루 시나리오를 한 계정으로 보여줄 때 씁니다.
 
 액션 101개에는 화면을 하나씩 확인할 수 있는 상태가 골고루 들어 있습니다.
 
 | 무엇 | 몇 개 | 어디서 확인 |
 |---|---|---|
-| ACTIVE | 55 (홈 피드에 53) | 홈 · Discover |
+| ACTIVE | 55 (**홈 피드에는 더 적습니다** — 아래 참고) | 홈 · Discover |
 | COMPLETED | 26 (결과 + 호스트 한마디 + 소감) | 결과 보기 |
-| ENDED | 10 (그중 6개는 조기 종료 사유 있음) | 결과 작성 필요 |
+| ENDED | 10 (그중 **3개**만 조기 종료 사유 있음 — 키는 6곳인데 3곳이 `null`) | 결과 작성 필요 |
 | CANCELLED | 6 (취소 사유 있음) | Activity 취소됨 탭 |
 | DRAFT | 4 (작성 진행도 1~4단계) | Activity 작성중 탭 |
 | 진행중 · lazy 동기화 | 3 · 2 | 상태 전환 확인 |
 | 연일 활동 | 3 (항목 이름이 "1일차/2일차") | 항목별 크루 보기 |
+
+**홈 피드 숫자를 문서에 박지 마세요 — 계속 움직입니다.** `getActionFeed` 가
+`status = ACTIVE` **에 더해** `activity_end_at > now` 와 `recruit_end_at > now` 까지 걸러서,
+날짜가 지나면 같은 시드에서도 줄어듭니다. 2026-09-22 실측으로 **ACTIVE 52개 중 44개**였습니다
+(시드 55개 중 3개는 lazy 동기화로 이미 ENDED 가 된 상태). 세어 봐야 하면 그때 재세요.
 
 **시드로 만든 액션·계정의 주소는 매번 같습니다** (2026-09-04). 전에는 `seed` 를 다시 돌리면 같은 액션인데 번호가 바뀌어서, 화면을 열어둔 채 돌리면 그 링크가 죽었습니다("페이지를 찾을 수 없습니다"). 지금은 제목에서 번호를 계산하므로 **열어둔 탭도 그대로 살아 있습니다.** 북마크·발표 대본에 링크를 적어둬도 됩니다.
 
@@ -417,6 +445,10 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 > **읽기는 `lib/queries/`, 쓰기는 `lib/mutations.ts`.**
 > 화면에서 `supabase.from(...)` 이나 `supabase.rpc(...)` 를 직접 쓰지 마세요.
 
+> **지금 이 규칙을 어기는 화면이 10개 있습니다** (2026-09-22 실측 —
+> `app/action/[id]/` 아래 8개 · `app/action/create/` · `app/activity/`).
+> 새로 만드는 화면에서 따라 하지 마세요. 손댈 일이 생기면 `lib/queries/` 로 옮겨주세요.
+
 각자 쿼리를 짜면 `LEFT` 제외를 빠뜨리거나 조인을 틀리게 해서 **같은 데이터가 화면마다 다르게 보입니다.**
 
 ### 읽기
@@ -438,11 +470,13 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 | `getChatPosts` | 게시판 (원글 + 댓글) |
 | `getProfile` / `getFollowers` / `getFollowing` / `searchUsers` | 프로필·팔로우 |
 | `getPublicParticipationCounts` / `getPublicParticipatedActionIds` | 남에게도 보이는 참여 통계 |
-| `getNotifications` | 알림 |
+| `getNotifications` / `getUnreadCount` | 알림 · 안 읽은 수 |
 
 ### 쓰기 — 전부 `lib/mutations.ts`
 
-모든 함수가 `{ ok, data }` 또는 `{ ok: false, message }` 를 돌려줍니다.
+**`isNicknameTaken` 하나만 빼고** 모든 함수가 `{ ok, data }` 또는 `{ ok: false, message }` 를
+돌려줍니다. 그 하나는 `Promise<boolean>` 이라 `res.ok` 가 없습니다 — `if (!res.ok)` 로 받으면
+**항상 통과합니다.**
 `message`는 **그대로 사용자에게 보여주면 되는 한국어**라 `try/catch`가 필요 없습니다.
 
 ```ts
@@ -601,7 +635,8 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 `ReasonModal` 은 2026-09-17에 새로 만들어진 파일입니다 (개발 B). 취소·조기 종료·나가기·
 삭제 확인을 한 모달로 모은 것이라 내용이 `ActionHostActions`·`LeaveButton` 과 같은 성격입니다.
-다만 **`components/ui/LogoutButton.tsx`(디자이너)도 이것을 씁니다** — 고치기 전에 말해주세요.
+다만 **담당이 다른 사용처가 둘 더 있습니다** — `components/ui/LogoutButton.tsx`(디자이너) 와
+`components/action/ActivityButtons.tsx`(조장). 고치기 전에 말해주세요.
 
 > **새 파일을 만들면 이 표에 한 줄을 같이 넣으세요.** 9/14 에 둘, 9/17 에 여섯을 뒤늦게 채웠고
 > `ReasonModal` 도 만든 날 표에 안 들어가 2026-09-21에 채웠습니다. 표는 훑어서는 안 메워집니다 —
@@ -639,14 +674,15 @@ F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `
 | 화면 제목 한글로 통일 | 4명 · 7파일 |
 | 버튼 높이 고정 해제 (글자 200%) | 5명 · 21파일 |
 
-번지는 이유는 **공통 컴포넌트를 거치지 않는 것**입니다. `Button.tsx` 를 쓰는 파일은 16개인데
-버튼 스타일을 손으로 적은 파일은 25개입니다.
+번지는 이유는 **공통 컴포넌트를 거치지 않는 것**입니다. `Button.tsx` 를 쓰는 파일은 **16개**인데
+`<button>` 을 직접 쓴 파일이 **26개**입니다 (2026-09-22 실측 — 세는 기준은
+`grep -rl "<button" app/ components/` 에서 `Button.tsx` 자신을 뺀 것).
 새 화면을 만들 때는 **`components/ui/` 의 것을 먼저 찾아 쓰세요.** 없으면 만들자고 말해주세요 —
 그 한 번이 다음 통일 작업의 21파일을 1파일로 줄입니다.
 
 **입력칸 공통 컴포넌트가 생겼습니다** — `components/ui/Input.tsx` (2026-09-22, 소정님).
-전에는 이것이 없어서 같은 `h-12 rounded-xl border border-neutral-300 …` 이 16개 파일에
-복사돼 있었습니다. 지금 5개 파일이 `Input` 을 쓰고, 손으로 적은 곳이 12개 남았습니다.
+전에는 이것이 없어서 같은 `min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px]`
+이 16개 파일에 복사돼 있었습니다. 지금 5개 파일이 `Input` 을 쓰고, 손으로 적은 곳이 12개 남았습니다.
 **새로 만드는 입력칸은 손으로 짜지 말고 `Input` 을 쓰세요.** 남은 12개는 손대는 화면이
 생길 때 하나씩 옮기면 됩니다 — 그것만으로 다음 타이포·높이 통일 작업이 1파일이 됩니다.
 같은 PR 로 `Chip` 에 `size="sm"` 이, `Button` 에 `href`(링크로 렌더) 가 들어왔고
