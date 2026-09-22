@@ -268,7 +268,11 @@ export function ActionCard({
             히트테스트에서 빠집니다. pointer-events-auto 만 붙이면 반대로 사진 탭이 죽으므로,
             9/22 결정(사진칸도 상세 상단으로 이동)을 지키기 위해 이 자리를 Link 로 둡니다 —
             가로 드래그는 안쪽 스크롤러가 먹고, 탭은 이 Link 가 받아 둘이 같이 됩니다.
-            aria-hidden 은 위 덮개 링크가 이미 sr-only 제목을 들고 있어 중복 안내를 막기 위함. */}
+            aria-hidden 은 위 덮개 링크가 이미 sr-only 제목을 들고 있어 중복 안내를 막기 위함.
+
+            상세 화면(fill 없는 쪽)은 이 래퍼 밖이라 원래부터 잘 됐습니다 — 같은 컴포넌트가
+            카드에서만 안 되던 것이라 상세에서 눌러보고 「되네」 하면 놓칩니다.
+            실측 수치는 CLAUDE.md 규칙 16 에 있습니다. */}
         <Link
           href={`/action/${action.id}`}
           tabIndex={-1}
