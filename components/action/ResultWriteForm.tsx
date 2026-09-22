@@ -105,14 +105,14 @@ export function ResultWriteForm({
       <section className="flex flex-col gap-3">
         <div>
           <SectionTitle>자동 집계</SectionTitle>
-          <p className="mt-0.5 text-[12px] text-neutral-500">
+          <p className="mt-0.5 text-caption text-neutral-500">
             참여 기록으로 자동 계산되어 수정할 수 없어요. 실제 활동 내용이 다를 경우 아래 입력칸에 적어주세요.
           </p>
         </div>
 
         <div className="flex flex-col gap-3 rounded-xl bg-neutral-50 p-4">
           {items.length === 0 ? (
-            <p className="text-[13px] text-neutral-400">모집 항목이 없어요.</p>
+            <p className="text-label text-neutral-400">모집 항목이 없어요.</p>
           ) : (
             items.map((item) => {
               const { ratio, isMet } = describeResultRatio(item, item.currentCount);
@@ -122,7 +122,7 @@ export function ResultWriteForm({
                     <span className="text-sm font-semibold text-neutral-900">
                       {item.name}
                     </span>
-                    <span className="text-[15px] font-bold tabular-nums text-neutral-900">
+                    <span className="text-body font-bold tabular-nums text-neutral-900">
                       {describeResultCount(item, item.currentCount)}
                     </span>
                   </div>
@@ -146,7 +146,7 @@ export function ResultWriteForm({
 
                   <p
                     className={cn(
-                      'text-[12px] font-medium',
+                      'text-label font-medium',
                       isMet ? 'text-emerald-700' : 'text-neutral-500',
                     )}
                   >
@@ -167,7 +167,7 @@ export function ResultWriteForm({
           onChange={(e) => setContent(e.target.value)}
           rows={6}
           placeholder="어떤 활동을 했는지, 어떤 변화가 있었는지 적어주세요."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
         />
       </label>
 
@@ -181,7 +181,7 @@ export function ResultWriteForm({
           urls={imageUrls}
           onChange={setImageUrls}
         />
-        <p className="text-[11px] text-neutral-400">
+        <p className="text-caption text-neutral-400">
           최소 {UPLOAD.RESULT_IMAGE_MIN}장, 최대 {UPLOAD.RESULT_IMAGE_MAX}장이에요.
         </p>
       </div>
@@ -194,7 +194,7 @@ export function ResultWriteForm({
           onChange={(e) => setOwnerVoice(e.target.value)}
           rows={4}
           placeholder="함께해준 크루들에게 남기고 싶은 말을 적어주세요."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
         />
       </label>
 
@@ -222,7 +222,7 @@ export function ResultWriteForm({
             결과 공개하기
           </Button>
         </div>
-        <p className="mt-2 text-center text-[11px] text-neutral-400">
+        <p className="mt-2 text-center text-caption text-neutral-400">
           공개하면 참여한 크루들에게 알림이 가고, 크루들도 소감을 남길 수 있게 돼요.
         </p>
       </div>

@@ -109,24 +109,24 @@ export function DiscoverChat({
   if (!authenticated) {
     return (
       <div className="flex flex-col gap-5 px-5 pb-24 pt-6">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-          <p className="text-[14px] font-semibold text-neutral-900">
+        <div className="rounded-xl border border-neutral-200 bg-white p-5">
+          <p className="text-label font-semibold text-neutral-900">
             로그인 후 Discover AI로 내게 맞는 액션을 찾아보세요.
           </p>
-          <ul className="mt-3 flex flex-col gap-2 text-[13px] leading-relaxed text-neutral-600">
+          <ul className="mt-3 flex flex-col gap-2 text-label leading-relaxed text-neutral-600">
             <li>· 내 지역과 가능한 시간에 맞춰 추천해요.</li>
             <li>· 이미 참여한 액션과 내가 만든 액션은 자동으로 빼요.</li>
             <li>· 질문을 통해 내 성향을 파악하고 맞춤 액션을 찾아요.</li>
           </ul>
           <Link
             href="/login?next=/discover"
-            className="mt-5 flex min-h-13 items-center justify-center rounded-xl bg-neutral-900 py-3 text-[15px] font-semibold text-white"
+            className="mt-5 flex min-h-13 items-center justify-center rounded-xl bg-neutral-900 py-3 text-body font-semibold text-white"
           >
             로그인하고 추천받기
           </Link>
           <Link
             href="/signup"
-            className="mt-2 flex min-h-11 items-center justify-center rounded-xl border border-neutral-300 py-3 text-[13px] font-semibold text-neutral-700"
+            className="mt-2 flex min-h-11 items-center justify-center rounded-xl border border-neutral-300 py-3 text-label font-semibold text-neutral-700"
           >
             처음이라면 가입하기
           </Link>
@@ -143,12 +143,12 @@ export function DiscoverChat({
     <div className="flex flex-col gap-4 px-5 pb-24 pt-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[12px] text-neutral-500">
+          <p className="text-caption text-neutral-500">
             <b className="font-semibold text-neutral-800">{nickname}</b>님 맞춤 대화
           </p>
         </div>
         {items === null && (
-          <span className="text-[11px] tabular-nums text-neutral-400">
+          <span className="text-caption tabular-nums text-neutral-400">
             맞춤 추천 준비 중 · {answeredCount}/5
           </span>
         )}
@@ -159,7 +159,7 @@ export function DiscoverChat({
           <Bubble key={`${message.role}-${index}`}>{message.content}</Bubble>
         ) : (
           <div key={`${message.role}-${index}`} className="flex justify-end">
-            <span className="max-w-[80%] rounded-2xl rounded-br-sm bg-neutral-900 px-4 py-2.5 text-[14px] leading-relaxed text-white">
+            <span className="max-w-[80%] rounded-xl rounded-br-sm bg-neutral-900 px-4 py-2.5 text-body leading-relaxed text-white">
               {message.content}
             </span>
           </div>
@@ -173,7 +173,7 @@ export function DiscoverChat({
               key={option}
               type="button"
               onClick={() => choose(option)}
-              className="rounded-full border border-neutral-900 px-4 py-2 text-[13px] font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
+              className="rounded-full border border-neutral-900 px-4 py-2 text-label font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
             >
               {option}
             </button>
@@ -193,7 +193,7 @@ export function DiscoverChat({
       )}
 
       {error && (
-        <div className="flex flex-col gap-3 rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600">
+        <div className="flex flex-col gap-3 rounded-xl bg-red-50 px-4 py-3 text-label text-red-600">
           <p>{error}</p>
           <Button variant="secondary" size="sm" onClick={restart}>
             다시 시도
@@ -204,7 +204,7 @@ export function DiscoverChat({
       {items && (
         <div className="flex flex-col gap-4">
           {relaxation.length > 0 && (
-            <p className="rounded-xl bg-violet-50 px-4 py-3 text-[12px] leading-relaxed text-violet-700">
+            <p className="rounded-xl bg-violet-50 px-4 py-3 text-caption leading-relaxed text-violet-700">
               말씀해주신 조건에 맞는 액션이 많지 않아 비슷한 조건까지 조금
               넓혀서 찾아봤어요. 최대한 비슷한 액션부터 보여드릴게요.
             </p>
@@ -222,7 +222,7 @@ export function DiscoverChat({
               {items.map((item) => (
                 <div key={item.action.id} className="flex flex-col gap-1.5">
                   <ActionCard action={item.action} />
-                  <p className="px-1 text-[12px] leading-relaxed text-neutral-500">
+                  <p className="px-1 text-caption leading-relaxed text-neutral-500">
                     ✦ {item.reason}
                   </p>
                 </div>
@@ -242,10 +242,10 @@ export function DiscoverChat({
 function Bubble({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex gap-2">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-bold text-white">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-caption font-bold text-white">
         착
       </span>
-      <p className="max-w-[80%] whitespace-pre-line rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2.5 text-[14px] leading-relaxed text-neutral-800">
+      <p className="max-w-[80%] whitespace-pre-line rounded-xl rounded-tl-sm bg-neutral-100 px-4 py-2.5 text-body leading-relaxed text-neutral-800">
         {children}
       </p>
     </div>

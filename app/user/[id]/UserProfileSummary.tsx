@@ -53,11 +53,11 @@ export function UserProfileSummary({
       <section className="flex items-center gap-4 px-5 py-5">
         <Avatar name={nickname} size="lg" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[17px] font-bold text-neutral-900">
+          <p className="truncate text-subtitle font-bold text-neutral-900">
             @{nickname}
           </p>
           {bio && (
-            <p className="mt-1 line-clamp-3 text-[13px] leading-relaxed text-neutral-500">
+            <p className="mt-1 line-clamp-3 text-label leading-relaxed text-neutral-500">
               {bio}
             </p>
           )}
@@ -65,7 +65,7 @@ export function UserProfileSummary({
         {isMe ? (
           <Link
             href="/my/edit"
-            className="shrink-0 rounded-lg border border-neutral-300 px-3 py-2 text-[12px] font-semibold text-neutral-700"
+            className="shrink-0 rounded-full border border-neutral-300 px-3 py-2 text-label font-semibold text-neutral-700"
           >
             프로필 수정
           </Link>

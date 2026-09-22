@@ -30,7 +30,7 @@ export default async function FollowingPage({
 
       <div className="px-5 py-4">
         <SectionTitle>{following.length}명</SectionTitle>
-        <p className="mt-0.5 text-[12px] text-neutral-500">
+        <p className="mt-0.5 text-caption text-neutral-500">
           @{profile.nickname}님이 팔로우하는 사람
         </p>
       </div>
@@ -42,7 +42,7 @@ export default async function FollowingPage({
             아직 팔로우하는 사람이 없어요
           </p>
           {shouldShowFollowEmptyHint(user?.id, id) && (
-            <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500 break-keep">
+            <p className="mt-1.5 text-label leading-relaxed text-neutral-500 break-keep">
               함께하고 싶은 호스트나 크루를 팔로우해보세요.
               <br />
               새로 열리는 액션 소식을 놓치지 않고 확인할 수 있어요.

@@ -66,7 +66,7 @@ function LoginForm() {
         </p>
 
         {notice && (
-          <p className="mt-5 rounded-xl bg-neutral-100 px-4 py-3 text-[13px] leading-relaxed text-neutral-700">
+          <p className="mt-5 rounded-xl bg-neutral-100 px-4 py-3 text-label leading-relaxed text-neutral-700">
             {notice}
           </p>
         )}
@@ -96,7 +96,7 @@ function LoginForm() {
         </label>
 
         {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-600">
+          <p className="rounded-xl bg-red-50 px-3 py-2 text-label text-red-600">
             {error}
           </p>
         )}
@@ -106,7 +106,7 @@ function LoginForm() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-[13px] text-neutral-500">
+      <p className="mt-6 text-center text-label text-neutral-500">
         아직 계정이 없나요?{' '}
         <Link
           href={withNext('/signup', next)}

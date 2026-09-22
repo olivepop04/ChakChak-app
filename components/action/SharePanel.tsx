@@ -105,7 +105,7 @@ export function SharePanel({
       <section className="flex flex-col gap-3">
         <div>
           <SectionTitle>착착 친구에게 보내기</SectionTitle>
-          <p className="mt-0.5 text-[12px] text-neutral-500">
+          <p className="mt-0.5 text-caption text-neutral-500">
             이름과 닉네임으로 친구를 찾을 수 있고, 상대방 알림으로 보내져요.
           </p>
         </div>
@@ -125,7 +125,7 @@ export function SharePanel({
 
         {searched &&
           (results.length === 0 ? (
-            <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-5 text-center text-[13px] text-neutral-700">
+            <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-5 text-center text-label text-neutral-700">
               찾는 사람이 없어요. 이름이나 닉네임을 다시 확인해주세요.
             </p>
           ) : (
@@ -134,14 +134,14 @@ export function SharePanel({
                 users={results}
                 action={(u) =>
                   sent.has(u.id) ? (
-                    <span className="shrink-0 rounded-lg bg-neutral-100 px-3 py-1.5 text-[12px] font-medium text-neutral-400">
+                    <span className="shrink-0 rounded-full bg-neutral-100 px-3 py-1.5 text-caption font-medium text-neutral-400">
                       보냄 ✓
                     </span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleSend(u)}
-                      className="shrink-0 rounded-lg bg-neutral-900 px-3 py-1.5 text-[12px] font-semibold text-white"
+                      className="shrink-0 rounded-full bg-neutral-900 px-3 py-1.5 text-label font-semibold text-white"
                     >
                       보내기
                     </button>
@@ -156,7 +156,7 @@ export function SharePanel({
       <section className="flex flex-col gap-3 border-t border-neutral-100 pt-6">
         <div>
           <SectionTitle>링크로 공유하기</SectionTitle>
-          <p className="mt-0.5 text-[12px] text-neutral-500">
+          <p className="mt-0.5 text-caption text-neutral-500">
             착착 회원이 아니어도 이 링크로 액션을 볼 수 있어요.
           </p>
         </div>
@@ -166,7 +166,7 @@ export function SharePanel({
             readOnly
             value={shareUrl}
             onFocus={(e) => e.currentTarget.select()}
-            className="min-h-11 flex-1 rounded-xl border border-neutral-300 bg-neutral-50 px-4 py-3 text-[13px] text-neutral-600 outline-none"
+            className="min-h-11 flex-1 rounded-xl border border-neutral-300 bg-neutral-50 px-4 py-3 text-label text-neutral-600 outline-none"
           />
           <Button variant="secondary" onClick={handleCopy}>
             복사

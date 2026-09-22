@@ -32,13 +32,13 @@ function CrewRow({ person }: { person: UserSummary; isOwner?: boolean }) {
         <p className="text-sm font-semibold text-neutral-900">
           @{person.nickname}
         </p>
-        <p className="text-[12px] text-neutral-500">
+        <p className="text-caption text-neutral-500">
           참여 {person.participatedCount}개 · 호스트 {person.ledCount}개
         </p>
       </div>
       <Link
         href={`/user/${person.id}`}
-        className="shrink-0 rounded-lg border border-neutral-300 px-3 py-1.5 text-[12px] font-medium text-neutral-700"
+        className="shrink-0 rounded-full border border-neutral-300 px-3 py-1.5 text-label font-medium text-neutral-700"
       >
         프로필 보기
       </Link>
@@ -100,14 +100,14 @@ export default async function CrewPage({
       <Header title="함께하는 크루" back backHref={`/action/${id}`} sticky />
 
       <div className="px-5 py-5">
-        <h1 className="line-clamp-2 text-[17px] font-bold leading-snug text-neutral-900">
+        <h1 className="line-clamp-2 text-subtitle font-bold leading-snug text-neutral-900">
           {action.title}
         </h1>
       </div>
 
       {owner && (
         <section>
-          <h2 className="px-5 pb-1 pt-2 text-[12px] font-semibold tracking-wide text-neutral-400">
+          <h2 className="px-5 pb-1 pt-2 text-caption font-semibold tracking-wide text-neutral-400">
             호스트
           </h2>
           <ul className="divide-y divide-neutral-100 border-y border-neutral-100">
@@ -117,7 +117,7 @@ export default async function CrewPage({
       )}
 
       <section className="mt-6">
-        <h2 className="px-5 pb-1 text-[12px] font-semibold tracking-wide text-neutral-400">
+        <h2 className="px-5 pb-1 text-caption font-semibold tracking-wide text-neutral-400">
           함께하는 크루 ({crew.length})
         </h2>
         {crew.length === 0 ? (
@@ -137,11 +137,11 @@ export default async function CrewPage({
 
       {isMultiDay && (
         <section className="px-5 pb-4 pt-6">
-          <h2 className="pb-2 text-[12px] font-semibold tracking-wide text-neutral-400">
+          <h2 className="pb-2 text-caption font-semibold tracking-wide text-neutral-400">
             항목별 참여 현황
           </h2>
           {personGroups.length === 0 ? (
-            <p className="rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] leading-relaxed text-neutral-500">
+            <p className="rounded-xl bg-neutral-50 px-4 py-6 text-center text-label leading-relaxed text-neutral-500">
               아직 확인할 수 있는 항목별 참여 정보가 없어요.
             </p>
           ) : (
@@ -159,7 +159,7 @@ export default async function CrewPage({
                         </h3>
                       </div>
                     </div>
-                    <span className="shrink-0 text-[13px] font-bold tabular-nums text-neutral-700">
+                    <span className="shrink-0 text-label font-bold tabular-nums text-neutral-700">
                       총 {group.total}
                       {group.unit}
                     </span>
@@ -171,7 +171,7 @@ export default async function CrewPage({
                         <Avatar name={person.nickname} size="sm" />
                         <Link
                           href={`/user/${person.id}`}
-                          className="min-w-0 flex-1 truncate text-[13px] font-semibold text-neutral-800"
+                          className="min-w-0 flex-1 truncate text-label font-semibold text-neutral-800"
                         >
                           @{person.nickname}
                         </Link>
@@ -189,7 +189,7 @@ export default async function CrewPage({
       <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
         <Link
           href={`/action/${id}/chat`}
-          className="flex min-h-14 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-base font-bold text-white shadow-sm transition-colors active:bg-neutral-800"
+          className="flex min-h-14 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-base font-bold text-white transition-colors active:bg-neutral-800"
         >
           <svg
             className="mr-2.5 h-5 w-5 flex-none"

@@ -55,11 +55,11 @@ export function ActionCrewSection({
               ))}
             </div>
           )}
-          <span className="truncate text-[14px] font-semibold text-neutral-800">
+          <span className="truncate text-label font-semibold text-neutral-800">
             {crewCount}명 {status === undefined || status === 'ACTIVE' ? '참여 중' : '참여'}
           </span>
         </div>
-        <span className="shrink-0 text-[13px] font-medium text-neutral-400 ml-2">
+        <span className="shrink-0 text-label font-medium text-neutral-400 ml-2">
           전체보기 ›
         </span>
       </button>

@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils/cn';
 import type { JoinedActionData, ActionCardData } from '@/lib/types/view';
 
 const btn =
-  'inline-flex min-h-9 items-center justify-center rounded-lg px-3 py-2 text-[12px] font-semibold';
+  'inline-flex min-h-9 items-center justify-center rounded-full px-3 py-2 text-label font-semibold';
 const primary = `${btn} bg-neutral-900 text-white`;
 const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 
@@ -105,12 +105,12 @@ function CreatedFooter({
     <div className="flex flex-col gap-2.5">
       {/* 1. 모집 마감 ~ 활동 시작 전: 목표 미달 시에만 취소 안내 (F37) */}
       {!isStarted && isShortfall && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] leading-relaxed text-amber-800">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-caption leading-relaxed text-amber-800">
           <p className="font-semibold text-amber-900">⚠️ 최소 목표 미달 (모집 마감)</p>
-          <p className="mt-0.5 text-[11px] text-amber-700">
+          <p className="mt-0.5 text-caption text-amber-700">
             최소 모집 인원·수량을 채우지 못했습니다. 활동 시작 전까지 아래 [취소하기] 버튼으로 액션을 취소하실 수 있습니다.
           </p>
-          <p className="mt-0.5 text-[11px] text-amber-600">
+          <p className="mt-0.5 text-caption text-amber-600">
             (시작 시각 이후에는 취소가 불가하며, 별도 조치가 없으면 예정대로 진행됩니다.)
           </p>
         </div>
@@ -118,12 +118,12 @@ function CreatedFooter({
 
       {/* 2. 활동 시작 ~ 활동 종료 전: 진행 중인 모든 액션에 조기종료 안내 */}
       {item.status === 'ACTIVE' && isStarted && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-[12px] leading-relaxed text-blue-800">
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-caption leading-relaxed text-blue-800">
           <p className="font-semibold text-blue-900">💡 활동 조기종료 안내</p>
-          <p className="mt-0.5 text-[11px] text-blue-700">
+          <p className="mt-0.5 text-caption text-blue-700">
             활동 종료 시각 전까지 아래 [조기종료] 버튼으로 활동을 일찍 마칠 수 있습니다.
           </p>
-          <p className="mt-0.5 text-[11px] text-blue-600">
+          <p className="mt-0.5 text-caption text-blue-600">
             (악천후, 장소 문제, 현저한 불참 등 부득이한 사정이 있거나 여러날 진행예정이었던 액션을 조기 달성한 경우 사용해 주세요.)
           </p>
         </div>
@@ -364,7 +364,7 @@ export default async function ActivityPage({
             key={t.href}
             href={t.href}
             className={cn(
-              '-mb-px border-b-2 px-4 py-3 text-[14px] font-semibold transition-colors',
+              '-mb-px border-b-2 px-4 py-3 text-body font-semibold transition-colors',
               t.active
                 ? 'border-neutral-900 text-neutral-900'
                 : 'border-transparent text-neutral-400',
@@ -388,7 +388,7 @@ export default async function ActivityPage({
               <Chip
                 selected={createdFilter === f.key}
                 as="span"
-                className="whitespace-nowrap px-3.5 py-1.5 text-[12px]"
+                className="whitespace-nowrap px-3.5 py-1.5 text-label"
               >
                 {f.label}
               </Chip>
@@ -404,7 +404,7 @@ export default async function ActivityPage({
               <Chip
                 selected={joinedFilter === f.key}
                 as="span"
-                className="whitespace-nowrap px-3.5 py-1.5 text-[12px]"
+                className="whitespace-nowrap px-3.5 py-1.5 text-label"
               >
                 {f.label}
               </Chip>
@@ -471,7 +471,7 @@ export default async function ActivityPage({
                 <div className="pointer-events-none absolute right-4 top-[72px] z-10">
                   <ParticipationBadge
                     status={a.participationStatus}
-                    className="rounded-md border border-neutral-200/60 px-2.5 py-1 text-[12px] font-bold shadow-md"
+                    className="rounded-full border border-neutral-200/60 px-2.5 py-1 text-caption font-bold"
                   />
                 </div>
               )}

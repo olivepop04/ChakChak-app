@@ -54,7 +54,7 @@ export function AddressBox({
           {placeName ? (
             <>
               {address && (
-                <p className="text-[11px] leading-snug text-neutral-500 break-words">
+                <p className="text-caption leading-snug text-neutral-500 break-words">
                   {address}
                 </p>
               )}
@@ -74,7 +74,7 @@ export function AddressBox({
         <button
           type="button"
           onClick={copy}
-          className="text-[13px] font-medium text-neutral-900 underline transition-colors hover:text-neutral-600"
+          className="text-label font-medium text-neutral-900 underline transition-colors hover:text-neutral-600"
         >
           주소 복사
         </button>
@@ -83,7 +83,7 @@ export function AddressBox({
           href={mapUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[13px] font-medium text-neutral-900 underline transition-colors hover:text-neutral-600"
+          className="text-label font-medium text-neutral-900 underline transition-colors hover:text-neutral-600"
         >
           지도에서 보기
         </a>

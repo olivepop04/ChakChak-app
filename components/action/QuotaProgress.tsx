@@ -78,12 +78,12 @@ export function QuotaProgress({
           <span className="text-xs text-neutral-500">{describeTarget(item)}</span>
 
           {detailed && genderReq !== 'ANY' && (
-            <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] font-medium text-neutral-600">
+            <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-caption font-medium text-neutral-600">
               {GENDER_REQUIREMENT_LABEL[genderReq]}
             </span>
           )}
           {detailed && conditionName && (
-            <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] font-medium text-neutral-600">
+            <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-caption font-medium text-neutral-600">
               {conditionName}
             </span>
           )}

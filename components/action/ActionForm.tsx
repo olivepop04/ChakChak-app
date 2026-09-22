@@ -81,7 +81,7 @@ export interface ActionFormInitial {
 }
 
 const input =
-  'min-h-11 rounded-xl border border-[#E0E0E0] px-4 py-3 text-[15px] outline-none focus:border-[#333333]';
+  'min-h-11 rounded-xl border border-hairline px-4 py-3 text-body outline-none focus:border-hairline-focus';
 const RECRUIT_END_ERROR =
   '모집 마감은 활동 시작보다 앞서야 해요. 마감일을 활동 시작일 이전으로 바꿔주세요.';
 const ACTIVITY_END_ERROR =
@@ -446,9 +446,9 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
                     handleCategoryClick(c);
                   }
                 }}
-                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 ${
+                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-label font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 ${
                   isSelected
-                    ? 'border-neutral-900 bg-neutral-900 text-white shadow-xs'
+                    ? 'border-neutral-900 bg-neutral-900 text-white'
                     : 'border-neutral-300 bg-white text-neutral-600 hover:border-neutral-400'
                 }`}
               >
@@ -489,9 +489,9 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           onChange={(e) => setDescription(e.target.value)}
           rows={5}
           placeholder="어떤 활동인지, 참여하면 무엇을 하게 되는지 적어주세요."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
         />
-        <span className="text-[11px] text-neutral-400">
+        <span className="text-caption text-neutral-400">
           전화번호·이메일 같은 개인정보는 적지 마세요. 공개된 화면에 그대로 보입니다.
         </span>
       </label>
@@ -510,7 +510,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             onThumbnailChange={setThumbnailIndex}
           />
         ) : (
-          <p className="rounded-xl bg-neutral-50 px-4 py-5 text-center text-[13px] text-neutral-500">
+          <p className="rounded-xl bg-neutral-50 px-4 py-5 text-center text-label text-neutral-500">
             제목을 입력하면 잠시 후 사진을 올릴 수 있어요.
             <br />
             저장 버튼을 먼저 누르지 않아도 됩니다.
@@ -529,7 +529,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         <FieldLabel>일정</FieldLabel>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[12px] text-neutral-500">모집 마감일 :</span>
+          <span className="text-label text-neutral-500">모집 마감일 :</span>
           <input
             ref={recruitEndRef}
             type="datetime-local"
@@ -541,19 +541,19 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             className={input}
           />
           {dateError?.field === 'recruitEnd' && (
-            <span className="text-[12px] text-red-600" role="alert">
+            <span className="text-label text-red-600" role="alert">
               {dateError.message}
             </span>
           )}
           {!dateError || dateError.field !== 'recruitEnd' ? (
-            <span className="text-[11px] text-neutral-400">
+            <span className="text-caption text-neutral-400">
               모집 마감은 활동 시작보다 앞서야 해요.
             </span>
           ) : null}
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[12px] text-neutral-500">활동 시작</span>
+          <span className="text-label text-neutral-500">활동 시작</span>
           <input
             ref={activityStartRef}
             type="datetime-local"
@@ -572,10 +572,10 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-3">
-            <label htmlFor="activity-end" className="text-[12px] text-neutral-500">
+            <label htmlFor="activity-end" className="text-label text-neutral-500">
               활동 종료
             </label>
-            <label className="flex items-center gap-1.5 text-[12px] text-neutral-600">
+            <label className="flex items-center gap-1.5 text-label text-neutral-600">
               <input
                 type="checkbox"
                 checked={isSameDay}
@@ -606,7 +606,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             className={input}
           />
           {dateError?.field === 'activityEnd' && (
-            <span className="text-[12px] text-red-600" role="alert">
+            <span className="text-label text-red-600" role="alert">
               {dateError.message}
             </span>
           )}
@@ -643,7 +643,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           />
         </label>
         {placeError && (
-          <p id="place-error" className="text-[12px] text-red-600" role="alert">
+          <p id="place-error" className="text-label text-red-600" role="alert">
             {placeError}
           </p>
         )}
@@ -657,7 +657,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           onChange={(e) => setNotice(e.target.value)}
           rows={3}
           placeholder="예: 편한 옷차림으로 와주세요. 물은 준비되어 있습니다."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
         />
       </label>
 
@@ -724,7 +724,7 @@ function ReviewModal({
         className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-4"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="review-modal-title" className="text-[16px] font-bold text-neutral-900">
+          <h2 id="review-modal-title" className="text-subtitle font-bold text-neutral-900">
             AI 검수 결과
           </h2>
           <button
@@ -780,14 +780,14 @@ function ReviewPanel({
       </div>
 
       {review.hard_errors.length > 0 && (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-[13px] text-red-700">
+        <ul className="flex list-disc flex-col gap-1 pl-5 text-label text-red-700">
           {review.hard_errors.map((m, i) => (
             <li key={i}>{m}</li>
           ))}
         </ul>
       )}
       {review.warnings.length > 0 && (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-[13px] text-amber-800">
+        <ul className="flex list-disc flex-col gap-1 pl-5 text-label text-amber-800">
           {review.warnings.map((m, i) => (
             <li key={i}>{m}</li>
           ))}
@@ -795,8 +795,8 @@ function ReviewPanel({
       )}
       {review.suggestions.length > 0 && (
         <div className="flex flex-col gap-1">
-          <p className="text-[12px] font-semibold text-neutral-600">이렇게 써보면 어때요?</p>
-          <ul className="flex list-disc flex-col gap-1 pl-5 text-[13px] text-neutral-700">
+          <p className="text-label font-semibold text-neutral-600">이렇게 써보면 어때요?</p>
+          <ul className="flex list-disc flex-col gap-1 pl-5 text-label text-neutral-700">
             {review.suggestions.map((m, i) => (
               <li key={i}>{m}</li>
             ))}
@@ -804,7 +804,7 @@ function ReviewPanel({
         </div>
       )}
       {review.questions.length > 0 && (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-[13px] text-neutral-600">
+        <ul className="flex list-disc flex-col gap-1 pl-5 text-label text-neutral-600">
           {review.questions.map((m, i) => (
             <li key={i}>{m}</li>
           ))}
@@ -817,12 +817,12 @@ function ReviewPanel({
         </Button>
       )}
       {needsWork && (
-        <p className="text-[12px] text-amber-800">
+        <p className="text-caption text-amber-800">
           수정하려면 창을 닫고 내용을 고친 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
         </p>
       )}
       {blocked && (
-        <p className="text-[12px] text-red-700">
+        <p className="text-caption text-red-700">
           창을 닫고 내용을 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
         </p>
       )}

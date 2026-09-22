@@ -22,14 +22,14 @@ export function MySavedSection({ saved }: { saved: ActionCardData[] }) {
         </SectionTitle>
         <Link
           href="/my/saved"
-          className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-900"
+          className="text-label font-semibold text-neutral-500 hover:text-neutral-900"
         >
           모두 보기 ›
         </Link>
       </div>
 
       {saved.length === 0 ? (
-        <p className="mx-5 rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] text-neutral-400">
+        <p className="mx-5 rounded-xl bg-neutral-50 px-4 py-6 text-center text-label text-neutral-400">
           아직 저장한 액션이 없어요.
         </p>
       ) : (

@@ -42,7 +42,7 @@ function LegalHeader({ title }: { title: LegalDocument['headerTitle'] }) {
       >
         ‹
       </Link>
-      <p className="ml-2 text-[15px] font-semibold text-neutral-900">
+      <p className="ml-2 text-body font-semibold text-neutral-900">
         {title}
       </p>
     </header>
@@ -62,7 +62,7 @@ function OtherDocumentLink({
     <div className="mx-5 border-t border-neutral-200 pt-6 text-center">
       <Link
         href={href}
-        className="text-[13px] font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+        className="text-label font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
       >
         {otherDocument.label}도 확인하기
       </Link>
@@ -105,7 +105,7 @@ export function LegalDocumentPage({
             >
               ‹
             </Link>
-            <p className="ml-2 text-[15px] font-semibold text-neutral-900">
+            <p className="ml-2 text-body font-semibold text-neutral-900">
               {document.headerTitle}
             </p>
           </header>
@@ -116,13 +116,13 @@ export function LegalDocumentPage({
 
       <article className="px-5 pb-8 pt-8">
         <div className="border-b border-neutral-200 pb-7">
-          <p className="text-[12px] font-semibold tracking-wide text-neutral-400">
+          <p className="text-caption font-semibold tracking-wide text-neutral-400">
             CHAKCHAK POLICY
           </p>
           <h1 className="mt-2 text-[26px] font-bold tracking-tight text-neutral-900">
             {document.title}
           </h1>
-          <span className="mt-3 inline-flex rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-medium text-neutral-600">
+          <span className="mt-3 inline-flex rounded-full bg-neutral-100 px-3 py-1.5 text-caption font-medium text-neutral-600">
             {document.version}
           </span>
         </div>
@@ -135,7 +135,7 @@ export function LegalDocumentPage({
               <section key={section.title} aria-labelledby={sectionId}>
                 <h2
                   id={sectionId}
-                  className="text-[16px] font-bold leading-relaxed text-neutral-900"
+                  className="text-subtitle font-bold leading-relaxed text-neutral-900"
                 >
                   {section.title}
                 </h2>
@@ -144,7 +144,7 @@ export function LegalDocumentPage({
                     block.type === 'bullet' ? (
                       <p
                         key={`${section.title}-${index}`}
-                        className="flex gap-2 pl-1 text-[14px] leading-7 text-neutral-600"
+                        className="flex gap-2 pl-1 text-body leading-7 text-neutral-600"
                       >
                         <span aria-hidden="true" className="shrink-0">
                           •
@@ -154,7 +154,7 @@ export function LegalDocumentPage({
                     ) : (
                       <p
                         key={`${section.title}-${index}`}
-                        className="whitespace-pre-line text-[14px] leading-7 text-neutral-600"
+                        className="whitespace-pre-line text-body leading-7 text-neutral-600"
                       >
                         {block.text}
                       </p>
@@ -172,7 +172,7 @@ export function LegalDocumentPage({
           <div className="mx-5 border-t border-neutral-200 pt-6 text-center">
             <Link
               href={otherDocument.href}
-              className="text-[13px] font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+              className="text-label font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
             >
               {otherDocument.label}도 확인하기
             </Link>
@@ -187,7 +187,7 @@ export function LegalDocumentPage({
           type="button"
           onClick={scrollToTop}
           aria-label="맨 위로 이동"
-          className="fixed bottom-6 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-lg font-bold text-neutral-700 shadow-lg transition-all active:scale-95 hover:bg-neutral-50"
+          className="fixed bottom-6 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-lg font-bold text-neutral-700 transition-all active:scale-95 hover:bg-neutral-50"
         >
           ↑
         </button>

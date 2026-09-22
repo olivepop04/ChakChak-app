@@ -10,7 +10,7 @@ export function ProfileActionList({
 }) {
   if (actions.length === 0) {
     return (
-      <p className="mx-5 rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] text-neutral-400">
+      <p className="mx-5 rounded-xl bg-neutral-50 px-4 py-6 text-center text-label text-neutral-400">
         {emptyText}
       </p>
     );

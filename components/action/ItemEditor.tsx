@@ -53,7 +53,7 @@ const emptyGoods = (): ActionItemInput => ({
 });
 
 const inputSm =
-  'min-h-11 rounded-lg border border-neutral-300 px-3 py-3 text-sm outline-none focus:border-neutral-900';
+  'min-h-11 rounded-xl border border-neutral-300 px-3 py-3 text-sm outline-none focus:border-neutral-900';
 
 function DeferredNumberInput({
   value,
@@ -134,7 +134,7 @@ export function ItemEditor({
         >
           {/* 종류 + 삭제 */}
           <div className="flex items-center gap-2">
-            <div className="flex overflow-hidden rounded-lg border border-neutral-300">
+            <div className="flex overflow-hidden rounded-xl border border-neutral-300">
               {(['PERSON', 'GOODS'] as const).map((t) => (
                 <button
                   key={t}
@@ -146,7 +146,7 @@ export function ItemEditor({
                       genderRequirement: t === 'GOODS' ? 'ANY' : item.genderRequirement,
                     })
                   }
-                  className={`px-3 py-1.5 text-[13px] font-medium ${
+                  className={`px-3 py-1.5 text-label font-medium ${
                     item.type === t
                       ? 'bg-neutral-900 text-white'
                       : 'bg-white text-neutral-600'
@@ -157,7 +157,7 @@ export function ItemEditor({
               ))}
             </div>
 
-            <span className="ml-auto text-[12px] font-medium text-neutral-500">
+            <span className="ml-auto text-label font-medium text-neutral-500">
               {preview(item)}
             </span>
 
@@ -165,7 +165,7 @@ export function ItemEditor({
               type="button"
               onClick={() => remove(i)}
               aria-label="항목 삭제"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100"
             >
               ×
             </button>
@@ -183,11 +183,11 @@ export function ItemEditor({
 
           {/* 모집 방식 */}
           <div className="flex flex-col gap-2">
-            <span className="text-[12px] font-medium text-neutral-700">
+            <span className="text-label font-medium text-neutral-700">
               {item.type === 'PERSON' ? '몇 명이 필요한가요?' : '얼마나 필요한가요?'}
             </span>
 
-            <label className="flex items-center gap-2 text-[13px] text-neutral-700">
+            <label className="flex items-center gap-2 text-label text-neutral-700">
               <input
                 type="radio"
                 checked={item.targetType === 'RANGE'}
@@ -210,20 +210,20 @@ export function ItemEditor({
                   }
                   className={`${inputSm} w-20`}
                 />
-                <span className="text-[13px] text-neutral-500">~</span>
+                <span className="text-label text-neutral-500">~</span>
                 <DeferredNumberInput
                   min={item.minRequired}
                   value={item.maxAllowed ?? item.minRequired}
                   onCommit={(maxAllowed) => update(i, { maxAllowed })}
                   className={`${inputSm} w-20`}
                 />
-                <span className="text-[13px] text-neutral-500">
+                <span className="text-label text-neutral-500">
                   {item.type === 'PERSON' ? PERSON_UNIT : item.unit || '개'}
                 </span>
               </div>
             )}
 
-            <label className="flex items-center gap-2 text-[13px] text-neutral-700">
+            <label className="flex items-center gap-2 text-label text-neutral-700">
               <input
                 type="radio"
                 checked={item.targetType === 'MINIMUM'}
@@ -237,14 +237,14 @@ export function ItemEditor({
 
             {item.targetType === 'MINIMUM' && (
               <div className="flex items-center gap-2 pl-6">
-                <span className="text-[13px] text-neutral-500">최소</span>
+                <span className="text-label text-neutral-500">최소</span>
                 <DeferredNumberInput
                   min={1}
                   value={item.minRequired}
                   onCommit={(minRequired) => update(i, { minRequired })}
                   className={`${inputSm} w-20`}
                 />
-                <span className="text-[13px] text-neutral-500">
+                <span className="text-label text-neutral-500">
                   {item.type === 'PERSON' ? PERSON_UNIT : item.unit || '개'}
                 </span>
               </div>
@@ -254,7 +254,7 @@ export function ItemEditor({
           {/* 물품: 단위 */}
           {item.type === 'GOODS' && (
             <div className="flex flex-col gap-1.5">
-              <span className="text-[12px] font-medium text-neutral-700">단위</span>
+              <span className="text-label font-medium text-neutral-700">단위</span>
               <input
                 type="text"
                 value={item.unit ?? ''}
@@ -269,7 +269,7 @@ export function ItemEditor({
           {item.type === 'PERSON' && (
             <>
               <div className="flex flex-col gap-1.5">
-                <span className="text-[12px] font-medium text-neutral-700">
+                <span className="text-label font-medium text-neutral-700">
                   성별 조건
                 </span>
                 <div className="flex gap-1.5">
@@ -278,7 +278,7 @@ export function ItemEditor({
                       key={g}
                       type="button"
                       onClick={() => update(i, { genderRequirement: g })}
-                      className={`rounded-lg border px-3 py-1.5 text-[13px] ${
+                      className={`rounded-full border px-3 py-1.5 text-label ${
                         (item.genderRequirement ?? 'ANY') === g
                           ? 'border-neutral-900 bg-neutral-900 text-white'
                           : 'border-neutral-300 bg-white text-neutral-600'
@@ -291,7 +291,7 @@ export function ItemEditor({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <span className="text-[12px] font-medium text-neutral-700">
+                <span className="text-label font-medium text-neutral-700">
                   참여 조건 <span className="text-neutral-400">(선택)</span>
                 </span>
                 <input
@@ -326,7 +326,7 @@ export function ItemEditor({
       </div>
 
       {items.length === 0 && (
-        <p className="text-[12px] text-neutral-400">
+        <p className="text-caption text-neutral-400">
           함께할 사람이나 필요한 물품을 하나 이상 추가해주세요.
         </p>
       )}

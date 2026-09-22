@@ -70,14 +70,14 @@ export function AddressSearch({
           type="button"
           onClick={openPostcode}
           disabled={!ready}
-          className="min-h-11 shrink-0 rounded-xl border border-neutral-300 px-4 py-3 text-[13px] font-semibold text-neutral-700 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
+          className="min-h-11 shrink-0 rounded-xl border border-neutral-300 px-4 py-3 text-label font-semibold text-neutral-700 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
         >
           {loadFailed ? '불러오기 실패' : ready ? '주소 검색' : '불러오는 중'}
         </button>
       </div>
 
       {loadFailed && (
-        <p className="text-[11px] text-red-600" role="alert">
+        <p className="text-caption text-red-600" role="alert">
           주소 검색을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해주세요.
         </p>
       )}
