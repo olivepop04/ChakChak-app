@@ -12,6 +12,7 @@
  */
 import Link from 'next/link';
 import { Calendar, MapPin } from 'lucide-react';
+import { ActionGallery } from '@/components/action/ActionGallery';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusBadge } from '@/components/ui/Badge';
 import {
@@ -277,20 +278,15 @@ export function ActionCard({
           />
         </div>
 
-        {/* 썸네일 — 액션 상세페이지처럼 뷰포트/앱쉘 좌우 여백 없이 꽉 채우며 세로 높이는 245px 고정 */}
+        {/* 썸네일 — 액션 상세페이지처럼 뷰포트/앱쉘 좌우 여백 없이 꽉 채우며 세로 높이는 245px 고정.
+            사진 여러 장은 ActionGallery(스와이프+점, 상세 화면과 공유)가 그린다 — fill로 245px에 맞춤 */}
         <div className="relative -mx-5 h-[245px] overflow-hidden bg-neutral-100">
-          {action.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={action.thumbnailUrl}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-              이미지 없음
-            </div>
-          )}
+          <ActionGallery
+            urls={action.imageUrls}
+            thumbnailIndex={action.thumbnailIndex}
+            alt={action.title}
+            fill
+          />
           {showStatus && (
             <div className="absolute right-4 top-4 z-10">
               <StatusBadge
