@@ -7,6 +7,7 @@
  */
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/server';
 import { getActionDetail } from '@/lib/queries/actions';
@@ -18,13 +19,14 @@ import { ActionCrewSection } from '@/components/action/ActionCrewSection';
 import { ActionHostActions } from '@/components/action/ActionHostActions';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
+import { Chip } from '@/components/ui/Chip';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { CrewAnchorButton, LikeButton, SaveButton, ShareButton, FollowButton } from '@/components/ui/ToggleButtons';
 import { Header } from '@/components/layout/Header';
 import {
+  deadlineDDay,
   formatActivityPeriod,
   formatDateShort,
-  timeUntilDeadline,
 } from '@/lib/utils/date';
 import { getActionCta } from '@/lib/utils/action-cta';
 import type { CrewMember } from '@/lib/types/view';
@@ -73,7 +75,7 @@ export default async function ActionDetailPage({
    */
   const summaryMembers = crew.slice(0, 4);
 
-  const deadline = timeUntilDeadline(action.recruitEndAt);
+  const dday = deadlineDDay(action.recruitEndAt);
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
   const canEditActionText =
     action.isOwner &&
@@ -183,27 +185,25 @@ export default async function ActionDetailPage({
         {/* 제목 영역 */}
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
-            {detailCategories.map((cat) => (
-              <span
-                key={cat}
-                className="rounded bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold text-neutral-600"
-              >
+            {detailCategories.map((cat, i) => (
+              <Chip key={cat} as="span" tone="accent" size="sm" selected={i === 0}>
                 {cat}
-              </span>
+              </Chip>
             ))}
             <StatusBadge
               status={action.status}
               recruitClosed={action.recruitClosed}
               customLabel={customStatusLabel}
+              className="!min-w-0 !rounded-full !px-2.5"
             />
-            {deadline && action.status === 'ACTIVE' && (
-              <span className="text-[11px] font-medium text-amber-700">
-                모집 {deadline}
+            {dday && action.status === 'ACTIVE' && (
+              <span className="ml-auto inline-flex h-6 flex-none items-center justify-center rounded-full border border-brand px-2.5 text-[13px] font-medium text-brand">
+                {dday}
               </span>
             )}
           </div>
 
-          <h1 className="text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
             {action.title}
           </h1>
 
@@ -252,11 +252,13 @@ export default async function ActionDetailPage({
         </div>
 
         {/* 상단 버튼 그룹 (참여인원 · 좋아요 · 저장 · 공유) */}
-        <div className="flex items-center justify-start gap-1 border-y border-neutral-100 py-2 text-xs tabular-nums text-neutral-500">
+        <div className="flex items-center gap-1 border-y border-neutral-100 py-2 text-xs tabular-nums text-neutral-500">
           <CrewAnchorButton
             count={action.crewCount}
+            suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
             className="px-1 py-0.5 text-xs gap-1"
           />
+          <span className="mx-2 h-3.5 w-px flex-none bg-neutral-200" aria-hidden="true" />
           <LikeButton
             actionId={action.id}
             initialLiked={action.likedByMe}
@@ -293,47 +295,52 @@ export default async function ActionDetailPage({
 
         {/* 모집 현황 */}
         <section className="flex flex-col gap-4">
-          <SectionTitle>모집 현황</SectionTitle>
+          <div className="flex items-baseline gap-2">
+            <SectionTitle>모집 현황</SectionTitle>
+            {action.recruitEndAt && (
+              <span className="text-[12px] text-neutral-500">
+                마감 : {formatDateShort(action.recruitEndAt)}
+              </span>
+            )}
+          </div>
           {action.items.length === 0 ? (
             <p className="text-sm text-neutral-400">등록된 모집 항목이 없어요.</p>
           ) : (
-            <div className="flex flex-col gap-5 rounded-xl border border-neutral-200 p-4">
-              {action.items.map((item) => (
+            <div className="flex flex-col gap-5 rounded-xl p-4">
+              {action.items.flatMap((item, i) => [
+                i > 0 && (
+                  <div key={`divider-${item.id}`} className="h-px bg-neutral-200" />
+                ),
                 <QuotaProgress
                   key={item.id}
                   item={item}
                   current={item.currentCount}
                   detailed
                   conditionName={item.conditionName}
-                />
-              ))}
+                />,
+              ])}
             </div>
           )}
         </section>
 
-        {/* 활동 일정 */}
-        <section className="flex flex-col gap-3">
-          <SectionTitle>활동 일정</SectionTitle>
-          <div className="flex flex-col gap-1 rounded-xl bg-neutral-50 p-4">
-            <p className="text-sm font-medium text-neutral-900">
-              {formatActivityPeriod(action.activityStartAt, action.activityEndAt)}
-            </p>
-            {action.recruitEndAt && (
-              <p className="text-[12px] text-neutral-500">
-                모집 마감일 : {formatDateShort(action.recruitEndAt)}
-              </p>
-            )}
-          </div>
-        </section>
-
-        {/* 활동 장소 */}
-        {(action.placeName || action.address) && (
+        {/* 일정 · 장소 — 활동 일정 + 활동 장소 통합 (2026-09-22) */}
+        {(action.activityStartAt || action.placeName || action.address) && (
           <section className="flex flex-col gap-3">
-            <SectionTitle>활동 장소</SectionTitle>
-            <AddressBox
-              placeName={action.placeName}
-              address={action.address ?? action.placeName ?? ''}
-            />
+            <SectionTitle>일정 · 장소</SectionTitle>
+            <div className="flex flex-col gap-3 rounded-xl bg-neutral-50 p-4">
+              <div className="flex items-start gap-2">
+                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
+                <p className="text-sm font-medium text-neutral-900">
+                  {formatActivityPeriod(action.activityStartAt, action.activityEndAt)}
+                </p>
+              </div>
+              {(action.placeName || action.address) && (
+                <AddressBox
+                  placeName={action.placeName}
+                  address={action.address ?? action.placeName ?? ''}
+                />
+              )}
+            </div>
           </section>
         )}
 
@@ -341,7 +348,7 @@ export default async function ActionDetailPage({
         {action.notice && (
           <section className="flex flex-col gap-2">
             <SectionTitle>안내사항</SectionTitle>
-            <p className="whitespace-pre-wrap rounded-xl bg-amber-50 p-4 text-[13px] leading-relaxed text-amber-900">
+            <p className="whitespace-pre-wrap rounded-xl bg-neutral-50 p-4 text-[13px] leading-relaxed text-neutral-800">
               {action.notice}
             </p>
           </section>

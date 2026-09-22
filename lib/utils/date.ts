@@ -85,6 +85,15 @@ export function timeUntilDeadline(iso: string | null): string | null {
   return '곧 마감';
 }
 
+/** 모집 마감까지 남은 일수를 D-day 뱃지 문구로. 지났거나 없으면 null */
+export function deadlineDDay(iso: string | null): string | null {
+  if (!iso) return null;
+  const diffMs = new Date(iso).getTime() - Date.now();
+  if (diffMs <= 0) return null;
+  const days = Math.floor(diffMs / 86400000);
+  return days >= 1 ? `D-${days}` : 'D-Day';
+}
+
 /** 요일이 주말인가. Discover 추천 점수 계산에 씁니다. */
 export function isWeekend(iso: string | null): boolean {
   if (!iso) return false;
