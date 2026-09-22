@@ -67,8 +67,22 @@ export function pickThumbnail(
   return imageUrls[index] ?? imageUrls[0];
 }
 
-/** 소개글을 카드용 한 줄로 */
-function summarize(text: string | null, max = 60): string | null {
+/**
+ * 소개글을 카드용으로 다듬는다 — 줄바꿈·연속 공백을 한 칸으로 접는 것이 본래 일이다.
+ *
+ * ★ 길이는 여기서 정하지 않습니다. 화면이 CSS 로 정합니다. (2026-09-22)
+ *   가로형 카드는 `line-clamp-2` 로 두 줄까지, 세로형 피드는 전체 노출입니다
+ *   (Day11 합의 · `components/ui/ActionCard.tsx:154,329`).
+ *
+ *   전에는 `max = 60` 이 기본값이라 **카드에 자리가 남아도 60자에서 「…」 로 끊겼습니다.**
+ *   세로형은 클램프가 없어서 CSS 로는 다 보여줄 수 있는데 데이터가 이미 잘려서 온 것입니다.
+ *   시드 소개글 100개 중 86개가 60자를 넘으니 거의 모든 카드가 잘려 있었습니다 (소정님 제보).
+ *
+ *   `max` 는 이제 **화면 제어가 아니라 전송량 상한**입니다. `description` 은
+ *   DB 가 `TEXT` 이고 폼에도 maxLength 가 없어 길이가 무제한이라, 피드 20장에
+ *   아주 긴 글이 실리는 것만 막습니다. 300 은 `LIMITS.BIO_MAX` 와 같은 눈금입니다.
+ */
+export function summarize(text: string | null, max = 300): string | null {
   if (!text) return null;
   const flat = text.replace(/\s+/g, ' ').trim();
   return flat.length > max ? `${flat.slice(0, max)}…` : flat;
