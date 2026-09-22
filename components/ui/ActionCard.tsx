@@ -254,8 +254,8 @@ export function ActionCard({
 
       {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
       <div className="relative z-10 flex flex-col pointer-events-none">
-        {/* 작성자 + 공유 — 썸네일 위 줄 */}
-        <div className="flex items-center justify-between gap-2 pt-4 pb-2">
+        {/* 작성자 — 썸네일 위 줄 (공유는 좋아요·저장 옆으로 이동, 2026-09-22) */}
+        <div className="flex items-center gap-2 pt-4 pb-2">
           <Link
             href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
             onClick={(e) => e.stopPropagation()}
@@ -266,16 +266,6 @@ export function ActionCard({
               @{action.owner?.nickname ?? '호스트'}
             </span>
           </Link>
-
-          <ShareButton
-            actionId={action.id}
-            actionTitle={action.title}
-            count={action.shareCount ?? 0}
-            disabled={shareDisabled}
-            disabledReason={reactionDisabledReason}
-            className="pointer-events-auto shrink-0 !p-1.5"
-            iconClassName="h-4 w-4"
-          />
         </div>
 
         {/* 썸네일 — 액션 상세페이지처럼 뷰포트/앱쉘 좌우 여백 없이 꽉 채우며 세로 높이는 245px 고정.
@@ -349,7 +339,8 @@ export function ActionCard({
             )}
           </div>
 
-          {/* 좋아요·저장 — "내 반응" 두 가지만. 참여인원은 위 정보줄로, 공유는 상단 작성자 줄로 이동 */}
+          {/* 좋아요·저장·공유 — "내 반응" 줄. 참여인원은 위 정보줄로.
+              공유는 원래 상단 작성자 줄에 있었는데 이 줄로 이동(2026-09-22), 같은 gap-3로 나열 */}
           <div className="pointer-events-auto mt-1 flex items-center gap-3 pt-1 text-xs tabular-nums text-neutral-500">
             <LikeButton
               actionId={action.id}
@@ -368,6 +359,15 @@ export function ActionCard({
               disabledReason={reactionDisabledReason}
               className="!inline-flex !items-center !gap-1.5 !p-0 !text-[13px] !font-medium !leading-none"
               iconClassName="!w-[20px] !h-[20px] shrink-0"
+            />
+            <ShareButton
+              actionId={action.id}
+              actionTitle={action.title}
+              count={action.shareCount ?? 0}
+              disabled={shareDisabled}
+              disabledReason={reactionDisabledReason}
+              className="!inline-flex !items-center !gap-1.5 !p-0 !text-[13px] !font-medium !leading-none"
+              iconClassName="!w-[17px] !h-[17px] shrink-0"
             />
           </div>
         </div>
