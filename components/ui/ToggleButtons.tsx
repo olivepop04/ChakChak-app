@@ -158,18 +158,18 @@ function DisabledNoticeModal({
         </span>
         <h2
           id="reaction-disabled-title"
-          className="mt-4 text-[17px] font-bold text-neutral-900"
+          className="mt-4 text-subtitle font-bold text-neutral-900"
         >
           {title}
         </h2>
-        <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+        <p className="mt-2 text-label leading-relaxed text-neutral-600">
           {body}
         </p>
         <button
           type="button"
           onClick={onClose}
           autoFocus
-          className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[14px] font-semibold text-white"
+          className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-body font-semibold text-white"
         >
           확인
         </button>
@@ -265,7 +265,7 @@ export function LikeButton({
         aria-disabled={disabled || undefined}
         aria-label="좋아요"
         className={cn(
-          'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
+          'inline-flex items-center gap-1 rounded-full px-2 py-1 text-label font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
           disabled
             ? 'cursor-not-allowed text-neutral-400 opacity-50'
             : on
@@ -308,25 +308,25 @@ export function LikeButton({
               </span>
               <h2
                 id="like-login-title"
-                className="mt-4 text-[17px] font-bold text-neutral-900"
+                className="mt-4 text-subtitle font-bold text-neutral-900"
               >
                 로그인하고 관심을 표현해보세요
               </h2>
-              <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+              <p className="mt-2 text-label leading-relaxed text-neutral-600">
                 로그인하고 나에게 맞는 액션을 찾아보세요. 마음에 든
                 액션에는 좋아요도 남길 수 있어요.
               </p>
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
                 autoFocus
-                className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[14px] font-semibold text-white"
+                className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-body font-semibold text-white"
               >
                 로그인하고 계속하기
               </Link>
               <button
                 type="button"
                 onClick={() => setLoginPromptOpen(false)}
-                className="mt-2 min-h-11 w-full rounded-xl py-3 text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
+                className="mt-2 min-h-11 w-full rounded-xl py-3 text-label font-semibold text-neutral-500 hover:bg-neutral-50"
               >
                 다음에 할게요
               </button>
@@ -434,7 +434,7 @@ export function SaveButton({
         aria-disabled={disabled || undefined}
         aria-label="저장"
         className={cn(
-          'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
+          'inline-flex items-center gap-1 rounded-full px-2 py-1 text-label font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
           disabled
             ? 'cursor-not-allowed text-neutral-400 opacity-50'
             : on
@@ -479,11 +479,11 @@ export function SaveButton({
               </span>
               <h2
                 id="save-login-title"
-                className="mt-4 text-[17px] font-bold text-neutral-900"
+                className="mt-4 text-subtitle font-bold text-neutral-900"
               >
                 로그인하고 액션을 저장해보세요
               </h2>
-              <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+              <p className="mt-2 text-label leading-relaxed text-neutral-600">
                 로그인하고 나에게 맞는 액션을 찾아보세요. 마음에 든 액션은
                 내 프로필에 모아둘 수 있어요.
               </p>
@@ -491,14 +491,14 @@ export function SaveButton({
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
                 autoFocus
-                className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[14px] font-semibold text-white"
+                className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-body font-semibold text-white"
               >
                 로그인하고 계속하기
               </Link>
               <button
                 type="button"
                 onClick={() => setLoginPromptOpen(false)}
-                className="mt-2 min-h-11 w-full rounded-xl py-3 text-[13px] font-semibold text-neutral-500 hover:bg-neutral-50"
+                className="mt-2 min-h-11 w-full rounded-xl py-3 text-label font-semibold text-neutral-500 hover:bg-neutral-50"
               >
                 다음에 할게요
               </button>
@@ -561,7 +561,7 @@ export function FollowButton({
       }}
       aria-pressed={on}
       className={cn(
-        'inline-flex min-h-9 items-center gap-1 rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-colors',
+        'inline-flex min-h-9 items-center gap-1 rounded-full px-3.5 py-2 text-label font-semibold transition-colors',
         on
           ? 'bg-neutral-200 text-neutral-700'
           : 'border border-neutral-300 bg-white text-neutral-700',
@@ -616,7 +616,7 @@ export function CrewAnchorButton({
       onClick={handleClick}
       aria-label="참여인원"
       className={cn(
-        'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900',
+        'inline-flex items-center gap-1 rounded-full px-2 py-1 text-label font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900',
         className,
       )}
     >
@@ -674,7 +674,7 @@ export function ShareButton({
         aria-disabled={disabled || undefined}
         aria-label="공유"
         className={cn(
-          'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-medium transition-colors',
+          'inline-flex items-center gap-1 rounded-full px-2 py-1 text-label font-medium transition-colors',
           disabled
             ? 'cursor-not-allowed text-neutral-400 opacity-50'
             : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900',

@@ -46,17 +46,17 @@ export function Chip({
       className={cn(
         'inline-flex items-center justify-center whitespace-nowrap rounded-full border transition-colors',
         size === 'sm'
-          ? 'h-[24px] px-2.5 text-[11px] font-medium'
+          ? 'h-[24px] px-2.5 text-caption font-medium'
           : tone === 'neutral'
-            ? 'gap-1 border-transparent px-3.5 py-2 text-[12px]'
-            : 'px-3.5 py-2 text-[13px] font-medium',
+            ? 'gap-1 border-transparent px-3.5 py-2 text-label'
+            : 'px-3.5 py-2 text-label font-medium',
         tone === 'default' &&
         (selected
           ? 'border-neutral-900 bg-neutral-900 text-white'
           : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'),
         tone === 'accent' &&
         (selected
-          ? 'border-transparent bg-[#00A56E] text-white'
+          ? 'border-transparent bg-brand text-white'
           : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'),
         // 세그먼트 컨트롤(정렬 필터) — 바깥 컨테이너가 #F5F5F7 배경을 이미 깔고 있어서
         // 선택 안 된 세그먼트는 투명, 선택된 세그먼트만 흰 배경으로 떠 보이게 한다.
@@ -64,7 +64,7 @@ export function Chip({
         'flex-1 justify-center',
         tone === 'neutral' &&
         (selected
-          ? 'bg-white font-bold text-[#00A56E] shadow-sm'
+          ? 'bg-white font-bold text-brand shadow-sm'
           : 'bg-transparent font-medium text-neutral-500 hover:text-neutral-700'),
         className,
       )}

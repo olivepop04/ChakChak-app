@@ -22,7 +22,7 @@ export function UserList({
             <p className="truncate text-sm font-semibold text-neutral-900">
               @{u.nickname}
             </p>
-            <p className="text-[12px] text-neutral-500">
+            <p className="text-caption text-neutral-500">
               참여 {u.participatedCount}개 · 호스트 {u.ledCount}개
             </p>
           </div>
@@ -31,7 +31,7 @@ export function UserList({
           ) : (
             <Link
               href={`/user/${u.id}`}
-              className="shrink-0 rounded-lg border border-neutral-300 px-3 py-1.5 text-[12px] font-medium text-neutral-700"
+              className="shrink-0 rounded-full border border-neutral-300 px-3 py-1.5 text-label font-medium text-neutral-700"
             >
               프로필 보기
             </Link>

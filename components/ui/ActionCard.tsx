@@ -137,7 +137,7 @@ export function ActionCard({
                     />
                   </div>
                 )}
-                <h3 className="flex-1 min-w-[6rem] font-paperlogy text-[20px] font-bold leading-snug text-neutral-900 break-keep">
+                <h3 className="flex-1 min-w-[6rem] font-paperlogy text-xl font-bold leading-snug text-neutral-900 break-keep">
                   {action.title}
                 </h3>
               </div>
@@ -154,11 +154,11 @@ export function ActionCard({
             <div className="mt-2 flex flex-col gap-1.5">
               {/* 참여인원 + 날짜 + 장소 — 세로형 카드와 같은 원칙(사실 정보는 한 줄, 아이콘 통일).
                   2026-09-21 홈피드 개편에서 가로형에도 같이 반영 */}
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] min-[410px]:text-[11px] font-bold text-neutral-500">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] min-[410px]:text-caption font-bold text-neutral-500">
                 <CrewAnchorButton
                   count={action.crewCount ?? 0}
                   suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
-                  className="!min-h-0 !gap-1 !p-0 !text-[10px] min-[410px]:!text-[11px] !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
+                  className="!min-h-0 !gap-1 !p-0 !text-[10px] min-[410px]:!text-caption !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
                   iconClassName="h-3 w-3 shrink-0 text-neutral-400"
                 />
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
@@ -181,20 +181,20 @@ export function ActionCard({
                   className="pointer-events-auto cursor-pointer flex items-center gap-1 shrink-0 min-w-0 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
                 >
                   <Avatar name={action.owner?.nickname ?? '호스트'} size="xs" />
-                  <span className="shrink-0 whitespace-nowrap text-[11px] font-medium text-neutral-600">
+                  <span className="shrink-0 whitespace-nowrap text-caption font-medium text-neutral-600">
                     @{action.owner?.nickname ?? '호스트'}
                   </span>
                 </Link>
 
                 {/* 메타 3종: 375px에서는 초슬림 밀착, 넓은 화면(sm)에서는 홈피드 규격으로 확장 */}
-                <div className="flex items-center gap-0.5 min-[410px]:gap-1 sm:gap-1.5 shrink-0 ml-auto pointer-events-auto text-[10px] min-[410px]:text-[11px] sm:text-xs font-medium text-neutral-500">
+                <div className="flex items-center gap-0.5 min-[410px]:gap-1 sm:gap-1.5 shrink-0 ml-auto pointer-events-auto text-[10px] min-[410px]:text-caption sm:text-xs font-medium text-neutral-500">
                   <LikeButton
                     actionId={action.id}
                     initialLiked={action.likedByMe}
                     initialCount={action.likeCount ?? 0}
                     disabled={likeDisabled}
                     disabledReason={reactionDisabledReason}
-                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-caption sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <SaveButton
@@ -203,7 +203,7 @@ export function ActionCard({
                     initialCount={action.saveCount ?? 0}
                     disabled={saveDisabled}
                     disabledReason={reactionDisabledReason}
-                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-caption sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <ShareButton
@@ -212,7 +212,7 @@ export function ActionCard({
                     count={action.shareCount ?? 0}
                     disabled={shareDisabled}
                     disabledReason={reactionDisabledReason}
-                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-caption sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                 </div>
@@ -251,10 +251,10 @@ export function ActionCard({
           <Link
             href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
             onClick={(e) => e.stopPropagation()}
-            className="pointer-events-auto flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-[13px] font-medium text-neutral-600 hover:underline active:opacity-70 transition-opacity"
+            className="pointer-events-auto flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-label font-medium text-neutral-600 hover:underline active:opacity-70 transition-opacity"
           >
             <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-            <span className="min-w-0 truncate text-[13px] font-medium text-neutral-600">
+            <span className="min-w-0 truncate text-label font-medium text-neutral-600">
               @{action.owner?.nickname ?? '호스트'}
             </span>
           </Link>
@@ -307,12 +307,12 @@ export function ActionCard({
           </div>
 
           {/* 고배율에서 잘리지 않게 말줄임 없이 전체 노출. 카드가 길어지는 건 감수 (배율 확대 사용자는 전부 보길 원함) */}
-          <h3 className="font-paperlogy text-[20px] font-bold leading-snug text-neutral-900 break-keep">
+          <h3 className="font-paperlogy text-xl font-bold leading-snug text-neutral-900 break-keep">
             {action.title}
           </h3>
 
           {action.summary && (
-            <p className="font-sans text-[15px] font-medium leading-relaxed text-neutral-500">
+            <p className="font-sans text-body font-medium leading-relaxed text-neutral-500">
               {action.summary}
             </p>
           )}
@@ -321,19 +321,19 @@ export function ActionCard({
               세 항목 전부 같은 굵기(medium)·13px 로 설정.
               2026-09-22: pointer-events-auto 제거 — 이 줄은 이제 클릭해도 카드 덮개 링크(상세페이지 상단)로 흘러가야 함.
               참여인원 버튼도 더는 여기서 따로 안 눌리고 같이 흘러감(크루섹션 점프는 상세페이지 자체에서만 씀) */}
-          <div className="flex flex-wrap items-center gap-3 font-sans text-[13px] font-medium text-neutral-500">
+          <div className="flex flex-wrap items-center gap-3 font-sans text-label font-medium text-neutral-500">
             <CrewAnchorButton
               count={action.crewCount ?? 0}
               suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
-              className="!min-h-0 !gap-1 !p-0 !font-sans !text-[13px] !font-medium !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
+              className="!min-h-0 !gap-1 !p-0 !font-sans !text-label !font-medium !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
               iconClassName="h-3.5 w-3.5 text-neutral-400"
             />
-            <span className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-[13px] font-medium text-neutral-500">
+            <span className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-label font-medium text-neutral-500">
               <Calendar className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
               {formatDate(action.activityStartAt)}
             </span>
             {action.address && (
-              <span className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-[13px] font-medium text-neutral-500">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-label font-medium text-neutral-500">
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
                 {action.address.split(' ').slice(0, 2).join(' ')}
               </span>
@@ -349,7 +349,7 @@ export function ActionCard({
               initialCount={action.likeCount ?? 0}
               disabled={likeDisabled}
               disabledReason={reactionDisabledReason}
-              className="!inline-flex !items-center !gap-1.5 !p-0 !text-[13px] !font-medium !leading-none"
+              className="!inline-flex !items-center !gap-1.5 !p-0 !text-label !font-medium !leading-none"
               iconClassName="!w-[20px] !h-[20px] shrink-0"
             />
             <SaveButton
@@ -358,7 +358,7 @@ export function ActionCard({
               initialCount={action.saveCount ?? 0}
               disabled={saveDisabled}
               disabledReason={reactionDisabledReason}
-              className="!inline-flex !items-center !gap-1.5 !p-0 !text-[13px] !font-medium !leading-none"
+              className="!inline-flex !items-center !gap-1.5 !p-0 !text-label !font-medium !leading-none"
               iconClassName="!w-[20px] !h-[20px] shrink-0"
             />
             <ShareButton
@@ -367,7 +367,7 @@ export function ActionCard({
               count={action.shareCount ?? 0}
               disabled={shareDisabled}
               disabledReason={reactionDisabledReason}
-              className="!inline-flex !items-center !gap-1.5 !p-0 !text-[13px] !font-medium !leading-none"
+              className="!inline-flex !items-center !gap-1.5 !p-0 !text-label !font-medium !leading-none"
               iconClassName="!w-[17px] !h-[17px] shrink-0"
             />
           </div>

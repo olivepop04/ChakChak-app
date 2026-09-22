@@ -100,7 +100,7 @@ export function ImageUploader({
           <div
             key={url}
             className={cn(
-              'relative h-24 w-24 overflow-hidden rounded-lg border-2',
+              'relative h-24 w-24 overflow-hidden rounded-xl border-2',
               showThumbnailPicker && i === thumbnailIndex
                 ? 'border-neutral-900'
                 : 'border-neutral-200',
@@ -141,21 +141,21 @@ export function ImageUploader({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
-            className="flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 disabled:opacity-50"
+            className="flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 disabled:opacity-50"
           >
             {busy ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
             ) : (
               <>
                 <span className="text-xl">＋</span>
-                <span className="text-[11px]">사진</span>
+                <span className="text-caption">사진</span>
               </>
             )}
           </button>
         )}
       </div>
 
-      <p className="text-[11px] text-neutral-400">
+      <p className="text-caption text-neutral-400">
         {urls.length} / {max}장 · JPG · PNG · WebP · 한 장당 5MB 이하
         {showThumbnailPicker && ' · 첫 번째가 대표 이미지예요'}
       </p>

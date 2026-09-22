@@ -22,7 +22,7 @@ export function SectionTitle({
   className?: string;
 }) {
   return (
-    <h2 className={cn('text-[15px] font-bold text-neutral-900', className)}>
+    <h2 className={cn('text-body font-bold text-neutral-900', className)}>
       {children}
     </h2>
   );

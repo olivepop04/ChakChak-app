@@ -57,7 +57,7 @@ export function Header({
           type="button"
           onClick={handleBack}
           aria-label="뒤로 가기"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
         >
           <ChevronLeft className="h-5 w-5 text-neutral-700" />
         </button>
@@ -93,7 +93,7 @@ export function Header({
 
         8쪽의 나머지(자간·색 통일, 이중 h1 정리)는 발표 후 소정님 전담입니다.
       */}
-      <h1 className="flex-1 truncate text-[15px] font-bold tracking-widest text-neutral-700">
+      <h1 className="flex-1 truncate text-body font-bold tracking-widest text-neutral-700">
         {title}
       </h1>
 
