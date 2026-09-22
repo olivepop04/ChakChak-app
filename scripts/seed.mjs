@@ -92,17 +92,112 @@ const PLACE_SUFFIX = {
 };
 
 const IMG = {
+  // 동물
   animal: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1200',
-  dog: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1200',
+  dog: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1200',
+  dog_walk: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=1200',
+  cat: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200',
+  cat_warm: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=1200',
+
+  // 환경
   env: 'https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?w=1200',
+  tree: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200',
+  recycle: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=1200',
   beach: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=1200',
+  river: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1200',
+  garden: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200',
+
+  // 아동·청소년
   kids: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1200',
   book: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1200',
-  senior: 'https://images.unsplash.com/photo-1516307365426-bea591f05011?w=1200',
-  food: 'https://images.unsplash.com/photo-1593113630400-ea4288922497?w=1200',
+  study: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200',
+
+  // 노인 (신규 맞춤 이미지로 교체)
+  senior: '/images/actions/senior_tea.jpg',
+  senior_tea: '/images/actions/senior_tea.jpg',
+  senior_kiosk: '/images/actions/kiosk.jpg',
+  senior_smartphone: '/images/actions/smartphone.jpg',
+  senior_lunchbox: '/images/actions/lunchbox.jpg',
+  senior_wallpaper: '/images/actions/wallpaper.jpg',
+  senior_boardgame: '/images/actions/boardgame.jpg',
+  senior_nail_art: '/images/actions/nail_art.jpg',
+  senior_care: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=1200',
+
+  // 장애 (신규 맞춤 이미지로 교체)
+  wheelchair: '/images/actions/wheelchair.jpg',
+  bowling: '/images/actions/bowling.jpg',
+  guide_runner: '/images/actions/guide_runner.jpg',
+  art_therapy: '/images/actions/art_therapy.jpg',
+  sign_language: '/images/actions/sign_language.jpg',
+  care: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1200',
+
+  // 지역사회 / 나눔 / 식사
   community: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1200',
-  garden: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200',
+  sharing: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1200',
+  briquette: '/images/actions/briquette.jpg',
+  food: 'https://images.unsplash.com/photo-1593113630400-ea4288922497?w=1200',
+  cooking: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1200',
+  mural: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1200',
+  snow: 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?w=1200',
+
+  // 교육
+  edu: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1200',
 };
+
+const THEME_EXTRAS = {
+  '동물': [IMG.dog_walk, IMG.animal, IMG.dog, IMG.cat, IMG.cat_warm, IMG.community],
+  '환경': [IMG.tree, IMG.recycle, IMG.env, IMG.beach, IMG.river, IMG.garden, IMG.community],
+  '지역사회': [IMG.community, IMG.sharing, IMG.briquette, IMG.senior_wallpaper, IMG.senior_lunchbox, IMG.food, IMG.cooking, IMG.mural, IMG.snow],
+  '아동·청소년': [IMG.kids, IMG.book, IMG.study, IMG.art_therapy, IMG.senior_boardgame, IMG.community, IMG.edu],
+  '노인': [IMG.senior_tea, IMG.senior_kiosk, IMG.senior_smartphone, IMG.senior_lunchbox, IMG.senior_boardgame, IMG.senior_nail_art, IMG.senior_wallpaper, IMG.senior_care],
+  '장애': [IMG.wheelchair, IMG.bowling, IMG.guide_runner, IMG.art_therapy, IMG.sign_language, IMG.care, IMG.book],
+  '교육': [IMG.edu, IMG.study, IMG.senior_smartphone, IMG.senior_kiosk, IMG.book, IMG.community],
+  '기타': [IMG.community, IMG.sharing, IMG.briquette, IMG.food, IMG.kids, IMG.care],
+};
+
+function getActionImages(primary, category, idx) {
+  if (!primary) return { imageUrls: [], thumbnailIndex: 0 };
+
+  const mod = idx % 5;
+  // idx % 5 === 0 -> 1장 (~20%)
+  // idx % 5 === 1, 3 -> 2장 (~40%)
+  // idx % 5 === 2, 4 -> 3장 (~40%)
+  const count = (mod === 0) ? 1 : (mod === 1 || mod === 3) ? 2 : 3;
+
+  if (count === 1) {
+    return { imageUrls: [primary], thumbnailIndex: 0 };
+  }
+
+  const pool = THEME_EXTRAS[category] || THEME_EXTRAS['기타'];
+  const filtered = pool.filter((url) => url !== primary);
+
+  const extra1 = filtered[idx % filtered.length];
+  const remaining = filtered.filter((url) => url !== extra1);
+  const extra2 = remaining[(idx + 1) % remaining.length];
+
+  if (count === 2) {
+    // 2장일 때 thumbnailIndex 0과 1을 섞음
+    const thumbIdx = (idx % 4 === 1) ? 1 : 0;
+    const urls = thumbIdx === 1 ? [extra1, primary] : [primary, extra1];
+    return { imageUrls: urls, thumbnailIndex: thumbIdx };
+  }
+
+  // count === 3: thumbnailIndex 0, 1, 2를 골고루 섞음
+  let thumbIdx = 0;
+  if (idx % 6 === 2) thumbIdx = 1;
+  else if (idx % 6 === 4) thumbIdx = 2;
+
+  let urls;
+  if (thumbIdx === 0) {
+    urls = [primary, extra1, extra2];
+  } else if (thumbIdx === 1) {
+    urls = [extra1, primary, extra2];
+  } else {
+    urls = [extra1, extra2, primary];
+  }
+
+  return { imageUrls: urls, thumbnailIndex: thumbIdx };
+}
 
 const EXTRA_CATEGORY = {
   '유기묘 임시보호 설명회': '교육',
@@ -134,14 +229,14 @@ const ACTIONS = [
       comments: ['사료 2포 후원 신청했습니다!', '강아지들이랑 산책할 생각에 벌써 설레네요.']
     }],
 
-  ['유기견 산책 친구를 찾습니다', '동물', IMG.animal, '서울특별시 마포구 월드컵로 30', 'ACTIVE', 4, 7,
+  ['유기견 산책 친구를 찾습니다', '동물', IMG.dog_walk, '서울특별시 마포구 월드컵로 30', 'ACTIVE', 4, 7,
     [['산책 봉사자', 'PERSON', 'R', 3, 6, '명', 'ANY']], 1,
     {
       description: '마포구 유기견 쉼터에서 사람의 따뜻한 손길과 바깥공기가 그리운 강아지들과 함께 평화의 공원을 산책할 친구를 찾습니다. 대형견과 소형견 산책 경험이 있으신 분들 특히 환영합니다.',
       notice: '리드줄을 안전하게 잡을 수 있는 편한 복장과 운동화를 권장합니다. 배변봉투와 물통은 쉼터에서 제공합니다.'
     }],
 
-  ['길고양이 겨울집 만들기', '동물', IMG.animal, '경기도 고양시 일산동구', 'ACTIVE', 6, 10,
+  ['길고양이 겨울집 만들기', '동물', IMG.cat, '경기도 고양시 일산동구', 'ACTIVE', 6, 10,
     [['제작 도우미', 'PERSON', 'M', 4, null, '명', 'ANY'], ['스티로폼 박스', 'GOODS', 'M', 20, null, '개', 'ANY']], 1,
     {
       description: '일산 주택가 길고양이들이 혹독한 겨울 추위를 무사히 견딜 수 있도록 단열 스티로폼과 보온재로 튼튼한 겨울집을 제작합니다. 손재주가 없어도 누구나 쉽게 조립할 수 있습니다.',
@@ -157,7 +252,7 @@ const ACTIONS = [
       ownerVoice: '갑작스러운 한파 예보에 걱정이 많았는데 든든한 크루분들 덕분에 하루 만에 모든 보온 작업을 끝냈습니다. 진심으로 감사드립니다.'
     }],
 
-  ['유기묘 임시보호 설명회', '동물', IMG.animal, '서울특별시 종로구 종로 1', 'ENDED', 18, -5,
+  ['유기묘 임시보호 설명회', '동물', IMG.cat, '서울특별시 종로구 종로 1', 'ENDED', 18, -5,
     [['참가자', 'PERSON', 'R', 5, 15, '명', 'ANY']], 1,
     {
       description: '종로구 입양센터에서 유기묘 임시보호(임보)를 처음 시작하는 분들을 위해 주의사항과 기본 케어법, 입양 연계 절차를 공유하는 온·오프라인 설명회였습니다.',
@@ -178,7 +273,7 @@ const ACTIONS = [
       notice: '모래사장을 오래 걸으므로 편한 신발을 신어주세요. 젖은 해양 부유물이 많아 방수 장갑을 권장합니다.'
     }],
 
-  ['우리 동네 분리배출 캠페인', '환경', IMG.env, '서울특별시 관악구 관악로 1', 'COMPLETED', 40, -30,
+  ['우리 동네 분리배출 캠페인', '환경', IMG.recycle, '서울특별시 관악구 관악로 1', 'COMPLETED', 40, -30,
     [['캠페인 도우미', 'PERSON', 'R', 4, 8, '명', 'ANY']], 1,
     {
       description: '관악구 대학동 원룸촌 주변의 올바른 투명 페트병 라벨 제거 및 재활용품 분리배출 방법을 알리는 가두 캠페인을 진행했습니다.',
@@ -224,14 +319,14 @@ const ACTIONS = [
       notice: '위생을 위해 단정한 옷차림과 마스크 착용을 부탁드립니다. 앞치마와 위생모는 현장에서 제공됩니다.'
     }],
 
-  ['골목길 벽화 그리기', '지역사회', IMG.community, '부산광역시 사하구', 'ACTIVE', 9, 13,
+  ['골목길 벽화 그리기', '지역사회', IMG.mural, '부산광역시 사하구', 'ACTIVE', 9, 13,
     [['그림 봉사', 'PERSON', 'R', 5, 10, '명', 'ANY'], ['페인트', 'GOODS', 'M', 15, null, '통', 'ANY']], 1,
     {
       description: '부산 사하구 감천동 노후 주택가 골목 계단길에 밝고 따뜻한 희망의 테마 벽화를 그립니다. 스케치가 되어 있어 붓질만 하실 수 있으면 초보자도 환영합니다.',
       notice: '옷이나 신발에 페인트가 튈 수 있으니 버려도 괜찮은 옷과 신발을 착용해 주세요. 붓과 앞치마는 지급됩니다.'
     }],
 
-  ['우리 동네 눈 치우기', '지역사회', IMG.community, '강원특별자치도 춘천시', 'COMPLETED', 52, -44,
+  ['우리 동네 눈 치우기', '지역사회', IMG.snow, '강원특별자치도 춘천시', 'COMPLETED', 52, -44,
     [['제설 봉사', 'PERSON', 'M', 10, null, '명', 'MALE']], 1,
     {
       description: '춘천 시내 폭설 후 결빙 위험이 큰 주택가 비탈길과 버스 정류장 주변 인도에 쌓인 눈을 치우고 염화칼슘을 살포한 안전 제설 봉사였습니다.',
@@ -294,35 +389,35 @@ const ACTIONS = [
       notice: '출판 연도 5년 이내, 파손이나 낙서가 없는 깨끗한 아동 도서를 직접 기부해 주시거나 분류에 참여해 주세요.'
     }],
 
-  ['어르신 말벗 봉사', '노인', IMG.senior, '서울특별시 중랑구 면목로', 'ACTIVE', 1, 7,
+  ['어르신 말벗 봉사', '노인', IMG.senior_tea, '서울특별시 중랑구 면목로', 'ACTIVE', 1, 7,
     [['말벗 봉사자', 'PERSON', 'M', 6, null, '명', 'ANY']], 1,
     {
       description: '중랑구 면목동 거주 홀몸 어르신 댁을 2인 1조로 방문하여 따뜻한 차 한잔과 함께 일상 대화를 나누고 혈압 체크와 건강 안부를 묻는 온기 나눔입니다.',
       notice: '어르신의 말씀을 귀담아듣고 공감해 주실 따뜻한 마음만 가지고 오시면 됩니다. 소정의 다과를 함께 전달합니다.'
     }],
 
-  ['경로당 대청소', '노인', IMG.senior, '경기도 성남시 수정구', 'ACTIVE', 10, 12,
+  ['경로당 대청소', '노인', IMG.community, '경기도 성남시 수정구', 'ACTIVE', 10, 12,
     [['청소 봉사', 'PERSON', 'R', 6, 12, '명', 'ANY']], 1,
     {
       description: '성남시 수정구 태평동 경로당의 어르신들이 쾌적하게 생활하실 수 있도록 방충망 먼지 청소, 바닥 물걸레질, 화장실 소독 및 주방 묵은 때를 시원하게 씻어냅니다.',
       notice: '물청소에 적합한 반바지나 편한 트레이닝복, 고무장갑을 지참해 주시면 좋습니다. 청소 도구는 완비되어 있습니다.'
     }],
 
-  ['어르신 목욕 봉사 (남성)', '노인', IMG.senior, '대전광역시 중구', 'ACTIVE', 6, 10,
+  ['어르신 목욕 봉사 (남성)', '노인', IMG.senior_care, '대전광역시 중구', 'ACTIVE', 6, 10,
     [['목욕 봉사', 'PERSON', 'R', 3, 5, '명', 'MALE']], 1,
     {
       description: '대전 중구 노인복지센터에서 거동이 불편하신 남성 어르신들의 온천수 목욕 및 등 밀어드리기, 머리 감겨드리기를 보조해 드리는 사랑의 목욕 봉사입니다.',
       notice: '남성 봉사자 전용 항목입니다. 미끄럼 방지 실내화와 반바지, 갈아입으실 여벌 속옷을 준비해 주세요.'
     }],
 
-  ['어르신 목욕 봉사 (여성)', '노인', IMG.senior, '대전광역시 중구', 'ACTIVE', 6, 10,
+  ['어르신 목욕 봉사 (여성)', '노인', IMG.senior_care, '대전광역시 중구', 'ACTIVE', 6, 10,
     [['목욕 봉사', 'PERSON', 'R', 3, 5, '명', 'FEMALE']], 1,
     {
       description: '대전 중구 노인복지센터에서 홀로 목욕하기 어려우신 여성 어르신들의 목욕을 정성껏 돕고 로션 발라드리기와 머리 말리기를 보조하는 목욕 나눔입니다.',
       notice: '여성 봉사자 전용 항목입니다. 습한 목욕탕 환경이므로 반팔, 반바지와 방수 슬리퍼, 여벌 옷을 챙겨와 주세요.'
     }],
 
-  ['홀몸 어르신 도시락 배달', '노인', IMG.food, '서울특별시 동대문구', 'COMPLETED', 38, -28,
+  ['홀몸 어르신 도시락 배달', '노인', IMG.senior_lunchbox, '서울특별시 동대문구', 'COMPLETED', 38, -28,
     [['배달 봉사', 'PERSON', 'M', 8, null, '명', 'ANY'], ['도시락', 'GOODS', 'M', 80, null, '개', 'ANY']], 1,
     {
       description: '동대문구 답십리동 독거 어르신 80가구에 갓 지은 따뜻한 영양 도시락을 집 앞까지 도보 및 차량으로 직접 배달하고 안부를 확인한 봉사였습니다.',
@@ -331,14 +426,14 @@ const ACTIONS = [
       ownerVoice: '대문 앞까지 나와 손을 흔들어주시던 할머니의 모습에 가슴이 뭉클했습니다. 한 분도 빠짐없이 신속히 배달해 주신 크루분들 감사해요.'
     }],
 
-  ['어르신 스마트폰 교실', '노인', IMG.senior, '울산광역시 남구', 'ENDED', 26, -4,
+  ['어르신 스마트폰 교실', '노인', IMG.senior_smartphone, '울산광역시 남구', 'ENDED', 26, -4,
     [['강사 도우미', 'PERSON', 'R', 3, 6, '명', 'ANY']], 1,
     {
       description: '울산 남구 노인복지관 어르신들께 카카오톡 사진 전송, 지도 앱 길찾기, 보이스피싱 예방 설정을 1:1 밀착 코칭해 드린 스마트폰 활용 강좌였습니다.',
       notice: '스마트폰 기본 조작이 익숙하신 분들이 보조 강사로 활약하셨습니다.'
     }],
 
-  ['휠체어 이동 도우미', '장애', IMG.community, '서울특별시 서대문구', 'ACTIVE', 5, 8,
+  ['휠체어 이동 도우미', '장애', IMG.wheelchair, '서울특별시 서대문구', 'ACTIVE', 5, 8,
     [['이동 봉사', 'PERSON', 'R', 4, 8, '명', 'ANY']], 1,
     {
       description: '서대문구 독립문역 인근에서 휠체어를 이용하시는 중증 장애인분들의 문화센터 나들이 이동 경로 동행 및 지하철 리프트 이용을 안전하게 보조합니다.',
@@ -352,7 +447,7 @@ const ACTIONS = [
       notice: '한글 맞춤법과 키보드 타자 입력에 능숙하신 분 환영합니다. 개인 노트북을 지참해 주시기 바랍니다.'
     }],
 
-  ['수어 통역 재능기부', '장애', IMG.community, '경기도 안양시 동안구', 'COMPLETED', 48, -38,
+  ['수어 통역 재능기부', '장애', IMG.sign_language, '경기도 안양시 동안구', 'COMPLETED', 48, -38,
     [['수어 통역', 'PERSON', 'R', 2, 3, '명', 'ANY']], 1,
     {
       description: '안양시 동안구 장애인 예술제 무대에서 청각장애인 관객들을 위해 연극 대사와 사회자 안내 멘트를 실시간 수어로 통역한 뜻깊은 무대였습니다.',
@@ -361,14 +456,14 @@ const ACTIONS = [
       ownerVoice: '무대 위에서 손끝으로 마음을 잇는 크루분들의 열정에 큰 감동을 받았습니다. 멋진 수어 통역 감사드립니다.'
     }],
 
-  ['다문화 가정 한글 교실', '교육', IMG.book, '경기도 화성시', 'ACTIVE', 4, 9,
+  ['다문화 가정 한글 교실', '교육', IMG.edu, '경기도 화성시', 'ACTIVE', 4, 9,
     [['한글 선생님', 'PERSON', 'R', 3, 6, '명', 'ANY']], 1,
     {
       description: '화성시 다문화가족지원센터에서 이주 여성 및 다문화 자녀들을 위해 기초 한글 자모음 읽기와 생활 한국어 회화를 친절하게 알려줄 자원교사를 모집합니다.',
       notice: '친절하고 또박또박 발음해 주실 분이면 충분합니다. 교재와 플래시 카드는 센터에 준비되어 있습니다.'
     }],
 
-  ['시니어 컴퓨터 교실 보조', '교육', IMG.senior, '서울특별시 구로구 디지털로', 'ACTIVE', 8, 11,
+  ['시니어 컴퓨터 교실 보조', '교육', IMG.senior_smartphone, '서울특별시 구로구 디지털로', 'ACTIVE', 8, 11,
     [['보조 강사', 'PERSON', 'M', 4, null, '명', 'ANY']], 1,
     {
       description: '구로 디지털단지 평생학습관에서 어르신 컴퓨터 기초반(한글 문서 작성, 인터넷 검색) 수업 중 마우스 조작과 타자에 서투신 어르신 옆에서 1:1로 실습을 도와드립니다.',
@@ -482,7 +577,7 @@ const ACTIONS = [
       comments: ['빗물받이마다 담배꽁초가 정말 많았는데 수고 많으셨습니다.', '배수구 뚜껑 들어올리는 요령 덕분에 금방 끝났네요.']
     }],
 
-  ['꿈나무 청소년 파이썬 코딩 멘토링', '교육', IMG.kids, '서울특별시 금천구 가산디지털로', 'ACTIVE', 2, 0,
+  ['꿈나무 청소년 파이썬 코딩 멘토링', '교육', IMG.study, '서울특별시 금천구 가산디지털로', 'ACTIVE', 2, 0,
     [['코딩 멘토', 'PERSON', 'R', 2, 4, '명', 'ANY']], 1,
     {
       isLazySync: true,
@@ -492,7 +587,7 @@ const ACTIONS = [
     }],
 
   // 4. ACTIVE 미래 활동 예정 (DEMO Host 1개)
-  ['어르신을 위한 스마트폰 기초 교실', '교육', IMG.senior, '서울특별시 광진구 자양로', 'ACTIVE', 3, 5,
+  ['어르신을 위한 스마트폰 기초 교실', '교육', IMG.senior_smartphone, '서울특별시 광진구 자양로', 'ACTIVE', 3, 5,
     [['강사 보조', 'PERSON', 'R', 3, 6, '명', 'ANY']], 1,
     {
       owner: 'DEMO',
@@ -521,7 +616,7 @@ const ACTIONS = [
     }],
 
   // 6. ACTIVE 모집 마감 + 활동 예정 (5개)
-  ['독거 어르신 주거환경 도배 봉사', '노인', IMG.senior, '서울특별시 영등포구 도신로', 'ACTIVE', 5, 4,
+  ['독거 어르신 주거환경 도배 봉사', '노인', IMG.senior_wallpaper, '서울특별시 영등포구 도신로', 'ACTIVE', 5, 4,
     [['도배 도우미', 'PERSON', 'R', 4, 6, '명', 'MALE']], 5,
     {
       description: '영등포구 노후 다세대 주택에 거주하시는 독거 어르신 댁의 곰팡이 핀 벽지를 뜯어내고 친환경 도배지로 교체해 드립니다.',
@@ -529,7 +624,7 @@ const ACTIONS = [
       comments: ['모집 마감되었네요. 주말에 안전하게 도배 마무리해요!']
     }],
 
-  ['시각장애인 마라톤 동반 주자', '장애', IMG.community, '서울특별시 송파구 올림픽로', 'ACTIVE', 6, 5,
+  ['시각장애인 마라톤 동반 주자', '장애', IMG.guide_runner, '서울특별시 송파구 올림픽로', 'ACTIVE', 6, 5,
     [['가이드 러너', 'PERSON', 'R', 3, 5, '명', 'ANY']], 6,
     {
       description: '올림픽공원 평화의 광장에서 시각장애인 러너의 눈이 되어 고무 끈을 잡고 함께 페이스를 맞추어 5km를 달리는 가이드 러너 봉사입니다.',
@@ -577,7 +672,7 @@ const ACTIONS = [
       notice: '행사장 안내 및 질서 유지를 함께 진행합니다.'
     }],
 
-  ['어르신 말벗 및 네일아트 봉사', '노인', IMG.senior, '서울특별시 강서구 강서로', 'ACTIVE', 3, 8,
+  ['어르신 말벗 및 네일아트 봉사', '노인', IMG.senior_nail_art, '서울특별시 강서구 강서로', 'ACTIVE', 3, 8,
     [['네일아트 봉사', 'PERSON', 'R', 2, 4, '명', 'FEMALE']], 1,
     {
       description: '강서구 경로당 어르신들께 예쁜 매니큐어를 발라드리고 손 마사지를 해드리며 소녀 시절 이야기로 꽃을 피웁니다.',
@@ -598,7 +693,7 @@ const ACTIONS = [
       notice: '장화와 방수복이 구비되어 있습니다. 오염되어도 괜찮은 옷을 입고 오세요.'
     }],
 
-  ['도심 속 미세먼지 저감 쌈지숲 조성', '환경', IMG.garden, '서울특별시 강남구 강남대로', 'ACTIVE', 5, 10,
+  ['도심 속 미세먼지 저감 쌈지숲 조성', '환경', IMG.tree, '서울특별시 강남구 강남대로', 'ACTIVE', 5, 10,
     [['식재 봉사자', 'PERSON', 'M', 10, null, '명', 'ANY'], ['원예용 흙', 'GOODS', 'M', 30, null, '포', 'ANY']], 1,
     {
       description: '강남대로 빌딩 숲 자투리 공간에 공기 정화 능력이 뛰어난 회양목과 산철쭉을 심어 작은 녹지 쉼터를 조성합니다.',
@@ -612,28 +707,28 @@ const ACTIONS = [
       notice: '강의 PPT 템플릿과 워크시트가 제공됩니다.'
     }],
 
-  ['장애인 볼링 동아리 활동 보조', '장애', IMG.community, '대전광역시 서구 둔산로', 'ACTIVE', 3, 8,
+  ['장애인 볼링 동아리 활동 보조', '장애', IMG.bowling, '대전광역시 서구 둔산로', 'ACTIVE', 3, 8,
     [['투구 보조', 'PERSON', 'R', 3, 6, '명', 'ANY']], 1,
     {
       description: '대전 둔산동 볼링장에서 지체장애인 동호회 분들의 볼링공 선택과 투구 레인 이동, 스코어 기록을 즐겁게 보조합니다.',
       notice: '볼링화 대여료는 센터에서 지원합니다.'
     }],
 
-  ['소외계층을 위한 따뜻한 제빵 나눔', '지역사회', IMG.food, '대구광역시 중구 달구벌대로', 'ACTIVE', 2, 5,
+  ['소외계층을 위한 따뜻한 제빵 나눔', '지역사회', IMG.cooking, '대구광역시 중구 달구벌대로', 'ACTIVE', 2, 5,
     [['제빵 봉사', 'PERSON', 'R', 4, 6, '명', 'ANY'], ['밀가루', 'GOODS', 'M', 50, null, 'kg', 'ANY']], 1,
     {
       description: '대구 적십자 나눔터에서 단팥빵과 카스텔라 200개를 직접 반죽하고 오븐에 구워 당일 복지관에 배달합니다.',
       notice: '위생모와 제빵 앞치마를 착용하고 진행합니다.'
     }],
 
-  ['외국인 유학생 한국어 대화 친구', '교육', IMG.book, '서울특별시 동대문구 이문로', 'ACTIVE', 1, 9,
+  ['외국인 유학생 한국어 대화 친구', '교육', IMG.edu, '서울특별시 동대문구 이문로', 'ACTIVE', 1, 9,
     [['대화 친구', 'PERSON', 'M', 5, null, '명', 'ANY']], 1,
     {
       description: '동대문구 대학가 인근에서 외국인 교환학생들과 카페에 모여 한국의 대학 문화와 일상 줄임말, 생활 회화를 나눕니다.',
       notice: '음료 1잔이 기본 제공됩니다.'
     }],
 
-  ['도심 길고양이 급식소 순찰 및 관리', '동물', IMG.animal, '서울특별시 관악구 신림로', 'ACTIVE', 6, 12,
+  ['도심 길고양이 급식소 순찰 및 관리', '동물', IMG.cat, '서울특별시 관악구 신림로', 'ACTIVE', 6, 12,
     [['급식소 관리', 'PERSON', 'M', 4, null, '명', 'ANY'], ['캔 간식', 'GOODS', 'M', 60, null, '캔', 'ANY']], 1,
     {
       description: '관악구 주택가 골목길의 지정 길고양이 급식소 6곳을 돌며 밥그릇을 세척하고 신선한 사료와 캔 간식을 채웁니다.',
@@ -654,7 +749,7 @@ const ACTIONS = [
       notice: '아이들과 눈높이를 맞추고 공감해 주실 분이면 충분합니다.'
     }],
 
-  ['시니어 디지털 키오스크 실습 지도', '노인', IMG.senior, '광주광역시 북구 첨단과기로', 'ACTIVE', 2, 7,
+  ['시니어 디지털 키오스크 실습 지도', '노인', IMG.senior_kiosk, '광주광역시 북구 첨단과기로', 'ACTIVE', 2, 7,
     [['실습 지도자', 'PERSON', 'M', 4, null, '명', 'ANY']], 1,
     {
       description: '광주 북구 평생교육관에서 패스트푸드점, 병원, 무인 발급기 키오스크 화면을 가상 태블릿으로 연습시켜 드립니다.',
@@ -676,7 +771,7 @@ const ACTIONS = [
     }],
 
   // 8. ENDED 6개 (조기 종료 3개 + 정상 종료 3개)
-  ['북한산 둘레길 정비 및 숲 가꾸기', '환경', IMG.env, '서울특별시 강북구 삼양로', 'ENDED', 12, -4,
+  ['북한산 둘레길 정비 및 숲 가꾸기', '환경', IMG.tree, '서울특별시 강북구 삼양로', 'ENDED', 12, -4,
     [['정리 봉사자', 'PERSON', 'R', 4, 8, '명', 'ANY']], 1,
     {
       owner: 'DEMO',
@@ -685,7 +780,7 @@ const ACTIONS = [
       comments: ['안전이 최우선이죠! 비가 너무 많이 와서 고생 많으셨습니다.', '다음 맑은 날에 꼭 다시 모여요!']
     }],
 
-  ['벽화 골목길 보수 및 페인트 칠', '지역사회', IMG.community, '인천광역시 중구 신포로', 'ENDED', 15, -6,
+  ['벽화 골목길 보수 및 페인트 칠', '지역사회', IMG.mural, '인천광역시 중구 신포로', 'ENDED', 15, -6,
     [['페인트 도우미', 'PERSON', 'R', 3, 6, '명', 'ANY'], ['방수 페인트', 'GOODS', 'M', 10, null, '통', 'ANY']], 1,
     {
       earlyEndReason: '도료 공급 문제 및 기온 급강하로 작업을 일찍 마쳤습니다.',
@@ -709,7 +804,7 @@ const ACTIONS = [
       comments: ['아이들이 숲에서 너무 신나게 놀았어요. 결과 기대됩니다!', '인솔 선생님들도 정말 감사하다고 전하셨어요.']
     }],
 
-  ['장애인 복지관 나들이 동행 봉사', '장애', IMG.community, '서울특별시 노원구 한글비석로', 'ENDED', 18, -4,
+  ['장애인 복지관 나들이 동행 봉사', '장애', IMG.wheelchair, '서울특별시 노원구 한글비석로', 'ENDED', 18, -4,
     [['나들이 보조', 'PERSON', 'M', 5, null, '명', 'ANY']], 1,
     {
       demoCrew: 'AFTER_ACTION', earlyEndReason: null,
@@ -717,7 +812,7 @@ const ACTIONS = [
       comments: ['어르신 휠체어 밀어드리며 기분 좋은 산책이었습니다.', '소감 얼른 작성할게요!']
     }],
 
-  ['시니어 기억지킴 치매예방 교실', '노인', IMG.senior, '경기도 부천시 소사구', 'ENDED', 20, -5,
+  ['시니어 기억지킴 치매예방 교실', '노인', IMG.senior_boardgame, '경기도 부천시 소사구', 'ENDED', 20, -5,
     [['교구 도우미', 'PERSON', 'R', 2, 4, '명', 'ANY'], ['인지놀이 퍼즐', 'GOODS', 'M', 20, null, '세트', 'ANY']], 1,
     {
       earlyEndReason: null,
@@ -726,7 +821,7 @@ const ACTIONS = [
     }],
 
   // 9. COMPLETED 16개
-  ['종로 독거 어르신 사랑의 도시락 나눔', '노인', IMG.food, '서울특별시 종로구 율곡로', 'COMPLETED', 28, -18,
+  ['종로 독거 어르신 사랑의 도시락 나눔', '노인', IMG.senior_lunchbox, '서울특별시 종로구 율곡로', 'COMPLETED', 28, -18,
     [['조리 및 포장', 'PERSON', 'R', 4, 6, '명', 'ANY'], ['보온 도시락통', 'GOODS', 'M', 50, null, '개', 'ANY']], 1,
     {
       owner: 'DEMO',
@@ -741,7 +836,7 @@ const ACTIONS = [
       comments: ['도시락 반찬 구성이 정말 알차서 어르신들이 참 좋아하셨어요.', '다음 나눔 때도 꼭 불러주세요!']
     }],
 
-  ['발달장애 아동 미술 치료 보조', '장애', IMG.kids, '서울특별시 마포구 월드컵북로', 'COMPLETED', 32, -20,
+  ['발달장애 아동 미술 치료 보조', '장애', IMG.art_therapy, '서울특별시 마포구 월드컵북로', 'COMPLETED', 32, -20,
     [['미술 보조', 'PERSON', 'R', 3, 5, '명', 'ANY'], ['스케치북과 크레파스', 'GOODS', 'M', 30, null, '세트', 'ANY']], 1,
     {
       demoCrew: 'ACTUALLY_PARTICIPATED',
@@ -752,7 +847,7 @@ const ACTIONS = [
       comments: ['아이들의 그림 솜씨가 대단해서 깜짝 놀랐습니다!', '준비해주신 다과도 맛있게 잘 먹었습니다.']
     }],
 
-  ['영도 노후 주거지 희망 도색 나눔', '지역사회', IMG.community, '부산광역시 영도구 절영로', 'COMPLETED', 35, -24,
+  ['영도 노후 주거지 희망 도색 나눔', '지역사회', IMG.mural, '부산광역시 영도구 절영로', 'COMPLETED', 35, -24,
     [['페인트칠 봉사', 'PERSON', 'R', 5, 8, '명', 'ANY']], 1,
     {
       owner: 'DEMO',
@@ -763,7 +858,7 @@ const ACTIONS = [
       comments: ['다들 열정적으로 임해주셔서 힘든 줄도 모르고 칠했네요 ㅎㅎ', '전후 사진 비교해보니 정말 뿌듯합니다!']
     }],
 
-  ['용인 유기묘 보호소 대청소 및 소독', '동물', IMG.animal, '경기도 용인시 처인구', 'COMPLETED', 40, -28,
+  ['용인 유기묘 보호소 대청소 및 소독', '동물', IMG.cat, '경기도 용인시 처인구', 'COMPLETED', 40, -28,
     [['청소 도우미', 'PERSON', 'R', 6, 10, '명', 'ANY']], 1,
     {
       isShortfall: true,
@@ -783,7 +878,7 @@ const ACTIONS = [
       comments: ['바람 하나 안 들어오게 꼼꼼히 막아서 마음이 놓이네요.']
     }],
 
-  ['안양천 줍깅 및 수질 정화 활동', '환경', IMG.env, '경기도 안양시 만안구', 'COMPLETED', 34, -22,
+  ['안양천 줍깅 및 수질 정화 활동', '환경', IMG.river, '경기도 안양시 만안구', 'COMPLETED', 34, -22,
     [['플로깅 봉사', 'PERSON', 'M', 12, null, '명', 'ANY']], 1,
     {
       description: '안양천 산책로와 둔치 3km 구간을 걸으며 버려진 캔과 비닐 120kg을 수거하고 분리배출을 완료했습니다.',
@@ -792,7 +887,7 @@ const ACTIONS = [
       comments: ['날씨는 쌀쌀했지만 땀 흘리며 걸으니 상쾌했습니다!']
     }],
 
-  ['폐플라스틱 병뚜껑 업사이클링 키링 제작', '환경', IMG.env, '서울특별시 종로구 대학로', 'COMPLETED', 38, -26,
+  ['폐플라스틱 병뚜껑 업사이클링 키링 제작', '환경', IMG.recycle, '서울특별시 종로구 대학로', 'COMPLETED', 38, -26,
     [['제작 보조', 'PERSON', 'R', 4, 6, '명', 'ANY'], ['플라스틱 병뚜껑', 'GOODS', 'M', 500, null, '개', 'ANY']], 1,
     {
       demoCrew: 'ACTUALLY_PARTICIPATED',
@@ -812,7 +907,7 @@ const ACTIONS = [
       comments: ['상인 어르신들이 정말 좋은 취지라고 칭찬 많이 해주셨어요!']
     }],
 
-  ['사랑의 연탄 나눔 봉사', '지역사회', IMG.food, '서울특별시 성북구 정릉로', 'COMPLETED', 48, -35,
+  ['사랑의 연탄 나눔 봉사', '지역사회', IMG.briquette, '서울특별시 성북구 정릉로', 'COMPLETED', 48, -35,
     [['연탄 배달', 'PERSON', 'M', 15, null, '명', 'ANY'], ['연탄', 'GOODS', 'M', 1000, null, '장', 'ANY']], 1,
     {
       owner: 'DEMO',
@@ -840,7 +935,7 @@ const ACTIONS = [
       comments: ['아이들의 날카로운 질문에 오히려 제가 더 많은 자극을 받았습니다.']
     }],
 
-  ['시니어 보드게임 인지발달 교실', '노인', IMG.senior, '대전광역시 유성구 온천로', 'COMPLETED', 41, -29,
+  ['시니어 보드게임 인지발달 교실', '노인', IMG.senior_boardgame, '대전광역시 유성구 온천로', 'COMPLETED', 41, -29,
     [['게임 보조', 'PERSON', 'R', 3, 5, '명', 'ANY']], 1,
     {
       description: '유성구 경로당 어르신 20여 명과 함께 기억력과 소근육 발달에 좋은 루미큐브, 젠가 게임을 즐겁게 진행했습니다.',
@@ -869,7 +964,7 @@ const ACTIONS = [
       comments: ['처음엔 부끄러워하던 아이들이 끝날 땐 품에 안겨 안 놔주더라고요 ㅠㅠ']
     }],
 
-  ['은퇴 시니어를 위한 유튜브 영상 편집 기초', '교육', IMG.senior, '서울특별시 양천구 신목로', 'COMPLETED', 50, -38,
+  ['은퇴 시니어를 위한 유튜브 영상 편집 기초', '교육', IMG.senior_smartphone, '서울특별시 양천구 신목로', 'COMPLETED', 50, -38,
     [['실습 멘토', 'PERSON', 'R', 3, 6, '명', 'ANY']], 1,
     {
       description: '양천구 복지관에서 은퇴 시니어 15분을 대상으로 스마트폰 숏폼 영상 자막 넣기와 컷 편집을 1:1로 지도해 드렸습니다.',
@@ -910,7 +1005,7 @@ const ACTIONS = [
       cancelReason: '시공 자재 수급 지연 및 기상 악화(한파)로 인하여 부득이 취소되었습니다.'
     }],
 
-  ['어르신 야외 봄꽃 나들이 동행', '노인', IMG.senior, '서울특별시 영등포구 여의서로', 'CANCELLED', 8, 4,
+  ['어르신 야외 봄꽃 나들이 동행', '노인', IMG.wheelchair, '서울특별시 영등포구 여의서로', 'CANCELLED', 8, 4,
     [['휠체어 동행', 'PERSON', 'M', 8, null, '명', 'ANY']], 1,
     {
       description: '여의도 윤중로 봄꽃길을 어르신들과 함께 산책하며 꽃구경과 기념사진을 촬영해 드리는 나들이 행사였습니다.',
@@ -1170,7 +1265,7 @@ async function seed() {
       ? null
       : (meta?.description ?? `${title}. 처음이신 분도 담당자가 함께 안내해드리니 편하게 참여하세요.`);
 
-    const imageUrls = image ? [image] : [];
+    const { imageUrls, thumbnailIndex } = getActionImages(image, category, idx);
     const noticeText = isDraft && meta?.draftLevel <= 2
       ? null
       : (meta?.notice ?? '편한 옷차림으로 와주세요. 물과 간식은 준비되어 있습니다.');
@@ -1185,7 +1280,7 @@ async function seed() {
         category,
         categories: EXTRA_CATEGORY[title] ? [category, EXTRA_CATEGORY[title]] : [category],
         image_urls: imageUrls,
-        thumbnail_index: 0,
+        thumbnail_index: thumbnailIndex,
         address: isDraft && meta?.draftLevel <= 2 ? null : address,
         place_name: isDraft && meta?.draftLevel <= 2 ? null : placeName,
         notice: noticeText,
