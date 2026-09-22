@@ -17,6 +17,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
 import { LIMITS, UPLOAD, type NotificationType } from '@/lib/constants';
 import { getBioValidationError } from '@/lib/utils/profile-validation';
+import { getActionItemsError } from '@/lib/utils/action-items-validation';
 
 type DB = SupabaseClient<Database>;
 
@@ -582,15 +583,13 @@ export async function saveActionItems(
   //
   //   공개할 때는 항목이 하나 이상 있어야 하므로, 그때만 requireAtLeastOne 을 넘기세요.
   //   「저장은 되고, 공개는 막힌다」 — 결과의 저장/공개를 나눈 규칙 14 와 같은 모양입니다.
-  if (items.length === 0 && opts?.requireAtLeastOne)
-    return { ok: false, message: '모집 항목을 하나 이상 추가해주세요.' };
-
-  for (const it of items) {
-    if (it.targetType === 'RANGE' && (it.maxAllowed ?? null) === null)
-      return { ok: false, message: `「${it.name}」의 최대 인원을 입력해주세요.` };
-    if (it.targetType === 'RANGE' && (it.maxAllowed as number) < it.minRequired)
-      return { ok: false, message: `「${it.name}」의 최대 인원이 최소보다 작습니다.` };
-  }
+  //
+  //   검사는 `lib/utils/action-items-validation.ts` 로 떼어냈습니다 (2026-09-22).
+  //   이 파일은 `@/` 별칭을 쓰기 때문에 Node 테스트 러너가 import 하지 못해서,
+  //   분기를 지키는 테스트를 붙일 수가 없었습니다. 순수 함수로 빼서 붙였습니다
+  //   (`tests/action-items-save.test.ts`).
+  const 검사 = getActionItemsError(items, opts);
+  if (검사) return { ok: false, message: 검사 };
 
   // ★ 지우기 실패를 삼키지 마세요. (2026-09-17)
   //   전에는 반환값을 안 받았습니다. 항목이 0개인 경로에서는 뒤에 insert 가 없어서
