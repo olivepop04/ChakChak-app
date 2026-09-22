@@ -261,8 +261,20 @@ export function ActionCard({
         </div>
 
         {/* 썸네일 — 액션 상세페이지처럼 뷰포트/앱쉘 좌우 여백 없이 꽉 채우며 세로 높이는 245px 고정.
-            사진 여러 장은 ActionGallery(스와이프+점, 상세 화면과 공유)가 그린다 — fill로 245px에 맞춤 */}
-        <div className="relative -mx-5 h-[245px] overflow-hidden bg-neutral-100">
+            사진 여러 장은 ActionGallery(스와이프+점, 상세 화면과 공유)가 그린다 — fill로 245px에 맞춤.
+
+            ★ 이 자리를 div 로 되돌리면 스와이프가 죽습니다 (민호, 2026-09-22 실측).
+            바로 위 본문 래퍼가 pointer-events-none 이라 그 안의 갤러리 스크롤러도
+            히트테스트에서 빠집니다. pointer-events-auto 만 붙이면 반대로 사진 탭이 죽으므로,
+            9/22 결정(사진칸도 상세 상단으로 이동)을 지키기 위해 이 자리를 Link 로 둡니다 —
+            가로 드래그는 안쪽 스크롤러가 먹고, 탭은 이 Link 가 받아 둘이 같이 됩니다.
+            aria-hidden 은 위 덮개 링크가 이미 sr-only 제목을 들고 있어 중복 안내를 막기 위함. */}
+        <Link
+          href={`/action/${action.id}`}
+          tabIndex={-1}
+          aria-hidden="true"
+          className="pointer-events-auto relative -mx-5 block h-[245px] overflow-hidden bg-neutral-100"
+        >
           <ActionGallery
             urls={action.imageUrls}
             thumbnailIndex={action.thumbnailIndex}
@@ -278,7 +290,7 @@ export function ActionCard({
               />
             </div>
           )}
-        </div>
+        </Link>
 
         <div className="flex flex-col gap-2 pt-3 pb-4">
           {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
