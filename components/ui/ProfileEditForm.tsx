@@ -261,7 +261,7 @@ export function ProfileEditForm({
                   }`}
                 >
                   <span
-                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                    className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
                       enabled ? 'left-6' : 'left-1'
                     }`}
                   />

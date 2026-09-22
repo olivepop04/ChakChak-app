@@ -15,7 +15,7 @@ export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTML
       <input
         ref={ref}
         className={cn(
-          'min-h-11 rounded-xl border border-[#E0E0E0] px-4 py-3 text-body outline-none transition-colors focus:border-[#333333]',
+          'min-h-11 rounded-xl border border-hairline px-4 py-3 text-body outline-none transition-colors focus:border-hairline-focus',
           className,
         )}
         {...props}

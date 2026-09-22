@@ -84,7 +84,7 @@ export function ActionCard({
     return (
       <article
         className={cn(
-          'relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md',
+          'relative overflow-hidden rounded-xl border border-neutral-200 bg-white',
           className,
         )}
       >
@@ -290,7 +290,7 @@ export function ActionCard({
               <StatusBadge
                 status={action.status}
                 recruitClosed={isRecruitClosed}
-                className="bg-white/90 shadow-xs"
+                className="bg-white/90"
               />
             </div>
           )}

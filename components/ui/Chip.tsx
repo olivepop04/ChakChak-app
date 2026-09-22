@@ -64,7 +64,7 @@ export function Chip({
         'flex-1 justify-center',
         tone === 'neutral' &&
         (selected
-          ? 'bg-white font-bold text-brand shadow-sm'
+          ? 'bg-white font-bold text-brand'
           : 'bg-transparent font-medium text-neutral-500 hover:text-neutral-700'),
         className,
       )}

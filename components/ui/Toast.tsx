@@ -65,7 +65,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             className={cn(
-              'pointer-events-auto w-full rounded-xl px-4 py-3 text-label font-medium shadow-lg text-center',
+              'pointer-events-auto w-full rounded-xl px-4 py-3 text-label font-medium text-center',
               'animate-[toast-in_180ms_ease-out]',
               TONE[t.tone],
             )}
