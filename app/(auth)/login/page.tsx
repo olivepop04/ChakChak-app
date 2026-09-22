@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
 import { getLoginNotice } from '@/lib/utils/auth-notice';
@@ -74,25 +75,23 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label className="flex flex-col gap-1.5">
           <FieldLabel>이메일</FieldLabel>
-          <input
+          <Input
             type="email"
             required
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900"
           />
         </label>
 
         <label className="flex flex-col gap-1.5">
           <FieldLabel>비밀번호</FieldLabel>
-          <input
+          <Input
             type="password"
             required
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900"
           />
         </label>
 

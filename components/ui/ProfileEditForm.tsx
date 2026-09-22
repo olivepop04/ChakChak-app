@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
@@ -179,10 +180,9 @@ export function ProfileEditForm({
       {/* 수정 가능 항목 */}
       <label className="flex flex-col gap-1.5">
         <FieldLabel>닉네임</FieldLabel>
-        <input
+        <Input
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          className="min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900"
         />
       </label>
 

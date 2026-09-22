@@ -7,6 +7,7 @@
  */
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/server';
 import { getActionDetail } from '@/lib/queries/actions';
 import { getActionCrew } from '@/lib/queries/participations';
@@ -351,6 +352,7 @@ export default async function ActionDetailPage({
           crewCount={action.crewCount}
           members={summaryMembers}
           canViewCrew={isCrewMember}
+          status={action.status}
         />
       </div>
 
@@ -365,12 +367,9 @@ export default async function ActionDetailPage({
       <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
         {cta.type === 'host_ended_write_result' ? (
           <div className="flex w-full items-center gap-2">
-            <Link
-              href={cta.chatHref}
-              className="flex min-h-13 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-neutral-300 bg-white px-2 py-3 text-xs sm:text-sm font-medium text-neutral-800 shadow-sm transition-colors active:bg-neutral-50 whitespace-nowrap"
-            >
+            <Button href={cta.chatHref} variant="secondary" size="md" className="flex-1">
               <svg
-                className="h-4 w-4 flex-none text-neutral-700"
+                className="h-4 w-4 flex-none"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -384,23 +383,13 @@ export default async function ActionDetailPage({
                 />
               </svg>
               <span>CREW CHAT</span>
-            </Link>
-            <Link
-              href={cta.writeHref}
-              className="flex min-h-13 flex-1 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-neutral-900 px-2 py-3 text-xs sm:text-sm font-medium text-white shadow-sm transition-colors active:bg-neutral-800 whitespace-nowrap"
-            >
-              <span>결과 작성</span>
-            </Link>
+            </Button>
+            <Button href={cta.writeHref} size="md" className="flex-1">
+              결과 작성
+            </Button>
           </div>
         ) : cta.type === 'link' ? (
-          <Link
-            href={cta.href}
-            className={
-              cta.isCrewChat
-                ? 'flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
-                : 'flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[15px] font-bold text-white shadow-sm transition-colors active:bg-neutral-800'
-            }
-          >
+          <Button href={cta.href} size="lg" fullWidth>
             {cta.isCrewChat && (
               <svg
                 className="h-5 w-5 flex-none"
@@ -418,14 +407,11 @@ export default async function ActionDetailPage({
               </svg>
             )}
             <span>{cta.label}</span>
-          </Link>
+          </Button>
         ) : (
-          <button
-            disabled
-            className="flex min-h-13 w-full items-center justify-center cursor-not-allowed rounded-xl bg-neutral-200 py-3 text-[15px] font-semibold text-neutral-400"
-          >
+          <Button size="lg" fullWidth disabled>
             {cta.label}
-          </button>
+          </Button>
         )}
       </div>
     </main>

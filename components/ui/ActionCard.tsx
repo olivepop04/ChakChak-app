@@ -12,8 +12,10 @@
  */
 import Link from 'next/link';
 import { Calendar, MapPin } from 'lucide-react';
+import { ActionGallery } from '@/components/action/ActionGallery';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusBadge } from '@/components/ui/Badge';
+import { Chip } from '@/components/ui/Chip';
 import {
   CrewAnchorButton,
   LikeButton,
@@ -82,7 +84,7 @@ export function ActionCard({
     return (
       <article
         className={cn(
-          'relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md',
+          'relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md',
           className,
         )}
       >
@@ -117,17 +119,9 @@ export function ActionCard({
                   썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어난다. 2026-09-10 회의 */}
               <div className="mb-1.5 flex flex-wrap items-center gap-1">
                 {allCategories.map((c, i) => (
-                  <span
-                    key={c}
-                    className={cn(
-                      'inline-flex items-center whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-                      i === 0
-                        ? 'bg-[#00A56E] text-white'
-                        : 'border border-neutral-300 text-neutral-500',
-                    )}
-                  >
+                  <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0}>
                     {c}
-                  </span>
+                  </Chip>
                 ))}
               </div>
 
@@ -163,9 +157,8 @@ export function ActionCard({
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] min-[410px]:text-[11px] font-bold text-neutral-500">
                 <CrewAnchorButton
                   count={action.crewCount ?? 0}
-                  actionId={action.id}
-                  suffixLabel="명 참여 중"
-                  className="pointer-events-auto !min-h-0 !gap-1 !p-0 !text-[10px] min-[410px]:!text-[11px] !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
+                  suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
+                  className="!min-h-0 !gap-1 !p-0 !text-[10px] min-[410px]:!text-[11px] !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
                   iconClassName="h-3 w-3 shrink-0 text-neutral-400"
                 />
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
@@ -253,8 +246,8 @@ export function ActionCard({
 
       {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
       <div className="relative z-10 flex flex-col pointer-events-none">
-        {/* 작성자 + 공유 — 썸네일 위 줄 */}
-        <div className="flex items-center justify-between gap-2 pt-4 pb-2">
+        {/* 작성자 — 썸네일 위 줄 (공유는 좋아요·저장 옆으로 이동, 2026-09-22) */}
+        <div className="flex items-center gap-2 pt-4 pb-2">
           <Link
             href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
             onClick={(e) => e.stopPropagation()}
@@ -265,32 +258,37 @@ export function ActionCard({
               @{action.owner?.nickname ?? '호스트'}
             </span>
           </Link>
-
-          <ShareButton
-            actionId={action.id}
-            actionTitle={action.title}
-            count={action.shareCount ?? 0}
-            disabled={shareDisabled}
-            disabledReason={reactionDisabledReason}
-            className="pointer-events-auto shrink-0 !p-1.5"
-            iconClassName="h-4 w-4"
-          />
         </div>
 
-        {/* 썸네일 — 액션 상세페이지처럼 뷰포트/앱쉘 좌우 여백 없이 꽉 채우며 세로 높이는 245px 고정 */}
-        <div className="relative -mx-5 h-[245px] overflow-hidden bg-neutral-100">
-          {action.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={action.thumbnailUrl}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-              이미지 없음
-            </div>
-          )}
+        {/* 썸네일 — 액션 상세페이지처럼 뷰포트/앱쉘 좌우 여백 없이 꽉 채우며 세로 높이는 245px 고정.
+            사진 여러 장은 ActionGallery(스와이프+점, 상세 화면과 공유)가 그린다 — fill로 245px에 맞춤 */}
+
+        {/* ★ 이 자리를 div 로 되돌리면 스와이프가 죽습니다. 민호, 2026-09-22 실측.
+            바로 위 본문 래퍼가 pointer-events-none 이라 그 안의 갤러리 스크롤러도
+            히트테스트에서 빠집니다. 홈 카드 30개 전부 가로 스크롤이 0px 였고,
+            그중 24개는 사진이 2장 이상이라 **넘어가지도 않는 점을 그리고 있었습니다.**
+
+            그렇다고 pointer-events-auto 만 붙이면 반대로 사진 탭이 죽습니다(실측: 눌러도
+            안 움직임). 사진칸도 상세 상단으로 가야 한다는 게 9/22 결정이라(성은님 요청,
+            deaa1fc) 이 자리를 Link 로 둡니다 — 가로 드래그는 안쪽 스크롤러가 먹고,
+            탭은 이 Link 가 받아 둘이 같이 됩니다.
+            실측: 스와이프 375px · 점 off→ON · 탭하면 /action/… 로 이동.
+
+            aria-hidden 은 바로 위 덮개 링크(:251)가 이미 sr-only 제목을 들고 있어서,
+            스크린리더에 같은 링크가 두 번 읽히지 않게 하려는 것입니다.
+            상세 화면(fill 없는 쪽)은 pointer-events 가 auto 라 원래부터 잘 됐습니다. */}
+        <Link
+          href={`/action/${action.id}`}
+          tabIndex={-1}
+          aria-hidden="true"
+          className="pointer-events-auto relative -mx-5 block h-[245px] overflow-hidden bg-neutral-100"
+        >
+          <ActionGallery
+            urls={action.imageUrls}
+            thumbnailIndex={action.thumbnailIndex}
+            alt={action.title}
+            fill
+          />
           {showStatus && (
             <div className="absolute right-4 top-4 z-10">
               <StatusBadge
@@ -300,23 +298,15 @@ export function ActionCard({
               />
             </div>
           )}
-        </div>
+        </Link>
 
         <div className="flex flex-col gap-2 pt-3 pb-4">
           {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
           <div className="flex flex-wrap gap-1">
             {allCategories.map((c, i) => (
-              <span
-                key={c}
-                className={cn(
-                  'inline-flex h-[24px] items-center justify-center whitespace-nowrap rounded-full px-2.5 font-sans text-[13px] font-medium leading-none',
-                  i === 0
-                    ? 'bg-[#00A56E] text-white'
-                    : 'border border-neutral-300 text-neutral-600',
-                )}
-              >
+              <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0}>
                 {c}
-              </span>
+              </Chip>
             ))}
           </div>
 
@@ -332,12 +322,13 @@ export function ActionCard({
           )}
 
           {/* 참여인원 + 날짜 + 장소 — "활동에 대한 사실 정보"로 한 줄에 묶음 (좋아요·저장은 "내 반응"이라 아래 줄로 분리).
-              세 항목 전부 같은 굵기(medium)·13px 로 설정 */}
-          <div className="pointer-events-auto flex flex-wrap items-center gap-3 font-sans text-[13px] font-medium text-neutral-500">
+              세 항목 전부 같은 굵기(medium)·13px 로 설정.
+              2026-09-22: pointer-events-auto 제거 — 이 줄은 이제 클릭해도 카드 덮개 링크(상세페이지 상단)로 흘러가야 함.
+              참여인원 버튼도 더는 여기서 따로 안 눌리고 같이 흘러감(크루섹션 점프는 상세페이지 자체에서만 씀) */}
+          <div className="flex flex-wrap items-center gap-3 font-sans text-[13px] font-medium text-neutral-500">
             <CrewAnchorButton
               count={action.crewCount ?? 0}
-              actionId={action.id}
-              suffixLabel="명 참여 중"
+              suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
               className="!min-h-0 !gap-1 !p-0 !font-sans !text-[13px] !font-medium !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
               iconClassName="h-3.5 w-3.5 text-neutral-400"
             />
@@ -353,7 +344,8 @@ export function ActionCard({
             )}
           </div>
 
-          {/* 좋아요·저장 — "내 반응" 두 가지만. 참여인원은 위 정보줄로, 공유는 상단 작성자 줄로 이동 */}
+          {/* 좋아요·저장·공유 — "내 반응" 줄. 참여인원은 위 정보줄로.
+              공유는 원래 상단 작성자 줄에 있었는데 이 줄로 이동(2026-09-22), 같은 gap-3로 나열 */}
           <div className="pointer-events-auto mt-1 flex items-center gap-3 pt-1 text-xs tabular-nums text-neutral-500">
             <LikeButton
               actionId={action.id}
@@ -372,6 +364,15 @@ export function ActionCard({
               disabledReason={reactionDisabledReason}
               className="!inline-flex !items-center !gap-1.5 !p-0 !text-[13px] !font-medium !leading-none"
               iconClassName="!w-[20px] !h-[20px] shrink-0"
+            />
+            <ShareButton
+              actionId={action.id}
+              actionTitle={action.title}
+              count={action.shareCount ?? 0}
+              disabled={shareDisabled}
+              disabledReason={reactionDisabledReason}
+              className="!inline-flex !items-center !gap-1.5 !p-0 !text-[13px] !font-medium !leading-none"
+              iconClassName="!w-[17px] !h-[17px] shrink-0"
             />
           </div>
         </div>

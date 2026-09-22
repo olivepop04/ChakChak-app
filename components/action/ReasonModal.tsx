@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { cn } from '@/lib/utils/cn';
 
 interface ReasonModalProps {
   open: boolean;
@@ -16,6 +17,8 @@ interface ReasonModalProps {
     maxLength?: number;
   };
   confirmLabel: string;
+  /** 확인 버튼 색 — 기본 'default'는 포인트 그린(취소·나가기·로그아웃·조기종료), 'danger'는 되돌릴 수 없는 진짜 삭제만 */
+  confirmVariant?: 'default' | 'danger';
   cancelLabel?: string;
   busy?: boolean;
   onClose: () => void;
@@ -30,6 +33,7 @@ export function ReasonModal({
   warningTone = 'danger',
   reason,
   confirmLabel,
+  confirmVariant = 'default',
   cancelLabel = '취소',
   busy = false,
   onClose,
@@ -103,7 +107,7 @@ export function ReasonModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5"
       >
         <h2 id={titleId} className="text-[17px] font-bold text-neutral-900">
           {title}
@@ -164,7 +168,10 @@ export function ReasonModal({
             type="button"
             onClick={handleConfirm}
             disabled={isBusy || !canConfirm}
-            className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-red-600 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className={cn(
+              'flex min-h-11 flex-1 items-center justify-center rounded-xl py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40',
+              confirmVariant === 'danger' ? 'bg-danger' : 'bg-brand',
+            )}
           >
             {isBusy ? '처리 중...' : confirmLabel}
           </button>

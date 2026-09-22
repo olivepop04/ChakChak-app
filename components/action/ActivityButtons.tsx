@@ -11,11 +11,11 @@ import { createClient } from '@/lib/supabase/client';
 import { deleteDraft, cancelAction, endActionEarly } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
 import { ReasonModal } from '@/components/action/ReasonModal';
+import { Button } from '@/components/ui/Button';
 
 const btn =
   'inline-flex min-h-9 items-center justify-center rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors';
 const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
-const danger = `${btn} border border-red-200 bg-red-50 text-red-600`;
 
 /**
  * 참여 취소 버튼은 components/action/LeaveButton.tsx 로 옮겼습니다 (개발 B 담당).
@@ -46,14 +46,15 @@ export function DeleteDraftButton({ actionId }: { actionId: string }) {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={danger}>
+      <Button type="button" variant="danger" size="sm" onClick={() => setOpen(true)} disabled={busy}>
         삭제하기
-      </button>
+      </Button>
       <ReasonModal
         open={open}
         title="작성 중인 액션을 삭제할까요?"
         description="되돌릴 수 없습니다."
         confirmLabel="삭제 진행"
+        confirmVariant="danger"
         busy={busy}
         onClose={() => setOpen(false)}
         onConfirm={handle}

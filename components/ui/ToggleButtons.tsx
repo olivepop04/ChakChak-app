@@ -147,7 +147,7 @@ function DisabledNoticeModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="reaction-disabled-title"
-        className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
+        className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-5"
         onClick={(event) => event.stopPropagation()}
       >
         <span
@@ -297,7 +297,7 @@ export function LikeButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby="like-login-title"
-              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
+              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-5"
               onClick={(event) => event.stopPropagation()}
             >
               <span
@@ -468,7 +468,7 @@ export function SaveButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby="save-login-title"
-              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
+              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-5"
               onClick={(event) => event.stopPropagation()}
             >
               <span
@@ -593,13 +593,16 @@ export function CrewAnchorButton({
   const router = useRouter();
 
   function handleClick(e: React.MouseEvent) {
-    e.stopPropagation();
     const el = document.getElementById(targetId);
     if (el) {
+      e.stopPropagation();
       el.scrollIntoView({ behavior: 'smooth' });
     } else if (actionId) {
+      e.stopPropagation();
       router.push(`/action/${actionId}#${targetId}`);
     }
+    // 둘 다 없으면(예: 카드에서 크루섹션 없이 쓸 때) 아무것도 안 하고 클릭을
+    // 그대로 흘려보낸다 — 카드 덮개 링크로 넘어가 상세페이지 상단으로 이동
   }
 
   return (

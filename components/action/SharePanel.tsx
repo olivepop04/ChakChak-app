@@ -15,6 +15,7 @@ import { searchUsers } from '@/lib/queries/profiles';
 import { shareToUser } from '@/lib/mutations';
 import { UserList } from '@/components/ui/UserList';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { useToast } from '@/components/ui/Toast';
 import { LIMITS } from '@/lib/constants';
@@ -110,12 +111,12 @@ export function SharePanel({
         </div>
 
         <div className="flex gap-2">
-          <input
+          <Input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="이름 또는 닉네임 (2자 이상)"
-            className="min-h-11 flex-1 rounded-xl border border-neutral-300 px-4 py-3 text-[14px] outline-none focus:border-neutral-900"
+            className="flex-1"
           />
           <Button onClick={handleSearch} loading={searching}>
             검색
