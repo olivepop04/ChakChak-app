@@ -157,9 +157,8 @@ export function ActionCard({
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] min-[410px]:text-[11px] font-bold text-neutral-500">
                 <CrewAnchorButton
                   count={action.crewCount ?? 0}
-                  actionId={action.id}
                   suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
-                  className="pointer-events-auto !min-h-0 !gap-1 !p-0 !text-[10px] min-[410px]:!text-[11px] !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
+                  className="!min-h-0 !gap-1 !p-0 !text-[10px] min-[410px]:!text-[11px] !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
                   iconClassName="h-3 w-3 shrink-0 text-neutral-400"
                 />
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
@@ -303,11 +302,12 @@ export function ActionCard({
           )}
 
           {/* 참여인원 + 날짜 + 장소 — "활동에 대한 사실 정보"로 한 줄에 묶음 (좋아요·저장은 "내 반응"이라 아래 줄로 분리).
-              세 항목 전부 같은 굵기(medium)·13px 로 설정 */}
-          <div className="pointer-events-auto flex flex-wrap items-center gap-3 font-sans text-[13px] font-medium text-neutral-500">
+              세 항목 전부 같은 굵기(medium)·13px 로 설정.
+              2026-09-22: pointer-events-auto 제거 — 이 줄은 이제 클릭해도 카드 덮개 링크(상세페이지 상단)로 흘러가야 함.
+              참여인원 버튼도 더는 여기서 따로 안 눌리고 같이 흘러감(크루섹션 점프는 상세페이지 자체에서만 씀) */}
+          <div className="flex flex-wrap items-center gap-3 font-sans text-[13px] font-medium text-neutral-500">
             <CrewAnchorButton
               count={action.crewCount ?? 0}
-              actionId={action.id}
               suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
               className="!min-h-0 !gap-1 !p-0 !font-sans !text-[13px] !font-medium !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
               iconClassName="h-3.5 w-3.5 text-neutral-400"
