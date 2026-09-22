@@ -137,7 +137,7 @@ export function ActionCard({
                     />
                   </div>
                 )}
-                <h3 className="flex-1 min-w-[8rem] font-paperlogy text-[20px] font-bold leading-snug text-neutral-900 break-keep">
+                <h3 className="flex-1 min-w-[6rem] font-paperlogy text-[20px] font-bold leading-snug text-neutral-900 break-keep">
                   {action.title}
                 </h3>
               </div>
