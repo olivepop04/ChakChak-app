@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/ui/Avatar';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { useToast } from '@/components/ui/Toast';
+import type { ActionStatus } from '@/lib/constants';
 import type { UserSummary } from '@/lib/types/view';
 
 interface ActionCrewSectionProps {
@@ -11,6 +12,8 @@ interface ActionCrewSectionProps {
   crewCount: number;
   members: UserSummary[];
   canViewCrew: boolean;
+  /** ACTIVE만 "참여 중", 그 외(완료·종료·취소)는 "참여". 안 주면 기존처럼 "참여 중" */
+  status?: ActionStatus;
 }
 
 export function ActionCrewSection({
@@ -18,6 +21,7 @@ export function ActionCrewSection({
   crewCount,
   members,
   canViewCrew,
+  status,
 }: ActionCrewSectionProps) {
   const router = useRouter();
   const toast = useToast();
@@ -52,7 +56,7 @@ export function ActionCrewSection({
             </div>
           )}
           <span className="truncate text-[14px] font-semibold text-neutral-800">
-            {crewCount}명 참여 중
+            {crewCount}명 {status === undefined || status === 'ACTIVE' ? '참여 중' : '참여'}
           </span>
         </div>
         <span className="shrink-0 text-[13px] font-medium text-neutral-400 ml-2">

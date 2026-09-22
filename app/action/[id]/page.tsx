@@ -351,6 +351,7 @@ export default async function ActionDetailPage({
           crewCount={action.crewCount}
           members={summaryMembers}
           canViewCrew={isCrewMember}
+          status={action.status}
         />
       </div>
 

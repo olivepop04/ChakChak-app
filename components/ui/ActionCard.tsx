@@ -165,7 +165,7 @@ export function ActionCard({
                 <CrewAnchorButton
                   count={action.crewCount ?? 0}
                   actionId={action.id}
-                  suffixLabel="명 참여 중"
+                  suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
                   className="pointer-events-auto !min-h-0 !gap-1 !p-0 !text-[10px] min-[410px]:!text-[11px] !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
                   iconClassName="h-3 w-3 shrink-0 text-neutral-400"
                 />
@@ -333,7 +333,7 @@ export function ActionCard({
             <CrewAnchorButton
               count={action.crewCount ?? 0}
               actionId={action.id}
-              suffixLabel="명 참여 중"
+              suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
               className="!min-h-0 !gap-1 !p-0 !font-sans !text-[13px] !font-medium !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
               iconClassName="h-3.5 w-3.5 text-neutral-400"
             />
