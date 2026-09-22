@@ -30,6 +30,19 @@ export interface ActionCardData {
   categories: Category[];
   /** 대표 이미지 1장. 없으면 null → 컴포넌트가 대체 표시를 그린다 */
   thumbnailUrl: string | null;
+  /**
+   * 액션 이미지 전체 (최대 3장). 카드에서 좌우로 넘겨 보여줄 때 씁니다 (2026-09-22).
+   *
+   * `thumbnailUrl` 은 그대로 둡니다 — 한 장만 그리는 곳이 안 깨지게.
+   * 여러 장을 그릴 때는 `components/action/ActionGallery` 에 `urls`·`thumbnailIndex` 를
+   * 그대로 넘기면 됩니다. 그 컴포넌트가 대표 이미지를 맨 앞으로 재배치합니다.
+   *
+   * ★ 카드에서 2·3번째 이미지에는 `loading="lazy"` 를 꼭 붙이세요.
+   *   홈 피드가 20장이라 그냥 그리면 이미지 요청이 20 -> 최대 60개가 됩니다.
+   */
+  imageUrls: string[];
+  /** 대표로 지정된 이미지의 위치. `imageUrls` 와 함께 씁니다 */
+  thumbnailIndex: number;
   address: string | null;
   /** 장소 이름. 호스트가 직접 입력. 예) 신라목욕탕 */
   placeName: string | null;
