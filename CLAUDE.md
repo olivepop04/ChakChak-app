@@ -140,7 +140,19 @@ if (!res.ok) { toast(res.message, 'error'); scrollAndFocus(itemsSectionRef.curre
 
 > **`requireItems` 를 임시저장 경로에 넘기면 이 버그가 그대로 되살아납니다.**
 > `handleSave` 는 `saveDraft()`, `handleReview` 만 `saveDraft({ requireItems: true })` 입니다.
-> 이 분기를 지키는 테스트가 아직 없습니다.
+
+**이제 테스트가 지킵니다** — `tests/action-items-save.test.ts` (2026-09-22).
+**두 겹을 다 지킵니다.** 한쪽만 고쳐서는 안 고쳐졌던 버그라서요.
+
+| 무엇 | 어떻게 |
+|---|---|
+| 함수 — 빈 배열을 거절하지 않는다 | 검사를 `lib/utils/action-items-validation.ts` 의 순수 함수로 떼어내 직접 부릅니다 |
+| 화면 — 항목 0개에서도 함수를 부른다 | `ActionForm.tsx` 소스에 `items.length` 검사가 생기면 깨집니다 |
+| 임시저장·공개 경로가 갈려 있다 | `saveDraft()` / `saveDraft({ requireItems: true })` 를 각각 확인합니다 |
+
+`lib/mutations.ts` 는 `@/` 별칭을 써서 **Node 테스트 러너가 import 하지 못합니다.**
+그래서 검사만 별칭 없는 파일로 떼어냈습니다 — 다른 검사 로직도 테스트를 붙이려면 같은 방법을 쓰세요.
+**버그를 일부러 되살려 두 변이 모두 테스트가 깨지는 것을 확인했습니다.**
 
 **11. `profiles.skills` 는 `null` 과 빈 배열이 다릅니다**
 
@@ -250,8 +262,11 @@ const cta = getActionCta({
 **DRAFT 도 빠져 있었습니다** (2026-09-11). 호스트 갈래로 떨어져서
 「함께하는 크루와 이야기하기」 가 나왔는데, DRAFT 는 크루가 있을 수 없으니
 누르면 **빈 게시판**이 열렸습니다. 게다가 그 화면 안내가
-「완료된 액션이라 새 글을 쓸 수 없어요」 였습니다 — 위에는 「작성 중」 이라고 적혀 있는데요
-(`app/action/[id]/chat/page.tsx` 가 CANCELLED 와 그 밖만 나눕니다. 아직 그대로입니다).
+「완료된 액션이라 새 글을 쓸 수 없어요」 였습니다 — 위에는 「작성 중」 이라고 적혀 있는데요.
+
+**안내 문구는 그 뒤에 고쳐졌습니다** (2026-09-22 확인). `app/action/[id]/chat/page.tsx` 가
+DRAFT · CANCELLED · 그 밖을 각각 나누고, DRAFT 는 「아직 공개 전이라 크루가 없어요.」 입니다.
+**이 문서가 「아직 그대로」 라고 적어둔 채 남아 있었습니다** — 고쳤습니다.
 
 **16. 액션 카드 안에 「눌리거나 스와이프되는 것」 을 넣을 때는 `pointer-events-auto` 가 필요합니다** (2026-09-22).
 
