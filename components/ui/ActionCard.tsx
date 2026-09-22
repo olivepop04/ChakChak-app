@@ -11,6 +11,7 @@
  * 화면에서 직접 supabase 를 부르면 카드마다 모양이 달라진다.
  */
 import Link from 'next/link';
+import { Calendar, MapPin } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusBadge } from '@/components/ui/Badge';
 import {
@@ -21,6 +22,9 @@ import {
 } from '@/components/ui/ToggleButtons';
 import type { ActionCardData } from '@/lib/types/view';
 import { cn } from '@/lib/utils/cn';
+// 날짜 표시는 공용 함수를 쓴다 (CLAUDE.md 규칙) — 요일까지 나오는 "8월 30일 (토)" 형식.
+// 카드가 자체적으로 갖고 있던 formatDate(요일 없음)를 지우고 이걸로 통일했다 (2026-09-21).
+import { formatDate } from '@/lib/utils/date';
 
 interface ActionCardProps {
   action: ActionCardData;
@@ -31,12 +35,6 @@ interface ActionCardProps {
   /** 카드 아래에 덧붙일 내용. Activity 의 CTA 버튼 등 */
   footer?: React.ReactNode;
   className?: string;
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '날짜 미정';
-  const d = new Date(iso);
-  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
 
 export function ActionCard({
@@ -124,7 +122,7 @@ export function ActionCard({
                     className={cn(
                       'inline-flex items-center whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-medium',
                       i === 0
-                        ? 'bg-neutral-900 text-white'
+                        ? 'bg-[#00A56E] text-white'
                         : 'border border-neutral-300 text-neutral-500',
                     )}
                   >
@@ -145,7 +143,7 @@ export function ActionCard({
                     />
                   </div>
                 )}
-                <h3 className="flex-1 min-w-[8rem] text-[15px] font-bold leading-snug text-neutral-900 break-keep">
+                <h3 className="flex-1 min-w-[8rem] font-paperlogy text-[20px] font-bold leading-snug text-neutral-900 break-keep">
                   {action.title}
                 </h3>
               </div>
@@ -160,12 +158,29 @@ export function ActionCard({
             </div>
 
             <div className="mt-2 flex flex-col gap-1.5">
-              <p className="text-[11px] text-neutral-400">
-                {formatDate(action.activityStartAt)}
-                {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
-              </p>
+              {/* 참여인원 + 날짜 + 장소 — 세로형 카드와 같은 원칙(사실 정보는 한 줄, 아이콘 통일).
+                  2026-09-21 홈피드 개편에서 가로형에도 같이 반영 */}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] min-[410px]:text-[11px] font-bold text-neutral-500">
+                <CrewAnchorButton
+                  count={action.crewCount ?? 0}
+                  actionId={action.id}
+                  suffixLabel="명 참여 중"
+                  className="pointer-events-auto !min-h-0 !gap-1 !p-0 !text-[10px] min-[410px]:!text-[11px] !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
+                  iconClassName="h-3 w-3 shrink-0 text-neutral-400"
+                />
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  <Calendar className="h-3 w-3 shrink-0 text-neutral-400" aria-hidden="true" />
+                  {formatDate(action.activityStartAt)}
+                </span>
+                {action.address && (
+                  <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                    <MapPin className="h-3 w-3 shrink-0 text-neutral-400" aria-hidden="true" />
+                    {action.address.split(' ').slice(0, 2).join(' ')}
+                  </span>
+                )}
+              </div>
 
-              {/* 통계 + 아바타 — 고배율에서 한 줄에 못 담으면 통계가 아래로 내려가게 flex-wrap */}
+              {/* 아바타 + 좋아요·저장·공유 — 참여인원은 위로 옮겨서 이 셋만 남음. 고배율에서 한 줄에 못 담으면 아래로 내려가게 flex-wrap */}
               <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 w-full min-w-0 pt-2 mt-1.5 border-t border-neutral-100">
                 <Link
                   href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
@@ -178,14 +193,8 @@ export function ActionCard({
                   </span>
                 </Link>
 
-                {/* 메타 4종: 375px에서는 초슬림 밀착, 넓은 화면(sm)에서는 홈피드 규격으로 확장 */}
+                {/* 메타 3종: 375px에서는 초슬림 밀착, 넓은 화면(sm)에서는 홈피드 규격으로 확장 */}
                 <div className="flex items-center gap-0.5 min-[410px]:gap-1 sm:gap-1.5 shrink-0 ml-auto pointer-events-auto text-[10px] min-[410px]:text-[11px] sm:text-xs font-medium text-neutral-500">
-                  <CrewAnchorButton
-                    count={action.crewCount ?? 0}
-                    actionId={action.id}
-                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-[11px] sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
-                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
-                  />
                   <LikeButton
                     actionId={action.id}
                     initialLiked={action.likedByMe}
@@ -229,12 +238,13 @@ export function ActionCard({
   }
 
   // 기본 세로형 레이아웃 (variant === 'default')
+  // 2026-09-21 홈피드 개편: 작성자·공유를 썸네일 위로, 참여인원을 날짜·장소 줄로,
+  // 썸네일은 카드 좌우 여백을 벗어나 폭 전체로 채우고 모서리를 각지게 함
+  // (Day5 확정 "카드 테두리·그림자 없음"을 이 카드에도 같이 반영 — 엣지투엣지 썸네일이
+  //  카드 테두리와 함께 있으면 모서리에서 잘려 보여서, 실제로 함께 가야 하는 값이었음).
   return (
     <article
-      className={cn(
-        'relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md',
-        className,
-      )}
+      className={cn('relative bg-white', className)}
     >
       {/* 1. 카드 전체 클릭 시 액션 상세로 이동하는 투명 덮개 링크 */}
       <Link href={`/action/${action.id}`} className="absolute inset-0 z-0">
@@ -243,13 +253,38 @@ export function ActionCard({
 
       {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
       <div className="relative z-10 flex flex-col pointer-events-none">
-        <div className="relative w-full aspect-[16/10] overflow-hidden bg-neutral-100">
+        {/* 작성자 + 공유 — 썸네일 위 줄 */}
+        <div className="flex items-center justify-between gap-2 pt-4 pb-2">
+          <Link
+            href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
+            onClick={(e) => e.stopPropagation()}
+            className="pointer-events-auto flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-[13px] font-medium text-neutral-600 hover:underline active:opacity-70 transition-opacity"
+          >
+            <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
+            <span className="min-w-0 truncate text-[13px] font-medium text-neutral-600">
+              @{action.owner?.nickname ?? '호스트'}
+            </span>
+          </Link>
+
+          <ShareButton
+            actionId={action.id}
+            actionTitle={action.title}
+            count={action.shareCount ?? 0}
+            disabled={shareDisabled}
+            disabledReason={reactionDisabledReason}
+            className="pointer-events-auto shrink-0 !p-1.5"
+            iconClassName="h-4 w-4"
+          />
+        </div>
+
+        {/* 썸네일 — 액션 상세페이지처럼 뷰포트/앱쉘 좌우 여백 없이 꽉 채우며 세로 높이는 245px 고정 */}
+        <div className="relative -mx-5 h-[245px] overflow-hidden bg-neutral-100">
           {action.thumbnailUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={action.thumbnailUrl}
               alt=""
-              className="absolute inset-0 h-full w-full object-cover"
+              className="h-full w-full object-cover"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-neutral-400">
@@ -257,7 +292,7 @@ export function ActionCard({
             </div>
           )}
           {showStatus && (
-            <div className="absolute right-3 top-3 z-10">
+            <div className="absolute right-4 top-4 z-10">
               <StatusBadge
                 status={action.status}
                 recruitClosed={isRecruitClosed}
@@ -267,16 +302,16 @@ export function ActionCard({
           )}
         </div>
 
-        <div className="flex flex-col gap-2 p-4">
+        <div className="flex flex-col gap-2 pt-3 pb-4">
           {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
           <div className="flex flex-wrap gap-1">
             {allCategories.map((c, i) => (
               <span
                 key={c}
                 className={cn(
-                  'inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium',
+                  'inline-flex h-[24px] items-center justify-center whitespace-nowrap rounded-full px-2.5 font-sans text-[13px] font-medium leading-none',
                   i === 0
-                    ? 'bg-neutral-900 text-white'
+                    ? 'bg-[#00A56E] text-white'
                     : 'border border-neutral-300 text-neutral-600',
                 )}
               >
@@ -286,70 +321,58 @@ export function ActionCard({
           </div>
 
           {/* 고배율에서 잘리지 않게 말줄임 없이 전체 노출. 카드가 길어지는 건 감수 (배율 확대 사용자는 전부 보길 원함) */}
-          <h3 className="text-[15px] font-bold leading-snug text-neutral-900 break-keep">
+          <h3 className="font-paperlogy text-[20px] font-bold leading-snug text-neutral-900 break-keep">
             {action.title}
           </h3>
 
           {action.summary && (
-            <p className="text-[13px] leading-relaxed text-neutral-500">
+            <p className="font-sans text-[15px] font-medium leading-relaxed text-neutral-500">
               {action.summary}
             </p>
           )}
 
-          <p className="text-xs text-neutral-500">
-            {formatDate(action.activityStartAt)}
-            {action.address ? ` · ${action.address.split(' ').slice(0, 2).join(' ')}` : ''}
-          </p>
-
-          {/* 3. 인터랙티브 요소들 & 통계 4종
-              고배율에서 작성자 아이디가 잘리지 않게 하고(말줄임 제거), 한 줄에 못 담으면
-              flex-wrap 으로 통계 4종이 아래 줄로 내려가게 한다. 배율 감지는 필요 없다 —
-              글자가 커지면 자리가 모자라 자동으로 줄바꿈된다. */}
-          <div className="pointer-events-auto mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-2 border-t border-neutral-100 pt-3">
-            {/* 작성자 프로필 링크 */}
-            <Link
-              href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
-              onClick={(e) => e.stopPropagation()}
-              className="pointer-events-auto cursor-pointer flex items-center gap-1.5 min-w-0 flex-1 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
-            >
-              <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-              <span className="min-w-0 break-all text-xs text-neutral-600">
-                @{action.owner?.nickname ?? '호스트'}
+          {/* 참여인원 + 날짜 + 장소 — "활동에 대한 사실 정보"로 한 줄에 묶음 (좋아요·저장은 "내 반응"이라 아래 줄로 분리).
+              세 항목 전부 같은 굵기(medium)·13px 로 설정 */}
+          <div className="pointer-events-auto flex flex-wrap items-center gap-3 font-sans text-[13px] font-medium text-neutral-500">
+            <CrewAnchorButton
+              count={action.crewCount ?? 0}
+              actionId={action.id}
+              suffixLabel="명 참여 중"
+              className="!min-h-0 !gap-1 !p-0 !font-sans !text-[13px] !font-medium !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
+              iconClassName="h-3.5 w-3.5 text-neutral-400"
+            />
+            <span className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-[13px] font-medium text-neutral-500">
+              <Calendar className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
+              {formatDate(action.activityStartAt)}
+            </span>
+            {action.address && (
+              <span className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-[13px] font-medium text-neutral-500">
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
+                {action.address.split(' ').slice(0, 2).join(' ')}
               </span>
-            </Link>
+            )}
+          </div>
 
-            {/* 통계 4종 (참여인원, 좋아요, 저장, 공유) */}
-            <div className="pointer-events-auto flex items-center justify-start gap-1 shrink-0 text-xs tabular-nums text-neutral-500">
-              <CrewAnchorButton
-                count={action.crewCount ?? 0}
-                actionId={action.id}
-                className="px-1 py-0.5 text-xs gap-1"
-              />
-              <LikeButton
-                actionId={action.id}
-                initialLiked={action.likedByMe}
-                initialCount={action.likeCount ?? 0}
-                disabled={likeDisabled}
-                disabledReason={reactionDisabledReason}
-                className="px-1 py-0.5 text-xs gap-1"
-              />
-              <SaveButton
-                actionId={action.id}
-                initialSaved={action.savedByMe}
-                initialCount={action.saveCount ?? 0}
-                disabled={saveDisabled}
-                disabledReason={reactionDisabledReason}
-                className="px-1 py-0.5 text-xs gap-1"
-              />
-              <ShareButton
-                actionId={action.id}
-                actionTitle={action.title}
-                count={action.shareCount ?? 0}
-                disabled={shareDisabled}
-                disabledReason={reactionDisabledReason}
-                className="px-1 py-0.5 text-xs gap-1"
-              />
-            </div>
+          {/* 좋아요·저장 — "내 반응" 두 가지만. 참여인원은 위 정보줄로, 공유는 상단 작성자 줄로 이동 */}
+          <div className="pointer-events-auto mt-1 flex items-center gap-3 pt-1 text-xs tabular-nums text-neutral-500">
+            <LikeButton
+              actionId={action.id}
+              initialLiked={action.likedByMe}
+              initialCount={action.likeCount ?? 0}
+              disabled={likeDisabled}
+              disabledReason={reactionDisabledReason}
+              className="!inline-flex !items-center !gap-1.5 !p-0 !text-[13px] !font-medium !leading-none"
+              iconClassName="!w-[20px] !h-[20px] shrink-0"
+            />
+            <SaveButton
+              actionId={action.id}
+              initialSaved={action.savedByMe}
+              initialCount={action.saveCount ?? 0}
+              disabled={saveDisabled}
+              disabledReason={reactionDisabledReason}
+              className="!inline-flex !items-center !gap-1.5 !p-0 !text-[13px] !font-medium !leading-none"
+              iconClassName="!w-[20px] !h-[20px] shrink-0"
+            />
           </div>
         </div>
       </div>

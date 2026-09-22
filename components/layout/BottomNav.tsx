@@ -8,15 +8,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { HouseHeart, SearchCheck, Plus, Grid2x2Plus, UserCircle } from 'lucide-react';
+import { House, SearchCheck, Plus, LayersPlus, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const TABS = [
-  { href: '/', label: '홈', icon: HouseHeart },
-  { href: '/discover', label: '액션 찾기', icon: SearchCheck },
-  { href: '/action/create', label: '액션 만들기', icon: Plus },
-  { href: '/activity', label: '내 액션', icon: Grid2x2Plus },
-  { href: '/my', label: '프로필', icon: UserCircle },
+  { href: '/', label: '홈', icon: House, iconClassName: 'h-6 w-6' },
+  { href: '/discover', label: '액션 찾기', icon: SearchCheck, iconClassName: 'h-6 w-6' },
+  { href: '/action/create', label: '액션 만들기', icon: Plus, iconClassName: 'h-7 w-7' },
+  { href: '/activity', label: '내 액션', icon: LayersPlus, iconClassName: 'h-5 w-5' },
+  // h-5.5 는 Tailwind 기본 spacing 에 5.5 가 없어서 CSS 가 아예 안 생깁니다
+  // (빌드 산출물에서 0건 확인). tailwind.config.ts 의 min-h-13 주석과 같은 함정이라
+  // 임의값으로 적었습니다. 1.375rem = 22px — 소정님이 의도한 크기 그대로입니다.
+  { href: '/my', label: '프로필', icon: UserCircle, iconClassName: 'h-[1.375rem] w-[1.375rem]' },
 ] as const;
 
 function isActive(pathname: string, href: string) {
@@ -66,13 +69,14 @@ export function BottomNav() {
     return null;
   }
 
-  // ★ 아래 두 가지를 빼지 마세요. 둘이 짝입니다. (2026-09-21)
+  // ★ 아래 세 가지를 빼지 마세요. 셋이 한 묶음입니다. (2026-09-21)
   //
-  //   ① nav 의 text-size-adjust: 100%   탭만 글자 배율에서 빼기
+  //   ① nav 의 text-size-adjust: 100%   탭 라벨을 폰 글자 배율에서 빼기
   //   ② ul 의 h-[var(--nav-h)]          탭 높이를 변수에 고정
+  //   ③ li 의 min-w-0                   ① 이 뚫렸을 때 truncate 가 걸리게
   //
-  //   왜 — 폰·브라우저의 글자 크기를 최대로 올리면 탭이 62px 에서 107px 이상으로
-  //   커지는데 하단 바들은 `bottom: calc(var(--nav-h) + env(...))` = 64px 에 있어서
+  //   왜 — 글자 크기를 최대로 올리면 탭이 62px 에서 107px 이상으로 커지는데
+  //   하단 바들은 `bottom: calc(var(--nav-h) + env(...))` = 64px 에 있어서
   //   **탭이 버튼을 덮었습니다.** 실제로 이렇게 보였습니다 (수정 13 · 3쪽)
   //     · 참여 완료 액션 — 「결과 보기」 버튼이 아예 안 보임
   //     · 참여 예정 액션 — 「함께하는 크루와 이야기하기」 가 반만 보임
@@ -81,15 +85,12 @@ export function BottomNav() {
   //   글자를 안 키우는 쪽(①)과 높이를 못 늘리는 쪽(②)을 같이 걸어야 막힙니다.
   //   ① 만 있으면 브라우저가 그 속성을 무시할 때 뚫리고,
   //   ② 만 있으면 커진 글자가 64px 박스 안에서 잘립니다.
+  //   ③ 이 없으면 ① 이 뚫렸을 때 탭 바가 가로로 삐져나가 프로필 탭이 화면 밖으로
+  //   밀립니다 (375px 화면에서 556px 까지 벌어지는 것을 확인).
   //   실측(글자 300%): 탭 높이 65px 유지 · 하단 바 버튼이 클릭을 정상 수신.
   //
-  //   탭 모양을 바꿀 때는 `globals.css` 의 `--nav-h` 를 같이 올리세요.
+  //   탭 모양을 바꿀 때는 `app/globals.css` 의 `--nav-h` 를 같이 올리세요.
   //   그 변수를 쓰는 곳이 11개 파일이라 한 곳만 고치면 전부 따라옵니다.
-  //
-  //   남은 구멍 하나 — 아래 li 가 `flex-1` 인데 `min-w-0` 이 없어서
-  //   `truncate` 가 걸리지 않습니다. ① 이 뚫린 상태로 글자가 커지면
-  //   탭 바가 가로로 삐져나가 프로필 탭이 화면 밖으로 밀립니다
-  //   (375px 화면에서 556px 까지 벌어지는 것을 확인). `flex-1 min-w-0` 한 번이면 닫힙니다.
 
   // ── 알고 넘긴 것 — 하단 탭이 화면 중간에 떠 보이는 현상 (2026-09-21) ──────
   //
@@ -111,29 +112,48 @@ export function BottomNav() {
     <nav
       className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-app border-t border-neutral-200 bg-white"
       style={{
+        // 민호(성은님 PR, origin/dev 1c26890) — 글자 배율(200~300%)을 켜면 라벨이
+        // 커지면서 탭이 부풀어 다른 화면 하단 버튼을 덮는 버그가 있었다. 이 두 줄이
+        // 그 짝 수정 중 ①번 — 탭 라벨은 폰 글자 크기 설정을 따라가지 않게 막는다.
+        // 아래 <ul> 의 h-[var(--nav-h)] 와 반드시 같이 있어야 한다 (하나만 빼면 재발).
         WebkitTextSizeAdjust: '100%',
         textSizeAdjust: '100%',
       }}
       aria-label="주요 메뉴"
     >
-      <ul className="flex h-[var(--nav-h)]">
+      {/*
+        2026-09-21 홈피드 개편 — 활성 탭만 캡슐 배경 + 라벨, 비활성 탭은 아이콘만.
+        라벨을 영구히 지운 게 아니라 활성 상태에 따라 매번 바뀌는 것이 핵심(고정 삭제 아님).
+        색은 브랜드 그린(#00A56E)인데, tailwind.config.ts 에 아직 brand 토큰이 없어서
+        임시로 대괄호 값을 씀 — 토큰 정리(Day5 반영) 때 정식 색상으로 바꿔야 함.
+
+        아이콘·라벨 크기를 여기서 더 키운다면 app/globals.css 의 --nav-h(64px)도
+        같이 올릴 것 — 하단 고정 바가 있는 11개 화면이 전부 이 변수로 자기 위치를 잡는다.
+      */}
+      <ul className="flex h-[var(--nav-h)] items-center justify-between px-4">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           const Icon = tab.icon;
           return (
-            <li key={tab.href} className="flex-1">
+            <li key={tab.href} className="flex min-w-0 items-center justify-center">
               <Link
                 href={tab.href}
                 aria-current={active ? 'page' : undefined}
+                aria-label={active ? undefined : tab.label}
                 className={cn(
-                  'flex h-full flex-col items-center justify-center gap-0.5 px-1 py-1.5 transition-colors',
-                  active ? 'text-neutral-900' : 'text-neutral-400',
+                  'flex min-w-0 items-center justify-center gap-1.5 rounded-full transition-all duration-300 ease-in-out',
+                  // 터치 타겟 44px 이상 — 활성 캡슐은 py-2.5(10px×2)+아이콘 24px = 44px
+                  active
+                    ? 'bg-[#E9F9EF] px-4 py-2.5 text-[#00A56E]'
+                    : 'h-11 w-11 text-neutral-400 hover:text-neutral-600',
                 )}
               >
-                <Icon className="h-6 w-6 shrink-0" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-                <span className="max-w-full truncate whitespace-nowrap text-[10px] font-semibold tracking-wide">
-                  {tab.label}
-                </span>
+                <Icon className={cn(tab.iconClassName || 'h-6 w-6', 'shrink-0')} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
+                {active && (
+                  <span className="max-w-full truncate whitespace-nowrap text-[13px] font-bold">
+                    {tab.label}
+                  </span>
+                )}
               </Link>
             </li>
           );

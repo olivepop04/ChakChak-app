@@ -578,12 +578,15 @@ export function CrewAnchorButton({
   count,
   actionId,
   targetId = 'crew-section',
+  /** 숫자 뒤에 붙일 문구. 예) "명 참여 중". 안 주면 숫자만(기존 그대로) */
+  suffixLabel,
   className,
   iconClassName,
 }: {
   count: number;
   actionId?: string;
   targetId?: string;
+  suffixLabel?: string;
   className?: string;
   iconClassName?: string;
 }) {
@@ -610,7 +613,10 @@ export function CrewAnchorButton({
       )}
     >
       <UsersRound className={cn(iconClassName || 'h-4 w-4', 'shrink-0 text-neutral-400')} />
-      <span className="tabular-nums">{count}</span>
+      <span className="tabular-nums">
+        {count}
+        {suffixLabel}
+      </span>
     </button>
   );
 }

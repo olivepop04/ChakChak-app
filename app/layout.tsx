@@ -1,7 +1,20 @@
 import type { Metadata, Viewport } from 'next';
+import localFont from 'next/font/local';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
 import { BottomNav } from '@/components/layout/BottomNav';
+
+const paperlogy = localFont({
+  src: '../public/fonts/Paperlogy-7Bold.woff2',
+  variable: '--font-paperlogy',
+  display: 'swap',
+});
+
+// 본문 폰트(Pretendard) 는 next/font/local 이 아니라 globals.css 의 일반 @font-face 로
+// 연결한다. Pretendard 9개 굵기 파일(각 2.6~2.76MB, 한글 완성형 전체 글리프)을
+// next/font/local 로 묶으면 빌드 시점 폰트 분석(fallback 메트릭 계산)이 메모리를
+// 32GB 까지 먹다가 "JavaScript heap out of memory" 로 dev 서버가 죽는다 — 실측 확인됨.
+// Paperlogy 는 파일이 1개라 괜찮았지만 9개는 이 방식과 안 맞는다.
 
 export const metadata: Metadata = {
   title: '착착',
@@ -31,7 +44,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="antialiased">
+      <body className={`antialiased ${paperlogy.variable}`}>
         {/*
           ToastProvider 로 감싸 두었기 때문에 어느 클라이언트 컴포넌트에서든
           useToast() 를 바로 쓸 수 있습니다.

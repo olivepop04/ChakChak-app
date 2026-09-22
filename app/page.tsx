@@ -59,11 +59,12 @@ export default async function HomePage({
   return (
     <main className="pb-24">
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-5 pb-3 pt-6">
+      <header className="flex items-center justify-between px-5 pb-4 pt-6">
         <div>
-          <p className="text-xl font-bold tracking-tight text-neutral-900">착착</p>
-          <p className="mt-0.5 text-[13px] text-neutral-500">
-            착한 일을 착착, 쉽고 즐겁게!
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/chakchak-wordmark.png" alt="착착" className="h-[24px] w-auto" />
+          <p className="mt-1 text-[13px] text-neutral-500">
+            착착 쌓이는 착한 일
           </p>
         </div>
 
@@ -74,16 +75,16 @@ export default async function HomePage({
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
           >
             <Bell className="h-5 w-5 text-neutral-700" />
+            {/* 2026-09-21 홈피드 개편: 숫자 대신 점 — 벨 아이콘은 "있다/없다"만 알면 됨.
+                unread 값 자체(및 getUnreadCount)는 그대로 두고 표시만 바꿈 */}
             {unread > 0 && (
-              <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                {unread > 9 ? '9+' : unread}
-              </span>
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full border border-white bg-red-500" />
             )}
           </Link>
         ) : (
           <Link
             href="/login"
-            className="rounded-lg border border-neutral-300 px-3 py-2 text-[13px] font-semibold text-neutral-700"
+            className="rounded-lg px-3 py-2 text-[13px] font-semibold text-neutral-700"
           >
             로그인
           </Link>
@@ -91,33 +92,32 @@ export default async function HomePage({
       </header>
 
       {/* 필터 영역 (카테고리 + 정렬) */}
-      <div className="flex flex-col gap-3 px-5 pb-4">
+      <div className="flex flex-col gap-5 px-5 pb-1">
         {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다 */}
-        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-5 px-5 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-5 px-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link href={makeCategoryUrl(undefined)} scroll={false} className="shrink-0">
-            <Chip selected={!selected} as="span" className="whitespace-nowrap">
+            <Chip selected={!selected} as="span" tone="accent" className="whitespace-nowrap">
               전체
             </Chip>
           </Link>
           {CATEGORIES.map((c) => (
             <Link key={c} href={makeCategoryUrl(c)} scroll={false} className="shrink-0">
-              <Chip selected={selected === c} as="span" className="whitespace-nowrap">
+              <Chip selected={selected === c} as="span" tone="accent" className="whitespace-nowrap">
                 {c}
               </Chip>
             </Link>
           ))}
         </div>
 
-        {/* 정렬 필터 칩 — 칩이 맨 앞(왼쪽)에서 시작 */}
-        {/* 앞의 「정렬」 라벨은 2026-09-10 회의로 뺐습니다. */}
-        <div className="flex items-center gap-2 border-t border-neutral-100 pt-3">
-          <Link href={makeSortUrl('DEADLINE')} scroll={false}>
-            <Chip selected={currentSort === 'DEADLINE'} as="span">
+        {/* 정렬 필터 — 세그먼트 컨트롤 */}
+        <div className="flex items-center gap-1 rounded-full bg-[#F5F5F7] p-1">
+          <Link href={makeSortUrl('DEADLINE')} scroll={false} className="flex-1">
+            <Chip selected={currentSort === 'DEADLINE'} as="span" tone="neutral" className="w-full">
               마감 임박
             </Chip>
           </Link>
-          <Link href={makeSortUrl('POPULAR')} scroll={false}>
-            <Chip selected={currentSort === 'POPULAR'} as="span">
+          <Link href={makeSortUrl('POPULAR')} scroll={false} className="flex-1">
+            <Chip selected={currentSort === 'POPULAR'} as="span" tone="neutral" className="w-full">
               인기순
             </Chip>
           </Link>

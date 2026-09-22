@@ -10,6 +10,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        paperlogy: ['var(--font-paperlogy)', 'Paperlogy', 'sans-serif'],
       },
       maxWidth: {
         // Mobile-first. The app is a mobile web app; cap the shell width.
