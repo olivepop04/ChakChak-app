@@ -15,6 +15,7 @@ import { Calendar, MapPin } from 'lucide-react';
 import { ActionGallery } from '@/components/action/ActionGallery';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusBadge } from '@/components/ui/Badge';
+import { Chip } from '@/components/ui/Chip';
 import {
   CrewAnchorButton,
   LikeButton,
@@ -83,7 +84,7 @@ export function ActionCard({
     return (
       <article
         className={cn(
-          'relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md',
+          'relative overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md',
           className,
         )}
       >
@@ -118,17 +119,9 @@ export function ActionCard({
                   썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어난다. 2026-09-10 회의 */}
               <div className="mb-1.5 flex flex-wrap items-center gap-1">
                 {allCategories.map((c, i) => (
-                  <span
-                    key={c}
-                    className={cn(
-                      'inline-flex items-center whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-                      i === 0
-                        ? 'bg-[#00A56E] text-white'
-                        : 'border border-neutral-300 text-neutral-500',
-                    )}
-                  >
+                  <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0}>
                     {c}
-                  </span>
+                  </Chip>
                 ))}
               </div>
 
@@ -292,17 +285,9 @@ export function ActionCard({
           {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
           <div className="flex flex-wrap gap-1">
             {allCategories.map((c, i) => (
-              <span
-                key={c}
-                className={cn(
-                  'inline-flex h-[24px] items-center justify-center whitespace-nowrap rounded-full px-2.5 font-sans text-[13px] font-medium leading-none',
-                  i === 0
-                    ? 'bg-[#00A56E] text-white'
-                    : 'border border-neutral-300 text-neutral-600',
-                )}
-              >
+              <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0}>
                 {c}
-              </span>
+              </Chip>
             ))}
           </div>
 

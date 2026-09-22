@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
@@ -43,9 +44,6 @@ import {
 
 const CATEGORY_OPTIONS = ['전체', ...CATEGORIES] as const;
 const DRAFT_KEY = 'chak_signup_draft';
-
-const inputClass =
-  'min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900';
 
 function SignUpForm() {
   const router = useRouter();
@@ -327,23 +325,21 @@ function SignUpForm() {
           <div className="mt-8 flex flex-col gap-3">
             <label className="flex flex-col gap-1.5">
               <FieldLabel>이메일</FieldLabel>
-              <input
+              <Input
                 type="email"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={inputClass}
               />
             </label>
 
             <label className="flex flex-col gap-1.5">
               <FieldLabel>비밀번호</FieldLabel>
-              <input
+              <Input
                 type="password"
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={inputClass}
               />
               <span className="text-[11px] text-neutral-400">6자 이상</span>
             </label>
@@ -425,10 +421,9 @@ function SignUpForm() {
           <div className="mt-8 flex flex-col gap-3">
             <label className="flex flex-col gap-1.5">
               <FieldLabel>이름</FieldLabel>
-              <input
+              <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={inputClass}
               />
               <span className="text-[11px] text-neutral-400">
                 안전한 활동 참여를 위해 실명 사용을 권장해요.
@@ -437,10 +432,9 @@ function SignUpForm() {
 
             <label className="flex flex-col gap-1.5">
               <FieldLabel>닉네임</FieldLabel>
-              <input
+              <Input
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                className={inputClass}
               />
               <span className="text-[11px] text-neutral-400">
                 다른 사람에게는 닉네임이 먼저 보여요.

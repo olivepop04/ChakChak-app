@@ -24,6 +24,11 @@ export function Chip({
    * 명시적으로 지정한 곳(app/page.tsx 의 홈 필터)에만 적용되고 다른 화면엔 영향 없음.
    */
   tone = 'default',
+  /**
+   * 기본값 'md' — 필터 칩 크기(13px), 기존 그대로.
+   * 'sm'은 Day10 확정값(카드용 11px, 타입스케일 "캡션") — 카드 카테고리 칩 전용(2026-09-22).
+   */
+  size = 'md',
 }: {
   selected?: boolean;
   onClick?: () => void;
@@ -31,6 +36,7 @@ export function Chip({
   className?: string;
   as?: 'button' | 'span';
   tone?: 'default' | 'accent' | 'neutral';
+  size?: 'md' | 'sm';
 }) {
   return (
     <Component
@@ -39,9 +45,11 @@ export function Chip({
       aria-pressed={selected}
       className={cn(
         'inline-flex items-center justify-center whitespace-nowrap rounded-full border transition-colors',
-        tone === 'neutral'
-          ? 'gap-1 border-transparent px-3.5 py-2 text-[12px]'
-          : 'px-3.5 py-2 text-[13px] font-medium',
+        size === 'sm'
+          ? 'h-[24px] px-2.5 text-[11px] font-medium'
+          : tone === 'neutral'
+            ? 'gap-1 border-transparent px-3.5 py-2 text-[12px]'
+            : 'px-3.5 py-2 text-[13px] font-medium',
         tone === 'default' &&
         (selected
           ? 'border-neutral-900 bg-neutral-900 text-white'

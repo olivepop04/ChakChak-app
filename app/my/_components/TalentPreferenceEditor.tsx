@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Input } from '@/components/ui/Input';
 import {
   SKILLS,
   SKILL_NONE,
@@ -77,12 +78,11 @@ export function TalentPreferenceEditor({
           <span className="text-[12px] font-medium text-neutral-600">
             목록에 없는 재능
           </span>
-          <input
+          <Input
             value={other}
             maxLength={40}
             onChange={(event) => commit(selected, event.target.value)}
             placeholder="예: 수어 통역"
-            className="min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[14px] outline-none focus:border-neutral-900"
           />
           <span className="text-right text-[11px] text-neutral-400">
             {other.length} / 40

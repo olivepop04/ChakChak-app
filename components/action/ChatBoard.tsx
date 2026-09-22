@@ -264,6 +264,7 @@ export function ChatBoard({
         title={deleteTarget?.isPost ? '이 글을 삭제할까요?' : '이 댓글을 삭제할까요?'}
         description={deleteTarget?.isPost ? '달린 댓글도 함께 사라집니다.' : undefined}
         confirmLabel="삭제"
+        confirmVariant="danger"
         busy={deleteBusy}
         onClose={() => {
           if (!deleteBusy) setDeleteTarget(null);

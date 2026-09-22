@@ -23,15 +23,15 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT: Record<Variant, string> = {
-  primary: 'bg-neutral-900 text-white hover:bg-neutral-800 active:bg-neutral-700',
+  primary: 'bg-brand text-white hover:bg-brand/90 active:bg-brand/80',
   secondary:
     'border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50 active:bg-neutral-100',
-  danger: 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-100',
+  danger: 'border border-danger bg-danger-soft text-danger hover:bg-danger/10',
   ghost: 'text-neutral-600 hover:bg-neutral-100',
 };
 
 const SIZE: Record<Size, string> = {
-  sm: 'min-h-9 px-3 py-2 text-[13px] rounded-lg gap-1.5',
+  sm: 'min-h-9 px-3 py-2 text-[13px] rounded-xl gap-1.5',
   md: 'min-h-11 px-4 py-3 text-sm rounded-xl gap-2',
   lg: 'min-h-13 px-5 py-3 text-[15px] rounded-xl gap-2',
 };

@@ -81,7 +81,7 @@ export interface ActionFormInitial {
 }
 
 const input =
-  'min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px] outline-none focus:border-neutral-900';
+  'min-h-11 rounded-xl border border-[#E0E0E0] px-4 py-3 text-[15px] outline-none focus:border-[#333333]';
 const RECRUIT_END_ERROR =
   '모집 마감은 활동 시작보다 앞서야 해요. 마감일을 활동 시작일 이전으로 바꿔주세요.';
 const ACTIVITY_END_ERROR =
@@ -721,7 +721,7 @@ function ReviewModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-modal-title"
-        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-4 shadow-xl"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-4"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 id="review-modal-title" className="text-[16px] font-bold text-neutral-900">

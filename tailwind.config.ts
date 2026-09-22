@@ -12,6 +12,23 @@ const config: Config = {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
         paperlogy: ['var(--font-paperlogy)', 'Paperlogy', 'sans-serif'],
       },
+      // 디자인 가이드 Day5 확정값. DEFAULT=진한값(배경) · soft=연한값(배경/보조) ·
+      // ink=그진한 배경 위에 얹는 글자색(대부분 soft와 같음, warning만 예외).
+      // 완료/성공은 포인트 그린을 그대로 겸용하기로 했어서 별도 색을 안 둠 — brand 그대로 쓸 것.
+      colors: {
+        brand: { DEFAULT: '#00A56E', soft: '#E9F9EF', ink: '#E9F9EF' },
+        danger: { DEFAULT: '#EA764B', soft: '#FFF0ED', ink: '#FFF0ED' },
+        warning: { DEFAULT: '#FEC60A', soft: '#FFF9E6', ink: '#7F6925' },
+        info: { DEFAULT: '#2B65D0', soft: '#EBEFFA', ink: '#EBEFFA' },
+      },
+      // Day8 타입 스케일 6단계 중 Tailwind 기본값에 없는 것만. 24·20px은
+      // 기존 text-2xl·text-xl과 이미 같아서 안 넣음(중복 방지).
+      fontSize: {
+        subtitle: '17px',
+        body: '15px',
+        label: '13px',
+        caption: '11px',
+      },
       maxWidth: {
         // Mobile-first. The app is a mobile web app; cap the shell width.
         app: '480px',
