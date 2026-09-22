@@ -13,7 +13,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Ban, Heart, Star, UsersRound, Share2 } from 'lucide-react';
+import { Ban, Heart, Star, UsersRound, Share2, Plus, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toggleLike, toggleSave, toggleFollow } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
@@ -561,14 +561,19 @@ export function FollowButton({
       }}
       aria-pressed={on}
       className={cn(
-        'inline-flex min-h-9 items-center rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-colors',
+        'inline-flex min-h-9 items-center gap-1 rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-colors',
         on
-          ? 'border border-neutral-300 bg-white text-neutral-600'
-          : 'bg-neutral-900 text-white',
+          ? 'bg-neutral-200 text-neutral-700'
+          : 'border border-neutral-300 bg-white text-neutral-700',
         className,
       )}
     >
-      {on ? '팔로잉 ✓' : '팔로우'}
+      {on ? (
+        <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      ) : (
+        <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      )}
+      {on ? '팔로잉' : '팔로우'}
     </button>
   );
 }

@@ -3,9 +3,13 @@
  *
  * 지도는 외부 링크로 엽니다. 지도 API 를 붙이면 키 발급과 요금이 따라오는데,
  * MVP 에서는 카카오맵 검색 링크로 충분합니다.
+ *
+ * ★ 배경·패딩은 이 컴포넌트가 갖지 않습니다 — 부르는 쪽(액션 상세의 "일정 · 장소")이
+ *   활동 일정과 같은 박스를 씌웁니다. 2026-09-22 개편.
  */
 'use client';
 
+import { MapPin } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 
 export function AddressBox({
@@ -43,39 +47,43 @@ export function AddressBox({
   const mapUrl = `https://map.kakao.com/link/search/${encodeURIComponent(mapSearchQuery)}`;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-neutral-50 p-4">
-      <div className="flex flex-col gap-1">
-        {placeName ? (
-          <>
-            <h3 className="text-[15px] font-bold leading-snug text-neutral-900 break-keep">
-              {placeName}
-            </h3>
-            {address && (
-              <p className="text-xs leading-relaxed text-neutral-500 break-words">
-                {address}
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="text-sm font-semibold leading-relaxed text-neutral-900 break-words">
-            {address}
-          </p>
-        )}
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start gap-2">
+        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
+        <div className="flex flex-col gap-0.5">
+          {placeName ? (
+            <>
+              {address && (
+                <p className="text-[11px] leading-snug text-neutral-500 break-words">
+                  {address}
+                </p>
+              )}
+              <h3 className="text-sm font-bold leading-snug text-neutral-900 break-keep">
+                {placeName}
+              </h3>
+            </>
+          ) : (
+            <p className="text-sm font-semibold leading-relaxed text-neutral-900 break-words">
+              {address}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 pt-0.5">
+      <div className="flex items-center justify-center gap-3 pl-6">
         <button
           type="button"
           onClick={copy}
-          className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-[12px] font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
+          className="text-[13px] font-medium text-neutral-900 underline transition-colors hover:text-neutral-600"
         >
           주소 복사
         </button>
+        <span className="h-3.5 w-px shrink-0 bg-neutral-200" aria-hidden="true" />
         <a
           href={mapUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-[12px] font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
+          className="text-[13px] font-medium text-neutral-900 underline transition-colors hover:text-neutral-600"
         >
           지도에서 보기
         </a>
