@@ -9,6 +9,7 @@
  *   <Button variant="danger" disabled>삭제</Button>
  *   <Button loading>저장 중</Button>
  */
+import Link from 'next/link';
 import { cn } from '@/lib/utils/cn';
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -20,6 +21,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
   /** true 면 스피너를 보여주고 자동으로 비활성화됩니다 */
   loading?: boolean;
+  /** 주면 <button> 대신 <Link>로 렌더링(화면 이동용 CTA — 액션 상세 하단 버튼 등) */
+  href?: string;
 }
 
 const VARIANT: Record<Variant, string> = {
@@ -44,22 +47,29 @@ export function Button({
   disabled,
   className,
   children,
+  href,
   ...props
 }: ButtonProps) {
+  const classes = cn(
+    'inline-flex items-center justify-center whitespace-nowrap font-semibold transition-colors',
+    'disabled:cursor-not-allowed disabled:opacity-40',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2',
+    VARIANT[variant],
+    SIZE[size],
+    fullWidth && 'w-full',
+    className,
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={classes}>
+        {children}
+      </Link>
+    );
+  }
+
   return (
-    <button
-      disabled={disabled || loading}
-      className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap font-semibold transition-colors',
-        'disabled:cursor-not-allowed disabled:opacity-40',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2',
-        VARIANT[variant],
-        SIZE[size],
-        fullWidth && 'w-full',
-        className,
-      )}
-      {...props}
-    >
+    <button disabled={disabled || loading} className={classes} {...props}>
       {loading && (
         <span
           className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
