@@ -262,7 +262,27 @@ export function ActionCard({
 
         {/* 썸네일 — 액션 상세페이지처럼 뷰포트/앱쉘 좌우 여백 없이 꽉 채우며 세로 높이는 245px 고정.
             사진 여러 장은 ActionGallery(스와이프+점, 상세 화면과 공유)가 그린다 — fill로 245px에 맞춤 */}
-        <div className="relative -mx-5 h-[245px] overflow-hidden bg-neutral-100">
+
+        {/* ★ 이 자리를 div 로 되돌리면 스와이프가 죽습니다. 민호, 2026-09-22 실측.
+            바로 위 본문 래퍼가 pointer-events-none 이라 그 안의 갤러리 스크롤러도
+            히트테스트에서 빠집니다. 홈 카드 30개 전부 가로 스크롤이 0px 였고,
+            그중 24개는 사진이 2장 이상이라 **넘어가지도 않는 점을 그리고 있었습니다.**
+
+            그렇다고 pointer-events-auto 만 붙이면 반대로 사진 탭이 죽습니다(실측: 눌러도
+            안 움직임). 사진칸도 상세 상단으로 가야 한다는 게 9/22 결정이라(성은님 요청,
+            deaa1fc) 이 자리를 Link 로 둡니다 — 가로 드래그는 안쪽 스크롤러가 먹고,
+            탭은 이 Link 가 받아 둘이 같이 됩니다.
+            실측: 스와이프 375px · 점 off→ON · 탭하면 /action/… 로 이동.
+
+            aria-hidden 은 바로 위 덮개 링크(:251)가 이미 sr-only 제목을 들고 있어서,
+            스크린리더에 같은 링크가 두 번 읽히지 않게 하려는 것입니다.
+            상세 화면(fill 없는 쪽)은 pointer-events 가 auto 라 원래부터 잘 됐습니다. */}
+        <Link
+          href={`/action/${action.id}`}
+          tabIndex={-1}
+          aria-hidden="true"
+          className="pointer-events-auto relative -mx-5 block h-[245px] overflow-hidden bg-neutral-100"
+        >
           <ActionGallery
             urls={action.imageUrls}
             thumbnailIndex={action.thumbnailIndex}
@@ -278,7 +298,7 @@ export function ActionCard({
               />
             </div>
           )}
-        </div>
+        </Link>
 
         <div className="flex flex-col gap-2 pt-3 pb-4">
           {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
