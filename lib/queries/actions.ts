@@ -155,6 +155,8 @@ function toCard(
     category: raw.category,
     categories: raw.categories ?? [raw.category],
     thumbnailUrl: pickThumbnail(raw.image_urls, raw.thumbnail_index),
+    imageUrls: raw.image_urls ?? [],
+    thumbnailIndex: raw.thumbnail_index ?? 0,
     address: raw.address,
     placeName: raw.place_name,
     status: raw.status,

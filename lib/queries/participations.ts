@@ -143,6 +143,8 @@ export async function getMyJoinedActions(
         category: a.category,
         categories: (a.categories ?? [a.category]) as Category[],
         thumbnailUrl: pickThumbnail(a.image_urls, a.thumbnail_index),
+        imageUrls: a.image_urls ?? [],
+        thumbnailIndex: a.thumbnail_index ?? 0,
         address: a.address,
         placeName: a.place_name,
         status: a.status as ActionStatus,
