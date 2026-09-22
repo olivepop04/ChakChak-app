@@ -16,7 +16,7 @@ import type {
   ActionResultData,
 } from '@/lib/types/view';
 import type { ParticipationStatus, ItemType, ActionStatus, Category } from '@/lib/constants';
-import { getActionItems, pickThumbnail } from '@/lib/queries/actions';
+import { getActionItems, pickThumbnail, summarize } from '@/lib/queries/actions';
 
 type DB = SupabaseClient<Database>;
 
@@ -137,7 +137,9 @@ export async function getMyJoinedActions(
       return {
         id: a.id,
         title: a.title,
-        summary: a.description?.slice(0, 60) ?? null,
+        // 60자 자르기를 쓰던 자리. 「…」 도 안 붙어서 말 중간에 끊겼습니다.
+        // 길이는 화면이 CSS 로 정합니다 — actions.ts 의 summarize 주석 참고 (2026-09-22)
+        summary: summarize(a.description),
         category: a.category,
         categories: (a.categories ?? [a.category]) as Category[],
         thumbnailUrl: pickThumbnail(a.image_urls, a.thumbnail_index),
