@@ -129,9 +129,9 @@ export function DiscoverChat({
             로그인 후 Discover AI로 내게 맞는 액션을 찾아보세요.
           </p>
           <ul className="mt-3 flex flex-col gap-2 text-[13px] leading-relaxed text-neutral-600">
-            <li>· 내 지역과 가능한 시간에 맞춰 추천해요.</li>
-            <li>· 이미 참여한 액션과 내가 만든 액션은 자동으로 빼요.</li>
-            <li>· 대화를 통해 내 성향을 파악하고 맞춤 액션을 찾아요.</li>
+            <li>· 내 지역과 가능한 시간에 맞춰 Action을 추천해요.</li>
+            <li>· 이미 참여한 Action과 내가 만든 Action은 자동으로 빼요.</li>
+            <li>· 편안한 대화를 통해 내게 꼭 맞는 좋은 일을 찾아요.</li>
           </ul>
           <Link
             href="/login?next=/discover"
@@ -184,7 +184,9 @@ export function DiscoverChat({
       {loading && (
         <Bubble>
           <span className="inline-flex items-center gap-2">
-            착착 AI가 답변을 살펴보고 있어요
+            {messages.length === 0
+              ? '잠시만요. AI가 대화를 준비하고 있어요 😊'
+              : 'AI가 맞춤 활동을 생각하고 있어요 😊'}
             <span className="inline-flex gap-0.5">
               <Dot /> <Dot /> <Dot />
             </span>
@@ -247,26 +249,26 @@ export function DiscoverChat({
         <div className="flex flex-col gap-4">
           {relaxation.length > 0 && (
             <p className="rounded-xl bg-violet-50 px-4 py-3 text-[12px] leading-relaxed text-violet-700">
-              말씀해주신 조건에 맞는 액션이 많지 않아 비슷한 조건까지 조금
-              넓혀서 찾아봤어요. 최대한 비슷한 액션부터 보여드릴게요.
+              {relaxation[0]}
             </p>
           )}
 
           {items.length === 0 ? (
             <EmptyState
               icon="🔍"
-              title="지금은 딱 맞는 액션이 없어요."
-              description="직접 액션을 만들어 보면 어떠세요?"
-              action={{ label: '직접 액션 만들기', href: '/action/create' }}
+              title="지금은 딱 맞는 Action이 없어요."
+              description="직접 새로운 Action을 만들어 보면 어떠세요?"
+              action={{ label: '직접 Action 만들기', href: '/action/create' }}
             />
           ) : (
             <div className="flex flex-col gap-4">
               {items.map((item) => (
-                <div key={item.action.id} className="flex flex-col gap-1.5">
+                <div key={item.action.id} className="flex flex-col gap-1.5 rounded-2xl border border-neutral-100 bg-neutral-50/50 p-2">
                   <ActionCard action={item.action} />
-                  <p className="px-1 text-[12px] leading-relaxed text-neutral-500">
-                    ✦ {item.reason}
-                  </p>
+                  <div className="flex items-start gap-1.5 px-2 py-1 text-[13px] leading-relaxed text-neutral-700">
+                    <span className="font-bold text-amber-500">✦</span>
+                    <p className="font-medium text-neutral-800">{item.reason}</p>
+                  </div>
                 </div>
               ))}
             </div>

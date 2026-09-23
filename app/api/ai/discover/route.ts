@@ -38,14 +38,16 @@ import {
   getRecommendationReply,
   getRemainingQuestionKeys,
   shouldRecommendNow,
+  analyzeUserContext,
   type QuestionKey,
+  type UserStateCategory,
 } from '@/app/api/ai/discover/interview';
 import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 
-const CHAT_PROMPT_VERSION = 'discover-chat-v6-semantic-agent';
-const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v6-semantic-indexing';
-const MAX_USER_TURNS = 5;
+const CHAT_PROMPT_VERSION = 'discover-chat-v7-personalized-companion';
+const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v7-semantic-3step';
+const MAX_USER_TURNS = 6;
 const PARTICIPATION_MODES = [
   '시간을 내서',
   '물건으로',
@@ -63,15 +65,17 @@ const ChatRequestSchema = z.object({
 });
 
 const ConversationSchema = z.object({
-  reply: z.string().trim().min(1).max(250),
+  reply: z.string().trim().min(1).max(300),
   question_key: z
     .enum([
-      'skills',
       'talent_preference',
-      'participation_mode',
+      'skills',
+      'activity_type',
+      'vibe_preference',
       'group_size',
       'field_preference',
       'travel_range',
+      'participation_mode',
     ])
     .nullable()
     .default(null),
@@ -96,59 +100,61 @@ const RecommendationSchema = z.object({
 type ChatMessage = z.infer<typeof ChatMessageSchema>;
 type Conversation = z.infer<typeof ConversationSchema>;
 
-const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 대화형 맞춤 추천 AI 어시스턴트입니다.
+const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 맞춤 추천 AI 어시스턴트입니다.
 반드시 JSON 형식으로만 답하세요.
 
-역할 및 대화 원칙:
-1. [첫 번째 턴 (사용자답변수 0)]:
-   - 사용자의 닉네임을 부르며 따뜻하고 반갑게 맞이해주세요.
-   - Discover AI의 역할(3~5가지 편안한 대화를 통해 회원님에게 꼭 맞는 봉사 액션을 찾아드림)을 안내하세요.
-   - 프로필 정보(나눌 수 있는 재능, 지난 활동 이력)가 있다면 자연스럽게 언급하며 첫 질문(재능 활용 여부)을 시작하세요.
-   - 프로필에 재능이 없다면, 이번에는 가진 재능을 살릴 수 있는 활동을 원하는지, 아니면 부담 없이 가볍게 참여하고 싶은지 물어보세요.
+Discover AI의 목적:
+- 사용자를 평가하거나 정보를 캐묻는 '설문조사'가 아니라, 회원님을 깊이 이해하고 꼭 맞는 Action을 함께 찾아주는 따뜻하고 친절한 동반자입니다.
+- 사용자가 "나한테 맞춰서 물어보네", "내가 했던 활동도 알고 있네", "이미 알고 있는 건 또 안 묻네", "몇 가지만 답했는데 나를 꽤 잘 파악했네", "착한 일을 시작하는 게 생각보다 쉽네"라고 느끼도록 대화합니다.
 
-2. [이후 턴 (사용자답변수 1 이상)]:
-   - 이전 사용자의 답변을 한 문장으로 따뜻하고 공감 가득하게 받아주세요 (과도한 칭찬이나 기계적인 반복 지양, 자연스러운 한국어 구어체).
-   - 서버가 제공한 '남은질문' 목록의 첫 번째 주제(question_key)를 참고하여 다음 질문으로 부드럽게 연결하세요.
-   - 질문 흐름: 재능 활용 여부 -> (재능 활용 시 어떤 재능인지 / 미활용 시 참여 방식) -> 모임 인원 규모 -> 관심 분야(익숙한 분야 / 새로운 분야) -> 활동 지역 및 이동 범위.
-   - 프로필에 이미 등록된 활동지역이나 시간대를 굳이 불필요하게 다시 캐묻지 마세요.
+핵심 대화 원칙 (엄수):
+1. [언어 규칙 - 절대 금지어]:
+   - '봉사', '봉사활동', '봉사자', '수혜자', '사회공헌 활동' 단어를 일체 사용하지 마세요!
+   - 대신 'Action', '좋은 일', '함께하기', '참여하기', '직접 해보기', '작은 행동', '좋은 행동' 등의 긍정적이고 활기찬 표현을 사용하세요.
 
-3. [조기 추천 판단 (enough)]:
-   - 3번째 답변 이후(사용자답변수 >= 3), 사용자가 본인의 선호나 희망사항(재능, 분야, 모임규모, 장소 등)을 충분히 명확하게 표현했다고 판단되면 "enough": true 로 설정하세요.
-   - 아직 정보가 더 필요하다고 판단되면 "enough": false 를 유지하세요 (5번째 답변에서는 코드가 자동으로 추천으로 전환합니다).
+2. [핵심 질문 공식: [이미 알고 있는 사실] + [자연스러운 확인/선택 질문]]:
+   - 없는 데이터를 있는 것처럼 아는 척하지 마세요 (데이터의 진실성 준수).
+   - 프로필이나 과거 활동으로 이미 파악된 정보(재능, 시간, 지역)는 중복해서 캐묻지 마세요.
+   - 예: 프로필에 사진 촬영이 이미 있다면 "어떤 재능이 있으세요?" ❌ -> "프로필에 사진 촬영 재능을 등록해주셨네요. 이번에도 사진 촬영을 살릴 수 있는 Action을 찾아볼까요?" ⭕
+   - 예: 과거 환경 활동 이력이 있다면 "어떤 분야에 관심 있으세요?" ❌ -> "지난번에는 환경 분야의 소규모 야외 Action에 참여하셨네요. 이번에도 비슷한 활동을 이어가볼까요, 아니면 새로운 분야도 괜찮으세요?" ⭕
 
-4. [선택지(options) 제공]:
-   - 사용자가 한 번의 탭으로 편하게 답변할 수 있도록 질문에 맞는 친절한 선택지 2~4개를 options 배열에 넣어주세요.
-   - 재능 관련 질문일 때는 나눌 수 있는 재능 목록에서 추천 선택지를 구성하세요.
+3. [첫 번째 턴 (사용자답변수 0) 오프닝]:
+   - 짧은 환영 인사 + Discover의 역할을 먼저 안내한 후 첫 질문을 시작하세요.
+   - 전달받은 '사용자상태(A~F)'와 '이미알고있는사실'을 활용하여 자연스럽게 환영하세요.
+   - 신규 사용자(F 상태)라면: "반가워요! 아직 착착에서 해본 활동이나 프로필 정보가 없으시네요. 괜찮아요. 몇 가지만 편하게 알려주시면 지금 잘 맞는 Action을 찾아드릴게요. 😊"처럼 부담을 덜어주세요.
 
-5. [추천 조건 누적]:
-   - 전체 대화에서 파악된 카테고리를 categories 배열에 추출하세요 (허용 목록: ${CATEGORIES.join(', ')}).
-   - 파악된 참여 방식을 participation_mode 에 설정하세요 (허용: ${PARTICIPATION_MODES.join(', ')}, 또는 null).
+4. [이후 턴 (사용자답변수 1 이상)]:
+   - 이전 사용자의 답변을 한 문장으로 따뜻하고 공감 가득하게 받아준 뒤 다음 질문으로 자연스럽게 연결하세요.
+   - 사용자를 평가하거나 심사하는 말투 금지 (예: "재능이 없으시군요" ❌ -> "괜찮아요. 특별한 재능 없이도 쉽게 참여할 수 있는 Action이 많아요. 😊" ⭕).
+   - 모임 규모를 물을 때는 "혼자 참여"를 묻지 말고 "10명 안팎의 작은 모임이 편하신가요, 아니면 사람이 조금 많아도 괜찮으세요?"처럼 Action의 규모(소규모/중규모/대규모)를 파악하세요.
+   - 얼마나 오래 참여할 수 있는지, 시간을 얼마나 쓸 수 있는지 등의 불필요한 질문은 하지 마세요.
+
+5. [질문 수 및 추천 전환 판단 (enough)]:
+   - 최소 4개 질문 답변 전(사용자답변수 < 4)에는 enough를 false로 유지하세요.
+   - 4번째 답변 이후(사용자답변수 >= 4), 사용자의 선호(재능, 분야, 환경, 모임규모, 성격 등)가 충분히 파악되었다고 판단되면 "enough": true로 설정하여 즉시 추천으로 전환하세요.
+   - 아직 정보가 부족하다면 5~6번째 질문을 진행하세요. (6번째 답변에서는 코드가 자동으로 무조건 추천으로 전환합니다).
+
+6. [선택지(options) 제공]:
+   - 사용자가 탭 한 번으로 편하게 답할 수 있도록 질문에 부합하는 친절한 선택지 2~3개를 options 배열에 넣어주세요.
 
 형식:
 {"reply":"공감 및 질문 문장","question_key":"group_size","enough":false,"options":["선택지1","선택지2"],"categories":[],"participation_mode":null}`;
 
 const RECOMMEND_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트입니다.
-프로젝트의 '콘텐츠 자동 분류·색인 시스템'에 의해 생성된 각 액션의 AI 색인 메타데이터를 분석하여 사용자의 대화 및 성향에 가장 부합하는 최적의 액션 3개를 추천합니다.
+프로젝트의 '콘텐츠 자동 분류·색인 시스템'에 의해 생성된 각 액션의 7대 AI 색인 메타데이터와 사용자의 대화 및 성향을 비교하여 가장 부합하는 최적의 액션 3개를 추천합니다.
 반드시 JSON 형식으로만 답하세요.
 
-후보 색인 메타데이터 구조:
-- category: 활동 분야 ('동물', '환경', '지역사회', '아동·청소년', '노인', '장애', '교육', '기타')
-- activityTypes: 활동 환경 ('실내 활동', '실외 활동', '실내외 병행', '온라인/비대면')
-- targetGroups: 모임 성격 및 교류 형태 ('교류·교육·소통형': 말벗, 멘토링, 교육, 돌봄 등 소통 중심 / '육체·과업·집중형': 플로깅, 연탄배달, 도시락포장, 청소 등 육체활동 중심 / '가족·동반가능')
-- participationModes: 모임 인원 규모 ('10명 이내 소그룹', '10~20명 중그룹', '20명 이상 대그룹')
-- skills: 이 액션에서 실제로 활용할 수 있는 재능 ('사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공')
-- keywords: 검색 및 활동 핵심어 (3~5개)
-- difficulty: 참여 문턱 ('누구나 참여가능', '기초 체력 필요', '전문지식,자격,역량 필요')
-
-추천 및 선정 규칙:
-1. 주어진 후보 목록의 actionId 중에서만 topActionIds로 최대 3개를 선정하세요.
-2. 사용자가 대화에서 표현한 구체적인 희망 사항(선호 재능, 활동 방식, 모임 규모, 관심 분야, 지역 등)과 후보 액션의 색인 정보 간의 의미적 적합도(Semantic Match)가 가장 높은 액션을 우선 선정하세요.
-3. 각 선정 액션에 대해 친근하고 따뜻한 1문장(50자 안팎)의 개인화된 추천 이유(reason)를 작성하세요.
-4. 이유 작성 시, 사용자가 직접 말한 답변 내용과 해당 액션의 색인 특성을 직접 연결해주세요 (예: "사진 촬영 재능으로 어르신들의 소중한 순간을 담아드릴 수 있는 액션이에요.").
-5. 후보 정보에 없는 허위 사실이나 거리, 시간 등을 지어내지 마세요.
+핵심 규칙:
+1. '봉사', '봉사활동', '봉사자', '수혜자' 단어를 일체 사용하지 마세요. 'Action', '함께하는 활동', '참여'로 표현하세요.
+2. 주어진 후보 목록의 actionId 중에서만 topActionIds로 최대 3개를 선정하세요.
+3. 각 선정 액션에 대해 [사용자 정보/대화 발언] → [Action 특성/색인] → [추천 이유]가 자연스럽게 연결된 친근하고 따뜻한 1문장(50자 안팎)의 개인화된 사유(reason)를 작성하세요.
+   - 예시: "사진 촬영 재능을 활용할 수 있고, 평소 선호하셨던 소규모 환경 활동이라 부담 없이 참여해볼 수 있는 Action이에요."
+   - 예시: "가볍게 첫 참여를 원하셨던 성은님께 딱 맞는, 사전 준비 없이 누구나 참여 가능한 Action이에요."
+   - 예시: "사람들과 따뜻하게 이야기 나누는 소통형 활동을 좋아하시는 성은님께 잘 어울리는 소규모 Action이에요."
+4. 후보 정보에 없는 허위 사실이나 거리, 시간 등을 지어내지 마세요.
 
 형식:
-{"topActionIds":["actionId1", "actionId2", "actionId3"],"reasons":[{"actionId":"actionId1","reason":"추천 이유 문장"}]}`;
+{"topActionIds":["actionId1", "actionId2", "actionId3"],"reasons":[{"actionId":"actionId1","reason":"개인화된 추천 이유 문장"}]}`;
 
 function extractSkillsAnswer(messages: ChatMessage[]): string[] | null {
   const userText = messages
@@ -176,6 +182,9 @@ function fallbackConversation({
   hasHistory,
   profileCategories,
   questionKey,
+  userState,
+  knownFacts,
+  pastActivitySummary,
 }: {
   messages: ChatMessage[];
   nickname: string;
@@ -186,6 +195,9 @@ function fallbackConversation({
   hasHistory: boolean;
   profileCategories: string[];
   questionKey: QuestionKey | null;
+  userState?: UserStateCategory;
+  knownFacts?: string[];
+  pastActivitySummary?: string;
 }): Conversation {
   const userText = messages
     .filter((message) => message.role === 'user')
@@ -226,6 +238,9 @@ function fallbackConversation({
         selectedSkills,
         fieldReferenceCategories,
         hasHistory,
+        userState,
+        knownFacts,
+        pastActivitySummary,
       }),
       question_key: questionKey,
       enough: false,
@@ -301,6 +316,22 @@ export async function POST(request: Request) {
     ? historyCategories
     : allowedCategories(profile.categories);
 
+  const historyActionIds = history.map((action) => action.id);
+  const { data: pastMetasData } = historyActionIds.length > 0
+    ? await supabase
+        .from('action_ai_metadata')
+        .select('action_id, categories, activity_types, target_groups, participation_modes, skills, keywords, difficulty')
+        .in('action_id', historyActionIds)
+    : { data: [] };
+
+  const pastMetaMap = new Map((pastMetasData ?? []).map((m) => [m.action_id, m]));
+
+  const userContext = analyzeUserContext({
+    profile,
+    history,
+    pastMetas: pastMetasData ?? [],
+  });
+
   const userAnswers = messages
     .filter((message) => message.role === 'user')
     .map((message) => message.content);
@@ -316,6 +347,7 @@ export async function POST(request: Request) {
   const remainingQuestionKeys = getRemainingQuestionKeys({
     skillsAnswered,
     answers: adaptiveAnswers,
+    userState: userContext.state,
   });
   const fallbackQuestionKey = remainingQuestionKeys[0] ?? null;
 
@@ -329,16 +361,27 @@ export async function POST(request: Request) {
       temperature: 0.3,
       user: JSON.stringify({
         사용자: profile.nickname,
+        사용자상태: userContext.state,
+        상태설명: userContext.stateLabel,
+        이미알고있는사실: userContext.knownFacts,
         프로필: {
           관심카테고리: profile.categories,
           활동지역: profile.regions,
           참여가능시간: profile.timePrefs,
           나눌수있는재능: effectiveSkills,
+          자기소개: profile.bio,
         },
-        지난활동: history.slice(0, 5).map((action) => ({
-          제목: action.title,
-          카테고리: action.category,
-        })),
+        지난활동: history.slice(0, 3).map((action) => {
+          const meta = pastMetaMap.get(action.id);
+          return {
+            제목: action.title,
+            카테고리: action.category,
+            활동환경: meta?.activity_types?.[0] ?? null,
+            모임성격: meta?.target_groups?.[0] ?? null,
+            인원규모: meta?.participation_modes?.[0] ?? null,
+            활용재능: meta?.skills ?? [],
+          };
+        }),
         사용자답변수: userTurnCount,
         남은질문: remainingQuestionKeys,
         대화: messages,
@@ -358,6 +401,9 @@ export async function POST(request: Request) {
       hasHistory,
       profileCategories: profile.categories,
       questionKey: fallbackQuestionKey,
+      userState: userContext.state,
+      knownFacts: userContext.knownFacts,
+      pastActivitySummary: userContext.pastActivitySummary,
     });
   }
 
@@ -378,6 +424,9 @@ export async function POST(request: Request) {
       hasHistory,
       profileCategories: profile.categories,
       questionKey: chosenQuestionKey,
+      userState: userContext.state,
+      knownFacts: userContext.knownFacts,
+      pastActivitySummary: userContext.pastActivitySummary,
     });
 
     const reply =
@@ -417,6 +466,9 @@ export async function POST(request: Request) {
     hasHistory,
     profileCategories: profile.categories,
     questionKey: null,
+    userState: userContext.state,
+    knownFacts: userContext.knownFacts,
+    pastActivitySummary: userContext.pastActivitySummary,
   });
   const finalReply = getRecommendationReply({
     nickname: profile.nickname,
@@ -453,12 +505,12 @@ export async function POST(request: Request) {
 
   if (candidates.length === 0 && hasRegionFilter) {
     candidates = categoryCandidates;
-    relaxation.push('활동 지역을 넓혀봤어요.');
+    relaxation.push('말씀해주신 조건으로는 선택지가 많지 않아서, 지역이나 분야를 조금 넓혀 더 잘 맞는 Action을 찾아봤어요.');
   }
 
   if (candidates.length === 0 && filterCategories.length > 0) {
     candidates = allCandidates;
-    relaxation.push('관심 분야도 넓혀봤어요.');
+    relaxation.push('말씀해주신 조건으로는 선택지가 많지 않아서, 지역이나 분야를 조금 넓혀 더 잘 맞는 Action을 찾아봤어요.');
   }
 
   if (candidates.length === 0) {
@@ -515,13 +567,18 @@ export async function POST(request: Request) {
   }
 
   const participationMode =
-    fallback.participation_mode ?? conversation.participation_mode;
+    conversation.participation_mode ?? fallback.participation_mode;
   const scoringAnswers = {
     participationMode,
     category: filterCategories.length === 1 ? filterCategories[0] : null,
     range: relaxation.length > 0 ? 'any' : null,
     talentPreference: adaptiveAnswers.talentPreference ?? null,
-    groupSizePreference: adaptiveAnswers.groupSizePreference ?? null,
+    groupSizePreference:
+      adaptiveAnswers.groupSizePreference === 'small'
+        ? ('small' as const)
+        : adaptiveAnswers.groupSizePreference
+          ? ('any' as const)
+          : null,
     fieldPreference: adaptiveAnswers.fieldPreference ?? null,
     travelRange: adaptiveAnswers.travelRange ?? null,
   };
