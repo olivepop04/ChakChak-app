@@ -5,6 +5,7 @@ import {
   DISCOVER_RECOMMENDATION_REPLY,
   analyzeUserContext,
   extractAdaptiveAnswers,
+  extractAnswersFromDialogue,
   getDiscoverReply,
   getQuestionOptions,
   getQuestionReply,
@@ -353,4 +354,20 @@ test('선택지 및 자연어 답변에서 성향을 올바르게 누적해 읽�
     fieldPreference: 'new',
     travelRange: 'province',
   });
+});
+
+test('대화 맥락(질문-답변 쌍)에서 사용자가 선택한 상관없음 답변을 각 질문 축에 맞게 정확히 매핑한다', () => {
+  const dialogue = [
+    { role: 'assistant', content: '어떤 모임 규모에서 함께하기를 원하시나요?' },
+    { role: 'user', content: '상관없음' },
+    { role: 'assistant', content: '모임 규모는 상관없다고 하셨군요! 다음으로 어떤 참여 난이도를 선호하시나요?' },
+    { role: 'user', content: '상관없음' },
+    { role: 'assistant', content: '참여 난이도도 상관없다고 하셨군요! 이제 어떤 이동 범위를 원하시는지 선택해 주세요.' },
+    { role: 'user', content: '상관없음' },
+  ];
+
+  const answers = extractAnswersFromDialogue(dialogue);
+  assert.equal(answers.groupSizePreference, 'any');
+  assert.equal(answers.difficultyPreference, 'any');
+  assert.equal(answers.travelRange, 'any');
 });

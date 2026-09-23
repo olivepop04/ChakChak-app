@@ -33,6 +33,7 @@ import {
 import { sameProvince, totalGroupSize } from '@/lib/utils/discover-ranking';
 import {
   extractAdaptiveAnswers,
+  extractAnswersFromDialogue,
   getQuestionOptions,
   getQuestionReply,
   getRecommendationReply,
@@ -326,7 +327,10 @@ export async function POST(request: Request) {
   const userAnswers = messages
     .filter((message) => message.role === 'user')
     .map((message) => message.content);
-  const adaptiveAnswers = extractAdaptiveAnswers(userAnswers);
+  const adaptiveAnswers = {
+    ...extractAdaptiveAnswers(userAnswers),
+    ...extractAnswersFromDialogue(messages),
+  };
   const inferredSkills = extractSkillsAnswer(messages);
   const effectiveSkills = inferredSkills ?? profile.skills;
   const selectedSkills =
@@ -398,7 +402,31 @@ export async function POST(request: Request) {
     });
   }
 
-  const chosenQuestionKey = fallbackQuestionKey;
+  let chosenQuestionKey: QuestionKey = fallbackQuestionKey ?? 'field_preference';
+
+  if (isAiSuccess && conversation.question_key) {
+    chosenQuestionKey = conversation.question_key;
+  } else if (isAiSuccess && conversation.reply) {
+    const replyText = conversation.reply;
+    if (/모임 규모|인원|소규모|중규모|대규모/.test(replyText)) {
+      chosenQuestionKey = 'group_size';
+    } else if (/난이도|문턱|체력|전문지식/.test(replyText)) {
+      chosenQuestionKey = 'difficulty';
+    } else if (/환경|실내|실외|야외|비대면/.test(replyText)) {
+      chosenQuestionKey = 'activity_type';
+    } else if (/스타일|성격|교류|소통|과업|집중형/.test(replyText)) {
+      chosenQuestionKey = 'vibe_preference';
+    } else if (/분야|카테고리|관심사/.test(replyText)) {
+      chosenQuestionKey = 'field_preference';
+    } else if (/장소|지역|이동 범위|거리|집 근처/.test(replyText)) {
+      chosenQuestionKey = 'travel_range';
+    } else if (/시간|주말|평일|오전|오후|저녁/.test(replyText)) {
+      chosenQuestionKey = 'time_pref';
+    } else if (/재능|기술|특기/.test(replyText)) {
+      chosenQuestionKey = 'skills';
+    }
+  }
+
   const recommendNow = shouldRecommendNow({
     userTurnCount,
     enough: conversation.enough,
@@ -422,11 +450,7 @@ export async function POST(request: Request) {
 
     const reply =
       isAiSuccess && conversation.reply ? conversation.reply : fallback.reply;
-    const fullOptions = getQuestionOptions(chosenQuestionKey, SKILLS);
-    const options =
-      isAiSuccess && conversation.options.length >= fullOptions.length
-        ? conversation.options
-        : fullOptions;
+    const options = getQuestionOptions(chosenQuestionKey, SKILLS);
 
     return NextResponse.json({
       done: false,

@@ -626,6 +626,85 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
 }
 
 /**
+ * 대화 맥락(질문-답변 쌍)을 기반으로 사용자 의도 정밀 추출
+ * 특히 '상관없음'이나 단답형 답변이 어느 질문에 대한 것인지 정확히 매핑한다.
+ */
+export function extractAnswersFromDialogue(
+  messages: readonly { role: string; content: string }[],
+): AdaptiveAnswers {
+  const answers: AdaptiveAnswers = {};
+
+  for (let i = 0; i < messages.length - 1; i++) {
+    const current = messages[i];
+    const next = messages[i + 1];
+
+    if (current.role === 'assistant' && next.role === 'user') {
+      const q = current.content;
+      const a = next.content;
+
+      // 1. 모임 규모 질문에 대한 답변
+      if (/모임 규모|인원|소규모|중규모|대규모/.test(q)) {
+        if (/상관없/.test(a)) answers.groupSizePreference = 'any';
+        else if (/소규모|10명 안팎|10명 이내|작은/.test(a)) answers.groupSizePreference = 'small';
+        else if (/중규모|10-20|10~20|중그룹/.test(a)) answers.groupSizePreference = 'medium';
+        else if (/대규모|20명 이상|대그룹/.test(a)) answers.groupSizePreference = 'large';
+      }
+
+      // 2. 참여 난이도 질문에 대한 답변
+      if (/난이도|문턱|체력|전문지식/.test(q)) {
+        if (/상관없/.test(a)) answers.difficultyPreference = 'any';
+        else if (/누구나|부담 없|초보/.test(a)) answers.difficultyPreference = 'easy';
+        else if (/기초 체력|체력|몸 쓰는/.test(a)) answers.difficultyPreference = 'physical';
+        else if (/전문지식|자격|역량/.test(a)) answers.difficultyPreference = 'expert';
+      }
+
+      // 3. 환경 질문에 대한 답변
+      if (/환경|실내|실외|야외|비대면/.test(q)) {
+        if (/상관없/.test(a)) answers.activityType = 'any';
+        else if (/실내/.test(a)) answers.activityType = 'indoor';
+        else if (/실외|야외/.test(a)) answers.activityType = 'outdoor';
+      }
+
+      // 4. 모임 성격/스타일 질문에 대한 답변
+      if (/스타일|성격|교류|소통|과업|집중형/.test(q)) {
+        if (/상관없/.test(a)) answers.vibePreference = 'any';
+        else if (/교류|소통|교육/.test(a)) answers.vibePreference = 'social';
+        else if (/과업|육체|집중/.test(a)) answers.vibePreference = 'task';
+      }
+
+      // 5. 이동 범위 질문에 대한 답변
+      if (/장소|지역|이동 범위|거리|집 근처/.test(q)) {
+        if (/상관없/.test(a)) answers.travelRange = 'any';
+        else if (/집 근처|선택 지역/.test(a)) answers.travelRange = 'exact';
+        else if (/같은 시.?도|시·도/.test(a)) answers.travelRange = 'province';
+      }
+
+      // 6. 활동 분야 질문에 대한 답변
+      if (/분야|카테고리|관심사/.test(q)) {
+        if (/상관없/.test(a)) answers.fieldPreference = 'any';
+        else if (/새로운/.test(a)) answers.fieldPreference = 'new';
+        else answers.fieldPreference = 'familiar';
+      }
+
+      // 7. 시간대 질문에 대한 답변
+      if (/시간|주말|평일|오전|오후|저녁/.test(q)) {
+        if (/상관없/.test(a)) answers.timePreference = 'any';
+        else if (/주말/.test(a)) answers.timePreference = 'weekend';
+        else if (/평일/.test(a)) answers.timePreference = 'weekday';
+      }
+
+      // 8. 재능 질문에 대한 답변
+      if (/재능|살려보고|발휘/.test(q)) {
+        if (/상관없|부담 없이|가볍게|특별한 재능 없이/.test(a)) answers.talentPreference = 'any';
+        else if (/재능|살릴/.test(a)) answers.talentPreference = 'use';
+      }
+    }
+  }
+
+  return answers;
+}
+
+/**
  * 다음 질문 키 추출 (남은 질문 축)
  */
 export function getRemainingQuestionKeys({
