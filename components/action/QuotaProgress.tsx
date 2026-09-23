@@ -14,11 +14,7 @@
  * 숫자를 직접 조합하지 말고 lib/utils/quota.ts 의 함수를 쓸 것.
  */
 import { UsersRound, Package } from 'lucide-react';
-import {
-  describeTarget,
-  getQuotaState,
-  type QuotaItem,
-} from '@/lib/utils/quota';
+import { getQuotaState, type QuotaItem } from '@/lib/utils/quota';
 import { GENDER_REQUIREMENT_LABEL } from '@/lib/constants';
 import { cn } from '@/lib/utils/cn';
 
@@ -75,7 +71,6 @@ export function QuotaProgress({
 
         <div className="flex flex-1 flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="text-sm font-bold text-neutral-900">{item.name}</span>
-          <span className="text-xs text-neutral-500">{describeTarget(item)}</span>
 
           {detailed && genderReq !== 'ANY' && (
             <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-caption font-medium text-neutral-600">
@@ -92,20 +87,12 @@ export function QuotaProgress({
         <span
           className={cn(
             'shrink-0 text-sm font-bold tabular-nums',
-            state.isFull ? 'text-neutral-400' : 'text-neutral-900',
+            state.isMinMet ? 'text-brand' : 'text-neutral-900',
           )}
         >
           {countNumerator}
           {countDenominator && (
-            <span
-              className={cn(
-                'font-medium',
-                state.isMinMet ? 'text-emerald-600' : 'text-neutral-500',
-              )}
-            >
-              {' '}
-              / {countDenominator}
-            </span>
+            <span className="font-medium text-neutral-500"> / {countDenominator}</span>
           )}
         </span>
       </div>

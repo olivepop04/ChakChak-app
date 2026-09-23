@@ -251,10 +251,10 @@ export function ActionCard({
           <Link
             href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
             onClick={(e) => e.stopPropagation()}
-            className="pointer-events-auto flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-label font-medium text-neutral-600 hover:underline active:opacity-70 transition-opacity"
+            className="pointer-events-auto flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-sm font-semibold text-neutral-900 hover:underline active:opacity-70 transition-opacity"
           >
-            <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
-            <span className="min-w-0 truncate text-label font-medium text-neutral-600">
+            <Avatar name={action.owner?.nickname ?? '호스트'} />
+            <span className="min-w-0 truncate text-sm font-semibold text-neutral-900">
               @{action.owner?.nickname ?? '호스트'}
             </span>
           </Link>
