@@ -40,7 +40,7 @@ export default async function EditActionPage({
     <main>
       <Header title="액션 수정" back backHref={`/action/${id}`} sticky />
 
-      <section className="border-b border-neutral-100 px-5 py-4">
+      <section className="border-b border-neutral-100 px-6 py-4">
         <p className="text-caption font-medium text-neutral-400">수정 중인 액션</p>
         <h1 className="mt-1 line-clamp-2 text-subtitle font-bold leading-snug text-neutral-900">
           {action.title}
@@ -51,14 +51,14 @@ export default async function EditActionPage({
         </p>
       </section>
 
-      <h2 className="px-5 pt-6 text-body font-bold text-neutral-900">소개·안내 수정</h2>
+      <h2 className="px-6 pt-6 text-body font-bold text-neutral-900">소개·안내 수정</h2>
       <ActionTextEditForm
         actionId={action.id}
         initialDescription={action.description ?? ''}
         initialNotice={action.notice ?? ''}
       />
 
-      <section className="border-t border-neutral-100 px-5 py-6">
+      <section className="border-t border-neutral-100 px-6 py-6">
         <h2 className="text-body font-bold text-neutral-900">현재 모집 항목</h2>
         <p className="mt-1 text-caption leading-relaxed text-neutral-500">
           공개한 뒤에는 기존 모집 항목을 수정하거나 삭제할 수 없어요.
@@ -105,7 +105,7 @@ export default async function EditActionPage({
       {canAddActionItems ? (
         <AddActionItemsForm actionId={action.id} />
       ) : (
-        <section className="border-t border-neutral-100 px-5 pb-28 pt-6">
+        <section className="border-t border-neutral-100 px-6 pb-28 pt-6">
           <h2 className="text-body font-bold text-neutral-900">모집 항목 추가</h2>
           <p className="mt-3 rounded-xl bg-neutral-50 px-4 py-5 text-label leading-relaxed text-neutral-500">
             모집이 끝난 액션에는 새 모집 항목을 추가할 수 없어요.

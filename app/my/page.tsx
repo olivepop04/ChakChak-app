@@ -48,7 +48,7 @@ export default async function MyPage() {
       />
 
       {/* 프로필 */}
-      <section className="flex items-center gap-4 px-5 py-4">
+      <section className="flex items-center gap-4 px-6 py-4">
         <Avatar name={profile.nickname} size="lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-subtitle font-bold text-neutral-900">
@@ -85,7 +85,7 @@ export default async function MyPage() {
 
       {/* 관심 카테고리 */}
       {profile.categories.length > 0 && (
-        <section className="mt-6 px-5">
+        <section className="mt-6 px-6">
           <SectionTitle className="pb-3">관심 카테고리</SectionTitle>
           <div className="flex flex-wrap gap-1.5">
             {profile.categories.map((c) => (
@@ -108,7 +108,7 @@ export default async function MyPage() {
         <div className="divide-y divide-neutral-100 border-y border-neutral-100">
           <Link
             href="/my/edit#notification-settings"
-            className="flex items-center justify-between px-5 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
+            className="flex items-center justify-between px-6 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
           >
             알림 설정
             <span className="text-neutral-300">›</span>

@@ -85,7 +85,7 @@ export function RegionPicker({
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
           <div className="max-h-[70vh] w-full max-w-app overflow-y-auto rounded-t-2xl bg-white">
-            <div className="sticky top-0 flex items-center justify-between border-b border-neutral-100 bg-white px-5 py-4">
+            <div className="sticky top-0 flex items-center justify-between border-b border-neutral-100 bg-white px-6 py-4">
               <h2 className="text-body font-semibold">
                 {sido ? sido : '지역 추가'}
               </h2>
@@ -104,7 +104,7 @@ export function RegionPicker({
                   <button
                     type="button"
                     onClick={() => add(NATIONWIDE)}
-                    className="flex w-full items-center justify-between px-5 py-3.5 text-left text-body hover:bg-neutral-50"
+                    className="flex w-full items-center justify-between px-6 py-3.5 text-left text-body hover:bg-neutral-50"
                   >
                     전국 전체
                   </button>
@@ -117,7 +117,7 @@ export function RegionPicker({
                       <button
                         type="button"
                         onClick={() => setSido(s)}
-                        className="flex w-full items-center justify-between px-5 py-3.5 text-left text-body hover:bg-neutral-50"
+                        className="flex w-full items-center justify-between px-6 py-3.5 text-left text-body hover:bg-neutral-50"
                       >
                         {s}
                         <span className="text-neutral-300">›</span>
@@ -130,7 +130,7 @@ export function RegionPicker({
                         type="button"
                         onClick={() => add(formatRegion(sido, g))}
                         disabled={value.includes(formatRegion(sido, g))}
-                        className="w-full px-5 py-3.5 text-left text-body hover:bg-neutral-50 disabled:text-neutral-300"
+                        className="w-full px-6 py-3.5 text-left text-body hover:bg-neutral-50 disabled:text-neutral-300"
                       >
                         {g === PROVINCE_WIDE ? `${sido} 전체` : g}
                       </button>

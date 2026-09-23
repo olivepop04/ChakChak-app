@@ -410,7 +410,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const isPlaceNameError = placeError.includes('장소 이름');
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-[calc(8rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-4">
+    <div className="flex flex-col gap-6 px-6 pb-[calc(8rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-4">
       {/* 제목 */}
       <label className="flex flex-col gap-1.5">
         <FieldLabel>제목</FieldLabel>

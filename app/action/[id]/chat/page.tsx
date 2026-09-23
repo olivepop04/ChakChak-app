@@ -66,7 +66,7 @@ export default async function ChatPage({
     <main>
       <Header title="크루 채팅" back backHref={`/action/${id}`} sticky />
 
-      <div className="border-b border-neutral-100 px-5 py-4">
+      <div className="border-b border-neutral-100 px-6 py-4">
         <h1 className="line-clamp-1 text-body font-bold text-neutral-900">
           {action.title}
         </h1>

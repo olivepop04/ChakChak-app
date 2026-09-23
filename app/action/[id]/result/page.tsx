@@ -84,7 +84,7 @@ export default async function ResultPage({
     <main className={canWriteVoice ? 'pb-52' : 'pb-24'}>
       <Header title="액션 결과" back backHref={`/action/${id}`} sticky />
 
-      <div className="flex flex-col gap-6 px-5 py-6">
+      <div className="flex flex-col gap-6 px-6 py-6">
         {/* 제목 */}
         <div className="flex flex-col gap-2">
           <h1 className="text-xl font-bold leading-snug tracking-tight text-neutral-900">

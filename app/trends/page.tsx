@@ -42,7 +42,7 @@ export default async function TrendsPage() {
     <main className="pb-24">
       <Header title="트렌드" back backHref="/" sticky />
 
-      <div className="flex flex-col gap-5 px-5 py-5">
+      <div className="flex flex-col gap-5 px-6 py-5">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">
             지금 착착에서는

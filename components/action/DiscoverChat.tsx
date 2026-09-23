@@ -108,7 +108,7 @@ export function DiscoverChat({
 
   if (!authenticated) {
     return (
-      <div className="flex flex-col gap-5 px-5 pb-24 pt-6">
+      <div className="flex flex-col gap-5 px-6 pb-24 pt-6">
         <div className="rounded-xl border border-neutral-200 bg-white p-5">
           <p className="text-label font-semibold text-neutral-900">
             로그인 후 Discover AI로 내게 맞는 액션을 찾아보세요.
@@ -140,7 +140,7 @@ export function DiscoverChat({
   ).length;
 
   return (
-    <div className="flex flex-col gap-4 px-5 pb-24 pt-4">
+    <div className="flex flex-col gap-4 px-6 pb-24 pt-4">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-caption text-neutral-500">

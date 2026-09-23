@@ -5,7 +5,7 @@ import type { ActionCardData } from '@/lib/types/view';
 
 export function SavedActionList({ actions }: { actions: ActionCardData[] }) {
   return (
-    <div className="flex flex-col gap-3 px-5 py-5 pb-28">
+    <div className="flex flex-col gap-3 px-6 py-5 pb-28">
       {actions.map((action) => (
         <ActionCard key={action.id} action={action} variant="horizontal" showStatus />
       ))}

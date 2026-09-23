@@ -355,7 +355,7 @@ export default async function ActivityPage({
       <Header title="내 액션" back backHref="/" sticky />
 
       {/* 탭: 호스트한 액션 / 참여한 액션 */}
-      <div className="flex border-b border-neutral-200 px-5">
+      <div className="flex border-b border-neutral-200 px-6">
         {[
           { label: '호스트한 액션', href: '/activity', active: isCreated },
           { label: '참여한 액션', href: '/activity?tab=joined', active: !isCreated },
@@ -376,7 +376,7 @@ export default async function ActivityPage({
       </div>
 
       {/* 상태 필터 탭 */}
-      <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto border-b border-neutral-100 bg-white px-5 py-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto border-b border-neutral-100 bg-white px-6 py-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {isCreated
           ? CREATED_FILTERS.map((f) => (
             <Link
@@ -429,7 +429,7 @@ export default async function ActivityPage({
             action={{ label: '전체 보기', href: '/activity' }}
           />
         ) : (
-          <div className="flex flex-col gap-4 px-5 py-5">
+          <div className="flex flex-col gap-4 px-6 py-5">
             {filteredCreated.map((a) => (
               <ActionCard
                 key={a.id}
@@ -460,7 +460,7 @@ export default async function ActivityPage({
           action={{ label: '전체 보기', href: '/activity?tab=joined' }}
         />
       ) : (
-        <div className="flex flex-col gap-4 px-5 py-5">
+        <div className="flex flex-col gap-4 px-6 py-5">
           {filteredJoined.map((a) => (
             <div key={a.id} className="relative">
               <ActionCard action={a} footer={<JoinedFooter item={a} />} />

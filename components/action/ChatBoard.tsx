@@ -104,7 +104,7 @@ export function ChatBoard({
           description="첫 글을 남겨 이야기를 시작해보세요."
         />
       ) : (
-        <ul className="flex flex-col gap-3 px-5 py-4">
+        <ul className="flex flex-col gap-3 px-6 py-4">
           {posts.map((post) => (
             <li
               key={post.id}

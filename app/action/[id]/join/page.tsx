@@ -52,7 +52,7 @@ export default async function JoinPage({
       <Header title="참여하기" back backHref={`/action/${id}`} sticky />
 
       {/* 액션 요약 */}
-      <section className="flex flex-col gap-3 border-b border-neutral-100 px-5 py-5">
+      <section className="flex flex-col gap-3 border-b border-neutral-100 px-6 py-5">
         <h1 className="text-subtitle font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>

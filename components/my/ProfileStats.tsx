@@ -22,7 +22,7 @@ function Stat({ value, label, href }: ProfileStatItem) {
 
 export function ProfileStats({ stats }: { stats: ProfileStatItem[] }) {
   return (
-    <section className="mx-5 flex rounded-xl border border-neutral-200">
+    <section className="mx-6 flex rounded-xl border border-neutral-200">
       {stats.map((stat) => (
         <Stat key={stat.label} {...stat} />
       ))}

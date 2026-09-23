@@ -15,7 +15,7 @@ export default async function SignupWelcomePage({
   // 하단 탭을 숨기는 화면이라(BottomNav.tsx) 탭을 피하려던 pb-28 은 필요 없습니다.
   // 글자를 키웠을 때 아래가 답답하지 않을 만큼만 남깁니다.
   return (
-    <main className="flex min-h-dvh flex-col px-5 pb-8 pt-8">
+    <main className="flex min-h-dvh flex-col px-6 pb-8 pt-8">
       <div className="flex flex-col items-center text-center">
         <span className="text-5xl" aria-hidden="true">
           🎉
@@ -37,20 +37,20 @@ export default async function SignupWelcomePage({
         {returnPath ? (
           <Link
             href={returnPath}
-            className="flex min-h-13 w-full items-center justify-center rounded-xl border border-neutral-900 bg-white px-5 py-3 text-body font-semibold text-neutral-900 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+            className="flex min-h-13 w-full items-center justify-center rounded-xl border border-neutral-900 bg-white px-6 py-3 text-body font-semibold text-neutral-900 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
           >
             방금 보던 액션으로
           </Link>
         ) : null}
         <Link
           href="/action/create"
-          className="flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 px-5 py-3 text-body font-semibold text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+          className="flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 px-6 py-3 text-body font-semibold text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
         >
           액션 만들기
         </Link>
         <Link
           href="/discover"
-          className="flex min-h-13 w-full items-center justify-center rounded-xl border border-neutral-300 bg-white px-5 py-3 text-body font-semibold text-neutral-800 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+          className="flex min-h-13 w-full items-center justify-center rounded-xl border border-neutral-300 bg-white px-6 py-3 text-body font-semibold text-neutral-800 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
         >
           액션 찾아보기
         </Link>

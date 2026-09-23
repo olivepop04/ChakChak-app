@@ -277,7 +277,7 @@ export function ActionCard({
           href={`/action/${action.id}`}
           tabIndex={-1}
           aria-hidden="true"
-          className="pointer-events-auto relative -mx-5 block h-[245px] overflow-hidden bg-neutral-100"
+          className="pointer-events-auto relative -mx-6 block h-[245px] overflow-hidden bg-neutral-100"
         >
           <ActionGallery
             urls={action.imageUrls}

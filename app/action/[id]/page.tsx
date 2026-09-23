@@ -157,7 +157,7 @@ export default async function ActionDetailPage({
         alt={action.title}
       />
 
-      <div className="flex flex-col gap-6 px-5 pt-5">
+      <div className="flex flex-col gap-6 px-6 pt-5">
         {/* 조기 종료 사유 */}
         {action.earlyEndReason && (
           <div className="rounded-xl border border-red-100 bg-red-50 p-4">

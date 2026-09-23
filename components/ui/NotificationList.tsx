@@ -76,7 +76,7 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
     <div className="flex flex-col">
       {groups.map((g) => (
         <section key={g.label}>
-          <h2 className="px-5 pb-1.5 pt-4 text-caption font-bold tracking-wider text-neutral-400">
+          <h2 className="px-6 pb-1.5 pt-4 text-caption font-bold tracking-wider text-neutral-400">
             {g.label}
           </h2>
 
@@ -89,7 +89,7 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
                     type="button"
                     onClick={() => handleClick(n)}
                     className={cn(
-                      'flex w-full items-center gap-2.5 px-5 py-2.5 text-left transition-colors hover:bg-neutral-50',
+                      'flex w-full items-center gap-2.5 px-6 py-2.5 text-left transition-colors hover:bg-neutral-50',
                       !n.isRead && 'bg-amber-50/50',
                     )}
                   >
@@ -144,7 +144,7 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="mx-5 mt-4 rounded-xl border border-neutral-200 py-2.5 text-label font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+          className="mx-6 mt-4 rounded-xl border border-neutral-200 py-2.5 text-label font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
         >
           + 지난 알림 {hiddenCount}개 더보기
         </button>

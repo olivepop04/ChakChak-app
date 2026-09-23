@@ -297,7 +297,7 @@ function SignUpForm() {
   // 버튼 줄이 mt-auto 로 화면 맨 아래에 붙는데 pb-10 은 40px 뿐이라 탭(62px) 아래로 들어갔습니다.
   // 글자 200% 에서 탭이 107px 이 되므로, 탭을 피하는 값인 pb-28(112px) 로 잡습니다.
   return (
-    <main className="flex min-h-dvh flex-col px-5 pb-28 pt-8">
+    <main className="flex min-h-dvh flex-col px-6 pb-28 pt-8">
       {/* 진행 표시 */}
       <div className="mb-8 flex items-center gap-2">
         {[1, 2, 3].map((s) => (

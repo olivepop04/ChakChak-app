@@ -93,7 +93,7 @@ export function JoinForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-[calc(10rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-4">
+    <div className="flex flex-col gap-6 px-6 pb-[calc(10rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-4">
       <div>
         <h2 className="text-subtitle font-bold text-neutral-900">
           내가 할 수 있는 일

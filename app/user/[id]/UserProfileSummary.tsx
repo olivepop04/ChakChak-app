@@ -50,7 +50,7 @@ export function UserProfileSummary({
 
   return (
     <>
-      <section className="flex items-center gap-4 px-5 py-5">
+      <section className="flex items-center gap-4 px-6 py-5">
         <Avatar name={nickname} size="lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-subtitle font-bold text-neutral-900">

@@ -59,7 +59,7 @@ function OtherDocumentLink({
   const href = from ? `${otherDocument.href}?from=${from}` : otherDocument.href;
 
   return (
-    <div className="mx-5 border-t border-neutral-200 pt-6 text-center">
+    <div className="mx-6 border-t border-neutral-200 pt-6 text-center">
       <Link
         href={href}
         className="text-label font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
@@ -114,7 +114,7 @@ export function LegalDocumentPage({
         <LegalHeader title={document.headerTitle} />
       </Suspense>
 
-      <article className="px-5 pb-8 pt-8">
+      <article className="px-6 pb-8 pt-8">
         <div className="border-b border-neutral-200 pb-6">
           <p className="text-caption font-semibold tracking-wide text-neutral-400">
             CHAKCHAK POLICY
@@ -169,7 +169,7 @@ export function LegalDocumentPage({
 
       <Suspense
         fallback={
-          <div className="mx-5 border-t border-neutral-200 pt-6 text-center">
+          <div className="mx-6 border-t border-neutral-200 pt-6 text-center">
             <Link
               href={otherDocument.href}
               className="text-label font-semibold text-neutral-600 underline underline-offset-4 hover:text-neutral-900"

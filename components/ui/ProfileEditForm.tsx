@@ -156,7 +156,7 @@ export function ProfileEditForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-[calc(7rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
+    <div className="flex flex-col gap-6 px-6 pb-[calc(7rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
       {/* 수정 불가 항목 */}
       <div className="flex flex-col gap-1.5">
         <FieldLabel>이름</FieldLabel>

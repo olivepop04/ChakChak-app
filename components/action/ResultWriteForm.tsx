@@ -100,7 +100,7 @@ export function ResultWriteForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-[calc(9rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
+    <div className="flex flex-col gap-6 px-6 pb-[calc(9rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
       {/* 자동 집계 — 수정 불가 */}
       <section className="flex flex-col gap-3">
         <div>

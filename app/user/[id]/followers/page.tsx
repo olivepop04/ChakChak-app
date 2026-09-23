@@ -28,7 +28,7 @@ export default async function FollowersPage({
     <main className="pb-24">
       <Header title="팔로워" back backHref={`/user/${id}`} sticky />
 
-      <div className="px-5 py-4">
+      <div className="px-6 py-4">
         <SectionTitle>{followers.length}명</SectionTitle>
         <p className="mt-0.5 text-caption text-neutral-500">
           @{profile.nickname}님을 팔로우하는 사람

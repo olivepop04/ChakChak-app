@@ -26,7 +26,7 @@ function toKoreanDateKey(iso: string | null): string | null {
 
 function CrewRow({ person }: { person: UserSummary; isOwner?: boolean }) {
   return (
-    <li className="flex items-center gap-3 px-5 py-3.5">
+    <li className="flex items-center gap-3 px-6 py-3.5">
       <Avatar name={person.nickname} />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-neutral-900">
@@ -99,7 +99,7 @@ export default async function CrewPage({
     <main className="pb-36">
       <Header title="함께하는 크루" back backHref={`/action/${id}`} sticky />
 
-      <div className="px-5 py-5">
+      <div className="px-6 py-5">
         <h1 className="line-clamp-2 text-subtitle font-bold leading-snug text-neutral-900">
           {action.title}
         </h1>
@@ -107,7 +107,7 @@ export default async function CrewPage({
 
       {owner && (
         <section>
-          <h2 className="px-5 pb-1 pt-2 text-caption font-semibold tracking-wide text-neutral-400">
+          <h2 className="px-6 pb-1 pt-2 text-caption font-semibold tracking-wide text-neutral-400">
             호스트
           </h2>
           <ul className="divide-y divide-neutral-100 border-y border-neutral-100">
@@ -117,7 +117,7 @@ export default async function CrewPage({
       )}
 
       <section className="mt-6">
-        <h2 className="px-5 pb-1 text-caption font-semibold tracking-wide text-neutral-400">
+        <h2 className="px-6 pb-1 text-caption font-semibold tracking-wide text-neutral-400">
           함께하는 크루 ({crew.length})
         </h2>
         {crew.length === 0 ? (
@@ -136,7 +136,7 @@ export default async function CrewPage({
       </section>
 
       {isMultiDay && (
-        <section className="px-5 pb-4 pt-6">
+        <section className="px-6 pb-4 pt-6">
           <h2 className="pb-2 text-caption font-semibold tracking-wide text-neutral-400">
             항목별 참여 현황
           </h2>

@@ -32,7 +32,7 @@ export default async function JoinedActionsPage({
         sticky
       />
 
-      <div className="px-5 py-4">
+      <div className="px-6 py-4">
         <SectionTitle>{actions.length}개</SectionTitle>
         <p className="mt-0.5 text-caption text-neutral-500">
           @{profile.nickname}님이 소감까지 작성한 액션
