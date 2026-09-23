@@ -45,7 +45,7 @@ export function ActionTextEditForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-6 pb-24 pt-6">
+    <div className="flex flex-col gap-6 px-6 pb-8 pt-6">
       <label className="flex flex-col gap-1.5">
         <FieldLabel>소개</FieldLabel>
         <textarea
@@ -71,7 +71,6 @@ export function ActionTextEditForm({
       <div className="pt-2">
         <Button
           type="button"
-          size="lg"
           fullWidth
           loading={busy}
           onClick={handleSave}

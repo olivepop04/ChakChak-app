@@ -45,7 +45,6 @@ export function AddActionItemsForm({ actionId }: { actionId: string }) {
       <div className="mt-5">
         <Button
           type="button"
-          size="lg"
           fullWidth
           loading={busy}
           disabled={newItems.length === 0}
