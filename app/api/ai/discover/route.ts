@@ -47,7 +47,7 @@ import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 
 const CHAT_PROMPT_VERSION = 'discover-chat-v7-personalized-companion';
 const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v7-semantic-3step';
-const MAX_USER_TURNS = 6;
+const MAX_USER_TURNS = 15;
 const PARTICIPATION_MODES = [
   '시간을 내서',
   '물건으로',
@@ -65,7 +65,7 @@ const ChatRequestSchema = z.object({
 });
 
 const ConversationSchema = z.object({
-  reply: z.string().trim().min(1).max(300),
+  reply: z.string().trim().min(1).max(400),
   question_key: z
     .enum([
       'talent_preference',
@@ -74,27 +74,21 @@ const ConversationSchema = z.object({
       'vibe_preference',
       'group_size',
       'field_preference',
+      'difficulty',
       'travel_range',
+      'time_pref',
       'participation_mode',
     ])
     .nullable()
     .default(null),
   enough: z.boolean().default(false),
-  options: z.array(z.string().trim().min(1).max(40)).max(6).default([]),
+  options: z.array(z.string().trim().min(1).max(50)).max(25).default([]),
   categories: z.array(z.string()).default([]),
   participation_mode: z.enum(PARTICIPATION_MODES).nullable().default(null),
 });
 
 const RecommendationSchema = z.object({
   topActionIds: z.array(z.string()).max(3).default([]),
-  reasons: z
-    .array(
-      z.object({
-        actionId: z.string(),
-        reason: z.string().trim().max(100),
-      }),
-    )
-    .default([]),
 });
 
 type ChatMessage = z.infer<typeof ChatMessageSchema>;
@@ -104,57 +98,54 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 맞춤 �
 반드시 JSON 형식으로만 답하세요.
 
 Discover AI의 목적:
-- 사용자를 평가하거나 정보를 캐묻는 '설문조사'가 아니라, 회원님을 깊이 이해하고 꼭 맞는 Action을 함께 찾아주는 따뜻하고 친절한 동반자입니다.
-- 사용자가 "나한테 맞춰서 물어보네", "내가 했던 활동도 알고 있네", "이미 알고 있는 건 또 안 묻네", "몇 가지만 답했는데 나를 꽤 잘 파악했네", "착한 일을 시작하는 게 생각보다 쉽네"라고 느끼도록 대화합니다.
+- 사용자를 평가하거나 정보를 캐묻는 '설문조사'가 아니라, 회원님을 깊이 이해하고 꼭 맞는 액션을 함께 찾아주는 따뜻하고 친절한 동반자입니다.
+- 사용자가 "나한테 맞춰서 물어보네", "내가 했던 활동도 알고 있네", "이미 알고 있는 건 또 안 묻네", "몇 가지만 답했는데 나를 꽤 잘 파악했네", "선한 행동을 시작하는 게 생각보다 쉽네"라고 느끼도록 대화합니다.
 
 핵심 대화 원칙 (엄수):
-1. [언어 규칙 - 절대 금지어]:
+1. [언어 규칙 - 절대 금지어 및 한글 '액션' 사용]:
+   - 영어 'Action' 단어는 절대 사용하지 말고, 반드시 한글 '액션'으로만 표기하세요!
    - '봉사', '봉사활동', '봉사자', '수혜자', '사회공헌 활동' 단어를 일체 사용하지 마세요!
-   - 대신 'Action', '좋은 일', '함께하기', '참여하기', '직접 해보기', '작은 행동', '좋은 행동' 등의 긍정적이고 활기찬 표현을 사용하세요.
+   - 대신 '액션', '좋은 일', '함께하기', '참여하기', '직접 해보기', '작은 행동' 등의 긍정적이고 활기찬 표현을 사용하세요.
 
-2. [핵심 질문 공식: [이미 알고 있는 사실] + [자연스러운 확인/선택 질문]]:
-   - 없는 데이터를 있는 것처럼 아는 척하지 마세요 (데이터의 진실성 준수).
-   - 프로필이나 과거 활동으로 이미 파악된 정보(재능, 시간, 지역)는 중복해서 캐묻지 마세요.
-   - 예: 프로필에 사진 촬영이 이미 있다면 "어떤 재능이 있으세요?" ❌ -> "프로필에 사진 촬영 재능을 등록해주셨네요. 이번에도 사진 촬영을 살릴 수 있는 Action을 찾아볼까요?" ⭕
-   - 예: 과거 환경 활동 이력이 있다면 "어떤 분야에 관심 있으세요?" ❌ -> "지난번에는 환경 분야의 소규모 야외 Action에 참여하셨네요. 이번에도 비슷한 활동을 이어가볼까요, 아니면 새로운 분야도 괜찮으세요?" ⭕
+2. [질문 주제 엄격 제한 - 가상 질문 절대 금지]:
+   - 질문은 오직 데이터베이스 10대 항목(카테고리/분야, 활동 환경, 모임 성격, 모임 인원 규모, 참여 난이도, 재능, 이동 지역, 활동 시간대) 중 아직 확인되지 않은 것에 대해서만 질문하세요.
+   - 메타데이터에 없는 가상의 활동 유형(예: 정화 활동, 교육 세미나, 캠페인, 직접 해보는 활동, 교육적인 프로그램 등)을 임의로 지어내어 질문하는 것은 엄격히 금지됩니다!
 
-3. [첫 번째 턴 (사용자답변수 0) 오프닝]:
-   - 짧은 환영 인사 + Discover의 역할을 먼저 안내한 후 첫 질문을 시작하세요.
-   - 전달받은 '사용자상태(A~F)'와 '이미알고있는사실'을 활용하여 자연스럽게 환영하세요.
-   - 신규 사용자(F 상태)라면: "반가워요! 아직 착착에서 해본 활동이나 프로필 정보가 없으시네요. 괜찮아요. 몇 가지만 편하게 알려주시면 지금 잘 맞는 Action을 찾아드릴게요. 😊"처럼 부담을 덜어주세요.
+3. [선택지 전체 출력 규칙]:
+   - 질문을 제시할 때는 시스템에 정의된 해당 항목의 전체 선택지 목록을 빠짐없이 options 배열에 모두 담으세요 (임의로 2~3개만 축소해서 출력하지 마세요).
+   - 복수 선택이나 오픈형 응답을 위해 마지막에 '상관없음' 옵션을 항상 포함하세요.
+   - 예시:
+     - 카테고리/분야: ["동물", "환경", "지역사회", "아동·청소년", "어르신", "장애인", "교육", "문화·예술", "기타", "상관없음"]
+     - 활동 환경: ["실내 활동", "실외 활동", "실내외 병행", "온라인/비대면", "상관없음"]
+     - 모임 성격: ["교류·교육·소통형", "육체·과업·집중형", "가족·동반가능", "상관없음"]
+     - 모임 규모: ["소규모 모임 (10명 안팎)", "중규모 모임 (10-20명)", "대규모 모임 (20명 이상)", "상관없음"]
+     - 참여 난이도: ["누구나 참여가능", "기초 체력 필요", "전문지식·자격 필요", "상관없음"]
+     - 이동 범위: ["집 근처 (선택 지역)", "같은 시·도까지", "지역 상관없음"]
+     - 활동 시간: ["주말 오전", "주말 오후", "평일 저녁", "평일 낮", "시간 상관없음"]
 
-4. [이후 턴 (사용자답변수 1 이상)]:
-   - 이전 사용자의 답변을 한 문장으로 따뜻하고 공감 가득하게 받아준 뒤 다음 질문으로 자연스럽게 연결하세요.
-   - 사용자를 평가하거나 심사하는 말투 금지 (예: "재능이 없으시군요" ❌ -> "괜찮아요. 특별한 재능 없이도 쉽게 참여할 수 있는 Action이 많아요. 😊" ⭕).
-   - 모임 규모를 물을 때는 "혼자 참여"를 묻지 말고 "10명 안팎의 작은 모임이 편하신가요, 아니면 사람이 조금 많아도 괜찮으세요?"처럼 Action의 규모(소규모/중규모/대규모)를 파악하세요.
-   - 얼마나 오래 참여할 수 있는지, 시간을 얼마나 쓸 수 있는지 등의 불필요한 질문은 하지 마세요.
+4. [사용자 질문 및 돌발 입력에 대한 친절한 우선 응답]:
+   - 사용자가 "혼자하는 건 없나요?", "다른 분야는 없나요?" 등 자연어로 질문하거나 특이 사항을 물어본 경우, 이를 무시하거나 성급하게 추천으로 넘기지 마세요!
+   - 반드시 사용자의 질문에 먼저 친절하고 명확하게 답변(예: "착착의 액션은 주로 함께하는 활동이지만, 소규모 모임이나 비대면으로 편하게 참여할 수 있는 액션도 있어요!")한 후 다음 적합한 메타데이터 선택지를 안내하세요.
 
-5. [질문 수 및 추천 전환 판단 (enough)]:
-   - 최소 4개 질문 답변 전(사용자답변수 < 4)에는 enough를 false로 유지하세요.
-   - 4번째 답변 이후(사용자답변수 >= 4), 사용자의 선호(재능, 분야, 환경, 모임규모, 성격 등)가 충분히 파악되었다고 판단되면 "enough": true로 설정하여 즉시 추천으로 전환하세요.
-   - 아직 정보가 부족하다면 5~6번째 질문을 진행하세요. (6번째 답변에서는 코드가 자동으로 무조건 추천으로 전환합니다).
-
-6. [선택지(options) 제공]:
-   - 사용자가 탭 한 번으로 편하게 답할 수 있도록 질문에 부합하는 친절한 선택지 2~3개를 options 배열에 넣어주세요.
+5. [추천 전환 기준 (enough) 및 질문 턴 수]:
+   - 질문 턴 수는 최대 15턴까지 허용됩니다.
+   - 4턴 이상 진행되었고 주요 선호 조건이 충분히 확인되었거나, 사용자가 "추천해줘", "이 정도면 됐어"와 같이 추천을 직접 요청했을 때만 "enough": true로 설정하세요.
+   - 대화가 더 필요하거나 사용자의 의문이 해소되지 않았다면 "enough": false로 질문을 이어가세요.
 
 형식:
-{"reply":"공감 및 질문 문장","question_key":"group_size","enough":false,"options":["선택지1","선택지2"],"categories":[],"participation_mode":null}`;
+{"reply":"공감 및 질문 문장","question_key":"group_size","enough":false,"options":["소규모 모임 (10명 안팎)","중규모 모임 (10-20명)","대규모 모임 (20명 이상)","상관없음"],"categories":[],"participation_mode":null}`;
 
 const RECOMMEND_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트입니다.
-프로젝트의 '콘텐츠 자동 분류·색인 시스템'에 의해 생성된 각 액션의 7대 AI 색인 메타데이터와 사용자의 대화 및 성향을 비교하여 가장 부합하는 최적의 액션 3개를 추천합니다.
+프로젝트의 '콘텐츠 자동 분류·색인 시스템'에 의해 생성된 각 액션의 7대 AI 색인 메타데이터와 사용자의 대화 및 성향을 비교하여 가장 부합하는 최적의 액션 3개를 선정합니다.
 반드시 JSON 형식으로만 답하세요.
 
 핵심 규칙:
-1. '봉사', '봉사활동', '봉사자', '수혜자' 단어를 일체 사용하지 마세요. 'Action', '함께하는 활동', '참여'로 표현하세요.
+1. 영어 'Action' 단어를 절대 쓰지 말고 한글 '액션'으로 표현하세요. '봉사', '봉사활동', '봉사자', '수혜자' 단어를 일체 사용하지 마세요.
 2. 주어진 후보 목록의 actionId 중에서만 topActionIds로 최대 3개를 선정하세요.
-3. 각 선정 액션에 대해 [사용자 정보/대화 발언] → [Action 특성/색인] → [추천 이유]가 자연스럽게 연결된 친근하고 따뜻한 1문장(50자 안팎)의 개인화된 사유(reason)를 작성하세요.
-   - 예시: "사진 촬영 재능을 활용할 수 있고, 평소 선호하셨던 소규모 환경 활동이라 부담 없이 참여해볼 수 있는 Action이에요."
-   - 예시: "가볍게 첫 참여를 원하셨던 성은님께 딱 맞는, 사전 준비 없이 누구나 참여 가능한 Action이에요."
-   - 예시: "사람들과 따뜻하게 이야기 나누는 소통형 활동을 좋아하시는 성은님께 잘 어울리는 소규모 Action이에요."
-4. 후보 정보에 없는 허위 사실이나 거리, 시간 등을 지어내지 마세요.
+3. 없는 사실이나 사용자가 말하지 않은 취향을 추측하거나 지어내지 마세요.
 
 형식:
-{"topActionIds":["actionId1", "actionId2", "actionId3"],"reasons":[{"actionId":"actionId1","reason":"개인화된 추천 이유 문장"}]}`;
+{"topActionIds":["actionId1", "actionId2", "actionId3"]}`;
 
 function extractSkillsAnswer(messages: ChatMessage[]): string[] | null {
   const userText = messages
@@ -431,10 +422,11 @@ export async function POST(request: Request) {
 
     const reply =
       isAiSuccess && conversation.reply ? conversation.reply : fallback.reply;
+    const fullOptions = getQuestionOptions(chosenQuestionKey, SKILLS);
     const options =
-      isAiSuccess && conversation.options.length > 0
+      isAiSuccess && conversation.options.length >= fullOptions.length
         ? conversation.options
-        : getQuestionOptions(chosenQuestionKey, SKILLS);
+        : fullOptions;
 
     return NextResponse.json({
       done: false,
@@ -505,12 +497,12 @@ export async function POST(request: Request) {
 
   if (candidates.length === 0 && hasRegionFilter) {
     candidates = categoryCandidates;
-    relaxation.push('말씀해주신 조건으로는 선택지가 많지 않아서, 지역이나 분야를 조금 넓혀 더 잘 맞는 Action을 찾아봤어요.');
+    relaxation.push('말씀해주신 조건으로는 선택지가 많지 않아서, 지역이나 분야를 조금 넓혀 더 잘 맞는 액션을 찾아봤어요.');
   }
 
   if (candidates.length === 0 && filterCategories.length > 0) {
     candidates = allCandidates;
-    relaxation.push('말씀해주신 조건으로는 선택지가 많지 않아서, 지역이나 분야를 조금 넓혀 더 잘 맞는 Action을 찾아봤어요.');
+    relaxation.push('말씀해주신 조건으로는 선택지가 많지 않아서, 지역이나 분야를 조금 넓혀 더 잘 맞는 액션을 찾아봤어요.');
   }
 
   if (candidates.length === 0) {
@@ -623,7 +615,6 @@ export async function POST(request: Request) {
       userId: user.id,
     });
 
-    const reasonsMap = new Map(aiRec.reasons.map((r) => [r.actionId, r.reason]));
     const chosenActions: (typeof candidates)[number][] = [];
 
     for (const id of aiRec.topActionIds) {
@@ -656,14 +647,10 @@ export async function POST(request: Request) {
         scoringAnswers,
         metadataByAction[action.id],
       );
-      const aiReason = reasonsMap.get(action.id);
       return {
         action,
         score: scored.score,
-        reason:
-          aiReason && aiReason.trim().length > 0
-            ? aiReason
-            : fallbackReason(scored),
+        reason: '',
       };
     });
   } catch {
@@ -677,7 +664,7 @@ export async function POST(request: Request) {
     topItems = codeTop.map((item) => ({
       action: item.action,
       score: item.score,
-      reason: fallbackReason(item),
+      reason: '',
     }));
   }
 

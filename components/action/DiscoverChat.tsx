@@ -129,8 +129,8 @@ export function DiscoverChat({
             로그인 후 Discover AI로 내게 맞는 액션을 찾아보세요.
           </p>
           <ul className="mt-3 flex flex-col gap-2 text-[13px] leading-relaxed text-neutral-600">
-            <li>· 내 지역과 가능한 시간에 맞춰 Action을 추천해요.</li>
-            <li>· 이미 참여한 Action과 내가 만든 Action은 자동으로 빼요.</li>
+            <li>· 내 지역과 가능한 시간에 맞춰 액션을 추천해요.</li>
+            <li>· 이미 참여한 액션과 내가 만든 액션은 자동으로 빼요.</li>
             <li>· 편안한 대화를 통해 내게 꼭 맞는 좋은 일을 찾아요.</li>
           </ul>
           <Link
@@ -256,19 +256,15 @@ export function DiscoverChat({
           {items.length === 0 ? (
             <EmptyState
               icon="🔍"
-              title="지금은 딱 맞는 Action이 없어요."
-              description="직접 새로운 Action을 만들어 보면 어떠세요?"
-              action={{ label: '직접 Action 만들기', href: '/action/create' }}
+              title="지금은 딱 맞는 액션이 없어요."
+              description="직접 새로운 액션을 만들어 보면 어떠세요?"
+              action={{ label: '직접 액션 만들기', href: '/action/create' }}
             />
           ) : (
             <div className="flex flex-col gap-4">
               {items.map((item) => (
-                <div key={item.action.id} className="flex flex-col gap-1.5 rounded-2xl border border-neutral-100 bg-neutral-50/50 p-2">
+                <div key={item.action.id} className="flex flex-col gap-1.5">
                   <ActionCard action={item.action} />
-                  <div className="flex items-start gap-1.5 px-2 py-1 text-[13px] leading-relaxed text-neutral-700">
-                    <span className="font-bold text-amber-500">✦</span>
-                    <p className="font-medium text-neutral-800">{item.reason}</p>
-                  </div>
                 </div>
               ))}
             </div>

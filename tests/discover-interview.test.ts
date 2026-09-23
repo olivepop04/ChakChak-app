@@ -14,19 +14,62 @@ import {
 } from '../app/api/ai/discover/interview.ts';
 import { SKILLS } from '../lib/constants/index.ts';
 
-test('Discover 재능 선택지는 프로필의 공통 재능 목록을 그대로 사용한다', () => {
-  assert.deepEqual(getQuestionOptions('skills', SKILLS), [...SKILLS]);
+test('Discover 재능 선택지는 프로필의 공통 재능 목록과 열린 선택지를 제공한다', () => {
+  const options = getQuestionOptions('skills', SKILLS);
+  assert.equal(options.includes('사진 촬영'), true);
+  assert.equal(options.includes('특별한 재능 없이 참여'), true);
+  assert.equal(options.includes('상관없음'), true);
 });
 
-test('모임 규모 질문의 선택지는 Action 규모를 제공한다 (혼자 vs 여럿 배제)', () => {
+test('모임 규모 질문의 선택지는 메타데이터 기준 4개 버튼을 제공한다', () => {
   assert.deepEqual(getQuestionOptions('group_size'), [
-    '10명 이내 소규모',
-    '10~20명 중규모',
-    '20명 이상 대규모',
+    '소규모 모임 (10명 안팎)',
+    '중규모 모임 (10-20명)',
+    '대규모 모임 (20명 이상)',
+    '상관없음',
   ]);
 });
 
-test('사용자 상태 A(가입 직후 첫 진입) 오프닝 질문을 생성한다', () => {
+test('카테고리/분야 질문의 선택지는 전체 카테고리 9개 + 상관없음을 제공한다', () => {
+  assert.deepEqual(getQuestionOptions('field_preference'), [
+    '동물',
+    '환경',
+    '지역사회',
+    '아동·청소년',
+    '어르신',
+    '장애인',
+    '교육',
+    '문화·예술',
+    '기타',
+    '상관없음',
+  ]);
+});
+
+test('활동 환경 및 성격, 난이도 질문의 선택지에 상관없음이 포함된다', () => {
+  assert.deepEqual(getQuestionOptions('activity_type'), [
+    '실내 활동',
+    '실외 활동',
+    '실내외 병행',
+    '온라인/비대면',
+    '상관없음',
+  ]);
+
+  assert.deepEqual(getQuestionOptions('vibe_preference'), [
+    '교류·교육·소통형',
+    '육체·과업·집중형',
+    '가족·동반가능',
+    '상관없음',
+  ]);
+
+  assert.deepEqual(getQuestionOptions('difficulty'), [
+    '누구나 참여가능',
+    '기초 체력 필요',
+    '전문지식·자격 필요',
+    '상관없음',
+  ]);
+});
+
+test('사용자 상태 A(가입 직후 첫 진입) 오프닝에 한글 액션 표기를 사용한다', () => {
   const reply = getQuestionReply('talent_preference', {
     nickname: '성은',
     answers: {},
@@ -41,7 +84,7 @@ test('사용자 상태 A(가입 직후 첫 진입) 오프닝 질문을 생성한
     reply,
     [
       '반가워요, 성은님! 😊',
-      '몇 가지만 편하게 알려주시면 성은님에게 꼭 맞는 Action을 찾아볼게요.',
+      '몇 가지만 편하게 알려주시면 성은님에게 꼭 맞는 액션을 찾아볼게요.',
       '먼저, 이번에는 가진 재능을 살려보고 싶으신가요, 아니면 부담 없이 가볍게 시작하고 싶으신가요?',
     ].join('\n'),
   );
@@ -63,7 +106,7 @@ test('사용자 상태 B(프로필 있음, 활동 0건) 오프닝에 등록 재�
     [
       '반가워요, 성은님! 😊',
       '프로필에 사진 촬영 재능을 등록해주셨네요.',
-      '이번 활동에서도 사진 촬영 재능을 살릴 수 있는 Action을 찾아볼까요, 아니면 가볍게 시작하고 싶으신가요?',
+      '이번 활동에서도 사진 촬영 재능을 살릴 수 있는 액션을 찾아볼까요, 아니면 가볍게 시작하고 싶으신가요?',
     ].join('\n'),
   );
 });
@@ -119,20 +162,20 @@ test('사용자 상태 E(장기 미활동 30일 이상) 오프닝에 복귀를 �
     fieldReferenceCategories: [],
     hasHistory: true,
     userState: 'E',
-    pastActivitySummary: '지난번 플로깅 Action',
+    pastActivitySummary: '지난번 플로깅 액션',
   });
 
   assert.equal(
     reply,
     [
       '반가워요, 성은님! 😊 오랜만이에요.',
-      '지난번 플로깅 Action하셨던 기억이 나네요.',
-      '이번에 다시 가볍게 시작해볼 만한 Action을 찾아볼까요?',
+      '지난번 플로깅 액션하셨던 기억이 나네요.',
+      '이번에 다시 가볍게 시작해볼 만한 액션을 찾아볼까요?',
     ].join('\n'),
   );
 });
 
-test('사용자 상태 F(비로그인 게스트) 오프닝에 친절하게 Action 탐색을 제안한다', () => {
+test('사용자 상태 F(비로그인 게스트) 오프닝에 친절하게 액션 탐색을 제안한다', () => {
   const reply = getQuestionReply('talent_preference', {
     nickname: '게스트',
     answers: {},
@@ -147,21 +190,23 @@ test('사용자 상태 F(비로그인 게스트) 오프닝에 친절하게 Actio
     reply,
     [
       '반가워요! 😊',
-      '몇 가지만 편하게 알려주시면 꼭 맞는 Action을 찾아볼게요.',
+      '몇 가지만 편하게 알려주시면 꼭 맞는 액션을 찾아볼게요.',
       '먼저, 이번에는 가진 재능을 살려보고 싶으신가요, 아니면 부담 없이 가볍게 시작하고 싶으신가요?',
     ].join('\n'),
   );
 });
 
-test('금지 단어(봉사, 봉사활동, 봉사자, 수혜자)가 질문 문구에 일체 포함되지 않는다', () => {
+test('금지 단어(봉사, 봉사활동, 봉사자, 수혜자) 및 영어 Action이 질문 문구에 일체 포함되지 않는다', () => {
   const keys = [
     'talent_preference',
     'skills',
     'activity_type',
     'vibe_preference',
     'group_size',
+    'difficulty',
     'field_preference',
     'travel_range',
+    'time_pref',
     'participation_mode',
   ] as const;
 
@@ -177,6 +222,7 @@ test('금지 단어(봉사, 봉사활동, 봉사자, 수혜자)가 질문 문구
     });
 
     assert.equal(/봉사|봉사활동|봉사자|수혜자/.test(text), false);
+    assert.equal(/Action/i.test(text), false);
   }
 });
 
@@ -228,7 +274,7 @@ test('analyzeUserContext는 사용자 상태 A~F를 정확히 분류한다', () 
   assert.equal(userE.state, 'E');
 });
 
-test('추천 시작 문장에 대화에서 확인한 성향을 자연스럽게 연결한다', () => {
+test('추천 시작 문장에 대화에서 확인한 성향을 자연스럽게 연결하며 한글 액션을 사용한다', () => {
   const reply = getRecommendationReply({
     nickname: '성은',
     answers: {
@@ -246,12 +292,13 @@ test('추천 시작 문장에 대화에서 확인한 성향을 자연스럽게 �
     reply,
     [
       '성은님께서 사진 촬영 재능을 살릴 수 있으면서, 날씨 안 타는 실내에서, 따뜻한 교류를 나누는, 10명 이내 소규모 참여하실 수 있는',
-      '새로운 분야의 Action으로 골라봤어요. 마음에 드는 활동을 확인해보세요! 😊',
+      '새로운 분야의 액션으로 골라봤어요. 마음에 드는 활동을 확인해보세요! 😊',
     ].join('\n'),
   );
+  assert.equal(/Action/i.test(reply), false);
 });
 
-test('질문 턴 수는 최소 4개, 충분하면 4개에서 즉시 추천, 최대 6개를 넘지 않는다', () => {
+test('질문 턴 수는 최대 15턴까지 허용하며, 6턴에서 강제 종료되지 않는다', () => {
   // 0~3턴: 무조건 추천하지 않음
   assert.equal(shouldRecommendNow({ userTurnCount: 0 }), false);
   assert.equal(shouldRecommendNow({ userTurnCount: 3, enough: false }), false);
@@ -261,13 +308,16 @@ test('질문 턴 수는 최소 4개, 충분하면 4개에서 즉시 추천, 최�
   assert.equal(shouldRecommendNow({ userTurnCount: 4, enough: false }), false);
   assert.equal(shouldRecommendNow({ userTurnCount: 4, enough: true }), true);
 
-  // 5턴: enough가 true일 때 추천, false면 추가 질문
-  assert.equal(shouldRecommendNow({ userTurnCount: 5, enough: false }), false);
-  assert.equal(shouldRecommendNow({ userTurnCount: 5, enough: true }), true);
+  // 6턴: 이전과 달리 강제 종료되지 않고 대화 지속 가능
+  assert.equal(shouldRecommendNow({ userTurnCount: 6, enough: false }), false);
+  assert.equal(shouldRecommendNow({ userTurnCount: 6, enough: true }), true);
 
-  // 6턴: 무조건 추천 (최대 6개 초과 금지)
-  assert.equal(shouldRecommendNow({ userTurnCount: 6, enough: false }), true);
-  assert.equal(shouldRecommendNow({ userTurnCount: 7, enough: false }), true);
+  // 10턴: 충분한 정보 파악을 위해 지속 가능
+  assert.equal(shouldRecommendNow({ userTurnCount: 10, enough: false }), false);
+  assert.equal(shouldRecommendNow({ userTurnCount: 10, enough: true }), true);
+
+  // 15턴: 최대 한도 도달 시 무조건 추천
+  assert.equal(shouldRecommendNow({ userTurnCount: 15, enough: false }), true);
 });
 
 test('추천 전환 때 AI가 만든 다음 질문을 고정 추천 안내로 교체한다', () => {

@@ -1,15 +1,14 @@
 /**
  * Discover AI 인터뷰 및 대화 로직
  *
- * 원칙 (20대 핵심 설계 명세):
- * 1. Discover AI는 '정보 수집 설문조사'가 아니라 '함께 Action을 찾아주는 친절한 AI 어시스턴트'다.
- * 2. [이미 알고 있는 사실] + [자연스러운 확인/선택 질문] 패턴을 최우선으로 사용한다.
- * 3. 이미 알고 있는 정보(프로필의 재능, 시간, 지역)는 다시 묻지 않는다.
- * 4. 사용자 상태 6단계(A~F)에 따라 오프닝과 맞춤 질문을 다르게 시작한다.
- * 5. 과거 활동 이력의 메타데이터(활동 환경, 성격, 규모)를 적극 활용한다.
- * 6. 질문은 최소 4개 기준, 충분하면 4개에서 즉시 추천, 최대 6개를 넘지 않는다.
- * 7. '봉사', '봉사활동', '봉사자', '수혜자' 표현을 일체 쓰지 않고 'Action', '좋은 일', '함께하기'를 쓴다.
- * 8. 모임 규모는 '혼자 vs 여럿'이 아니라 'Action의 규모(10명 이내 소규모 / 10~20명 중규모 / 20명 이상 대규모)'를 묻는다.
+ * 원칙 (개편 명세):
+ * 1. Discover AI는 '정보 수집 설문조사'가 아니라 '함께 액션을 찾아주는 친절한 AI 어시스턴트'다.
+ * 2. 영어 'Action'을 절대 쓰지 않고 반드시 한글 '액션'으로 표기한다.
+ * 3. '봉사', '봉사활동', '봉사자', '수혜자' 표현을 일체 쓰지 않는다.
+ * 4. 메타데이터에 없는 가상의 활동(정화활동, 세미나, 캠페인 등)을 묻지 않는다.
+ * 5. 10대 데이터 항목(카테고리, 환경, 성격, 인원규모, 난이도, 재능, 시간, 지역 등)을 충실히 확인한다.
+ * 6. 선택지 옵션은 메타데이터 기준과 1:1 일치하는 전체 버튼 목록 + '상관없음'을 빠짐없이 제공한다.
+ * 7. 질문 턴 수는 최대 15턴까지 허용하며, 충분한 정보가 모이면 조기 추천으로 유연하게 전환한다.
  */
 
 export type QuestionKey =
@@ -19,7 +18,9 @@ export type QuestionKey =
   | 'vibe_preference'
   | 'group_size'
   | 'field_preference'
+  | 'difficulty'
   | 'travel_range'
+  | 'time_pref'
   | 'participation_mode';
 
 export type UserStateCategory = 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
@@ -30,13 +31,15 @@ export interface AdaptiveAnswers {
   activityType?: 'indoor' | 'outdoor' | 'any' | null;
   vibePreference?: 'social' | 'task' | 'any' | null;
   groupSizePreference?: 'small' | 'medium' | 'large' | 'any' | null;
+  difficultyPreference?: 'easy' | 'physical' | 'expert' | 'any' | null;
   fieldPreference?: 'familiar' | 'new' | 'any' | null;
   travelRange?: 'exact' | 'province' | 'any' | null;
+  timePreference?: string | null;
   participationMode?: 'time' | 'goods' | 'direct' | null;
 }
 
 export const DISCOVER_RECOMMENDATION_REPLY =
-  '좋아요. 지금까지 나눈 이야기를 바탕으로 꼭 맞는 Action을 찾아봤어요. 😊';
+  '좋아요. 지금까지 나눈 이야기를 바탕으로 꼭 맞는 액션을 찾아봤어요. 😊';
 
 export interface UserContextSummary {
   state: UserStateCategory;
@@ -164,18 +167,20 @@ export function analyzeUserContext({
     const meta = pastMetas[0];
     const env = meta?.activity_types?.[0] ? ` ${meta.activity_types[0]}` : '';
     const size = meta?.participation_modes?.[0] ? ` ${meta.participation_modes[0]}` : '';
-    pastActivitySummary = `지난번 ${latest.category} 분야${env}${size} Action 참여`;
+    pastActivitySummary = `지난번 ${latest.category} 분야${env}${size} 액션 참여`;
     knownFacts.push(pastActivitySummary);
   }
 
   // 아직 모르는 정보 축 도출
   const missingAxes: QuestionKey[] = [];
-  if (!hasSkills) missingAxes.push('talent_preference');
+  if (!hasCategories) missingAxes.push('field_preference');
   missingAxes.push('activity_type');
   missingAxes.push('vibe_preference');
   missingAxes.push('group_size');
-  if (!hasCategories) missingAxes.push('field_preference');
+  missingAxes.push('difficulty');
+  if (!hasSkills) missingAxes.push('talent_preference');
   if (!hasRegions) missingAxes.push('travel_range');
+  if (!hasTimes) missingAxes.push('time_pref');
 
   return {
     state,
@@ -186,6 +191,9 @@ export function analyzeUserContext({
   };
 }
 
+/**
+ * 10대 메타데이터 기준과 1:1 일치하는 전체 선택지 목록 (+ '상관없음')
+ */
 export function getQuestionOptions(
   key: QuestionKey,
   skills: readonly string[] = [],
@@ -194,37 +202,78 @@ export function getQuestionOptions(
     talent_preference: [
       '가진 재능을 살릴래요',
       '부담 없이 가볍게 시작할래요',
+      '상관없음',
     ],
-    skills: [...skills],
+    skills: [
+      ...(skills.length > 0
+        ? skills
+        : [
+            '사진 촬영',
+            '디자인',
+            '요리',
+            '교육·멘토링',
+            '컴퓨터·IT',
+            '글쓰기',
+            '음악·공연',
+            '청소·정리',
+          ]),
+      '특별한 재능 없이 참여',
+      '상관없음',
+    ],
     activity_type: [
-      '날씨 안 타는 실내 활동',
-      '활기찬 야외 활동',
-      '어디든 상관없어요',
+      '실내 활동',
+      '실외 활동',
+      '실내외 병행',
+      '온라인/비대면',
+      '상관없음',
     ],
     vibe_preference: [
-      '대화·교육·소통형',
-      '몸 쓰며 집중하는 과업형',
-      '둘 다 좋아요',
+      '교류·교육·소통형',
+      '육체·과업·집중형',
+      '가족·동반가능',
+      '상관없음',
     ],
     group_size: [
-      '10명 이내 소규모',
-      '10~20명 중규모',
-      '20명 이상 대규모',
+      '소규모 모임 (10명 안팎)',
+      '중규모 모임 (10-20명)',
+      '대규모 모임 (20명 이상)',
+      '상관없음',
+    ],
+    difficulty: [
+      '누구나 참여가능',
+      '기초 체력 필요',
+      '전문지식·자격 필요',
+      '상관없음',
     ],
     field_preference: [
-      '익숙한 분야',
-      '새로운 분야',
-      '둘 다 좋아요',
+      '동물',
+      '환경',
+      '지역사회',
+      '아동·청소년',
+      '어르신',
+      '장애인',
+      '교육',
+      '문화·예술',
+      '기타',
+      '상관없음',
     ],
     travel_range: [
-      '집 근처(선택 지역)',
+      '집 근처 (선택 지역)',
       '같은 시·도까지',
       '지역 상관없음',
+    ],
+    time_pref: [
+      '주말 오전',
+      '주말 오후',
+      '평일 저녁',
+      '평일 낮',
+      '시간 상관없음',
     ],
     participation_mode: [
       '시간으로',
       '물품으로',
       '직접 행동으로',
+      '상관없음',
     ],
   };
 
@@ -236,7 +285,7 @@ function compactList(values: readonly string[]): string {
 }
 
 /**
- * 턴별 맞춤 질문 및 연결 멘트 생성 (설문식 문답 배제, 톤앤매너 엄수)
+ * 턴별 맞춤 질문 및 연결 멘트 생성 (영어 Action 배제, 메타데이터 외 질문 금지)
  */
 export function getQuestionReply(
   key: QuestionKey,
@@ -259,7 +308,7 @@ export function getQuestionReply(
     if (userState === 'F') {
       return [
         '반가워요! 😊',
-        '몇 가지만 편하게 알려주시면 꼭 맞는 Action을 찾아볼게요.',
+        '몇 가지만 편하게 알려주시면 꼭 맞는 액션을 찾아볼게요.',
         '먼저, 이번에는 가진 재능을 살려보고 싶으신가요, 아니면 부담 없이 가볍게 시작하고 싶으신가요?',
       ].join('\n');
     }
@@ -270,7 +319,7 @@ export function getQuestionReply(
       return [
         `반가워요, ${nickname}님! 😊 오랜만이에요.`,
         pastMention,
-        '이번에 다시 가볍게 시작해볼 만한 Action을 찾아볼까요?',
+        '이번에 다시 가볍게 시작해볼 만한 액션을 찾아볼까요?',
       ].join('\n');
     }
 
@@ -303,12 +352,12 @@ export function getQuestionReply(
         return [
           `반가워요, ${nickname}님! 😊`,
           `프로필에 ${skills} 재능을 등록해주셨네요.`,
-          `이번 활동에서도 ${skills} 재능을 살릴 수 있는 Action을 찾아볼까요, 아니면 가볍게 시작하고 싶으신가요?`,
+          `이번 활동에서도 ${skills} 재능을 살릴 수 있는 액션을 찾아볼까요, 아니면 가볍게 시작하고 싶으신가요?`,
         ].join('\n');
       }
       return [
         `반가워요, ${nickname}님! 😊`,
-        `몇 가지만 편하게 알려주시면 ${nickname}님에게 꼭 맞는 Action을 찾아볼게요.`,
+        `몇 가지만 편하게 알려주시면 ${nickname}님에게 꼭 맞는 액션을 찾아볼게요.`,
         '먼저, 이번에는 가진 재능을 살려보고 싶으신가요, 아니면 부담 없이 가볍게 시작하고 싶으신가요?',
       ].join('\n');
     }
@@ -316,7 +365,7 @@ export function getQuestionReply(
     // 상태 A: 회원가입 직후 첫 진입
     return [
       `반가워요, ${nickname}님! 😊`,
-      `몇 가지만 편하게 알려주시면 ${nickname}님에게 꼭 맞는 Action을 찾아볼게요.`,
+      `몇 가지만 편하게 알려주시면 ${nickname}님에게 꼭 맞는 액션을 찾아볼게요.`,
       '먼저, 이번에는 가진 재능을 살려보고 싶으신가요, 아니면 부담 없이 가볍게 시작하고 싶으신가요?',
     ].join('\n');
   }
@@ -330,22 +379,15 @@ export function getQuestionReply(
       ].join('\n');
     }
     return [
-      '멋져요! 가진 재능을 살릴 수 있는 Action을 함께 찾아볼게요.',
+      '멋져요! 가진 재능을 살릴 수 있는 액션을 함께 찾아볼게요.',
       '어떤 재능을 발휘하고 싶으신가요?',
     ].join('\n');
   }
 
-  // 참여 방식 질문 (호환성 보장)
-  if (key === 'participation_mode') {
-    return [
-      '괜찮아요. 특별한 재능 없이도 누구나 편하게 참여할 수 있는 Action이 많아요. 😊',
-      '시간, 물품, 직접 행동 중 어떤 방식이 가장 편하세요?',
-    ].join('\n');
-  }
-
+  // 활동 환경 질문 (activity_types)
   if (key === 'activity_type') {
     const bridge = answers.talentPreference === 'any'
-      ? '괜찮아요. 특별한 재능 없이도 누구나 즐겁게 참여할 수 있는 Action이 정말 많아요. 😊'
+      ? '괜찮아요. 특별한 재능 없이도 누구나 즐겁게 참여할 수 있는 액션이 정말 많아요. 😊'
       : '재능을 나누는 따뜻한 마음이 참 멋져요! 😊';
     return [
       bridge,
@@ -353,6 +395,7 @@ export function getQuestionReply(
     ].join('\n');
   }
 
+  // 활동 성격 질문 (target_groups)
   if (key === 'vibe_preference') {
     const bridge = answers.activityType === 'indoor'
       ? '실내 활동이 편하시군요.'
@@ -365,6 +408,7 @@ export function getQuestionReply(
     ].join('\n');
   }
 
+  // 모임 인원 규모 질문 (participation_modes)
   if (key === 'group_size') {
     const bridge = answers.vibePreference === 'social'
       ? '사람들과 소통하는 활동을 선호하시는군요.'
@@ -377,6 +421,14 @@ export function getQuestionReply(
     ].join('\n');
   }
 
+  // 참여 난이도 / 문턱 질문 (difficulty)
+  if (key === 'difficulty') {
+    return [
+      '활동 참여 문턱이나 난이도는 어느 정도가 편하세요? 첫 참여라 부담 없는 활동이 좋으신가요, 아니면 체력이나 전문성을 발휘해보고 싶으신가요?',
+    ].join('\n');
+  }
+
+  // 활동 분야 질문 (categories)
   if (key === 'field_preference') {
     const bridge = answers.groupSizePreference === 'small'
       ? '오붓한 소규모 모임이 더 편하시군요.'
@@ -385,22 +437,29 @@ export function getQuestionReply(
     if (categories && hasHistory) {
       return [
         bridge,
-        `이전에 ${categories} 관련 Action에 함께하셨는데, 이번에도 비슷한 분야를 이어가볼까요, 아니면 새로운 분야를 찾아볼까요?`,
+        `이전에 ${categories} 관련 액션에 함께하셨는데, 이번에는 어떤 분야에 관심이 가시나요?`,
       ].join('\n');
     }
     if (categories) {
       return [
         bridge,
-        `프로필에 관심사로 두신 ${categories} 분야를 찾아볼까요, 아니면 새로운 분야에도 도전해볼까요?`,
+        `프로필에 관심사로 두신 ${categories} 분야를 비롯해 어떤 분야를 가장 해보고 싶으세요?`,
       ].join('\n');
     }
     return [
       bridge,
-      '익숙한 관심 분야를 찾아볼까요, 아니면 새로운 분야에도 도전해볼까요?',
+      '특별히 관심이 가는 활동 분야가 있으신가요?',
     ].join('\n');
   }
 
-  // travel_range
+  // 활동 시간대 질문 (time_pref)
+  if (key === 'time_pref') {
+    return [
+      '주로 활동하기 편하신 시간대가 언제인가요? 주말이나 평일 중 원하시는 시간대를 알려주세요.',
+    ].join('\n');
+  }
+
+  // 이동 범위 질문 (travel_range)
   const fieldBridge = answers.fieldPreference === 'new'
     ? '새로운 분야에도 도전해보고 싶으시군요.'
     : answers.fieldPreference === 'familiar'
@@ -466,10 +525,10 @@ export function getRecommendationReply({
   const categories = compactList(fieldReferenceCategories);
   const ending =
     answers.fieldPreference === 'new'
-      ? '새로운 분야의 Action으로 골라봤어요.'
+      ? '새로운 분야의 액션으로 골라봤어요.'
       : answers.fieldPreference === 'familiar' && categories
-        ? `${categories} 분야의 Action으로 골라봤어요.`
-        : 'Action들을 골라봤어요.';
+        ? `${categories} 분야의 액션으로 골라봤어요.`
+        : '액션들을 골라봤어요.';
 
   if (parts.length === 0) return DISCOVER_RECOMMENDATION_REPLY;
 
@@ -520,13 +579,22 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.vibePreference = 'any';
   }
 
-  // 모임 인원 규모
-  if (/10명 이내|소규모|작은|적은|오붓|10명 안팎/.test(text)) {
+  // 모임 인원 규모 (혼자하는 것 문의도 소규모로 반영)
+  if (/10명 이내|소규모|작은|적은|오붓|10명 안팎|혼자|혼자하는/.test(text)) {
     answers.groupSizePreference = 'small';
-  } else if (/10~20|10명에서 20명|중규모|중그룹/.test(text)) {
+  } else if (/10~20|10-20|10명에서 20명|중규모|중그룹/.test(text)) {
     answers.groupSizePreference = 'medium';
   } else if (/20명 이상|대규모|사람 많|북적|인원.*상관|규모.*상관|많아도/.test(text)) {
     answers.groupSizePreference = 'large';
+  }
+
+  // 난이도 / 문턱
+  if (/누구나|첫 참여|쉬운|부담 없|초보/.test(text)) {
+    answers.difficultyPreference = 'easy';
+  } else if (/체력|몸 쓰는|힘쓰는|힘든/.test(text)) {
+    answers.difficultyPreference = 'physical';
+  } else if (/전문|자격|역량|기술/.test(text)) {
+    answers.difficultyPreference = 'expert';
   }
 
   // 관심 분야
@@ -547,6 +615,13 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.travelRange = 'any';
   }
 
+  // 시간대
+  if (/주말|토요일|일요일/.test(text)) {
+    answers.timePreference = 'weekend';
+  } else if (/평일/.test(text)) {
+    answers.timePreference = 'weekday';
+  }
+
   return answers;
 }
 
@@ -564,49 +639,58 @@ export function getRemainingQuestionKeys({
 }): QuestionKey[] {
   const remaining: QuestionKey[] = [];
 
-  // 재능 질문
+  // 1. 분야 선호 (가장 기본 관심사)
+  if (!answers.fieldPreference) {
+    remaining.push('field_preference');
+  }
+
+  // 2. 환경 질문 (실내/실외)
+  if (!answers.activityType) {
+    remaining.push('activity_type');
+  }
+
+  // 3. 성격 질문 (교류형 vs 과업형)
+  if (!answers.vibePreference) {
+    remaining.push('vibe_preference');
+  }
+
+  // 4. 인원 규모 질문 (소규모 vs 중규모 vs 대규모)
+  if (!answers.groupSizePreference) {
+    remaining.push('group_size');
+  }
+
+  // 5. 난이도 / 문턱
+  if (!answers.difficultyPreference) {
+    remaining.push('difficulty');
+  }
+
+  // 6. 재능 질문
   if (!answers.talentPreference) {
     remaining.push('talent_preference');
   } else if (answers.talentPreference === 'use' && !skillsAnswered) {
     remaining.push('skills');
   }
 
-  // 환경 질문 (실내/실외)
-  if (!answers.activityType) {
-    remaining.push('activity_type');
-  }
-
-  // 성격 질문 (교류형 vs 과업형)
-  if (!answers.vibePreference) {
-    remaining.push('vibe_preference');
-  }
-
-  // 인원 규모 질문 (소규모 vs 다인원)
-  if (!answers.groupSizePreference) {
-    remaining.push('group_size');
-  }
-
-  // 분야 선호
-  if (!answers.fieldPreference) {
-    remaining.push('field_preference');
-  }
-
-  // 이동 범위
+  // 7. 이동 범위
   if (!answers.travelRange) {
     remaining.push('travel_range');
+  }
+
+  // 8. 활동 시간대
+  if (!answers.timePreference) {
+    remaining.push('time_pref');
   }
 
   return remaining;
 }
 
 /**
- * 동적 추천 전환 여부 판정 (최소 4개 ~ 최대 6개 질문 규칙 준수)
+ * 동적 추천 전환 여부 판정
  *
- * 명세 8번:
- * - 최소 4개 정도를 기준으로 한다.
- * - 4개만으로 충분한 정보가 확보되면 바로 추천한다.
- * - 정보가 부족하면 5~6번째 질문을 한다.
- * - 6개를 초과하지 않는다.
+ * 명세:
+ * - 질문 턴 수는 최대 15턴까지 허용한다 (충분한 정보 파악을 위해).
+ * - 4턴 이상에서 사용자 조건이 충분히 모였거나, 사용자가 추천을 요청하면 즉시 전환한다.
+ * - 15턴에 도달하면 무조건 추천으로 전환한다.
  */
 export function shouldRecommendNow({
   userTurnCount,
@@ -615,9 +699,9 @@ export function shouldRecommendNow({
   userTurnCount: number;
   enough?: boolean;
 }): boolean {
-  // 6번째 답변에 도달하면 무조건 추천
-  if (userTurnCount >= 6) return true;
-  // 4~5번째 답변에서 충분한 정보가 확보되었으면 조기 추천
+  // 15번째 답변에 도달하면 무조건 추천
+  if (userTurnCount >= 15) return true;
+  // 4턴 이후에서 충분한 정보가 확보되었으면 조기 추천
   if (userTurnCount >= 4 && enough) return true;
   return false;
 }
