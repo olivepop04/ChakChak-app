@@ -94,7 +94,7 @@ export default async function HomePage({
       {/* 필터 영역 (카테고리 + 정렬) */}
       <div className="flex flex-col gap-5 px-6 pb-1">
         {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다 */}
-        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-6 px-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-6 px-6 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link href={makeCategoryUrl(undefined)} scroll={false} className="shrink-0">
             <Chip selected={!selected} as="span" tone="accent" className="whitespace-nowrap">
               전체
