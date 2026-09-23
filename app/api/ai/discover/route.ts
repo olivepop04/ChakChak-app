@@ -137,13 +137,14 @@ Discover AI의 목적:
      - 이동 범위: ["집 근처 (선택 지역)", "같은 시·도까지", "지역 상관없음"]
      - 활동 시간: ["주말 오전", "주말 오후", "평일 저녁", "평일 낮", "시간 상관없음"]
 
-6. [사용자 질문 및 개념 문의에 대한 다정하고 명확한 우선 응답 (주제 이탈 절대 금지)]:
-   - 사용자가 "전문지식 필요한 건 어떤 거야?", "과업형이 뭐야?", "혼자하는 건 없나요?" 등 직전 질문의 단어나 개념에 대해 질문한 경우:
-     1) 절대로 엉뚱한 다른 주제(환경, 지역 등)로 말을 돌리지 마세요!
-     2) 사용자의 궁금증에 대해 2~3문장으로 친절하고 생생하게 예시를 들어 설명하세요.
-        (예: "전문 지식이 필요한 액션은 특정 자격증이나 전문 실무 기술을 활용하는 활동이에요! 예를 들어 통·번역, 법률·세무 상담, 전문 IT 멘토링, 디자인 등이 있어요. 😊")
-     3) 설명을 마친 후, "혹시 이런 전문 액션에 관심이 가시나요, 아니면 부담 없이 가볍게 시작하고 싶으신가요?"처럼 **해당 질문의 맥락을 이어서 다시 질문**하세요.
-     4) 이때 "question_key"는 반드시 해당 주제(예: 'difficulty')를 그대로 유지하고, options도 해당 항목의 선택지들을 그대로 유지하세요!
+6. [선택지 답변 접수 vs 돌발 질문 구별 규칙 (이미 답변된 질문 반복 절대 금지)]:
+   - [선택지 버튼으로 답변한 경우 ('전문지식·자격 필요', '소규모 모임', '실내 활동', '익숙한 분야' 등)]:
+     - 이것은 질문이 아니라 사용자가 '선택을 완료한 것'입니다!
+     - 해당 조건은 이미 확정되었으므로, **절대로 같은 항목(난이도, 인원 등)을 다시 되묻지 마세요!**
+     - "전문성을 발휘해주신다니 정말 든든해요! 👏", "오붓한 소규모 모임이 더 편하시군요! 😊"처럼 멋진 선택에 맞장구를 치고,
+     - **반드시 [남은질문] 목록에 있는 아직 묻지 않은 다음 질문(이동 지역, 활동 시간 등)으로 넘어가세요!**
+   - [사용자가 물음표(?)나 질문형('~어떤 거야?', '~뭐야?', '~없나요?')으로 되물어본 경우에만]:
+     - 엉뚱한 주제로 돌리지 말고, 그 개념을 2~3문장으로 친절히 설명(예시 포함)한 뒤 해당 질문의 맥락을 이어서 다시 확인하세요.
 
 7. [추천 전환 기준 (enough) 및 질문 턴 수]:
    - 질문 턴 수는 최대 15턴까지 허용됩니다.
@@ -469,6 +470,14 @@ export async function POST(request: Request) {
     }
   }
 
+  const lastUserMsg = userAnswers[userAnswers.length - 1] ?? '';
+  const isQuestionInquiry = /\?|어떤 거야|뭐야|있나요|없나요|어때요/.test(lastUserMsg);
+
+  // 사용자가 개념 문의를 한 게 아닌데 AI가 이미 답변된 질문 키를 반환한 경우, 남은 질문으로 강제 전환
+  if (!isQuestionInquiry && remainingQuestionKeys.length > 0 && !remainingQuestionKeys.includes(chosenQuestionKey)) {
+    chosenQuestionKey = remainingQuestionKeys[0];
+  }
+
   const recommendNow = shouldRecommendNow({
     userTurnCount,
     enough: conversation.enough,
@@ -490,9 +499,20 @@ export async function POST(request: Request) {
       pastActivitySummary: userContext.pastActivitySummary,
     });
 
-    const reply =
+    let reply =
       isAiSuccess && conversation.reply ? conversation.reply : fallback.reply;
-    const options = getQuestionOptions(chosenQuestionKey, SKILLS);
+
+    // 만약 AI가 이미 답변된 질문 축을 되묻는 응답을 냈다면, 다음 남은 질문의 안내로 교체
+    if (
+      isAiSuccess &&
+      !isQuestionInquiry &&
+      conversation.question_key &&
+      !remainingQuestionKeys.includes(conversation.question_key)
+    ) {
+      reply = fallback.reply;
+    }
+
+    const options = getQuestionOptions(chosenQuestionKey, SKILLS, userContext.state);
 
     return NextResponse.json({
       done: false,
