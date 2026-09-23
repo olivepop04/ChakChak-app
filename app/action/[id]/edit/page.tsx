@@ -101,7 +101,7 @@ export default async function EditActionPage({
                     )}
                   </div>
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center">
-                    <PencilOff className="h-4 w-4 text-faint" aria-label="수정할 수 없음" />
+                    <PencilOff className="h-4 w-4 text-neutral-400" aria-label="수정할 수 없음" />
                   </span>
                 </div>
               </div>
