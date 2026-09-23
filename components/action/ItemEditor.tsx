@@ -56,6 +56,9 @@ const emptyGoods = (): ActionItemInput => ({
 const inputSm =
   'min-h-11 rounded-xl border border-neutral-300 px-3 py-3 text-sm outline-none focus:border-neutral-900';
 
+const quantityInput =
+  'h-8 w-10 appearance-none rounded-lg border border-neutral-300 text-center text-sm outline-none focus:border-neutral-900 [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none';
+
 function DeferredNumberInput({
   value,
   min,
@@ -195,14 +198,14 @@ export function ItemEditor({
                       maxAllowed: Math.max(minRequired, item.maxAllowed ?? minRequired),
                     })
                   }
-                  className={`${inputSm} w-20`}
+                  className={quantityInput}
                 />
                 <span className="text-label text-neutral-500">~</span>
                 <DeferredNumberInput
                   min={item.minRequired}
                   value={item.maxAllowed ?? item.minRequired}
                   onCommit={(maxAllowed) => update(i, { maxAllowed })}
-                  className={`${inputSm} w-20`}
+                  className={quantityInput}
                 />
                 <span className="text-label text-neutral-500">
                   {item.type === 'PERSON' ? PERSON_UNIT : item.unit || '개'}
@@ -229,7 +232,7 @@ export function ItemEditor({
                   min={1}
                   value={item.minRequired}
                   onCommit={(minRequired) => update(i, { minRequired })}
-                  className={`${inputSm} w-20`}
+                  className={quantityInput}
                 />
                 <span className="text-label text-neutral-500">
                   {item.type === 'PERSON' ? PERSON_UNIT : item.unit || '개'}

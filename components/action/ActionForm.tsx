@@ -22,6 +22,7 @@ import {
 } from '@/lib/mutations';
 import { AddressSearch } from '@/components/action/AddressSearch';
 import { ItemEditor } from '@/components/action/ItemEditor';
+import { DateTimePickerModal } from '@/components/action/DateTimePickerModal';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
 import { FieldLabel } from '@/components/ui/FieldLabel';
@@ -49,6 +50,18 @@ function moveToSameDate(value: string, activityStart: string): string {
   const [, time] = value.split('T');
   if (!startDate) return value;
   return time ? `${startDate}T${time}` : startTime ? activityStart : value;
+}
+
+/** datetime-local 값 → 화면에 보여줄 문자열 (2026. 9. 24. 오후 6:00) */
+function formatSchedule(value: string): string {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const hour = d.getHours();
+  const period = hour < 12 ? '오전' : '오후';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  const minute = String(d.getMinutes()).padStart(2, '0');
+  return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}. ${period} ${hour12}:${minute}`;
 }
 
 function scrollAndFocus(target: HTMLElement | null) {
@@ -129,9 +142,12 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const imageSectionRef = useRef<HTMLDivElement>(null);
   const itemsSectionRef = useRef<HTMLDivElement>(null);
-  const recruitEndRef = useRef<HTMLInputElement>(null);
-  const activityStartRef = useRef<HTMLInputElement>(null);
-  const activityEndRef = useRef<HTMLInputElement>(null);
+  const recruitEndRef = useRef<HTMLButtonElement>(null);
+  const activityStartRef = useRef<HTMLButtonElement>(null);
+  const activityEndRef = useRef<HTMLButtonElement>(null);
+  const [openPicker, setOpenPicker] = useState<
+    'recruitEnd' | 'activityStart' | 'activityEnd' | null
+  >(null);
   const placeSectionRef = useRef<HTMLDivElement>(null);
   const placeNameRef = useRef<HTMLInputElement>(null);
   const pendingReviewTargetRef = useRef<HTMLElement | null>(null);
@@ -551,16 +567,16 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
         <label className="flex flex-col gap-1.5">
           <span className="text-label text-neutral-500">모집 마감일</span>
-          <input
+          <button
+            type="button"
             ref={recruitEndRef}
-            type="datetime-local"
-            value={recruitEnd}
-            onChange={(e) => {
-              setRecruitEnd(e.target.value);
-              if (dateError?.field === 'recruitEnd') setDateError(null);
-            }}
-            className={input}
-          />
+            onClick={() => setOpenPicker('recruitEnd')}
+            className={`${input} flex items-center text-left ${
+              recruitEnd ? '' : 'text-neutral-400'
+            }`}
+          >
+            {recruitEnd ? formatSchedule(recruitEnd) : '날짜와 시간을 선택해주세요'}
+          </button>
           {dateError?.field === 'recruitEnd' && (
             <span className="text-label text-red-600" role="alert">
               {dateError.message}
@@ -575,20 +591,16 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
         <label className="flex flex-col gap-1.5">
           <span className="text-label text-neutral-500">활동 시작</span>
-          <input
+          <button
+            type="button"
             ref={activityStartRef}
-            type="datetime-local"
-            value={activityStart}
-            onChange={(e) => {
-              const nextActivityStart = e.target.value;
-              setActivityStart(nextActivityStart);
-              if (isSameDay) {
-                setActivityEnd((current) => moveToSameDate(current, nextActivityStart));
-              }
-              setDateError(null);
-            }}
-            className={input}
-          />
+            onClick={() => setOpenPicker('activityStart')}
+            className={`${input} flex items-center text-left ${
+              activityStart ? '' : 'text-neutral-400'
+            }`}
+          >
+            {activityStart ? formatSchedule(activityStart) : '날짜와 시간을 선택해주세요'}
+          </button>
         </label>
 
         <div className="flex flex-col gap-1.5">
@@ -620,19 +632,17 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
               시작일과 같음
             </label>
           </div>
-          <input
+          <button
+            type="button"
             id="activity-end"
             ref={activityEndRef}
-            type="datetime-local"
-            value={activityEnd}
-            onChange={(e) => {
-              setActivityEnd(
-                isSameDay ? moveToSameDate(e.target.value, activityStart) : e.target.value,
-              );
-              if (dateError?.field === 'activityEnd') setDateError(null);
-            }}
-            className={input}
-          />
+            onClick={() => setOpenPicker('activityEnd')}
+            className={`${input} flex items-center text-left ${
+              activityEnd ? '' : 'text-neutral-400'
+            }`}
+          >
+            {activityEnd ? formatSchedule(activityEnd) : '날짜와 시간을 선택해주세요'}
+          </button>
           {dateError?.field === 'activityEnd' && (
             <span className="text-label text-red-600" role="alert">
               {dateError.message}
@@ -726,6 +736,41 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           busy={busy}
         />
       )}
+
+      {/* 일정 3개 필드가 공유하는 날짜·시간 선택 모달 */}
+      <DateTimePickerModal
+        open={openPicker === 'recruitEnd'}
+        title="모집 마감일 선택"
+        value={recruitEnd}
+        onClose={() => setOpenPicker(null)}
+        onConfirm={(nextValue) => {
+          setRecruitEnd(nextValue);
+          if (dateError?.field === 'recruitEnd') setDateError(null);
+        }}
+      />
+      <DateTimePickerModal
+        open={openPicker === 'activityStart'}
+        title="활동 시작 선택"
+        value={activityStart}
+        onClose={() => setOpenPicker(null)}
+        onConfirm={(nextValue) => {
+          setActivityStart(nextValue);
+          if (isSameDay) {
+            setActivityEnd((current) => moveToSameDate(current, nextValue));
+          }
+          setDateError(null);
+        }}
+      />
+      <DateTimePickerModal
+        open={openPicker === 'activityEnd'}
+        title="활동 종료 선택"
+        value={activityEnd}
+        onClose={() => setOpenPicker(null)}
+        onConfirm={(nextValue) => {
+          setActivityEnd(isSameDay ? moveToSameDate(nextValue, activityStart) : nextValue);
+          if (dateError?.field === 'activityEnd') setDateError(null);
+        }}
+      />
     </div>
   );
 }
