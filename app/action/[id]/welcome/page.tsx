@@ -45,7 +45,7 @@ export default async function WelcomePage({
           <span className="text-5xl" aria-hidden="true">
             🎉
           </span>
-          <h1 className="mt-5 text-[26px] font-bold tracking-tight text-neutral-900">
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-neutral-900">
             You&apos;re In!
           </h1>
           <p className="mt-2 text-sm text-neutral-500">
@@ -59,7 +59,7 @@ export default async function WelcomePage({
         {/* 함께하는 크루 */}
         <Link
           href={`/action/${id}/crew`}
-          className="mt-10 flex flex-col gap-3 rounded-xl border border-neutral-200 p-5 transition-colors hover:bg-neutral-50"
+          className="mt-8 flex flex-col gap-3 rounded-xl border border-neutral-200 p-5 transition-colors hover:bg-neutral-50"
         >
           <p className="text-label font-semibold text-neutral-500">
             지금 이 액션을 함께하는 크루

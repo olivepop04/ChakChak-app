@@ -100,7 +100,7 @@ export function SharePanel({
   }
 
   return (
-    <div className={className ?? 'flex flex-col gap-7 px-5 py-5'}>
+    <div className={className ?? 'flex flex-col gap-6 px-5 py-5'}>
       {/* 회원에게 보내기 */}
       <section className="flex flex-col gap-3">
         <div>

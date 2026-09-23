@@ -14,7 +14,7 @@ export function MySavedSection({ saved }: { saved: ActionCardData[] }) {
   const previewItems = selectProfileActionPreview(saved);
 
   return (
-    <section className="mt-7">
+    <section className="mt-6">
       <div className="flex items-center justify-between px-5 pb-3">
         <SectionTitle>
           내가 저장한 액션{' '}

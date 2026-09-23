@@ -297,7 +297,7 @@ function SignUpForm() {
   // 버튼 줄이 mt-auto 로 화면 맨 아래에 붙는데 pb-10 은 40px 뿐이라 탭(62px) 아래로 들어갔습니다.
   // 글자 200% 에서 탭이 107px 이 되므로, 탭을 피하는 값인 pb-28(112px) 로 잡습니다.
   return (
-    <main className="flex min-h-dvh flex-col px-6 pb-28 pt-14">
+    <main className="flex min-h-dvh flex-col px-5 pb-28 pt-8">
       {/* 진행 표시 */}
       <div className="mb-8 flex items-center gap-2">
         {[1, 2, 3].map((s) => (
@@ -313,7 +313,7 @@ function SignUpForm() {
       {/* ── 1단계 ── */}
       {step === 1 && (
         <>
-          <h1 className="text-[22px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900">
             착한 일을 착착,
             <br />
             쉽고 즐겁게!
@@ -408,7 +408,7 @@ function SignUpForm() {
       {/* ── 2단계 ── */}
       {step === 2 && (
         <>
-          <h1 className="text-[22px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900">
             먼저, 당신을
             <br />
             조금만 알려주세요.
@@ -471,7 +471,7 @@ function SignUpForm() {
       {/* ── 3단계 ── */}
       {step === 3 && (
         <>
-          <h1 className="text-[22px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900">
             어떻게
             <br />
             활동하고 싶으세요?

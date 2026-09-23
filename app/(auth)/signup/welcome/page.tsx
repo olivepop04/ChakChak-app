@@ -15,12 +15,12 @@ export default async function SignupWelcomePage({
   // 하단 탭을 숨기는 화면이라(BottomNav.tsx) 탭을 피하려던 pb-28 은 필요 없습니다.
   // 글자를 키웠을 때 아래가 답답하지 않을 만큼만 남깁니다.
   return (
-    <main className="flex min-h-dvh flex-col px-6 pb-10 pt-10">
+    <main className="flex min-h-dvh flex-col px-5 pb-8 pt-8">
       <div className="flex flex-col items-center text-center">
         <span className="text-5xl" aria-hidden="true">
           🎉
         </span>
-        <h1 className="mt-6 text-[28px] font-bold tracking-tight text-neutral-900">
+        <h1 className="mt-6 text-2xl font-bold tracking-tight text-neutral-900">
           환영합니다!
         </h1>
         <p className="mt-3 text-subtitle font-semibold text-neutral-800">

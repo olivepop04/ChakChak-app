@@ -56,8 +56,8 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col px-6 pb-10 pt-16">
-      <div className="mb-10">
+    <main className="flex min-h-dvh flex-col px-5 pb-8 pt-8">
+      <div className="mb-8">
         <p className="text-2xl font-bold tracking-tight text-neutral-900">착착</p>
         <p className="mt-2 text-sm leading-relaxed text-neutral-500">
           착한 일을 착착,

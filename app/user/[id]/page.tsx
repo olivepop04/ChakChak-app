@@ -56,7 +56,7 @@ export default async function UserProfilePage({
       />
 
       {profile.categories.length > 0 && (
-        <section className="mt-7 px-5">
+        <section className="mt-6 px-5">
           <SectionTitle className="pb-3">관심 카테고리</SectionTitle>
           <div className="flex flex-wrap gap-1.5">
             {profile.categories.map((c) => (

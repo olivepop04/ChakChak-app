@@ -94,7 +94,7 @@ export function LegalDocumentPage({
   }
 
   return (
-    <main className="min-h-dvh bg-white pb-12">
+    <main className="min-h-dvh bg-white pb-8">
       <Suspense
         fallback={
           <header className="sticky top-0 z-20 flex h-14 items-center border-b border-neutral-100 bg-white/95 px-4 backdrop-blur">
@@ -115,11 +115,11 @@ export function LegalDocumentPage({
       </Suspense>
 
       <article className="px-5 pb-8 pt-8">
-        <div className="border-b border-neutral-200 pb-7">
+        <div className="border-b border-neutral-200 pb-6">
           <p className="text-caption font-semibold tracking-wide text-neutral-400">
             CHAKCHAK POLICY
           </p>
-          <h1 className="mt-2 text-[26px] font-bold tracking-tight text-neutral-900">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-neutral-900">
             {document.title}
           </h1>
           <span className="mt-3 inline-flex rounded-full bg-neutral-100 px-3 py-1.5 text-caption font-medium text-neutral-600">
@@ -127,7 +127,7 @@ export function LegalDocumentPage({
           </span>
         </div>
 
-        <div className="space-y-9 pt-8">
+        <div className="space-y-8 pt-8">
           {document.sections.map((section, sectionIndex) => {
             const sectionId = `legal-section-${sectionIndex + 1}`;
 

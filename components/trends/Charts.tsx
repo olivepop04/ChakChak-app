@@ -84,7 +84,7 @@ export function SummaryTiles({ stats }: { stats: TrendStats }) {
           key={t.label}
           className="flex flex-col gap-0.5 rounded-xl bg-neutral-50 px-4 py-3.5"
         >
-          <span className="text-[22px] font-bold tabular-nums text-neutral-900">
+          <span className="text-2xl font-bold tabular-nums text-neutral-900">
             {t.value}
           </span>
           <span className="text-caption text-neutral-500">{t.label}</span>

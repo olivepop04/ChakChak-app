@@ -20,7 +20,7 @@ export function ProfileActionSection({
   const visibleActions = selectProfileActionPreview(actions);
 
   return (
-    <section className="mt-7">
+    <section className="mt-6">
       <div className="flex items-center justify-between px-5 pb-1">
         <SectionTitle>
           {title} <span className="text-neutral-400">{actions.length}</span>
