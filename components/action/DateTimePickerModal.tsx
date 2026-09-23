@@ -189,7 +189,7 @@ export function DateTimePickerModal({
                 key={day}
                 type="button"
                 onClick={() => setSelectedDate(cellDate)}
-                className={`flex h-10 items-center justify-center rounded-full text-[14px] ${
+                className={`flex h-10 items-center justify-center rounded-full text-[12px] ${
                   isSelected
                     ? 'bg-brand font-bold text-white'
                     : isToday
