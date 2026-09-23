@@ -66,7 +66,7 @@ const ChatRequestSchema = z.object({
 });
 
 const ConversationSchema = z.object({
-  reply: z.string().trim().min(1).max(400),
+  reply: z.string().trim().min(1).max(1000),
   question_key: z
     .enum([
       'talent_preference',
@@ -81,11 +81,12 @@ const ConversationSchema = z.object({
       'participation_mode',
     ])
     .nullable()
+    .catch(null)
     .default(null),
-  enough: z.boolean().default(false),
-  options: z.array(z.string().trim().min(1).max(50)).max(25).default([]),
-  categories: z.array(z.string()).default([]),
-  participation_mode: z.enum(PARTICIPATION_MODES).nullable().default(null),
+  enough: z.boolean().catch(false).default(false),
+  options: z.array(z.string().trim().min(1).max(50)).max(25).catch([]).default([]),
+  categories: z.array(z.string()).catch([]).default([]),
+  participation_mode: z.enum(PARTICIPATION_MODES).nullable().catch(null).default(null),
 });
 
 const RecommendationSchema = z.object({
@@ -136,9 +137,13 @@ Discover AI의 목적:
      - 이동 범위: ["집 근처 (선택 지역)", "같은 시·도까지", "지역 상관없음"]
      - 활동 시간: ["주말 오전", "주말 오후", "평일 저녁", "평일 낮", "시간 상관없음"]
 
-6. [사용자 질문 및 돌발 입력에 대한 친절한 우선 응답]:
-   - 사용자가 "혼자하는 건 없나요?", "다른 분야는 없나요?" 등 자연어로 질문하거나 특이 사항을 물어본 경우, 이를 무시하거나 성급하게 추천으로 넘기지 마세요!
-   - 반드시 사용자의 질문에 먼저 친절하고 명확하게 답변(예: "착착의 액션은 주로 함께하는 활동이지만, 소규모 모임이나 비대면으로 편하게 참여할 수 있는 액션도 있어요!")한 후 다음 적합한 메타데이터 선택지를 안내하세요.
+6. [사용자 질문 및 개념 문의에 대한 다정하고 명확한 우선 응답 (주제 이탈 절대 금지)]:
+   - 사용자가 "전문지식 필요한 건 어떤 거야?", "과업형이 뭐야?", "혼자하는 건 없나요?" 등 직전 질문의 단어나 개념에 대해 질문한 경우:
+     1) 절대로 엉뚱한 다른 주제(환경, 지역 등)로 말을 돌리지 마세요!
+     2) 사용자의 궁금증에 대해 2~3문장으로 친절하고 생생하게 예시를 들어 설명하세요.
+        (예: "전문 지식이 필요한 액션은 특정 자격증이나 전문 실무 기술을 활용하는 활동이에요! 예를 들어 통·번역, 법률·세무 상담, 전문 IT 멘토링, 디자인 등이 있어요. 😊")
+     3) 설명을 마친 후, "혹시 이런 전문 액션에 관심이 가시나요, 아니면 부담 없이 가볍게 시작하고 싶으신가요?"처럼 **해당 질문의 맥락을 이어서 다시 질문**하세요.
+     4) 이때 "question_key"는 반드시 해당 주제(예: 'difficulty')를 그대로 유지하고, options도 해당 항목의 선택지들을 그대로 유지하세요!
 
 7. [추천 전환 기준 (enough) 및 질문 턴 수]:
    - 질문 턴 수는 최대 15턴까지 허용됩니다.

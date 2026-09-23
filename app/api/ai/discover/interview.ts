@@ -29,7 +29,7 @@ export interface AdaptiveAnswers {
   talentPreference?: 'use' | 'any' | null;
   selectedSkill?: string | null;
   activityType?: 'indoor' | 'outdoor' | 'any' | null;
-  vibePreference?: 'social' | 'task' | 'any' | null;
+  vibePreference?: 'social' | 'task' | 'family' | 'any' | null;
   groupSizePreference?: 'small' | 'medium' | 'large' | 'any' | null;
   difficultyPreference?: 'easy' | 'physical' | 'expert' | 'any' | null;
   fieldPreference?: 'familiar' | 'new' | 'any' | null;
@@ -404,7 +404,7 @@ export function getQuestionReply(
         : '환경은 자유롭게 열어둘게요.';
     return [
       bridge,
-      '활동 스타일은 사람들과 대화·교육을 나누는 **교류·소통형**이 좋으신가요, 아니면 몸 쓰며 깔끔하게 일에 집중하는 **과업형**이 끌리시나요?',
+      '활동 스타일은 사람들과 대화·교육을 나누는 **교류·소통형**이 좋으신가요, 몸 쓰며 깔끔하게 일에 집중하는 **과업형**이 끌리시나요, 아니면 가족·지인과 함께하기 좋은 **가족·동반가능** 액션을 찾으시나요?',
     ].join('\n');
   }
 
@@ -512,6 +512,8 @@ export function getRecommendationReply({
     parts.push('따뜻한 교류를 나누는');
   } else if (answers.vibePreference === 'task') {
     parts.push('활동에 집중할 수 있는');
+  } else if (answers.vibePreference === 'family') {
+    parts.push('가족·지인과 함께할 수 있는');
   }
 
   if (answers.groupSizePreference === 'small') {
@@ -571,7 +573,9 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
   }
 
   // 모임 성격 / 교류 형태
-  if (/교류|대화|교육|소통|말벗|멘토링|가르침|아이돌봄/.test(text)) {
+  if (/가족|동반|자녀|아이와|친구와/.test(text)) {
+    answers.vibePreference = 'family';
+  } else if (/교류|대화|교육|소통|말벗|멘토링|가르침|아이돌봄/.test(text)) {
     answers.vibePreference = 'social';
   } else if (/과업|몸 쓰|땀|집중|청소|플로깅|배달|일만|결과물/.test(text)) {
     answers.vibePreference = 'task';
@@ -666,8 +670,9 @@ export function extractAnswersFromDialogue(
       }
 
       // 4. 모임 성격/스타일 질문에 대한 답변
-      if (/스타일|성격|교류|소통|과업|집중형/.test(q)) {
+      if (/스타일|성격|교류|소통|과업|집중형|가족|동반/.test(q)) {
         if (/상관없/.test(a)) answers.vibePreference = 'any';
+        else if (/가족|동반|자녀|아이와|친구와/.test(a)) answers.vibePreference = 'family';
         else if (/교류|소통|교육/.test(a)) answers.vibePreference = 'social';
         else if (/과업|육체|집중/.test(a)) answers.vibePreference = 'task';
       }
