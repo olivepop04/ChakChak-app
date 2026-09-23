@@ -33,6 +33,7 @@ export interface AdaptiveAnswers {
   groupSizePreference?: 'small' | 'medium' | 'large' | 'any' | null;
   difficultyPreference?: 'easy' | 'physical' | 'expert' | 'any' | null;
   fieldPreference?: 'familiar' | 'new' | 'any' | null;
+  selectedCategory?: string | null;
   travelRange?: 'exact' | 'province' | 'any' | null;
   timePreference?: string | null;
   participationMode?: 'time' | 'goods' | 'direct' | null;
@@ -448,6 +449,15 @@ export function getQuestionReply(
 
   // 활동 분야 질문 (categories)
   if (key === 'field_preference') {
+    if (answers.fieldPreference === 'new') {
+      const categories = compactList(fieldReferenceCategories);
+      const pastNotice = categories ? `이전에 참여하셨던 ${categories} 분야 외에, ` : '';
+      return [
+        '새로운 도전을 원하신다니 멋진 선택이에요! ✨',
+        `${pastNotice}이번에는 어떤 새로운 분야에 가장 관심이 가시나요?`,
+      ].join('\n');
+    }
+
     const bridge = answers.groupSizePreference === 'small'
       ? '오붓한 소규모 모임이 더 편하시군요.'
       : '북적북적 함께하는 규모도 좋으시군요.';
@@ -620,12 +630,23 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
   }
 
   // 관심 분야
+  if (/동물/.test(text)) answers.selectedCategory = '동물';
+  else if (/환경/.test(text)) answers.selectedCategory = '환경';
+  else if (/지역사회/.test(text)) answers.selectedCategory = '지역사회';
+  else if (/아동|청소년/.test(text)) answers.selectedCategory = '아동·청소년';
+  else if (/어르신|노인/.test(text)) answers.selectedCategory = '어르신';
+  else if (/장애인|장애/.test(text)) answers.selectedCategory = '장애인';
+  else if (/교육/.test(text)) answers.selectedCategory = '교육';
+  else if (/문화|예술/.test(text)) answers.selectedCategory = '문화·예술';
+  else if (/기타/.test(text)) answers.selectedCategory = '기타';
+
   if (/새로운 분야|새 분야|도전|다양한|새로운 것/.test(text)) {
     answers.fieldPreference = 'new';
   } else if (/비슷한 분야|하던 분야|익숙한 분야|원래 하던|기존/.test(text)) {
     answers.fieldPreference = 'familiar';
   } else if (/분야.*상관|주제.*상관/.test(text)) {
     answers.fieldPreference = 'any';
+    answers.selectedCategory = '상관없음';
   }
 
   // 이동 범위
@@ -704,9 +725,24 @@ export function extractAnswersFromDialogue(
 
       // 6. 활동 분야 질문에 대한 답변
       if (/분야|카테고리|관심사|비슷한 활동|익숙한|도전/.test(q)) {
-        if (/상관없/.test(a)) answers.fieldPreference = 'any';
-        else if (/새로운|도전/.test(a)) answers.fieldPreference = 'new';
-        else if (/비슷|익숙|이어/.test(a)) answers.fieldPreference = 'familiar';
+        if (/상관없/.test(a)) {
+          answers.fieldPreference = 'any';
+          answers.selectedCategory = '상관없음';
+        } else if (/새로운|도전/.test(a)) {
+          answers.fieldPreference = 'new';
+        } else if (/비슷|익숙|이어/.test(a)) {
+          answers.fieldPreference = 'familiar';
+        }
+
+        if (/동물/.test(a)) answers.selectedCategory = '동물';
+        else if (/환경/.test(a)) answers.selectedCategory = '환경';
+        else if (/지역사회/.test(a)) answers.selectedCategory = '지역사회';
+        else if (/아동|청소년/.test(a)) answers.selectedCategory = '아동·청소년';
+        else if (/어르신|노인/.test(a)) answers.selectedCategory = '어르신';
+        else if (/장애인|장애/.test(a)) answers.selectedCategory = '장애인';
+        else if (/교육/.test(a)) answers.selectedCategory = '교육';
+        else if (/문화|예술/.test(a)) answers.selectedCategory = '문화·예술';
+        else if (/기타/.test(a)) answers.selectedCategory = '기타';
       }
 
       // 7. 시간대 질문에 대한 답변
@@ -742,7 +778,12 @@ export function getRemainingQuestionKeys({
   const remaining: QuestionKey[] = [];
 
   // 1. 분야 선호 (가장 기본 관심사)
-  if (!answers.fieldPreference) {
+  // fieldPreference가 아직 없거나, 'new'를 골랐는데 아직 구체적인 새 카테고리(selectedCategory)를 선택하지 않은 경우
+  const needsCategoryChoice =
+    !answers.fieldPreference ||
+    (answers.fieldPreference === 'new' && !answers.selectedCategory);
+
+  if (needsCategoryChoice) {
     remaining.push('field_preference');
   }
 
