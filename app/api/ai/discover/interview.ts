@@ -702,7 +702,7 @@ export function extractAnswersFromDialogue(
       }
 
       // 3. 환경 질문에 대한 답변
-      if (/환경|실내|실외|야외|비대면/.test(q)) {
+      if (/환경|실내|실외|야외|비대면|어떤 액션/.test(q)) {
         if (/상관없/.test(a)) answers.activityType = 'any';
         else if (/실내/.test(a)) answers.activityType = 'indoor';
         else if (/실외|야외/.test(a)) answers.activityType = 'outdoor';
