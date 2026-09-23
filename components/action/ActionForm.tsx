@@ -73,7 +73,7 @@ function scrollAndFocus(target: HTMLElement | null) {
   target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-import { X, Check } from 'lucide-react';
+import { X, Check, Ban, Sparkle } from 'lucide-react';
 
 export interface ActionFormInitial {
   id: string | null;
@@ -644,7 +644,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             {activityEnd ? formatSchedule(activityEnd) : '날짜와 시간을 선택해주세요'}
           </button>
           {dateError?.field === 'activityEnd' && (
-            <span className="text-label text-red-600" role="alert">
+            <span className="text-caption text-red-600" role="alert">
               {dateError.message}
             </span>
           )}
@@ -809,9 +809,9 @@ function ReviewModal({
             onClick={onClose}
             disabled={busy}
             aria-label="검수 결과 닫기"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-neutral-500 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            ×
+            <X className="h-5 w-5" />
           </button>
         </div>
         <ReviewPanel review={review} onPublish={onPublish} busy={busy} />
@@ -836,71 +836,70 @@ function ReviewPanel({
   const canPublish = !blocked;
 
   const tone = blocked
-    ? 'border-red-200 bg-red-50'
+    ? 'border-danger bg-danger-soft'
     : needsWork
-      ? 'border-amber-200 bg-amber-50'
-      : 'border-emerald-200 bg-emerald-50';
+      ? 'border-warning bg-warning-soft'
+      : 'border-brand bg-brand-soft';
+
+  const Icon = blocked ? Ban : needsWork ? Sparkle : Check;
+  const iconBg = blocked ? 'bg-danger' : needsWork ? 'bg-warning' : 'bg-brand';
+  const iconColor = needsWork ? 'text-warning-ink' : 'text-white';
+  const iconStrokeWidth = blocked ? 2.5 : needsWork ? 2.25 : 3;
 
   const heading = blocked
     ? '공개하기 전에 고쳐야 할 것이 있어요'
     : needsWork
-      ? '조금만 더 적어주시면 참여가 훨씬 쉬워져요'
+      ? '괜찮지만, 다듬으면 더 좋아요'
       : '공개할 준비가 되었어요.';
 
+  // BLOCK·REVISE 는 배열이 여러 개(hard_errors/warnings/suggestions/questions)로
+  // 나뉘어 와도 화면에서는 한 톤의 목록 하나로 보여준다 — 목업이 그렇게 확정됨.
+  const messages = [
+    ...review.hard_errors,
+    ...review.warnings,
+    ...review.suggestions,
+    ...review.questions,
+  ];
+  const messageColor = blocked ? 'text-danger' : needsWork ? 'text-warning-ink' : 'text-neutral-700';
+
   return (
-    <div className={`flex flex-col gap-3 rounded-xl border p-4 ${tone}`}>
-      <div className="flex items-center gap-2">
-        <span className="text-lg" aria-hidden="true">
-          {blocked ? '⚠️' : review.decision === 'REVISE' ? '💡' : '✅'}
+    <div className="flex flex-col gap-3">
+      <div className={`flex items-center gap-2 rounded-xl border px-4 py-2 ${tone}`}>
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
+          <Icon
+            className={`h-[18px] w-[18px] ${iconColor}`}
+            strokeWidth={iconStrokeWidth}
+            aria-hidden="true"
+          />
         </span>
-        <p className="text-sm font-semibold text-neutral-900">{heading}</p>
+        <p className={`text-body font-semibold text-hairline-focus ${blocked ? 'text-center' : ''}`}>
+          {heading}
+        </p>
       </div>
 
-      {review.hard_errors.length > 0 && (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-label text-red-700">
-          {review.hard_errors.map((m, i) => (
-            <li key={i}>{m}</li>
-          ))}
-        </ul>
-      )}
-      {review.warnings.length > 0 && (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-label text-amber-800">
-          {review.warnings.map((m, i) => (
-            <li key={i}>{m}</li>
-          ))}
-        </ul>
-      )}
-      {review.suggestions.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <p className="text-label font-semibold text-neutral-600">이렇게 써보면 어때요?</p>
-          <ul className="flex list-disc flex-col gap-1 pl-5 text-label text-neutral-700">
-            {review.suggestions.map((m, i) => (
-              <li key={i}>{m}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {review.questions.length > 0 && (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-label text-neutral-600">
-          {review.questions.map((m, i) => (
+      {messages.length > 0 && (
+        <ul className={`flex list-disc flex-col gap-1 pl-7 text-label ${messageColor}`}>
+          {messages.map((m, i) => (
             <li key={i}>{m}</li>
           ))}
         </ul>
       )}
 
       {canPublish && (
-        <Button type="button" onClick={onPublish} loading={busy} fullWidth>
+        <Button
+          type="button"
+          onClick={onPublish}
+          loading={busy}
+          size="sm"
+          className="mx-auto mt-2 w-[140px] rounded-full text-label font-bold"
+          style={needsWork ? { backgroundColor: '#7a7a7a' } : undefined}
+        >
           {needsWork ? '이대로 공개하기' : '액션 공개하기'}
         </Button>
       )}
-      {needsWork && (
-        <p className="text-caption text-amber-800">
-          수정하려면 창을 닫고 내용을 고친 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
-        </p>
-      )}
       {blocked && (
-        <p className="text-caption text-red-700">
-          창을 닫고 내용을 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
+        <p className="text-center text-caption text-neutral-500">
+          내용을 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
         </p>
       )}
     </div>
