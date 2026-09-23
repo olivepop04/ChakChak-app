@@ -31,7 +31,7 @@ export function LogoutButton() {
         type="button"
         onClick={() => setOpen(true)}
         disabled={busy}
-        className="flex w-full items-center justify-between px-5 py-4 text-left text-[14px] text-neutral-700 hover:bg-neutral-50"
+        className="flex w-full items-center justify-between px-6 py-4 text-left text-[14px] text-neutral-700 hover:bg-neutral-50"
       >
         로그아웃
         <span className="text-neutral-300">›</span>

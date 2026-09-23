@@ -58,14 +58,14 @@ export function ShareModal({
       >
         {/* 상단 헤더: 타이틀 & 닫기 버튼 */}
         <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-          <h2 id="share-modal-title" className="text-[17px] font-bold text-neutral-900">
+          <h2 id="share-modal-title" className="text-subtitle font-bold text-neutral-900">
             공유하기
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
           >
             ✕
           </button>
@@ -74,7 +74,7 @@ export function ShareModal({
         {/* 모임 제목 영역 */}
         {actionTitle && (
           <div className="border-b border-neutral-100 py-3">
-            <p className="line-clamp-2 text-[15px] font-bold leading-snug text-neutral-900">
+            <p className="line-clamp-2 text-body font-bold leading-snug text-neutral-900">
               {actionTitle}
             </p>
           </div>

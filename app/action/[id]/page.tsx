@@ -7,7 +7,7 @@
  */
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Calendar } from 'lucide-react';
+import { Calendar, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/server';
 import { getActionDetail } from '@/lib/queries/actions';
@@ -157,7 +157,7 @@ export default async function ActionDetailPage({
         alt={action.title}
       />
 
-      <div className="flex flex-col gap-6 px-5 pt-5">
+      <div className="flex flex-col gap-6 px-6 pt-5">
         {/* 조기 종료 사유 */}
         {action.earlyEndReason && (
           <div className="rounded-xl border border-red-100 bg-red-50 p-4">
@@ -209,12 +209,15 @@ export default async function ActionDetailPage({
 
           {canEditActionText && (
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <Link
+              <Button
                 href={`/action/${id}/edit`}
-                className="inline-flex self-start rounded-lg border border-neutral-200 px-3 py-2 text-[12px] font-semibold text-neutral-700 hover:bg-neutral-50"
+                variant="secondary"
+                size="sm"
+                className="self-start"
               >
-                소개·안내 수정
-              </Link>
+                <Pencil className="h-3.5 w-3.5" />
+                액션 수정
+              </Button>
               {action.isOwner && (
                 <ActionHostActions
                   actionId={action.id}

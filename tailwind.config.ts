@@ -20,6 +20,9 @@ const config: Config = {
         danger: { DEFAULT: '#EA764B', soft: '#FFF0ED', ink: '#FFF0ED' },
         warning: { DEFAULT: '#FEC60A', soft: '#FFF9E6', ink: '#7F6925' },
         info: { DEFAULT: '#2B65D0', soft: '#EBEFFA', ink: '#EBEFFA' },
+        // Day9 인풋 테두리/포커스 색. 2026-09-23 정식 토큰화 — 기존 neutral 팔레트
+        // 어디에도 정확히 안 맞아서(둘 다 인접 단계 사이) 값 그대로 이름만 붙임.
+        hairline: { DEFAULT: '#E0E0E0', focus: '#333333' },
       },
       // Day8 타입 스케일 6단계 중 Tailwind 기본값에 없는 것만. 24·20px은
       // 기존 text-2xl·text-xl과 이미 같아서 안 넣음(중복 방지).

@@ -20,28 +20,28 @@ export function ProfileActionSection({
   const visibleActions = selectProfileActionPreview(actions);
 
   return (
-    <section className="mt-7">
-      <div className="flex items-center justify-between px-5 pb-1">
+    <section className="mt-6">
+      <div className="flex items-center justify-between px-6 pb-1">
         <SectionTitle>
           {title} <span className="text-neutral-400">{actions.length}</span>
         </SectionTitle>
         <Link
           href={href}
-          className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-900"
+          className="text-label font-semibold text-neutral-500 hover:text-neutral-900"
         >
           모두 보기 ›
         </Link>
       </div>
       {description && (
-        <p className="px-5 pb-3 text-[11px] text-neutral-400">{description}</p>
+        <p className="px-6 pb-3 text-caption text-neutral-400">{description}</p>
       )}
 
       {actions.length === 0 ? (
-        <p className="mx-5 mt-2 rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] text-neutral-400">
+        <p className="mx-6 mt-2 rounded-xl bg-neutral-50 px-4 py-6 text-center text-label text-neutral-400">
           {emptyText}
         </p>
       ) : (
-        <div className="flex flex-col gap-3 px-5 pt-2">
+        <div className="flex flex-col gap-3 px-6 pt-2">
           {visibleActions.map((action) => (
             <ActionCard
               key={action.id}

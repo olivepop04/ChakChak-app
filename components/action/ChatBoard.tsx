@@ -104,7 +104,7 @@ export function ChatBoard({
           description="첫 글을 남겨 이야기를 시작해보세요."
         />
       ) : (
-        <ul className="flex flex-col gap-3 px-5 py-4">
+        <ul className="flex flex-col gap-3 px-6 py-4">
           {posts.map((post) => (
             <li
               key={post.id}
@@ -120,17 +120,17 @@ export function ChatBoard({
                         참여 취소
                       </span>
                     )}
-                    <span className="text-[13px] font-semibold text-neutral-900">
+                    <span className="text-label font-semibold text-neutral-900">
                       @{post.author.nickname}
                     </span>
-                    <span className="text-[11px] text-neutral-400">
+                    <span className="text-caption text-neutral-400">
                       {formatRelative(post.createdAt)}
                     </span>
                     {post.isMine && !post.deletedAt && post.kind !== 'LEFT_NOTICE' && (
                       <button
                         type="button"
                         onClick={() => setDeleteTarget({ messageId: post.id, isPost: true })}
-                        className="ml-auto text-[11px] text-neutral-400 hover:text-red-500"
+                        className="ml-auto text-caption text-neutral-400 hover:text-red-500"
                       >
                         삭제
                       </button>
@@ -154,10 +154,10 @@ export function ChatBoard({
                       <Avatar name={reply.author.nickname} size="sm" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-2">
-                          <span className="text-[12px] font-semibold text-neutral-800">
+                          <span className="text-label font-semibold text-neutral-800">
                             @{reply.author.nickname}
                           </span>
-                          <span className="text-[11px] text-neutral-400">
+                          <span className="text-caption text-neutral-400">
                             {formatRelative(reply.createdAt)}
                           </span>
                           {reply.isMine && !reply.deletedAt && (
@@ -166,14 +166,14 @@ export function ChatBoard({
                               onClick={() =>
                                 setDeleteTarget({ messageId: reply.id, isPost: false })
                               }
-                              className="ml-auto text-[11px] text-neutral-400 hover:text-red-500"
+                              className="ml-auto text-caption text-neutral-400 hover:text-red-500"
                             >
                               삭제
                             </button>
                           )}
                         </div>
                         <p
-                          className={`mt-0.5 whitespace-pre-wrap break-words text-[13px] leading-relaxed ${
+                          className={`mt-0.5 whitespace-pre-wrap break-words text-label leading-relaxed ${
                             reply.deletedAt
                               ? 'italic text-neutral-400'
                               : 'text-neutral-700'
@@ -202,7 +202,7 @@ export function ChatBoard({
                         }}
                         maxLength={LIMITS.CHAT_MAX}
                         placeholder="댓글을 입력하세요"
-                        className="min-h-9 flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-[13px] outline-none focus:border-neutral-900"
+                        className="min-h-9 flex-1 rounded-xl border border-neutral-300 px-3 py-2 text-label outline-none focus:border-neutral-900"
                       />
                       <Button
                         size="sm"
@@ -219,7 +219,7 @@ export function ChatBoard({
                         setReplyTo(post.id);
                         setReplyText('');
                       }}
-                      className="text-[12px] font-medium text-neutral-500 hover:text-neutral-900"
+                      className="text-label font-medium text-neutral-500 hover:text-neutral-900"
                     >
                       댓글 달기
                     </button>
@@ -253,7 +253,7 @@ export function ChatBoard({
             </Button>
           </div>
         ) : (
-          <p className="py-2 text-center text-[13px] text-neutral-400">
+          <p className="py-2 text-center text-label text-neutral-400">
             {readOnlyReason ?? '지금은 글을 쓸 수 없어요.'}
           </p>
         )}

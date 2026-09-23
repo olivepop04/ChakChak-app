@@ -34,9 +34,9 @@ export function AddActionItemsForm({ actionId }: { actionId: string }) {
   }
 
   return (
-    <section className="border-t border-neutral-100 px-5 pb-28 pt-6">
+    <section className="border-t border-neutral-100 px-6 pb-28 pt-6">
       <SectionTitle>모집 항목 추가</SectionTitle>
-      <p className="mb-4 mt-1 text-[12px] leading-relaxed text-neutral-500">
+      <p className="mb-4 mt-1 text-caption leading-relaxed text-neutral-500">
         새로 필요한 인원이나 물품만 추가할 수 있어요.
       </p>
 
@@ -45,7 +45,6 @@ export function AddActionItemsForm({ actionId }: { actionId: string }) {
       <div className="mt-5">
         <Button
           type="button"
-          size="lg"
           fullWidth
           loading={busy}
           disabled={newItems.length === 0}

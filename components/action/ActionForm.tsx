@@ -22,6 +22,7 @@ import {
 } from '@/lib/mutations';
 import { AddressSearch } from '@/components/action/AddressSearch';
 import { ItemEditor } from '@/components/action/ItemEditor';
+import { DateTimePickerModal } from '@/components/action/DateTimePickerModal';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
 import { FieldLabel } from '@/components/ui/FieldLabel';
@@ -51,6 +52,18 @@ function moveToSameDate(value: string, activityStart: string): string {
   return time ? `${startDate}T${time}` : startTime ? activityStart : value;
 }
 
+/** datetime-local 값 → 화면에 보여줄 문자열 (2026. 9. 24. 오후 6:00) */
+function formatSchedule(value: string): string {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const hour = d.getHours();
+  const period = hour < 12 ? '오전' : '오후';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  const minute = String(d.getMinutes()).padStart(2, '0');
+  return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}. ${period} ${hour12}:${minute}`;
+}
+
 function scrollAndFocus(target: HTMLElement | null) {
   if (!target) return;
   const focusTarget = target.matches('input, textarea, button')
@@ -60,7 +73,7 @@ function scrollAndFocus(target: HTMLElement | null) {
   target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-import { X } from 'lucide-react';
+import { X, Check, Ban, Sparkle } from 'lucide-react';
 
 export interface ActionFormInitial {
   id: string | null;
@@ -81,7 +94,7 @@ export interface ActionFormInitial {
 }
 
 const input =
-  'min-h-11 rounded-xl border border-[#E0E0E0] px-4 py-3 text-[15px] outline-none focus:border-[#333333]';
+  'min-h-11 rounded-xl border border-hairline px-4 py-3 text-body outline-none focus:border-hairline-focus';
 const RECRUIT_END_ERROR =
   '모집 마감은 활동 시작보다 앞서야 해요. 마감일을 활동 시작일 이전으로 바꿔주세요.';
 const ACTIVITY_END_ERROR =
@@ -129,9 +142,12 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const imageSectionRef = useRef<HTMLDivElement>(null);
   const itemsSectionRef = useRef<HTMLDivElement>(null);
-  const recruitEndRef = useRef<HTMLInputElement>(null);
-  const activityStartRef = useRef<HTMLInputElement>(null);
-  const activityEndRef = useRef<HTMLInputElement>(null);
+  const recruitEndRef = useRef<HTMLButtonElement>(null);
+  const activityStartRef = useRef<HTMLButtonElement>(null);
+  const activityEndRef = useRef<HTMLButtonElement>(null);
+  const [openPicker, setOpenPicker] = useState<
+    'recruitEnd' | 'activityStart' | 'activityEnd' | null
+  >(null);
   const placeSectionRef = useRef<HTMLDivElement>(null);
   const placeNameRef = useRef<HTMLInputElement>(null);
   const pendingReviewTargetRef = useRef<HTMLElement | null>(null);
@@ -410,7 +426,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
   const isPlaceNameError = placeError.includes('장소 이름');
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-[calc(8rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-4">
+    <div className="flex flex-col gap-6 px-6 pb-[calc(8rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-4">
       {/* 제목 */}
       <label className="flex flex-col gap-1.5">
         <FieldLabel>제목</FieldLabel>
@@ -423,13 +439,16 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         />
       </label>
 
+      <div className="h-px bg-neutral-200" />
+
       {/* 카테고리 */}
       <div className="flex flex-col gap-2">
         <FieldLabel>카테고리</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => {
-            const isSelected = categories.includes(c);
-            const isPrimary = isSelected && categories[0] === c;
+            const order = categories.indexOf(c);
+            const isSelected = order !== -1;
+            const isPrimary = order === 0;
 
             return (
               <div
@@ -446,15 +465,21 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
                     handleCategoryClick(c);
                   }
                 }}
-                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 ${
+                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-label font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 ${
                   isSelected
-                    ? 'border-neutral-900 bg-neutral-900 text-white shadow-xs'
+                    ? isPrimary
+                      ? 'border-brand bg-brand-soft text-brand'
+                      : 'border-hairline-focus bg-white text-hairline-focus'
                     : 'border-neutral-300 bg-white text-neutral-600 hover:border-neutral-400'
                 }`}
               >
-                {isPrimary && (
-                  <span className="rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-neutral-900">
-                    대표
+                {isSelected && (
+                  <span
+                    className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${
+                      isPrimary ? 'bg-brand text-white' : 'bg-hairline-focus text-white'
+                    }`}
+                  >
+                    {order + 1}
                   </span>
                 )}
                 <span>{c}</span>
@@ -466,7 +491,11 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
                       e.stopPropagation();
                       handleCategoryDeselect(c);
                     }}
-                    className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                    className={`ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full ${
+                      isPrimary
+                        ? 'text-brand hover:bg-brand hover:text-white'
+                        : 'text-hairline-focus hover:bg-hairline-focus hover:text-white'
+                    }`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -475,10 +504,12 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             );
           })}
         </div>
-        <p className="mt-1 text-xs text-neutral-500">
-          * 최대 3개까지 선택 가능하며, 선택된 태그를 눌러 대표를 변경하거나 ✕를 눌러 해제할 수 있습니다.
+        <p className="text-caption text-neutral-400">
+          최대 3개까지 선택, 태그를 누르면 대표로 변경됩니다.
         </p>
       </div>
+
+      <div className="h-px bg-neutral-200" />
 
       {/* 소개 */}
       <label className="flex flex-col gap-1.5">
@@ -489,12 +520,14 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           onChange={(e) => setDescription(e.target.value)}
           rows={5}
           placeholder="어떤 활동인지, 참여하면 무엇을 하게 되는지 적어주세요."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
         />
-        <span className="text-[11px] text-neutral-400">
+        <span className="text-caption text-neutral-400">
           전화번호·이메일 같은 개인정보는 적지 마세요. 공개된 화면에 그대로 보입니다.
         </span>
       </label>
+
+      <div className="h-px bg-neutral-200" />
 
       {/* 이미지 — 액션이 저장된 뒤에 열립니다 */}
       <div ref={imageSectionRef} className="flex flex-col gap-2">
@@ -510,7 +543,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             onThumbnailChange={setThumbnailIndex}
           />
         ) : (
-          <p className="rounded-xl bg-neutral-50 px-4 py-5 text-center text-[13px] text-neutral-500">
+          <p className="rounded-xl bg-neutral-50 px-4 py-5 text-center text-label text-neutral-500">
             제목을 입력하면 잠시 후 사진을 올릴 수 있어요.
             <br />
             저장 버튼을 먼저 누르지 않아도 됩니다.
@@ -518,100 +551,107 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         )}
       </div>
 
+      <div className="h-px bg-neutral-200" />
+
       {/* 모집 항목 */}
       <div ref={itemsSectionRef} className="flex flex-col gap-2">
         <FieldLabel>무엇이 필요한가요?</FieldLabel>
         <ItemEditor items={items} onChange={setItems} />
       </div>
 
+      <div className="h-px bg-neutral-200" />
+
       {/* 일정 */}
       <div className="flex flex-col gap-3">
         <FieldLabel>일정</FieldLabel>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[12px] text-neutral-500">모집 마감일 :</span>
-          <input
+          <span className="text-label text-neutral-500">모집 마감일</span>
+          <button
+            type="button"
             ref={recruitEndRef}
-            type="datetime-local"
-            value={recruitEnd}
-            onChange={(e) => {
-              setRecruitEnd(e.target.value);
-              if (dateError?.field === 'recruitEnd') setDateError(null);
-            }}
-            className={input}
-          />
+            onClick={() => setOpenPicker('recruitEnd')}
+            className={`${input} flex items-center text-left ${
+              recruitEnd ? '' : 'text-neutral-400'
+            }`}
+          >
+            {recruitEnd ? formatSchedule(recruitEnd) : '날짜와 시간을 선택해주세요'}
+          </button>
           {dateError?.field === 'recruitEnd' && (
-            <span className="text-[12px] text-red-600" role="alert">
+            <span className="text-label text-red-600" role="alert">
               {dateError.message}
             </span>
           )}
           {!dateError || dateError.field !== 'recruitEnd' ? (
-            <span className="text-[11px] text-neutral-400">
-              모집 마감은 활동 시작보다 앞서야 해요.
+            <span className="text-caption text-neutral-400">
+              <span className="text-danger">*</span> 모집 마감은 활동 시작보다 앞서야 해요.
             </span>
           ) : null}
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[12px] text-neutral-500">활동 시작</span>
-          <input
+          <span className="text-label text-neutral-500">활동 시작</span>
+          <button
+            type="button"
             ref={activityStartRef}
-            type="datetime-local"
-            value={activityStart}
-            onChange={(e) => {
-              const nextActivityStart = e.target.value;
-              setActivityStart(nextActivityStart);
-              if (isSameDay) {
-                setActivityEnd((current) => moveToSameDate(current, nextActivityStart));
-              }
-              setDateError(null);
-            }}
-            className={input}
-          />
+            onClick={() => setOpenPicker('activityStart')}
+            className={`${input} flex items-center text-left ${
+              activityStart ? '' : 'text-neutral-400'
+            }`}
+          >
+            {activityStart ? formatSchedule(activityStart) : '날짜와 시간을 선택해주세요'}
+          </button>
         </label>
 
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-3">
-            <label htmlFor="activity-end" className="text-[12px] text-neutral-500">
+            <label htmlFor="activity-end" className="text-label text-hairline-focus">
               활동 종료
             </label>
-            <label className="flex items-center gap-1.5 text-[12px] text-neutral-600">
-              <input
-                type="checkbox"
-                checked={isSameDay}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setIsSameDay(checked);
-                  if (checked) {
-                    setActivityEnd((current) => moveToSameDate(current, activityStart));
-                    if (dateError?.field === 'activityEnd') setDateError(null);
-                  }
-                }}
-                className="h-4 w-4 rounded border-neutral-300 accent-neutral-900"
-              />
+            <label className="flex items-center gap-1.5 text-label text-hairline-focus">
+              <span
+                className={`relative inline-flex h-4 w-4 items-center justify-center rounded border ${
+                  isSameDay ? 'border-brand bg-brand' : 'border-neutral-300 bg-white'
+                }`}
+              >
+                {isSameDay && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                <input
+                  type="checkbox"
+                  checked={isSameDay}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsSameDay(checked);
+                    if (checked) {
+                      setActivityEnd((current) => moveToSameDate(current, activityStart));
+                      if (dateError?.field === 'activityEnd') setDateError(null);
+                    }
+                  }}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                />
+              </span>
               시작일과 같음
             </label>
           </div>
-          <input
+          <button
+            type="button"
             id="activity-end"
             ref={activityEndRef}
-            type="datetime-local"
-            value={activityEnd}
-            onChange={(e) => {
-              setActivityEnd(
-                isSameDay ? moveToSameDate(e.target.value, activityStart) : e.target.value,
-              );
-              if (dateError?.field === 'activityEnd') setDateError(null);
-            }}
-            className={input}
-          />
+            onClick={() => setOpenPicker('activityEnd')}
+            className={`${input} flex items-center text-left ${
+              activityEnd ? '' : 'text-neutral-400'
+            }`}
+          >
+            {activityEnd ? formatSchedule(activityEnd) : '날짜와 시간을 선택해주세요'}
+          </button>
           {dateError?.field === 'activityEnd' && (
-            <span className="text-[12px] text-red-600" role="alert">
+            <span className="text-caption text-red-600" role="alert">
               {dateError.message}
             </span>
           )}
         </div>
       </div>
+
+      <div className="h-px bg-neutral-200" />
 
       {/* 주소 · 장소명 */}
       <div ref={placeSectionRef} className="flex flex-col gap-3">
@@ -643,11 +683,13 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           />
         </label>
         {placeError && (
-          <p id="place-error" className="text-[12px] text-red-600" role="alert">
+          <p id="place-error" className="text-label text-red-600" role="alert">
             {placeError}
           </p>
         )}
       </div>
+
+      <div className="h-px bg-neutral-200" />
 
       {/* 안내사항 */}
       <label className="flex flex-col gap-1.5">
@@ -657,7 +699,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           onChange={(e) => setNotice(e.target.value)}
           rows={3}
           placeholder="예: 편한 옷차림으로 와주세요. 물은 준비되어 있습니다."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
         />
       </label>
 
@@ -694,6 +736,41 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           busy={busy}
         />
       )}
+
+      {/* 일정 3개 필드가 공유하는 날짜·시간 선택 모달 */}
+      <DateTimePickerModal
+        open={openPicker === 'recruitEnd'}
+        title="모집 마감일 선택"
+        value={recruitEnd}
+        onClose={() => setOpenPicker(null)}
+        onConfirm={(nextValue) => {
+          setRecruitEnd(nextValue);
+          if (dateError?.field === 'recruitEnd') setDateError(null);
+        }}
+      />
+      <DateTimePickerModal
+        open={openPicker === 'activityStart'}
+        title="활동 시작 선택"
+        value={activityStart}
+        onClose={() => setOpenPicker(null)}
+        onConfirm={(nextValue) => {
+          setActivityStart(nextValue);
+          if (isSameDay) {
+            setActivityEnd((current) => moveToSameDate(current, nextValue));
+          }
+          setDateError(null);
+        }}
+      />
+      <DateTimePickerModal
+        open={openPicker === 'activityEnd'}
+        title="활동 종료 선택"
+        value={activityEnd}
+        onClose={() => setOpenPicker(null)}
+        onConfirm={(nextValue) => {
+          setActivityEnd(isSameDay ? moveToSameDate(nextValue, activityStart) : nextValue);
+          if (dateError?.field === 'activityEnd') setDateError(null);
+        }}
+      />
     </div>
   );
 }
@@ -724,7 +801,7 @@ function ReviewModal({
         className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-4"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="review-modal-title" className="text-[16px] font-bold text-neutral-900">
+          <h2 id="review-modal-title" className="text-subtitle font-bold text-neutral-900">
             AI 검수 결과
           </h2>
           <button
@@ -732,9 +809,9 @@ function ReviewModal({
             onClick={onClose}
             disabled={busy}
             aria-label="검수 결과 닫기"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-neutral-500 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            ×
+            <X className="h-5 w-5" />
           </button>
         </div>
         <ReviewPanel review={review} onPublish={onPublish} busy={busy} />
@@ -759,71 +836,70 @@ function ReviewPanel({
   const canPublish = !blocked;
 
   const tone = blocked
-    ? 'border-red-200 bg-red-50'
+    ? 'border-danger bg-danger-soft'
     : needsWork
-      ? 'border-amber-200 bg-amber-50'
-      : 'border-emerald-200 bg-emerald-50';
+      ? 'border-warning bg-warning-soft'
+      : 'border-brand bg-brand-soft';
+
+  const Icon = blocked ? Ban : needsWork ? Sparkle : Check;
+  const iconBg = blocked ? 'bg-danger' : needsWork ? 'bg-warning' : 'bg-brand';
+  const iconColor = needsWork ? 'text-warning-ink' : 'text-white';
+  const iconStrokeWidth = blocked ? 2.5 : needsWork ? 2.25 : 3;
 
   const heading = blocked
     ? '공개하기 전에 고쳐야 할 것이 있어요'
     : needsWork
-      ? '조금만 더 적어주시면 참여가 훨씬 쉬워져요'
+      ? '괜찮지만, 다듬으면 더 좋아요'
       : '공개할 준비가 되었어요.';
 
+  // BLOCK·REVISE 는 배열이 여러 개(hard_errors/warnings/suggestions/questions)로
+  // 나뉘어 와도 화면에서는 한 톤의 목록 하나로 보여준다 — 목업이 그렇게 확정됨.
+  const messages = [
+    ...review.hard_errors,
+    ...review.warnings,
+    ...review.suggestions,
+    ...review.questions,
+  ];
+  const messageColor = blocked ? 'text-danger' : needsWork ? 'text-warning-ink' : 'text-neutral-700';
+
   return (
-    <div className={`flex flex-col gap-3 rounded-xl border p-4 ${tone}`}>
-      <div className="flex items-center gap-2">
-        <span className="text-lg" aria-hidden="true">
-          {blocked ? '⚠️' : review.decision === 'REVISE' ? '💡' : '✅'}
+    <div className="flex flex-col gap-3">
+      <div className={`flex items-center gap-2 rounded-xl border px-4 py-2 ${tone}`}>
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
+          <Icon
+            className={`h-[18px] w-[18px] ${iconColor}`}
+            strokeWidth={iconStrokeWidth}
+            aria-hidden="true"
+          />
         </span>
-        <p className="text-sm font-semibold text-neutral-900">{heading}</p>
+        <p className={`text-body font-semibold text-hairline-focus ${blocked ? 'text-center' : ''}`}>
+          {heading}
+        </p>
       </div>
 
-      {review.hard_errors.length > 0 && (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-[13px] text-red-700">
-          {review.hard_errors.map((m, i) => (
-            <li key={i}>{m}</li>
-          ))}
-        </ul>
-      )}
-      {review.warnings.length > 0 && (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-[13px] text-amber-800">
-          {review.warnings.map((m, i) => (
-            <li key={i}>{m}</li>
-          ))}
-        </ul>
-      )}
-      {review.suggestions.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <p className="text-[12px] font-semibold text-neutral-600">이렇게 써보면 어때요?</p>
-          <ul className="flex list-disc flex-col gap-1 pl-5 text-[13px] text-neutral-700">
-            {review.suggestions.map((m, i) => (
-              <li key={i}>{m}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {review.questions.length > 0 && (
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-[13px] text-neutral-600">
-          {review.questions.map((m, i) => (
+      {messages.length > 0 && (
+        <ul className={`flex list-disc flex-col gap-1 pl-7 text-label ${messageColor}`}>
+          {messages.map((m, i) => (
             <li key={i}>{m}</li>
           ))}
         </ul>
       )}
 
       {canPublish && (
-        <Button type="button" onClick={onPublish} loading={busy} fullWidth>
+        <Button
+          type="button"
+          onClick={onPublish}
+          loading={busy}
+          size="sm"
+          className="mx-auto mt-2 w-[140px] rounded-full text-label font-bold"
+          style={needsWork ? { backgroundColor: '#7a7a7a' } : undefined}
+        >
           {needsWork ? '이대로 공개하기' : '액션 공개하기'}
         </Button>
       )}
-      {needsWork && (
-        <p className="text-[12px] text-amber-800">
-          수정하려면 창을 닫고 내용을 고친 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
-        </p>
-      )}
       {blocked && (
-        <p className="text-[12px] text-red-700">
-          창을 닫고 내용을 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
+        <p className="text-center text-caption text-neutral-500">
+          내용을 수정한 뒤 다시 &ldquo;액션 생성하기&rdquo;를 눌러주세요.
         </p>
       )}
     </div>

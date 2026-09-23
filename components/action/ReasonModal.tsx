@@ -109,15 +109,15 @@ export function ReasonModal({
         aria-labelledby={titleId}
         className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5"
       >
-        <h2 id={titleId} className="text-[17px] font-bold text-neutral-900">
+        <h2 id={titleId} className="text-subtitle font-bold text-neutral-900">
           {title}
         </h2>
         {description && (
-          <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">{description}</p>
+          <p className="mt-2 text-label leading-relaxed text-neutral-500">{description}</p>
         )}
         {warning && (
           <p
-            className={`mt-3 rounded-lg border px-3 py-2 text-[13px] font-semibold leading-relaxed ${warningClassName}`}
+            className={`mt-3 rounded-xl border px-3 py-2 text-label font-semibold leading-relaxed ${warningClassName}`}
           >
             {warning}
           </p>
@@ -126,7 +126,7 @@ export function ReasonModal({
         {reason && (
           <>
             <label className="mt-4 flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-neutral-700">{reason.label}</span>
+              <span className="text-label font-medium text-neutral-700">{reason.label}</span>
               <textarea
                 autoFocus
                 value={value}
@@ -138,7 +138,7 @@ export function ReasonModal({
                 className="resize-none rounded-xl border border-neutral-300 p-3 text-sm leading-relaxed outline-none focus:border-neutral-900 disabled:bg-neutral-50"
               />
             </label>
-            <div className="mt-1 flex items-center justify-between gap-3 text-[11px]">
+            <div className="mt-1 flex items-center justify-between gap-3 text-caption">
               <span
                 className={
                   trimmedLength > 0 && trimmedLength < minLength

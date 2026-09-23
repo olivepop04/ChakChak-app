@@ -76,7 +76,7 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
     <div className="flex flex-col">
       {groups.map((g) => (
         <section key={g.label}>
-          <h2 className="px-5 pb-1.5 pt-4 text-[11px] font-bold tracking-wider text-neutral-400">
+          <h2 className="px-6 pb-1.5 pt-4 text-caption font-bold tracking-wider text-neutral-400">
             {g.label}
           </h2>
 
@@ -89,11 +89,11 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
                     type="button"
                     onClick={() => handleClick(n)}
                     className={cn(
-                      'flex w-full items-center gap-2.5 px-5 py-2.5 text-left transition-colors hover:bg-neutral-50',
+                      'flex w-full items-center gap-2.5 px-6 py-2.5 text-left transition-colors hover:bg-neutral-50',
                       !n.isRead && 'bg-amber-50/50',
                     )}
                   >
-                    <span className="shrink-0 text-[15px]" aria-hidden="true">
+                    <span className="shrink-0 text-body" aria-hidden="true">
                       {t.icon}
                     </span>
 
@@ -101,7 +101,7 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
                       <span className="flex items-center gap-1.5">
                         <span
                           className={cn(
-                            'truncate text-[13.5px] text-neutral-900',
+                            'truncate text-label text-neutral-900',
                             n.isRead ? 'font-medium' : 'font-semibold',
                           )}
                         >
@@ -116,20 +116,20 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
                       </span>
 
                       {n.actionTitle && (
-                        <span className="mt-0.5 block truncate text-[12px] text-neutral-500">
+                        <span className="mt-0.5 block truncate text-caption text-neutral-500">
                           「{n.actionTitle}」
                         </span>
                       )}
 
                       {/* 나가기 사유처럼 알림마다 다른 문장이 있으면 한 줄 더 */}
                       {n.body && (
-                        <span className="mt-0.5 block truncate text-[12px] italic text-neutral-400">
+                        <span className="mt-0.5 block truncate text-caption italic text-neutral-400">
                           &ldquo;{n.body}&rdquo;
                         </span>
                       )}
                     </span>
 
-                    <span className="shrink-0 text-[11px] tabular-nums text-neutral-400">
+                    <span className="shrink-0 text-caption tabular-nums text-neutral-400">
                       {formatRelative(n.createdAt)}
                     </span>
                   </button>
@@ -144,7 +144,7 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="mx-5 mt-4 rounded-lg border border-neutral-200 py-2.5 text-[13px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+          className="mx-6 mt-4 rounded-xl border border-neutral-200 py-2.5 text-label font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
         >
           + 지난 알림 {hiddenCount}개 더보기
         </button>

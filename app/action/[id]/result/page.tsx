@@ -84,13 +84,13 @@ export default async function ResultPage({
     <main className={canWriteVoice ? 'pb-52' : 'pb-24'}>
       <Header title="액션 결과" back backHref={`/action/${id}`} sticky />
 
-      <div className="flex flex-col gap-7 px-5 py-6">
+      <div className="flex flex-col gap-6 px-6 py-6">
         {/* 제목 */}
         <div className="flex flex-col gap-2">
-          <h1 className="text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="text-xl font-bold leading-snug tracking-tight text-neutral-900">
             {action.title}
           </h1>
-          <p className="text-[13px] text-neutral-500">
+          <p className="text-label text-neutral-500">
             {formatActivityPeriod(action.activity_start_at, action.activity_end_at)}
           </p>
         </div>
@@ -107,7 +107,7 @@ export default async function ResultPage({
                     <span className="text-sm font-semibold text-neutral-900">
                       {item.name}
                     </span>
-                    <span className="text-[15px] font-bold tabular-nums text-neutral-900">
+                    <span className="text-body font-bold tabular-nums text-neutral-900">
                       {describeResultCount(item, item.currentCount)}
                     </span>
                   </div>
@@ -131,7 +131,7 @@ export default async function ResultPage({
 
                   <p
                     className={cn(
-                      'text-[12px] font-medium',
+                      'text-caption font-medium',
                       isMet ? 'text-emerald-700' : 'text-neutral-500',
                     )}
                   >
@@ -147,7 +147,7 @@ export default async function ResultPage({
         {result.content && (
           <section className="flex flex-col gap-2">
             <SectionTitle>이렇게 마무리했어요</SectionTitle>
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-neutral-700">
+            <p className="whitespace-pre-wrap text-body leading-relaxed text-neutral-700">
               {result.content}
             </p>
           </section>
@@ -171,14 +171,14 @@ export default async function ResultPage({
         {/* 호스트의 한마디 */}
         {result.ownerVoice && (
           <section className="flex flex-col gap-2 rounded-xl bg-neutral-900 p-5 text-white">
-            <h2 className="text-[12px] font-semibold tracking-wide text-white/60">
+            <h2 className="text-caption font-semibold tracking-wide text-white/60">
               호스트의 한마디
             </h2>
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed">
+            <p className="whitespace-pre-wrap text-body leading-relaxed">
               {result.ownerVoice}
             </p>
             {owner && (
-              <p className="mt-1 text-[12px] text-white/60">@{owner.nickname}</p>
+              <p className="mt-1 text-caption text-white/60">@{owner.nickname}</p>
             )}
           </section>
         )}
@@ -188,7 +188,7 @@ export default async function ResultPage({
           <SectionTitle>Crew Voice ({result.crewVoices.length})</SectionTitle>
 
           {result.crewVoices.length === 0 ? (
-            <p className="rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] text-neutral-400">
+            <p className="rounded-xl bg-neutral-50 px-4 py-6 text-center text-label text-neutral-400">
               아직 남겨진 소감이 없어요.
             </p>
           ) : (
@@ -202,7 +202,7 @@ export default async function ResultPage({
         <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
           <Link
             href={`/action/${id}/voice`}
-            className="flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-[15px] font-semibold text-white transition-colors active:bg-neutral-800"
+            className="flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-body font-semibold text-white transition-colors active:bg-neutral-800"
           >
             소감 작성하기
           </Link>

@@ -14,26 +14,26 @@ export function MySavedSection({ saved }: { saved: ActionCardData[] }) {
   const previewItems = selectProfileActionPreview(saved);
 
   return (
-    <section className="mt-7">
-      <div className="flex items-center justify-between px-5 pb-3">
+    <section className="mt-6">
+      <div className="flex items-center justify-between px-6 pb-3">
         <SectionTitle>
           내가 저장한 액션{' '}
           <span className="text-neutral-400">{saved.length}</span>
         </SectionTitle>
         <Link
           href="/my/saved"
-          className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-900"
+          className="text-label font-semibold text-neutral-500 hover:text-neutral-900"
         >
           모두 보기 ›
         </Link>
       </div>
 
       {saved.length === 0 ? (
-        <p className="mx-5 rounded-xl bg-neutral-50 px-4 py-6 text-center text-[13px] text-neutral-400">
+        <p className="mx-6 rounded-xl bg-neutral-50 px-4 py-6 text-center text-label text-neutral-400">
           아직 저장한 액션이 없어요.
         </p>
       ) : (
-        <div className="flex flex-col gap-3 px-5">
+        <div className="flex flex-col gap-3 px-6">
           {previewItems.map((action) => (
             <ActionCard
               key={action.id}

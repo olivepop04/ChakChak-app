@@ -53,8 +53,8 @@ export default async function ResultWritePage({
     <main>
       <Header title="결과 작성" back backHref={`/action/${id}`} sticky />
 
-      <div className="border-b border-neutral-100 px-5 py-4">
-        <h1 className="line-clamp-2 text-[17px] font-bold leading-snug text-neutral-900">
+      <div className="border-b border-neutral-100 px-6 py-4">
+        <h1 className="line-clamp-2 text-subtitle font-bold leading-snug text-neutral-900">
           {action.title}
         </h1>
       </div>

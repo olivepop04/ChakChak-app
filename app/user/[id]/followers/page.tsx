@@ -28,9 +28,9 @@ export default async function FollowersPage({
     <main className="pb-24">
       <Header title="팔로워" back backHref={`/user/${id}`} sticky />
 
-      <div className="px-5 py-4">
+      <div className="px-6 py-4">
         <SectionTitle>{followers.length}명</SectionTitle>
-        <p className="mt-0.5 text-[12px] text-neutral-500">
+        <p className="mt-0.5 text-caption text-neutral-500">
           @{profile.nickname}님을 팔로우하는 사람
         </p>
       </div>
@@ -42,7 +42,7 @@ export default async function FollowersPage({
             아직 팔로워가 없어요
           </p>
           {shouldShowFollowEmptyHint(user?.id, id) && (
-            <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500 break-keep">
+            <p className="mt-1.5 text-label leading-relaxed text-neutral-500 break-keep">
               함께한 크루들을 팔로우하고 소감을 나눠보세요.
               <br />
               자연스럽게 내 팔로워도 늘어나요.

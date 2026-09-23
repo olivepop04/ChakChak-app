@@ -51,7 +51,7 @@ export function RegionPicker({
         {value.map((r) => (
           <span
             key={r}
-            className="inline-flex items-center gap-1.5 rounded-full border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-[13px] font-medium text-white"
+            className="inline-flex items-center gap-1.5 rounded-full border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-label font-medium text-white"
           >
             {shortRegion(r)}
             <button
@@ -69,14 +69,14 @@ export function RegionPicker({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="rounded-full border border-dashed border-neutral-300 px-3 py-1.5 text-[13px] text-neutral-500"
+            className="rounded-full border border-dashed border-neutral-300 px-3 py-1.5 text-label text-neutral-500"
           >
             ＋ 지역 추가
           </button>
         )}
       </div>
 
-      <p className="text-[11px] text-neutral-400">
+      <p className="text-caption text-neutral-400">
         시·도 전체 또는 시·군·구 단위로 최대 {max}곳까지 고를 수 있어요.
         전국을 고르면 모든 지역의 액션을 추천받습니다.
       </p>
@@ -85,14 +85,14 @@ export function RegionPicker({
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
           <div className="max-h-[70vh] w-full max-w-app overflow-y-auto rounded-t-2xl bg-white">
-            <div className="sticky top-0 flex items-center justify-between border-b border-neutral-100 bg-white px-5 py-4">
-              <h2 className="text-[15px] font-semibold">
+            <div className="sticky top-0 flex items-center justify-between border-b border-neutral-100 bg-white px-6 py-4">
+              <h2 className="text-body font-semibold">
                 {sido ? sido : '지역 추가'}
               </h2>
               <button
                 type="button"
                 onClick={() => (sido ? setSido(null) : setOpen(false))}
-                className="text-[13px] text-neutral-500"
+                className="text-label text-neutral-500"
               >
                 {sido ? '‹ 뒤로' : '닫기'}
               </button>
@@ -104,7 +104,7 @@ export function RegionPicker({
                   <button
                     type="button"
                     onClick={() => add(NATIONWIDE)}
-                    className="flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] hover:bg-neutral-50"
+                    className="flex w-full items-center justify-between px-6 py-3.5 text-left text-body hover:bg-neutral-50"
                   >
                     전국 전체
                   </button>
@@ -117,7 +117,7 @@ export function RegionPicker({
                       <button
                         type="button"
                         onClick={() => setSido(s)}
-                        className="flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] hover:bg-neutral-50"
+                        className="flex w-full items-center justify-between px-6 py-3.5 text-left text-body hover:bg-neutral-50"
                       >
                         {s}
                         <span className="text-neutral-300">›</span>
@@ -130,7 +130,7 @@ export function RegionPicker({
                         type="button"
                         onClick={() => add(formatRegion(sido, g))}
                         disabled={value.includes(formatRegion(sido, g))}
-                        className="w-full px-5 py-3.5 text-left text-[15px] hover:bg-neutral-50 disabled:text-neutral-300"
+                        className="w-full px-6 py-3.5 text-left text-body hover:bg-neutral-50 disabled:text-neutral-300"
                       >
                         {g === PROVINCE_WIDE ? `${sido} 전체` : g}
                       </button>

@@ -59,7 +59,7 @@ export default async function HomePage({
   return (
     <main className="pb-24">
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-5 pb-4 pt-6">
+      <header className="flex items-center justify-between px-6 pb-4 pt-6">
         <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/chakchak-wordmark.png" alt="착착" className="h-[24px] w-auto" />
@@ -92,9 +92,9 @@ export default async function HomePage({
       </header>
 
       {/* 필터 영역 (카테고리 + 정렬) */}
-      <div className="flex flex-col gap-5 px-5 pb-1">
+      <div className="flex flex-col gap-5 px-6 pb-1">
         {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다 */}
-        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-5 px-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-6 px-6 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link href={makeCategoryUrl(undefined)} scroll={false} className="shrink-0">
             <Chip selected={!selected} as="span" tone="accent" className="whitespace-nowrap">
               전체
@@ -135,7 +135,7 @@ export default async function HomePage({
           action={{ label: '액션 만들기', href: '/action/create' }}
         />
       ) : (
-        <div className="flex flex-col gap-4 px-5">
+        <div className="flex flex-col gap-4 px-6">
           {actions.map((a) => (
             <ActionCard key={a.id} action={a} />
           ))}

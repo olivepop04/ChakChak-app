@@ -93,12 +93,12 @@ export function JoinForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-[calc(10rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-4">
+    <div className="flex flex-col gap-6 px-6 pb-[calc(10rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-4">
       <div>
-        <h2 className="text-[17px] font-bold text-neutral-900">
+        <h2 className="text-subtitle font-bold text-neutral-900">
           내가 할 수 있는 일
         </h2>
-        <p className="mt-1 text-[13px] text-neutral-500">
+        <p className="mt-1 text-label text-neutral-500">
           여러 항목을 함께 선택할 수 있어요.
         </p>
       </div>
@@ -137,7 +137,7 @@ export function JoinForm({
               </label>
 
               {!genderOk && (
-                <p className="mt-2 pl-8 text-[12px] font-medium text-red-600">
+                <p className="mt-2 pl-8 text-label font-medium text-red-600">
                   성별 조건이 맞지 않아 참여할 수 없어요.
                 </p>
               )}
@@ -148,7 +148,7 @@ export function JoinForm({
                   <button
                     type="button"
                     onClick={() => setQuantity(item.id, sel.quantity - 1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-300 text-lg"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-lg"
                     aria-label="수량 줄이기"
                   >
                     −
@@ -158,13 +158,13 @@ export function JoinForm({
                     min={1}
                     value={sel.quantity}
                     onChange={(e) => setQuantity(item.id, Number(e.target.value) || 1)}
-                    className="min-h-9 w-20 rounded-lg border border-neutral-300 px-3 py-2 text-center text-sm outline-none focus:border-neutral-900"
+                    className="min-h-9 w-20 rounded-xl border border-neutral-300 px-3 py-2 text-center text-sm outline-none focus:border-neutral-900"
                   />
                   <span className="text-sm text-neutral-600">{item.unit}</span>
                   <button
                     type="button"
                     onClick={() => setQuantity(item.id, sel.quantity + 1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-300 text-lg"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-lg"
                     aria-label="수량 늘리기"
                   >
                     ＋
@@ -193,7 +193,7 @@ export function JoinForm({
       )}
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2.5 text-[13px] text-red-600">
+        <p className="rounded-xl bg-red-50 px-3 py-2.5 text-label text-red-600">
           {error}
         </p>
       )}

@@ -47,14 +47,14 @@ export function VoiceForm({
   }
 
   return (
-    <div className="flex flex-col gap-5 px-5 pb-[calc(8rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-6">
+    <div className="flex flex-col gap-5 px-6 pb-[calc(8rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-6">
       <div>
-        <h1 className="text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
+        <h1 className="text-xl font-bold leading-snug tracking-tight text-neutral-900">
           함께한 소감을
           <br />
           남겨주세요.
         </h1>
-        <p className="mt-2 line-clamp-2 text-[13px] text-neutral-500">
+        <p className="mt-2 line-clamp-2 text-label text-neutral-500">
           「{actionTitle}」
         </p>
       </div>
@@ -67,19 +67,19 @@ export function VoiceForm({
           rows={9}
           maxLength={LIMITS.CREW_VOICE_MAX}
           placeholder="어떤 점이 좋았는지, 어떤 마음이 들었는지 자유롭게 적어주세요."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
         />
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-red-600">
+          <span className="text-caption text-red-600">
             {tooShort ? `${LIMITS.CREW_VOICE_MIN}자 이상 적어주세요.` : ''}
           </span>
-          <span className="text-[11px] tabular-nums text-neutral-400">
+          <span className="text-caption tabular-nums text-neutral-400">
             {length} / {LIMITS.CREW_VOICE_MAX}
           </span>
         </div>
       </div>
 
-      <p className="rounded-xl bg-neutral-50 px-4 py-3 text-[12px] leading-relaxed text-neutral-500">
+      <p className="rounded-xl bg-neutral-50 px-4 py-3 text-caption leading-relaxed text-neutral-500">
         소감을 남기면 이 액션이 <b className="font-semibold text-neutral-700">참여 완료</b>로
         바뀌고, 내 프로필의 참여 횟수에 반영돼요. 남긴 소감은 결과 화면에 공개됩니다.
       </p>

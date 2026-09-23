@@ -66,11 +66,11 @@ export default async function ChatPage({
     <main>
       <Header title="크루 채팅" back backHref={`/action/${id}`} sticky />
 
-      <div className="border-b border-neutral-100 px-5 py-4">
-        <h1 className="line-clamp-1 text-[15px] font-bold text-neutral-900">
+      <div className="border-b border-neutral-100 px-6 py-4">
+        <h1 className="line-clamp-1 text-body font-bold text-neutral-900">
           {action.title}
         </h1>
-        <p className="mt-0.5 text-[12px] text-neutral-500">
+        <p className="mt-0.5 text-caption text-neutral-500">
           글 {posts.length}개
         </p>
       </div>

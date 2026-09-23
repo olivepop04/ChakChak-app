@@ -40,7 +40,7 @@ export default async function MyPage() {
           <Link
             href="/notifications"
             aria-label="알림"
-            className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-neutral-100 text-neutral-600"
+            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-neutral-100 text-neutral-600"
           >
             <Bell className="h-5 w-5 text-neutral-700" />
           </Link>
@@ -48,22 +48,22 @@ export default async function MyPage() {
       />
 
       {/* 프로필 */}
-      <section className="flex items-center gap-4 px-5 py-4">
+      <section className="flex items-center gap-4 px-6 py-4">
         <Avatar name={profile.nickname} size="lg" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[17px] font-bold text-neutral-900">
+          <p className="truncate text-subtitle font-bold text-neutral-900">
             @{profile.nickname}
           </p>
-          <p className="truncate text-[13px] text-neutral-500">{profile.name}</p>
+          <p className="truncate text-label text-neutral-500">{profile.name}</p>
           {profile.bio && (
-            <p className="mt-1 line-clamp-2 text-[12px] text-neutral-500">
+            <p className="mt-1 line-clamp-2 text-caption text-neutral-500">
               {profile.bio}
             </p>
           )}
         </div>
         <Link
           href="/my/edit"
-          className="shrink-0 rounded-lg border border-neutral-300 px-3 py-2 text-[12px] font-semibold text-neutral-700"
+          className="shrink-0 rounded-full border border-neutral-300 px-3 py-2 text-label font-semibold text-neutral-700"
         >
           프로필 수정
         </Link>
@@ -85,13 +85,13 @@ export default async function MyPage() {
 
       {/* 관심 카테고리 */}
       {profile.categories.length > 0 && (
-        <section className="mt-7 px-5">
+        <section className="mt-6 px-6">
           <SectionTitle className="pb-3">관심 카테고리</SectionTitle>
           <div className="flex flex-wrap gap-1.5">
             {profile.categories.map((c) => (
               <span
                 key={c}
-                className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-medium text-neutral-600"
+                className="rounded-full bg-neutral-100 px-3 py-1.5 text-caption font-medium text-neutral-600"
               >
                 {c}
               </span>
@@ -108,7 +108,7 @@ export default async function MyPage() {
         <div className="divide-y divide-neutral-100 border-y border-neutral-100">
           <Link
             href="/my/edit#notification-settings"
-            className="flex items-center justify-between px-5 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
+            className="flex items-center justify-between px-6 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
           >
             알림 설정
             <span className="text-neutral-300">›</span>
@@ -121,16 +121,16 @@ export default async function MyPage() {
       <footer className="mt-8 flex items-center justify-center gap-3 pb-4 text-center">
         <Link
           href="/terms?from=my"
-          className="text-[12px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
+          className="text-label text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
         >
           이용약관
         </Link>
-        <span aria-hidden="true" className="text-[11px] text-neutral-300">
+        <span aria-hidden="true" className="text-caption text-neutral-300">
           ·
         </span>
         <Link
           href="/privacy?from=my"
-          className="text-[12px] text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
+          className="text-label text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
         >
           개인정보 처리방침
         </Link>

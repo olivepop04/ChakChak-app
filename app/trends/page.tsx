@@ -42,12 +42,12 @@ export default async function TrendsPage() {
     <main className="pb-24">
       <Header title="트렌드" back backHref="/" sticky />
 
-      <div className="flex flex-col gap-5 px-5 py-5">
+      <div className="flex flex-col gap-5 px-6 py-5">
         <div>
-          <h1 className="text-[20px] font-bold tracking-tight text-neutral-900">
+          <h1 className="text-xl font-bold tracking-tight text-neutral-900">
             지금 착착에서는
           </h1>
-          <p className="mt-1 text-[13px] text-neutral-500">
+          <p className="mt-1 text-label text-neutral-500">
             사람들이 어떤 좋은 일을 하고 있는지 모아봤어요.
           </p>
         </div>
