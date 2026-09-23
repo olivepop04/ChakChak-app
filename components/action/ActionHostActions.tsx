@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { cancelAction, endActionEarly } from '@/lib/mutations';
+import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils/cn';
 import { ReasonModal } from '@/components/action/ReasonModal';
@@ -160,13 +162,16 @@ export function ActionHostActions({
             </button>
           )}
           {canCancel && (
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => openModal('cancel')}
-              className="inline-flex self-start rounded-full border border-neutral-200 px-3 py-2 text-label font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+              className="self-start"
             >
-              취소하기
-            </button>
+              <Trash2 className="h-3.5 w-3.5" />
+              액션 취소
+            </Button>
           )}
         </div>
       )}
