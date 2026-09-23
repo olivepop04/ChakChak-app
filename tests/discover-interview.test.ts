@@ -143,10 +143,16 @@ test('재능 답변을 받으면 신규 회원도 분야 선호를 포함한 공
   ]);
 });
 
-test('추천은 앞선 정보가 충분해도 다섯 번째 답변 뒤에만 시작한다', () => {
+test('추천은 다섯 번째 답변에 도달하면 무조건 시작한다', () => {
   assert.equal(shouldRecommendNow({ userTurnCount: 0 }), false);
   assert.equal(shouldRecommendNow({ userTurnCount: 4 }), false);
   assert.equal(shouldRecommendNow({ userTurnCount: 5 }), true);
+});
+
+test('앞선 대화에서 조건이 충분하면(enough: true) 3~4번째 답변에서도 추천을 시작할 수 있다', () => {
+  assert.equal(shouldRecommendNow({ userTurnCount: 2, enough: true }), false);
+  assert.equal(shouldRecommendNow({ userTurnCount: 3, enough: true }), true);
+  assert.equal(shouldRecommendNow({ userTurnCount: 4, enough: true }), true);
 });
 
 test('추천 전환 때 AI가 만든 다음 질문을 고정 추천 안내로 교체한다', () => {

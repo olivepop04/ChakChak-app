@@ -204,39 +204,39 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
   const text = messages.join(' ');
   const answers: AdaptiveAnswers = {};
 
-  if (/재능.*활용|재능을 쓰|내 재능으로/.test(text)) {
+  if (/재능.*활용|재능을 쓰|내 재능으로|재능.*기부|가진.*재능/.test(text)) {
     answers.talentPreference = 'use';
-  } else if (/재능.*상관|재능 없이도/.test(text)) {
+  } else if (/재능.*상관|재능 없이도|특별한 재능|누구나|상관없|가볍게/.test(text)) {
     answers.talentPreference = 'any';
   }
 
   if (/물건|물품/.test(text)) {
     answers.participationMode = 'goods';
-  } else if (/직접 행동|몸으로|몸을 움직/.test(text)) {
+  } else if (/직접 행동|몸으로|몸을 움직|현장 활동/.test(text)) {
     answers.participationMode = 'direct';
   } else if (/시간을 내|시간으로/.test(text)) {
     answers.participationMode = 'time';
   }
 
-  if (/10명 이내|소규모/.test(text)) {
+  if (/10명 이내|소규모|작은|적은|조용|혼자/.test(text)) {
     answers.groupSizePreference = 'small';
-  } else if (/많아도|인원.*상관|규모.*상관/.test(text)) {
+  } else if (/많아도|인원.*상관|규모.*상관|대규모|여럿|여러 사람/.test(text)) {
     answers.groupSizePreference = 'any';
   }
 
-  if (/새로운 분야|새 분야|도전/.test(text)) {
+  if (/새로운 분야|새 분야|도전|다양한/.test(text)) {
     answers.fieldPreference = 'new';
-  } else if (/비슷한 분야|하던 분야|익숙한 분야/.test(text)) {
+  } else if (/비슷한 분야|하던 분야|익숙한 분야|원래 하던/.test(text)) {
     answers.fieldPreference = 'familiar';
-  } else if (/분야.*상관|둘 다/.test(text)) {
+  } else if (/분야.*상관|둘 다|상관없/.test(text)) {
     answers.fieldPreference = 'any';
   }
 
-  if (/선택 지역만|가까운 곳만/.test(text)) {
+  if (/선택 지역만|가까운 곳만|가까운 곳|근처|동네/.test(text)) {
     answers.travelRange = 'exact';
-  } else if (/같은 시.?도|조금 멀어도/.test(text)) {
+  } else if (/같은 시.?도|조금 멀어도|인근/.test(text)) {
     answers.travelRange = 'province';
-  } else if (/지역.*상관|어디든/.test(text)) {
+  } else if (/지역.*상관|어디든|전국|상관없/.test(text)) {
     answers.travelRange = 'any';
   }
 
@@ -271,10 +271,14 @@ export function getRemainingQuestionKeys({
 
 export function shouldRecommendNow({
   userTurnCount,
+  enough = false,
 }: {
   userTurnCount: number;
+  enough?: boolean;
 }): boolean {
-  return userTurnCount >= 5;
+  if (userTurnCount >= 5) return true;
+  if (userTurnCount >= 3 && enough) return true;
+  return false;
 }
 
 export function getDiscoverReply({

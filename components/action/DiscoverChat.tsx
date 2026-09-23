@@ -41,8 +41,10 @@ export function DiscoverChat({
   authenticated?: boolean;
 }) {
   const started = useRef(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [options, setOptions] = useState<string[]>([]);
+  const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(authenticated);
   const [items, setItems] = useState<Recommendation[] | null>(null);
   const [relaxation, setRelaxation] = useState<string[]>([]);
@@ -53,6 +55,10 @@ export function DiscoverChat({
     started.current = true;
     void requestNext([]);
   }, [authenticated]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading, items]);
 
   async function requestNext(nextMessages: ChatMessage[]) {
     setLoading(true);
@@ -94,10 +100,19 @@ export function DiscoverChat({
     ];
     setMessages(nextMessages);
     setOptions([]);
+    setInputText('');
     void requestNext(nextMessages);
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const text = inputText.trim();
+    if (!text || loading) return;
+    choose(text);
+  }
+
   function restart() {
+    setInputText('');
     setMessages([]);
     setOptions([]);
     setItems(null);
@@ -116,7 +131,7 @@ export function DiscoverChat({
           <ul className="mt-3 flex flex-col gap-2 text-[13px] leading-relaxed text-neutral-600">
             <li>· 내 지역과 가능한 시간에 맞춰 추천해요.</li>
             <li>· 이미 참여한 액션과 내가 만든 액션은 자동으로 빼요.</li>
-            <li>· 질문을 통해 내 성향을 파악하고 맞춤 액션을 찾아요.</li>
+            <li>· 대화를 통해 내 성향을 파악하고 맞춤 액션을 찾아요.</li>
           </ul>
           <Link
             href="/login?next=/discover"
@@ -149,7 +164,7 @@ export function DiscoverChat({
         </div>
         {items === null && (
           <span className="text-[11px] tabular-nums text-neutral-400">
-            맞춤 추천 준비 중 · {answeredCount}/5
+            맞춤 추천 대화 중 · {answeredCount}회 답변
           </span>
         )}
       </div>
@@ -166,21 +181,6 @@ export function DiscoverChat({
         ),
       )}
 
-      {!loading && items === null && options.length > 0 && (
-        <div className="flex flex-wrap justify-end gap-2">
-          {options.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => choose(option)}
-              className="rounded-full border border-neutral-900 px-4 py-2 text-[13px] font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      )}
-
       {loading && (
         <Bubble>
           <span className="inline-flex items-center gap-2">
@@ -191,6 +191,48 @@ export function DiscoverChat({
           </span>
         </Bubble>
       )}
+
+      {!loading && items === null && (
+        <div className="flex flex-col gap-2.5 pt-1">
+          {options.length > 0 && (
+            <div className="flex flex-wrap justify-end gap-2">
+              {options.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => choose(option)}
+                  className="rounded-full border border-neutral-900 px-3.5 py-1.5 text-[13px] font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex items-center gap-2 pt-1">
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="직접 입력하거나 위 선택지를 골라보세요"
+              disabled={loading}
+              className="flex-1 rounded-full border border-neutral-300 bg-white px-4 py-2.5 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none disabled:bg-neutral-50"
+            />
+            <button
+              type="submit"
+              disabled={loading || !inputText.trim()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-opacity disabled:opacity-30"
+              aria-label="전송"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      )}
+
+      <div ref={chatEndRef} />
 
       {error && (
         <div className="flex flex-col gap-3 rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600">
