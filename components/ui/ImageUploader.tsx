@@ -102,8 +102,8 @@ export function ImageUploader({
             className={cn(
               'relative h-24 w-24 overflow-hidden rounded-xl border-2',
               showThumbnailPicker && i === thumbnailIndex
-                ? 'border-neutral-900'
-                : 'border-neutral-200',
+                ? 'border-brand'
+                : 'border-hairline',
             )}
           >
             {/* next/image 를 쓰지 않는 이유: Supabase 도메인 설정 없이도 동작하게 하려고 */}
@@ -117,11 +117,11 @@ export function ImageUploader({
                 className={cn(
                   'absolute bottom-1 left-1 rounded px-1.5 py-0.5 text-[10px] font-bold',
                   i === thumbnailIndex
-                    ? 'bg-neutral-900 text-white'
+                    ? 'bg-brand text-white'
                     : 'bg-white/85 text-neutral-600',
                 )}
               >
-                {i === thumbnailIndex ? '대표' : '대표로'}
+                {i === thumbnailIndex ? '대표' : '지정'}
               </button>
             )}
 
@@ -157,7 +157,6 @@ export function ImageUploader({
 
       <p className="text-caption text-neutral-400">
         {urls.length} / {max}장 · JPG · PNG · WebP · 한 장당 5MB 이하
-        {showThumbnailPicker && ' · 첫 번째가 대표 이미지예요'}
       </p>
 
       <input

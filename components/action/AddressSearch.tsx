@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Script from 'next/script';
+import { Search } from 'lucide-react';
 
 type PostcodeData = {
   address: string;
@@ -70,9 +71,18 @@ export function AddressSearch({
           type="button"
           onClick={openPostcode}
           disabled={!ready}
-          className="min-h-11 shrink-0 rounded-xl border border-neutral-300 px-4 py-3 text-label font-semibold text-neutral-700 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
+          className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-[#F5F5F7] px-4 text-label font-semibold text-hairline-focus disabled:cursor-not-allowed disabled:text-neutral-400"
         >
-          {loadFailed ? '불러오기 실패' : ready ? '주소 검색' : '불러오는 중'}
+          {loadFailed ? (
+            '불러오기 실패'
+          ) : ready ? (
+            <>
+              <Search className="h-3.5 w-3.5 text-neutral-600" />
+              주소 검색
+            </>
+          ) : (
+            '불러오는 중'
+          )}
         </button>
       </div>
 

@@ -12,6 +12,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { UsersRound, Package } from 'lucide-react';
 import {
   PERSON_UNIT,
   GENDER_REQUIREMENTS,
@@ -130,34 +131,20 @@ export function ItemEditor({
       {items.map((item, i) => (
         <div
           key={i}
-          className="flex flex-col gap-3 rounded-xl border border-neutral-200 p-4"
+          className="flex flex-col gap-3 rounded-xl bg-[#F5F5F7] p-4"
         >
           {/* 종류 + 삭제 */}
           <div className="flex items-center gap-2">
-            <div className="flex overflow-hidden rounded-xl border border-neutral-300">
-              {(['PERSON', 'GOODS'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() =>
-                    update(i, {
-                      type: t,
-                      unit: t === 'PERSON' ? PERSON_UNIT : '개',
-                      genderRequirement: t === 'GOODS' ? 'ANY' : item.genderRequirement,
-                    })
-                  }
-                  className={`px-3 py-1.5 text-label font-medium ${
-                    item.type === t
-                      ? 'bg-neutral-900 text-white'
-                      : 'bg-white text-neutral-600'
-                  }`}
-                >
-                  {t === 'PERSON' ? '인원' : '물품'}
-                </button>
-              ))}
-            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-brand bg-brand-soft px-3 py-1.5 text-label font-semibold text-brand">
+              {item.type === 'PERSON' ? (
+                <UsersRound className="h-3.5 w-3.5" />
+              ) : (
+                <Package className="h-3.5 w-3.5" />
+              )}
+              {item.type === 'PERSON' ? '인원' : '물품'}
+            </span>
 
-            <span className="ml-auto text-label font-medium text-neutral-500">
+            <span className="ml-auto text-label font-bold text-hairline-focus">
               {preview(item)}
             </span>
 
@@ -280,7 +267,7 @@ export function ItemEditor({
                       onClick={() => update(i, { genderRequirement: g })}
                       className={`rounded-full border px-3 py-1.5 text-label ${
                         (item.genderRequirement ?? 'ANY') === g
-                          ? 'border-neutral-900 bg-neutral-900 text-white'
+                          ? 'border-hairline-focus bg-white font-semibold text-hairline-focus'
                           : 'border-neutral-300 bg-white text-neutral-600'
                       }`}
                     >
@@ -292,7 +279,7 @@ export function ItemEditor({
 
               <div className="flex flex-col gap-1.5">
                 <span className="text-label font-medium text-neutral-700">
-                  참여 조건 <span className="text-neutral-400">(선택)</span>
+                  참여 조건 <span className="text-caption font-normal text-neutral-400">(선택)</span>
                 </span>
                 <input
                   value={item.conditionName ?? ''}

@@ -60,7 +60,7 @@ function scrollAndFocus(target: HTMLElement | null) {
   target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 
 export interface ActionFormInitial {
   id: string | null;
@@ -423,13 +423,16 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         />
       </label>
 
+      <div className="h-px bg-neutral-200" />
+
       {/* 카테고리 */}
       <div className="flex flex-col gap-2">
         <FieldLabel>카테고리</FieldLabel>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => {
-            const isSelected = categories.includes(c);
-            const isPrimary = isSelected && categories[0] === c;
+            const order = categories.indexOf(c);
+            const isSelected = order !== -1;
+            const isPrimary = order === 0;
 
             return (
               <div
@@ -448,13 +451,19 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
                 }}
                 className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-label font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 ${
                   isSelected
-                    ? 'border-neutral-900 bg-neutral-900 text-white'
+                    ? isPrimary
+                      ? 'border-brand bg-brand-soft text-brand'
+                      : 'border-hairline-focus bg-white text-hairline-focus'
                     : 'border-neutral-300 bg-white text-neutral-600 hover:border-neutral-400'
                 }`}
               >
-                {isPrimary && (
-                  <span className="rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-neutral-900">
-                    대표
+                {isSelected && (
+                  <span
+                    className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${
+                      isPrimary ? 'bg-brand text-white' : 'bg-hairline-focus text-white'
+                    }`}
+                  >
+                    {order + 1}
                   </span>
                 )}
                 <span>{c}</span>
@@ -466,7 +475,11 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
                       e.stopPropagation();
                       handleCategoryDeselect(c);
                     }}
-                    className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                    className={`ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full ${
+                      isPrimary
+                        ? 'text-brand hover:bg-brand hover:text-white'
+                        : 'text-hairline-focus hover:bg-hairline-focus hover:text-white'
+                    }`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -475,10 +488,12 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             );
           })}
         </div>
-        <p className="mt-1 text-xs text-neutral-500">
-          * 최대 3개까지 선택 가능하며, 선택된 태그를 눌러 대표를 변경하거나 ✕를 눌러 해제할 수 있습니다.
+        <p className="text-caption text-neutral-400">
+          최대 3개까지 선택, 태그를 누르면 대표로 변경됩니다.
         </p>
       </div>
+
+      <div className="h-px bg-neutral-200" />
 
       {/* 소개 */}
       <label className="flex flex-col gap-1.5">
@@ -495,6 +510,8 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           전화번호·이메일 같은 개인정보는 적지 마세요. 공개된 화면에 그대로 보입니다.
         </span>
       </label>
+
+      <div className="h-px bg-neutral-200" />
 
       {/* 이미지 — 액션이 저장된 뒤에 열립니다 */}
       <div ref={imageSectionRef} className="flex flex-col gap-2">
@@ -518,18 +535,22 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         )}
       </div>
 
+      <div className="h-px bg-neutral-200" />
+
       {/* 모집 항목 */}
       <div ref={itemsSectionRef} className="flex flex-col gap-2">
         <FieldLabel>무엇이 필요한가요?</FieldLabel>
         <ItemEditor items={items} onChange={setItems} />
       </div>
 
+      <div className="h-px bg-neutral-200" />
+
       {/* 일정 */}
       <div className="flex flex-col gap-3">
         <FieldLabel>일정</FieldLabel>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-label text-neutral-500">모집 마감일 :</span>
+          <span className="text-label text-neutral-500">모집 마감일</span>
           <input
             ref={recruitEndRef}
             type="datetime-local"
@@ -547,7 +568,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           )}
           {!dateError || dateError.field !== 'recruitEnd' ? (
             <span className="text-caption text-neutral-400">
-              모집 마감은 활동 시작보다 앞서야 해요.
+              <span className="text-danger">*</span> 모집 마감은 활동 시작보다 앞서야 해요.
             </span>
           ) : null}
         </label>
@@ -572,23 +593,30 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
 
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-3">
-            <label htmlFor="activity-end" className="text-label text-neutral-500">
+            <label htmlFor="activity-end" className="text-label text-hairline-focus">
               활동 종료
             </label>
-            <label className="flex items-center gap-1.5 text-label text-neutral-600">
-              <input
-                type="checkbox"
-                checked={isSameDay}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setIsSameDay(checked);
-                  if (checked) {
-                    setActivityEnd((current) => moveToSameDate(current, activityStart));
-                    if (dateError?.field === 'activityEnd') setDateError(null);
-                  }
-                }}
-                className="h-4 w-4 rounded border-neutral-300 accent-neutral-900"
-              />
+            <label className="flex items-center gap-1.5 text-label text-hairline-focus">
+              <span
+                className={`relative inline-flex h-4 w-4 items-center justify-center rounded border ${
+                  isSameDay ? 'border-brand bg-brand' : 'border-neutral-300 bg-white'
+                }`}
+              >
+                {isSameDay && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                <input
+                  type="checkbox"
+                  checked={isSameDay}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsSameDay(checked);
+                    if (checked) {
+                      setActivityEnd((current) => moveToSameDate(current, activityStart));
+                      if (dateError?.field === 'activityEnd') setDateError(null);
+                    }
+                  }}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                />
+              </span>
               시작일과 같음
             </label>
           </div>
@@ -612,6 +640,8 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           )}
         </div>
       </div>
+
+      <div className="h-px bg-neutral-200" />
 
       {/* 주소 · 장소명 */}
       <div ref={placeSectionRef} className="flex flex-col gap-3">
@@ -648,6 +678,8 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           </p>
         )}
       </div>
+
+      <div className="h-px bg-neutral-200" />
 
       {/* 안내사항 */}
       <label className="flex flex-col gap-1.5">
