@@ -22,6 +22,19 @@ test('Discover 재능 선택지는 프로필의 공통 재능 목록과 열린 �
   assert.equal(options.includes('상관없음'), true);
 });
 
+test('상태 C와 D 사용자의 첫 질문 선택지는 익숙한 분야와 새로운 도전을 제공한다', () => {
+  assert.deepEqual(getQuestionOptions('talent_preference', SKILLS, 'C'), [
+    '비슷한 활동을 이어갈래요',
+    '새로운 분야를 찾아볼래요',
+    '상관없음',
+  ]);
+  assert.deepEqual(getQuestionOptions('talent_preference', SKILLS, 'D'), [
+    '익숙한 분야가 좋아요',
+    '새로운 도전을 해볼래요',
+    '상관없음',
+  ]);
+});
+
 test('모임 규모 질문의 선택지는 메타데이터 기준 4개 버튼을 제공한다', () => {
   assert.deepEqual(getQuestionOptions('group_size'), [
     '소규모 모임 (10명 안팎)',

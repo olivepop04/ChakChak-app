@@ -197,7 +197,25 @@ export function analyzeUserContext({
 export function getQuestionOptions(
   key: QuestionKey,
   skills: readonly string[] = [],
+  userState?: UserStateCategory,
 ): string[] {
+  if (key === 'talent_preference') {
+    if (userState === 'D') {
+      return ['익숙한 분야가 좋아요', '새로운 도전을 해볼래요', '상관없음'];
+    }
+    if (userState === 'C') {
+      return ['비슷한 활동을 이어갈래요', '새로운 분야를 찾아볼래요', '상관없음'];
+    }
+    if (userState === 'E') {
+      return ['가볍게 다시 시작해볼래요', '새로운 활동을 찾아볼래요', '상관없음'];
+    }
+    return [
+      '가진 재능을 살릴래요',
+      '부담 없이 가볍게 시작할래요',
+      '상관없음',
+    ];
+  }
+
   const options: Record<QuestionKey, readonly string[]> = {
     talent_preference: [
       '가진 재능을 살릴래요',
@@ -685,10 +703,10 @@ export function extractAnswersFromDialogue(
       }
 
       // 6. 활동 분야 질문에 대한 답변
-      if (/분야|카테고리|관심사/.test(q)) {
+      if (/분야|카테고리|관심사|비슷한 활동|익숙한|도전/.test(q)) {
         if (/상관없/.test(a)) answers.fieldPreference = 'any';
-        else if (/새로운/.test(a)) answers.fieldPreference = 'new';
-        else answers.fieldPreference = 'familiar';
+        else if (/새로운|도전/.test(a)) answers.fieldPreference = 'new';
+        else if (/비슷|익숙|이어/.test(a)) answers.fieldPreference = 'familiar';
       }
 
       // 7. 시간대 질문에 대한 답변

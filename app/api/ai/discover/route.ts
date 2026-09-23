@@ -363,6 +363,31 @@ export async function POST(request: Request) {
   });
   const fallbackQuestionKey = remainingQuestionKeys[0] ?? null;
 
+  // Turn 0: 첫 진입 시에는 사용자 상태(A~F) 및 과거 활동에 기반한 정밀 오프닝과 맞춤 선택지를 즉시 반환
+  if (userTurnCount === 0) {
+    const openingKey: QuestionKey = 'talent_preference';
+    const openingReply = getQuestionReply(openingKey, {
+      nickname: profile.nickname,
+      answers: adaptiveAnswers,
+      profileSkills: profile.skills ?? [],
+      selectedSkills,
+      fieldReferenceCategories,
+      hasHistory,
+      userState: userContext.state,
+      knownFacts: userContext.knownFacts,
+      pastActivitySummary: userContext.pastActivitySummary,
+    });
+    const openingOptions = getQuestionOptions(openingKey, SKILLS, userContext.state);
+
+    return NextResponse.json({
+      done: false,
+      reply: openingReply,
+      options: openingOptions,
+      relaxation: [],
+      items: null,
+    });
+  }
+
   let conversation: Conversation;
   let isAiSuccess = false;
   try {
