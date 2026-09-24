@@ -66,9 +66,23 @@ function guessMode(action: ActionCardData): string {
   return action.category === '환경' ? '직접 행동으로' : '시간을 내서';
 }
 
+/**
+ * 시간대(오전·오후·저녁·밤)는 한국 시각으로 봅니다.
+ *
+ * 이 파일은 서버 라우트(`app/api/ai/discover`)에서만 돕니다. 배포 서버는 UTC 라서
+ * `new Date(iso).getHours()` 가 9시간 어긋났습니다 — 토요일 오전 10시 활동이
+ * 「밤」 으로 판정돼, 「주말 오전」 만 가능한 사람에게 시간 점수 15점이
+ * 통째로 안 붙었습니다 (TZ 를 바꿔 실측). 우리 PC 는 KST 라 로컬에서는
+ * 재현되지 않습니다.
+ *
+ * 요일 판정은 `lib/utils/date.ts` 의 `isWeekend` 가 2026-09-24 에 KST 로
+ * 고정됐으므로 그대로 씁니다. 여기서는 시각 판정만 맞춥니다.
+ */
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
 function getTimeSlot(iso: string | null): TimeSlot | null {
   if (!iso) return null;
-  const hour = new Date(iso).getHours();
+  const hour = new Date(new Date(iso).getTime() + KST_OFFSET_MS).getUTCHours();
   if (hour >= 5 && hour < 12) return '오전';
   if (hour >= 12 && hour < 18) return '오후';
   if (hour >= 18 && hour < 22) return '저녁';
