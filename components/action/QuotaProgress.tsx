@@ -57,13 +57,13 @@ export function QuotaProgress({
         <div
           className={cn(
             'flex h-9 w-9 flex-none items-center justify-center rounded-full',
-            state.isMinMet ? 'bg-emerald-50' : 'bg-neutral-100',
+            state.isMinMet ? 'bg-brand-soft' : 'bg-neutral-100',
           )}
         >
           <Icon
             className={cn(
               'h-[18px] w-[18px]',
-              state.isMinMet ? 'text-emerald-600' : 'text-neutral-500',
+              state.isMinMet ? 'text-brand' : 'text-neutral-500',
             )}
             aria-hidden="true"
           />
@@ -108,7 +108,7 @@ export function QuotaProgress({
         <div
           className={cn(
             'h-full rounded-full transition-[width] duration-300',
-            state.isMinMet ? 'bg-emerald-500' : 'bg-neutral-400',
+            state.isMinMet ? 'bg-brand' : 'bg-neutral-400',
           )}
           style={{ width: `${Math.max(state.ratio * 100, 2)}%` }}
         />
@@ -117,7 +117,7 @@ export function QuotaProgress({
       <p
         className={cn(
           'text-xs',
-          state.isMinMet ? 'text-emerald-700' : 'text-neutral-500',
+          state.isMinMet ? 'text-brand' : 'text-neutral-500',
         )}
       >
         {state.hint}

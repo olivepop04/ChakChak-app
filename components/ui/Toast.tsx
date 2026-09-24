@@ -36,7 +36,7 @@ export function useToast() {
 const TONE: Record<ToastTone, string> = {
   default: 'bg-neutral-900 text-white',
   error: 'bg-red-600 text-white',
-  success: 'bg-emerald-600 text-white',
+  success: 'bg-brand text-white',
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {

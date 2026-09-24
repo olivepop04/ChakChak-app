@@ -138,7 +138,7 @@ export function ResultWriteForm({
                     <div
                       className={cn(
                         'h-full rounded-full transition-all duration-300',
-                        isMet ? 'bg-emerald-500' : 'bg-neutral-400',
+                        isMet ? 'bg-brand' : 'bg-neutral-400',
                       )}
                       style={{ width: `${Math.round(ratio * 100)}%` }}
                     />
@@ -147,7 +147,7 @@ export function ResultWriteForm({
                   <p
                     className={cn(
                       'text-label font-medium',
-                      isMet ? 'text-emerald-700' : 'text-neutral-500',
+                      isMet ? 'text-brand' : 'text-neutral-500',
                     )}
                   >
                     {describeResult(item, item.currentCount)}
