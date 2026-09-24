@@ -130,7 +130,7 @@ export function scoreAction(
   //
   // '전체' 는 "가리지 않는다" 는 뜻이므로 어떤 카테고리와도 맞는 것으로 봅니다.
   // 이 방어가 없으면 '전체' 를 고른 사람은 8개 중 어느 것과도 안 맞아
-  // 관심 분야 30점이 영구히 0점이 됩니다. 에러가 안 나서 알아채기 어렵습니다.
+  // 관심 분야 25점이 영구히 0점이 됩니다. 에러가 안 나서 알아채기 어렵습니다.
   const wanted = new Set(
     [...profile.categories, answers.category].filter(Boolean) as string[],
   );
