@@ -15,12 +15,11 @@ import { useRouter } from 'next/navigation';
 import { Check, Minus, Plus, UsersRound, Package } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { joinAction, type JoinItemInput } from '@/lib/mutations';
-import { QuotaProgress } from '@/components/action/QuotaProgress';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils/cn';
-import { meetsGender } from '@/lib/utils/quota';
-import { PERSON_UNIT, type Gender } from '@/lib/constants';
+import { meetsGender, getQuotaState } from '@/lib/utils/quota';
+import { PERSON_UNIT, GENDER_REQUIREMENT_LABEL, type Gender } from '@/lib/constants';
 import type { ActionItemWithProgress } from '@/lib/types/view';
 
 interface Selection {
@@ -109,6 +108,9 @@ export function JoinForm({
           const genderOk = meetsGender(item, myGender);
           const disabled = item.isFull || !genderOk;
           const sel = selection[item.id];
+          const state = getQuotaState(item, item.currentCount);
+          const genderReq = item.gender_requirement ?? 'ANY';
+          const ItemIcon = item.type === 'PERSON' ? UsersRound : Package;
 
           return (
             <div
@@ -130,19 +132,85 @@ export function JoinForm({
                 <span
                   aria-hidden="true"
                   className={cn(
-                    'mt-1 flex h-5 w-5 flex-none items-center justify-center rounded',
+                    'mt-2 flex h-5 w-5 flex-none items-center justify-center rounded',
                     sel?.checked ? 'bg-brand' : 'border-[1.5px] border-neutral-300 bg-white',
                   )}
                 >
                   {sel?.checked && <Check className="h-3.5 w-3.5 stroke-[3] text-white" />}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <QuotaProgress
-                    item={item}
-                    current={item.currentCount}
-                    detailed
-                    conditionName={item.conditionName}
-                  />
+                  <div className="flex flex-col gap-2">
+                    {/* 상단: 아이콘 + 항목명 + 최종 모집 수 (한 row) */}
+                    <div className="flex items-center gap-2">
+                      {/* 원 안의 아이콘 (테두리 없음) */}
+                      <div
+                        className={cn(
+                          'flex h-9 w-9 flex-none items-center justify-center rounded-full',
+                          state.isMinMet ? 'bg-brand-soft' : 'bg-neutral-100',
+                        )}
+                      >
+                        <ItemIcon
+                          className={cn(
+                            'h-[18px] w-[18px]',
+                            state.isMinMet ? 'text-brand' : 'text-neutral-500',
+                          )}
+                          aria-hidden="true"
+                        />
+                      </div>
+
+                      <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <span className="text-sm font-bold text-neutral-900">{item.name}</span>
+                        {genderReq !== 'ANY' && (
+                          <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-caption font-medium text-neutral-600">
+                            {GENDER_REQUIREMENT_LABEL[genderReq]}
+                          </span>
+                        )}
+                        {item.conditionName && (
+                          <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-caption font-medium text-neutral-600">
+                            {item.conditionName}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 최종 모집 수만 표시 (목표 수 미표시) */}
+                      <span
+                        className={cn(
+                          'shrink-0 text-sm font-bold tabular-nums',
+                          state.isMinMet ? 'text-brand' : 'text-neutral-900',
+                        )}
+                      >
+                        {item.currentCount}{item.unit}
+                      </span>
+                    </div>
+
+                    {/* 프로그레스바 게이지 (앞까지 옴) */}
+                    <div
+                      className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200"
+                      role="progressbar"
+                      aria-valuenow={Math.round(state.ratio * 100)}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${item.name} 모집 현황`}
+                    >
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-all duration-300',
+                          state.isMinMet ? 'bg-brand' : 'bg-neutral-400',
+                        )}
+                        style={{ width: `${Math.max(state.ratio * 100, 2)}%` }}
+                      />
+                    </div>
+
+                    {/* 상태 안내 문구 */}
+                    <p
+                      className={cn(
+                        'text-xs font-medium',
+                        state.isMinMet ? 'text-brand' : 'text-neutral-500',
+                      )}
+                    >
+                      {state.hint}
+                    </p>
+                  </div>
                 </div>
               </label>
 

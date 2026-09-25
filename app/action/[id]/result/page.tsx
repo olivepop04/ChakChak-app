@@ -8,11 +8,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getActionResult } from '@/lib/queries/participations';
+import { UsersRound, Package } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { CrewVoiceList } from '@/components/action/CrewVoiceList';
-import { describeResult, describeResultCount, describeResultRatio } from '@/lib/utils/quota';
+import { describeResult, describeResultRatio } from '@/lib/utils/quota';
 import { cn } from '@/lib/utils/cn';
 import { formatActivityPeriod } from '@/lib/utils/date';
 
@@ -98,27 +99,53 @@ export default async function ResultPage({
         {/* 자동 집계 */}
         <section className="flex flex-col gap-3">
           <SectionTitle>함께 모은 것</SectionTitle>
-          <div className="flex flex-col gap-3.5 rounded-xl border border-neutral-200 p-4">
+          <div className="flex flex-col divide-y divide-neutral-100 rounded-xl border border-neutral-200 px-4 py-1">
             {result.items.map((item) => {
               const { ratio, isMet } = describeResultRatio(item, item.currentCount);
+              const Icon = item.type === 'PERSON' ? UsersRound : Package;
               return (
-                <div key={item.id} className="flex flex-col gap-1.5">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-sm font-semibold text-neutral-900">
+                <div key={item.id} className="flex flex-col gap-2 py-3.5 first:pt-3 last:pb-3">
+                  {/* 상단: 아이콘 + 항목명 + 최종 모집 수 (한 row) */}
+                  <div className="flex items-center gap-2">
+                    {/* 원 안의 아이콘 (테두리 없음) */}
+                    <div
+                      className={cn(
+                        'flex h-9 w-9 flex-none items-center justify-center rounded-full',
+                        isMet ? 'bg-brand-soft' : 'bg-neutral-100',
+                      )}
+                    >
+                      <Icon
+                        className={cn(
+                          'h-[18px] w-[18px]',
+                          isMet ? 'text-brand' : 'text-neutral-500',
+                        )}
+                        aria-hidden="true"
+                      />
+                    </div>
+
+                    <span className="flex-1 truncate text-sm font-bold text-neutral-900">
                       {item.name}
                     </span>
-                    <span className="text-body font-bold tabular-nums text-neutral-900">
-                      {describeResultCount(item, item.currentCount)}
+
+                    {/* 최종 모집 수만 표시 (목표 수 미표시) */}
+                    <span
+                      className={cn(
+                        'shrink-0 text-sm font-bold tabular-nums',
+                        isMet ? 'text-brand' : 'text-neutral-900',
+                      )}
+                    >
+                      {item.currentCount}{item.unit}
                     </span>
                   </div>
 
-                  {/* 게이지(그래프) */}
+                  {/* 프로그레스바 게이지 (앞까지 옴) */}
                   <div
-                    className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100"
+                    className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200"
                     role="progressbar"
                     aria-valuenow={Math.round(ratio * 100)}
                     aria-valuemin={0}
                     aria-valuemax={100}
+                    aria-label={`${item.name} 모집 현황`}
                   >
                     <div
                       className={cn(
@@ -129,9 +156,10 @@ export default async function ResultPage({
                     />
                   </div>
 
+                  {/* 상태 안내 문구 */}
                   <p
                     className={cn(
-                      'text-caption font-medium',
+                      'text-xs font-medium',
                       isMet ? 'text-brand' : 'text-neutral-500',
                     )}
                   >

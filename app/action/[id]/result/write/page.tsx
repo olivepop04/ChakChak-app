@@ -7,6 +7,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getActionItems } from '@/lib/queries/actions';
+import { formatActivityPeriod } from '@/lib/utils/date';
 import { ResultWriteForm } from '@/components/action/ResultWriteForm';
 import { Header } from '@/components/layout/Header';
 
@@ -28,7 +29,7 @@ export default async function ResultWritePage({
 
   const { data: action } = await supabase
     .from('actions')
-    .select('id, title, status, owner_id')
+    .select('id, title, status, owner_id, place_name, address, activity_start_at, activity_end_at')
     .eq('id', id)
     .maybeSingle();
   if (!action) notFound();
@@ -49,14 +50,23 @@ export default async function ResultWritePage({
       .maybeSingle(),
   ]);
 
+  const location = action.place_name || action.address;
+  const period = formatActivityPeriod(action.activity_start_at, action.activity_end_at);
+  const subInfo = [location, period].filter(Boolean).join(' | ');
+
   return (
     <main>
       <Header title="결과 작성" back backHref={`/action/${id}`} sticky />
 
-      <div className="border-b border-neutral-100 px-6 py-4">
-        <h1 className="line-clamp-2 text-subtitle font-bold leading-snug text-neutral-900">
+      <div className="border-b border-neutral-100 px-6 pt-5 pb-4">
+        <h1 className="text-xl font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
+        {subInfo && (
+          <p className="mt-1 text-xs text-neutral-500">
+            {subInfo}
+          </p>
+        )}
       </div>
 
       <ResultWriteForm

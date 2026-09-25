@@ -10,16 +10,28 @@
 'use client';
 
 import { useState } from 'react';
+import { UsersRound, Search, Check, Share2, Copy } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { searchUsers } from '@/lib/queries/profiles';
 import { shareToUser } from '@/lib/mutations';
-import { UserList } from '@/components/ui/UserList';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { SectionTitle } from '@/components/ui/SectionTitle';
 import { useToast } from '@/components/ui/Toast';
 import { LIMITS } from '@/lib/constants';
 import type { UserSummary } from '@/lib/types/view';
+
+/** 한글은 첫 글자, 영문은 최대 두 글자 */
+function getInitials(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return '?';
+
+  const isHangul = /[가-힣]/.test(trimmed[0]);
+  if (isHangul) return trimmed[0];
+
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+}
 
 export function SharePanel({
   actionId,
@@ -99,80 +111,134 @@ export function SharePanel({
     }
   }
 
+  const displayUrl = shareUrl ? shareUrl.replace(/^https?:\/\//, '') : '';
+
   return (
     <div className={className ?? 'flex flex-col gap-6 px-6 py-5'}>
-      {/* 회원에게 보내기 */}
+      {/* 착착 친구에게 보내기 */}
       <section className="flex flex-col gap-3">
-        <div>
-          <SectionTitle>착착 친구에게 보내기</SectionTitle>
-          <p className="mt-0.5 text-caption text-neutral-500">
-            이름과 닉네임으로 친구를 찾을 수 있고, 상대방 알림으로 보내져요.
-          </p>
+        <div className="flex items-center gap-2">
+          <UsersRound className="h-5 w-5 text-neutral-900" aria-hidden="true" />
+          <h2 className="text-base font-bold text-neutral-900">착착 친구에게 보내기</h2>
         </div>
 
-        <div className="flex gap-2">
-          <Input
+        {/* 검색창 */}
+        <div className="relative flex items-center">
+          <input
+            type="text"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSearch();
+              }
+            }}
             placeholder="이름 또는 닉네임 (2자 이상)"
-            className="flex-1"
+            className="h-12 w-full rounded-2xl bg-neutral-100 pl-4 pr-11 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:bg-neutral-50 focus:ring-1 focus:ring-neutral-300"
           />
-          <Button onClick={handleSearch} loading={searching}>
-            검색
-          </Button>
+          <button
+            type="button"
+            onClick={handleSearch}
+            disabled={searching}
+            aria-label="검색"
+            className="absolute right-3.5 flex h-6 w-6 items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors"
+          >
+            <Search className="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
 
-        {searched &&
-          (results.length === 0 ? (
-            <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-5 text-center text-label text-neutral-700">
-              찾는 사람이 없어요. 이름이나 닉네임을 다시 확인해주세요.
-            </p>
-          ) : (
-            <div className="-mx-6 border-y border-neutral-100">
-              <UserList
-                users={results}
-                action={(u) =>
-                  sent.has(u.id) ? (
-                    <span className="shrink-0 rounded-full bg-neutral-100 px-3 py-1.5 text-caption font-medium text-neutral-400">
-                      보냄 ✓
-                    </span>
+        {/* 검색 결과 목록 */}
+        {searched && results.length === 0 && (
+          <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-5 text-center text-label text-neutral-700">
+            찾는 사람이 없어요. 이름이나 닉네임을 다시 확인해주세요.
+          </p>
+        )}
+
+        {results.length > 0 && (
+          <ul className="mt-1 flex flex-col gap-3.5">
+            {results.map((u) => {
+              const isSent = sent.has(u.id);
+              return (
+                <li key={u.id} className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-neutral-200 text-sm font-bold text-neutral-600 select-none">
+                      {getInitials(u.nickname)}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="truncate text-sm font-bold text-neutral-900">
+                        @{u.nickname}
+                      </span>
+                      <span className="text-xs text-neutral-400">
+                        참여 {u.participatedCount}개 · 호스트 {u.ledCount}개
+                      </span>
+                    </div>
+                  </div>
+
+                  {isSent ? (
+                    <div className="flex h-8 items-center gap-1 rounded-full bg-neutral-100 px-3.5 text-xs font-semibold text-neutral-400 select-none">
+                      <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
+                      <span>보냄</span>
+                    </div>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleSend(u)}
-                      className="shrink-0 rounded-full bg-neutral-900 px-3 py-1.5 text-label font-semibold text-white"
+                      className="flex h-8 items-center rounded-full bg-brand px-4 text-xs font-bold text-white transition-all hover:bg-brand-dark active:scale-95"
                     >
                       보내기
                     </button>
-                  )
-                }
-              />
-            </div>
-          ))}
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
-      {/* 링크 복사 */}
-      <section className="flex flex-col gap-3 border-t border-neutral-100 pt-6">
-        <div>
-          <SectionTitle>링크로 공유하기</SectionTitle>
-          <p className="mt-0.5 text-caption text-neutral-500">
-            착착 회원이 아니어도 이 링크로 액션을 볼 수 있어요.
-          </p>
-        </div>
+      {/* 섹션 구분선 */}
+      <div className="h-px w-full bg-neutral-100" />
 
-        <div className="flex gap-2">
-          <input
-            readOnly
-            value={shareUrl}
-            onFocus={(e) => e.currentTarget.select()}
-            className="min-h-11 flex-1 rounded-xl border border-neutral-300 bg-neutral-50 px-4 py-3 text-label text-neutral-600 outline-none"
-          />
-          <Button variant="secondary" onClick={handleCopy}>
-            복사
-          </Button>
+      {/* 링크로 공유하기 */}
+      <section className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Share2 className="h-5 w-5 text-neutral-900" aria-hidden="true" />
+          <h2 className="text-base font-bold text-neutral-900">링크로 공유하기</h2>
+        </div>
+        <p className="text-xs text-neutral-400">
+          착착 회원이 아니어도 이 링크로 액션을 볼 수 있어요.
+        </p>
+
+        <div
+          onClick={handleCopy}
+          className="mt-1 flex h-12 w-full cursor-pointer items-center justify-between rounded-2xl bg-neutral-100 px-4 transition-colors hover:bg-neutral-200/70"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleCopy();
+            }
+          }}
+          aria-label="링크 복사하기"
+        >
+          <span className="truncate pr-2 text-sm text-neutral-700">
+            {displayUrl || '링크를 불러오는 중...'}
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopy();
+            }}
+            aria-label="링크 복사"
+            className="flex h-7 w-7 flex-none items-center justify-center text-neutral-600 transition-colors hover:text-neutral-900"
+          >
+            <Copy className="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
       </section>
     </div>
   );
 }
+
