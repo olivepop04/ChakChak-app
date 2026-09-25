@@ -13,21 +13,92 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { postChatMessage, deleteChatMessage } from '@/lib/mutations';
 import { Avatar } from '@/components/ui/Avatar';
-import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
+import { cn } from '@/lib/utils/cn';
 import { formatRelative } from '@/lib/utils/date';
 import { LIMITS } from '@/lib/constants';
 import { ReasonModal } from '@/components/action/ReasonModal';
-import type { ChatPost } from '@/lib/types/view';
+import type { ChatPost, ChatReply } from '@/lib/types/view';
 
 type DeleteTarget = {
   messageId: string;
   isPost: boolean;
 } | null;
+
+/** 원글·댓글 한 줄. 카드 없이 흐르는 목록이라 두 곳이 같은 모양을 씁니다. */
+function ChatMessageRow({
+  author,
+  content,
+  createdAt,
+  deletedAt,
+  kind,
+  isMine,
+  indent,
+  onReply,
+  onDelete,
+}: {
+  author: { nickname: string };
+  content: string;
+  createdAt: string;
+  deletedAt: string | null;
+  kind: ChatReply['kind'];
+  isMine: boolean;
+  indent?: boolean;
+  onReply?: () => void;
+  onDelete?: () => void;
+}) {
+  return (
+    <div className={cn('flex gap-2.5 py-4', indent && 'ml-[42px]')}>
+      <Avatar name={author.nickname} size="sm" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline gap-2">
+          <span className="text-label font-semibold text-neutral-900">
+            @{author.nickname}
+          </span>
+          {kind === 'LEFT_NOTICE' && (
+            <span className="shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
+              참여 취소
+            </span>
+          )}
+        </div>
+        <p
+          className={cn(
+            'mt-1 whitespace-pre-wrap break-words text-body leading-relaxed',
+            deletedAt ? 'italic text-neutral-400' : 'text-neutral-800',
+          )}
+        >
+          {content}
+        </p>
+        <div className="mt-1.5 flex items-center gap-2">
+          <span className="text-caption text-neutral-400">{formatRelative(createdAt)}</span>
+          {onReply && (
+            <button
+              type="button"
+              onClick={onReply}
+              className="text-label font-bold text-neutral-600 hover:text-neutral-900"
+            >
+              답글 달기
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="ml-auto text-caption text-neutral-400 hover:text-red-500"
+            >
+              삭제
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function ChatBoard({
   actionId,
@@ -104,153 +175,102 @@ export function ChatBoard({
           description="첫 글을 남겨 이야기를 시작해보세요."
         />
       ) : (
-        <ul className="flex flex-col gap-3 px-6 py-4">
-          {posts.map((post) => (
-            <li
-              key={post.id}
-              className="overflow-hidden rounded-xl border border-neutral-200"
-            >
-              {/* 원글 */}
-              <div className="flex gap-3 p-4">
-                <Avatar name={post.author.nickname} size="sm" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline gap-2">
-                    {post.kind === 'LEFT_NOTICE' && (
-                      <span className="shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
-                        참여 취소
-                      </span>
-                    )}
-                    <span className="text-label font-semibold text-neutral-900">
-                      @{post.author.nickname}
-                    </span>
-                    <span className="text-caption text-neutral-400">
-                      {formatRelative(post.createdAt)}
-                    </span>
-                    {post.isMine && !post.deletedAt && post.kind !== 'LEFT_NOTICE' && (
-                      <button
-                        type="button"
-                        onClick={() => setDeleteTarget({ messageId: post.id, isPost: true })}
-                        className="ml-auto text-caption text-neutral-400 hover:text-red-500"
-                      >
-                        삭제
-                      </button>
-                    )}
+        <div className="flex flex-col px-6">
+          {posts.map((post, postIdx) => {
+            const isLastPost = postIdx === posts.length - 1;
+            const canReplyToPost = canWrite && !post.deletedAt && post.kind !== 'LEFT_NOTICE';
+
+            return (
+              <div key={post.id}>
+                <ChatMessageRow
+                  author={post.author}
+                  content={post.content}
+                  createdAt={post.createdAt}
+                  deletedAt={post.deletedAt}
+                  kind={post.kind}
+                  isMine={post.isMine}
+                  onReply={canReplyToPost ? () => { setReplyTo(post.id); setReplyText(''); } : undefined}
+                  onDelete={
+                    post.isMine && !post.deletedAt && post.kind !== 'LEFT_NOTICE'
+                      ? () => setDeleteTarget({ messageId: post.id, isPost: true })
+                      : undefined
+                  }
+                />
+
+                {post.replies.map((reply) => (
+                  <div key={reply.id}>
+                    <div className="ml-[42px] border-t border-neutral-100" />
+                    <ChatMessageRow
+                      author={reply.author}
+                      content={reply.content}
+                      createdAt={reply.createdAt}
+                      deletedAt={reply.deletedAt}
+                      kind={reply.kind}
+                      isMine={reply.isMine}
+                      indent
+                      onDelete={
+                        reply.isMine && !reply.deletedAt
+                          ? () => setDeleteTarget({ messageId: reply.id, isPost: false })
+                          : undefined
+                      }
+                    />
                   </div>
-                  <p
-                    className={`mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed ${
-                      post.deletedAt ? 'italic text-neutral-400' : 'text-neutral-800'
-                    }`}
-                  >
-                    {post.content}
-                  </p>
-                </div>
-              </div>
+                ))}
 
-              {/* 댓글 */}
-              {post.replies.length > 0 && (
-                <ul className="flex flex-col gap-3 border-t border-neutral-100 bg-neutral-50 px-4 py-3">
-                  {post.replies.map((reply) => (
-                    <li key={reply.id} className="flex gap-2.5">
-                      <Avatar name={reply.author.nickname} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-label font-semibold text-neutral-800">
-                            @{reply.author.nickname}
-                          </span>
-                          <span className="text-caption text-neutral-400">
-                            {formatRelative(reply.createdAt)}
-                          </span>
-                          {reply.isMine && !reply.deletedAt && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setDeleteTarget({ messageId: reply.id, isPost: false })
-                              }
-                              className="ml-auto text-caption text-neutral-400 hover:text-red-500"
-                            >
-                              삭제
-                            </button>
-                          )}
-                        </div>
-                        <p
-                          className={`mt-0.5 whitespace-pre-wrap break-words text-label leading-relaxed ${
-                            reply.deletedAt
-                              ? 'italic text-neutral-400'
-                              : 'text-neutral-700'
-                          }`}
-                        >
-                          {reply.content}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {/* 댓글 달기 */}
-              {canWrite && !post.deletedAt && post.kind !== 'LEFT_NOTICE' && (
-                <div className="border-t border-neutral-100 px-4 py-2.5">
-                  {replyTo === post.id ? (
-                    <div className="flex gap-2">
-                      <input
-                        autoFocus
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') submitReply(post.id);
-                          if (e.key === 'Escape') setReplyTo(null);
-                        }}
-                        maxLength={LIMITS.CHAT_MAX}
-                        placeholder="댓글을 입력하세요"
-                        className="min-h-9 flex-1 rounded-xl border border-neutral-300 px-3 py-2 text-label outline-none focus:border-neutral-900"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => submitReply(post.id)}
-                        disabled={busy || !replyText.trim()}
-                      >
-                        등록
-                      </Button>
-                    </div>
-                  ) : (
+                {replyTo === post.id && (
+                  <div className="ml-[42px] flex min-h-11 items-center gap-2 rounded-xl border border-hairline py-1 pl-3.5 pr-1 mb-4">
+                    <input
+                      autoFocus
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') submitReply(post.id);
+                        if (e.key === 'Escape') setReplyTo(null);
+                      }}
+                      maxLength={LIMITS.CHAT_MAX}
+                      placeholder="댓글을 입력하세요"
+                      className="flex-1 bg-transparent py-1.5 text-body outline-none placeholder:text-neutral-400"
+                    />
                     <button
                       type="button"
-                      onClick={() => {
-                        setReplyTo(post.id);
-                        setReplyText('');
-                      }}
-                      className="text-label font-medium text-neutral-500 hover:text-neutral-900"
+                      onClick={() => submitReply(post.id)}
+                      disabled={busy || !replyText.trim()}
+                      aria-label="댓글 등록"
+                      className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-brand text-white disabled:opacity-40"
                     >
-                      댓글 달기
+                      <ArrowUp className="h-4 w-4" />
                     </button>
-                  )}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+                  </div>
+                )}
+
+                {!isLastPost && <div className="border-t border-neutral-100" />}
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {/* 하단 입력창. 탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
       <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
         {canWrite ? (
-          <div className="flex items-end gap-2">
+          <div className="flex min-h-11 items-center gap-2 rounded-xl border border-hairline py-1 pl-3.5 pr-1">
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={1}
               maxLength={LIMITS.CHAT_MAX}
               placeholder="크루에게 하고 싶은 말을 남겨보세요"
-              className="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-neutral-900"
+              className="max-h-32 flex-1 resize-none bg-transparent py-1.5 text-body outline-none placeholder:text-neutral-400"
             />
-            <Button
+            <button
+              type="button"
               onClick={submitPost}
-              loading={busy}
-              disabled={!text.trim()}
-              className="shrink-0"
+              disabled={busy || !text.trim()}
+              aria-label="보내기"
+              className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-brand text-white disabled:opacity-40"
             >
-              등록
-            </Button>
+              <ArrowUp className="h-[18px] w-[18px]" />
+            </button>
           </div>
         ) : (
           <p className="py-2 text-center text-label text-neutral-400">

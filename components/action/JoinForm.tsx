@@ -154,29 +154,29 @@ export function JoinForm({
 
               {/* 물품만 수량 입력. 사람은 항상 1명입니다. */}
               {item.type === 'GOODS' && sel?.checked && (
-                <div className="mt-3 flex items-center gap-2 pl-11">
-                  <div className="flex h-9 w-28 items-center justify-between rounded-full border-[1.5px] border-hairline-focus px-0.5">
+                <div className="mt-3 flex items-center gap-2 pl-8">
+                  <div className="flex h-8 w-24 items-center justify-between rounded-full border-[1.5px] border-hairline-focus">
                     <button
                       type="button"
                       onClick={() => setQuantity(item.id, sel.quantity - 1)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full"
+                      className="flex h-8 w-8 flex-none items-center justify-center rounded-full"
                       aria-label="수량 줄이기"
                     >
-                      <Minus className="h-[18px] w-[18px] text-hairline-focus" />
+                      <Minus className="h-4 w-4 text-hairline-focus" />
                     </button>
-                    <span className="w-9 text-center text-body font-semibold text-hairline-focus">
+                    <span className="w-8 text-center text-label font-semibold text-hairline-focus">
                       {sel.quantity}
                     </span>
                     <button
                       type="button"
                       onClick={() => setQuantity(item.id, sel.quantity + 1)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full"
+                      className="flex h-8 w-8 flex-none items-center justify-center rounded-full"
                       aria-label="수량 늘리기"
                     >
-                      <Plus className="h-[18px] w-[18px] text-hairline-focus" />
+                      <Plus className="h-4 w-4 text-hairline-focus" />
                     </button>
                   </div>
-                  <span className="text-body text-neutral-600">{item.unit}</span>
+                  <span className="text-label text-neutral-600">{item.unit}</span>
                 </div>
               )}
             </div>
