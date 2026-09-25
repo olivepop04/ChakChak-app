@@ -12,12 +12,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check, Minus, Plus, UsersRound, Package } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { joinAction, type JoinItemInput } from '@/lib/mutations';
 import { QuotaProgress } from '@/components/action/QuotaProgress';
 import { Button } from '@/components/ui/Button';
-import { FieldLabel } from '@/components/ui/FieldLabel';
 import { useToast } from '@/components/ui/Toast';
+import { cn } from '@/lib/utils/cn';
 import { meetsGender } from '@/lib/utils/quota';
 import { PERSON_UNIT, type Gender } from '@/lib/constants';
 import type { ActionItemWithProgress } from '@/lib/types/view';
@@ -112,11 +113,11 @@ export function JoinForm({
           return (
             <div
               key={item.id}
-              className={`rounded-xl border p-4 transition-colors ${
-                sel?.checked
-                  ? 'border-neutral-900 bg-neutral-50'
-                  : 'border-neutral-200'
-              } ${disabled ? 'opacity-50' : ''}`}
+              className={cn(
+                'rounded-xl border bg-white p-4 transition-colors',
+                sel?.checked ? 'border-[1.5px] border-brand' : 'border-neutral-200',
+                disabled && 'opacity-50',
+              )}
             >
               <label className="flex cursor-pointer items-start gap-3">
                 <input
@@ -124,8 +125,17 @@ export function JoinForm({
                   checked={sel?.checked ?? false}
                   disabled={disabled}
                   onChange={() => toggle(item.id)}
-                  className="mt-1 h-5 w-5 shrink-0 accent-neutral-900"
+                  className="sr-only"
                 />
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'mt-1 flex h-5 w-5 flex-none items-center justify-center rounded',
+                    sel?.checked ? 'bg-brand' : 'border-[1.5px] border-neutral-300 bg-white',
+                  )}
+                >
+                  {sel?.checked && <Check className="h-3.5 w-3.5 stroke-[3] text-white" />}
+                </span>
                 <div className="min-w-0 flex-1">
                   <QuotaProgress
                     item={item}
@@ -144,31 +154,29 @@ export function JoinForm({
 
               {/* 물품만 수량 입력. 사람은 항상 1명입니다. */}
               {item.type === 'GOODS' && sel?.checked && (
-                <div className="mt-3 flex items-center gap-2 pl-8">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(item.id, sel.quantity - 1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-lg"
-                    aria-label="수량 줄이기"
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min={1}
-                    value={sel.quantity}
-                    onChange={(e) => setQuantity(item.id, Number(e.target.value) || 1)}
-                    className="min-h-9 w-20 rounded-xl border border-neutral-300 px-3 py-2 text-center text-sm outline-none focus:border-neutral-900"
-                  />
-                  <span className="text-sm text-neutral-600">{item.unit}</span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(item.id, sel.quantity + 1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-lg"
-                    aria-label="수량 늘리기"
-                  >
-                    ＋
-                  </button>
+                <div className="mt-3 flex items-center gap-2 pl-11">
+                  <div className="flex h-9 w-28 items-center justify-between rounded-full border-[1.5px] border-hairline-focus px-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(item.id, sel.quantity - 1)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full"
+                      aria-label="수량 줄이기"
+                    >
+                      <Minus className="h-[18px] w-[18px] text-hairline-focus" />
+                    </button>
+                    <span className="w-9 text-center text-body font-semibold text-hairline-focus">
+                      {sel.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(item.id, sel.quantity + 1)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full"
+                      aria-label="수량 늘리기"
+                    >
+                      <Plus className="h-[18px] w-[18px] text-hairline-focus" />
+                    </button>
+                  </div>
+                  <span className="text-body text-neutral-600">{item.unit}</span>
                 </div>
               )}
             </div>
@@ -178,16 +186,23 @@ export function JoinForm({
 
       {/* 나의 참여 요약 */}
       {chosen.length > 0 && (
-        <section className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-neutral-900">
-          <FieldLabel>나의 참여</FieldLabel>
+        <section className="flex flex-col gap-2 rounded-xl bg-brand-soft p-4">
+          <h3 className="text-subtitle font-bold text-brand">나의 참여</h3>
           <ul className="flex flex-col gap-1">
-            {chosen.map((i) => (
-              <li key={i.id} className="text-sm font-medium text-neutral-800">
-                {i.type === 'PERSON'
-                  ? `🙋 ${i.name} 1${PERSON_UNIT}`
-                  : `📦 ${i.name} ${selection[i.id].quantity}${i.unit}`}
-              </li>
-            ))}
+            {chosen.map((i) => {
+              const Icon = i.type === 'PERSON' ? UsersRound : Package;
+              return (
+                <li
+                  key={i.id}
+                  className="flex items-center gap-2 text-body font-semibold text-neutral-900"
+                >
+                  <Icon className="h-4 w-4 flex-none text-brand" aria-hidden="true" />
+                  {i.type === 'PERSON'
+                    ? `${i.name} 1${PERSON_UNIT}`
+                    : `${i.name} ${selection[i.id].quantity}${i.unit}`}
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
