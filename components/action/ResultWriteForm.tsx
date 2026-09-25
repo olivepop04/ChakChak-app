@@ -234,7 +234,7 @@ export function ResultWriteForm({
       </div>
 
       {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200/80 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white p-4">
         <div className="flex items-center gap-2.5">
           <Button
             type="button"

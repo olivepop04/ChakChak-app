@@ -227,7 +227,7 @@ export default async function ResultPage({
 
       {/* 소감 작성하기. 탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
       {canWriteVoice && (
-        <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+        <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white p-4">
           <Link
             href={`/action/${id}/voice`}
             className="flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-body font-semibold text-white transition-colors active:bg-neutral-800"
