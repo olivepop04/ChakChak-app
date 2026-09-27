@@ -30,8 +30,13 @@ import { formatDate } from '@/lib/utils/date';
 
 interface ActionCardProps {
   action: ActionCardData;
-  /** 카드를 기본 세로형(default)으로 보여줄지, 가로형(horizontal)으로 보여줄지 */
-  variant?: 'default' | 'horizontal';
+  /**
+   * 카드를 기본 세로형(default)으로 보여줄지, 가로형(horizontal)으로 보여줄지.
+   * boxed 는 세로형과 내용이 같고, 둥근 테두리 칸 안에 들어가는 모양 —
+   * 사진이 화면 끝까지 나가지 않고 칸 폭에 맞춤(200px), 안쪽 여백 16px.
+   * 액션 찾기(DiscoverChat) 추천 결과 전용 (2026-09-27 목업 확정). 테두리 칸은 부르는 쪽이 그린다.
+   */
+  variant?: 'default' | 'horizontal' | 'boxed';
   /** 카드 우측 하단에 상태 배지를 보여줄지 (Activity 에서 true) */
   showStatus?: boolean;
   /** 카드 아래에 덧붙일 내용. Activity 의 CTA 버튼 등 */
@@ -230,11 +235,14 @@ export function ActionCard({
     );
   }
 
-  // 기본 세로형 레이아웃 (variant === 'default')
+  // 기본 세로형 레이아웃 (variant === 'default' · 'boxed')
   // 2026-09-21 홈피드 개편: 작성자·공유를 썸네일 위로, 참여인원을 날짜·장소 줄로,
   // 썸네일은 카드 좌우 여백을 벗어나 폭 전체로 채우고 모서리를 각지게 함
   // (Day5 확정 "카드 테두리·그림자 없음"을 이 카드에도 같이 반영 — 엣지투엣지 썸네일이
   //  카드 테두리와 함께 있으면 모서리에서 잘려 보여서, 실제로 함께 가야 하는 값이었음).
+  // boxed: 테두리 칸 안에 들어가는 모양 — 사진은 칸 폭에 맞추고(엣지투엣지 X), 안쪽 여백 16px
+  const boxed = variant === 'boxed';
+
   return (
     <article
       className={cn('relative bg-white', className)}
@@ -247,7 +255,7 @@ export function ActionCard({
       {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
       <div className="relative z-10 flex flex-col pointer-events-none">
         {/* 작성자 — 썸네일 위 줄 (공유는 좋아요·저장 옆으로 이동, 2026-09-22) */}
-        <div className="flex items-center gap-2 pt-4 pb-2">
+        <div className={cn('flex items-center gap-2 pb-2', boxed ? 'px-4 pt-3' : 'pt-4')}>
           <Link
             href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
             onClick={(e) => e.stopPropagation()}
@@ -277,7 +285,10 @@ export function ActionCard({
           href={`/action/${action.id}`}
           tabIndex={-1}
           aria-hidden="true"
-          className="pointer-events-auto relative -mx-6 block h-[245px] overflow-hidden bg-neutral-100"
+          className={cn(
+            'pointer-events-auto relative block overflow-hidden bg-neutral-100',
+            boxed ? 'h-[200px]' : '-mx-6 h-[245px]',
+          )}
         >
           <ActionGallery
             urls={action.imageUrls}
@@ -296,7 +307,7 @@ export function ActionCard({
           )}
         </Link>
 
-        <div className="flex flex-col gap-2 pt-3 pb-4">
+        <div className={cn('flex flex-col gap-2 pt-3 pb-4', boxed && 'px-4')}>
           {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
           <div className="flex flex-wrap gap-1">
             {allCategories.map((c, i) => (
