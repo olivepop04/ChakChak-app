@@ -52,21 +52,25 @@ export default async function ResultWritePage({
 
   const location = action.place_name || action.address;
   const period = formatActivityPeriod(action.activity_start_at, action.activity_end_at);
-  const subInfo = [location, period].filter(Boolean).join(' | ');
 
   return (
     <main>
       <Header title="결과 작성" back backHref={`/action/${id}`} sticky />
 
-      <div className="border-b border-neutral-100 px-6 pt-5 pb-4">
-        <h1 className="text-xl font-bold leading-snug tracking-tight text-neutral-900">
+      <div className="border-b border-neutral-100 px-6 py-4">
+        <h1 className="font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
-        {subInfo && (
-          <p className="mt-1 text-xs text-neutral-500">
-            {subInfo}
-          </p>
-        )}
+        {/* 장소 | 일정 — 결과 보기 화면과 같은 형식 */}
+        <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-500">
+          {location && (
+            <>
+              <span>{location}</span>
+              {period && <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />}
+            </>
+          )}
+          {period && <span>{period}</span>}
+        </div>
       </div>
 
       <ResultWriteForm

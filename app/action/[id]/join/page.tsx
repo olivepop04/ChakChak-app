@@ -62,7 +62,7 @@ export default async function JoinPage({
             @{action.owner.nickname}
           </span>
         </div>
-        <div className="rounded-xl bg-neutral-50 p-4">
+        <div className="rounded-xl bg-neutral-100 p-4">
           <p className="text-label font-medium text-neutral-900">
             {formatActivityPeriod(action.activityStartAt, action.activityEndAt)}
           </p>

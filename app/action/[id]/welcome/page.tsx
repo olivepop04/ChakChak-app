@@ -110,7 +110,7 @@ export default async function WelcomePage({
 
       {/* 하단 고정 버튼 (action/[id]/page.tsx의 크루 챗 버튼과 같은 위치 및 간격).
           탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 p-4">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 px-6 py-4">
         <Link
           href={`/action/${id}/chat`}
           className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-brand-soft text-body font-semibold text-brand transition-colors active:bg-white"

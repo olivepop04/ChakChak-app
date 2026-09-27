@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pencil } from 'lucide-react';
+import { PencilSparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { submitCrewVoice } from '@/lib/mutations';
 import { Button } from '@/components/ui/Button';
@@ -51,11 +51,11 @@ export function VoiceForm({
     <div className="flex flex-col gap-5 px-6 pb-[calc(8rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-6">
       <div>
         <div className="mb-2 flex items-center gap-1.5">
-          <Pencil className="h-3.5 w-3.5 text-neutral-500" />
+          <PencilSparkles className="h-[18px] w-[18px] flex-none text-neutral-500" aria-hidden="true" />
           <p className="text-body font-bold text-neutral-500">함께한 소감을 남겨주세요.</p>
         </div>
         <div className="h-px bg-neutral-200" />
-        <h1 className="mt-3 line-clamp-2 font-paperlogy text-xl font-bold leading-snug text-neutral-900">
+        <h1 className="mt-5 line-clamp-2 font-paperlogy text-body font-bold leading-snug text-neutral-900">
           {actionTitle}
         </h1>
 
@@ -64,10 +64,9 @@ export function VoiceForm({
             autoFocus
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            rows={9}
             maxLength={LIMITS.CREW_VOICE_MAX}
             placeholder="어떤 점이 좋았는지, 어떤 마음이 들었는지 자유롭게 적어주세요."
-            className="rounded-xl border border-hairline p-4 text-body leading-relaxed outline-none placeholder:text-neutral-400 focus:border-hairline-focus"
+            className="min-h-[190px] rounded-xl border border-hairline p-4 text-body leading-relaxed outline-none placeholder:text-neutral-400 focus:border-brand"
           />
           <div className="flex items-center justify-between">
             <span className="text-caption text-red-600">
@@ -87,7 +86,8 @@ export function VoiceForm({
       </p>
 
       {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white px-6 py-4">
+        {/* 10자 미만이면 회색 버튼 (Day14 통일안: 못 누를 때는 회색 한 가지) */}
         <Button
           type="button"
           size="lg"
@@ -95,6 +95,7 @@ export function VoiceForm({
           loading={busy}
           disabled={!canSubmit}
           onClick={handleSubmit}
+          className="disabled:bg-neutral-200 disabled:text-neutral-400 disabled:opacity-100"
         >
           소감 남기기
         </Button>

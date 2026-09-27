@@ -6,6 +6,7 @@
  */
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { ChevronRight, MessageSquareQuote, UsersRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getActionCrew, groupCrewByItem } from '@/lib/queries/participations';
 import { Avatar } from '@/components/ui/Avatar';
@@ -24,23 +25,29 @@ function toKoreanDateKey(iso: string | null): string | null {
   return iso ? KOREAN_DATE.format(new Date(iso)) : null;
 }
 
-function CrewRow({ person }: { person: UserSummary; isOwner?: boolean }) {
+/** 목록형 사람 한 줄 — 줄 전체가 프로필 링크, 오른쪽 › 화살표. 호스트는 이름 옆 배지 (Day14 통일안) */
+function CrewRow({ person, isOwner }: { person: UserSummary; isOwner?: boolean }) {
   return (
-    <li className="flex items-center gap-3 px-6 py-3.5">
-      <Avatar name={person.nickname} />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-neutral-900">
-          @{person.nickname}
-        </p>
-        <p className="text-caption text-neutral-500">
-          참여 {person.participatedCount}개 · 호스트 {person.ledCount}개
-        </p>
-      </div>
+    <li>
       <Link
         href={`/user/${person.id}`}
-        className="shrink-0 rounded-full border border-neutral-300 px-3 py-1.5 text-label font-medium text-neutral-700"
+        className="flex items-center gap-3 px-6 py-3 transition-colors hover:bg-neutral-50"
       >
-        프로필 보기
+        <Avatar name={person.nickname} />
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-1 text-body font-semibold text-neutral-900">
+            <span className="truncate">@{person.nickname}</span>
+            {isOwner && (
+              <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-caption font-semibold text-brand">
+                호스트
+              </span>
+            )}
+          </p>
+          <p className="mt-0.5 text-caption text-neutral-500">
+            참여 {person.participatedCount}개 · 호스트 {person.ledCount}개
+          </p>
+        </div>
+        <ChevronRight className="h-5 w-5 flex-none text-neutral-400" aria-hidden="true" />
       </Link>
     </li>
   );
@@ -100,72 +107,60 @@ export default async function CrewPage({
       <Header title="함께하는 크루" back backHref={`/action/${id}`} sticky />
 
       <div className="px-6 py-5">
-        <h1 className="line-clamp-2 text-subtitle font-bold leading-snug text-neutral-900">
+        <h1 className="line-clamp-2 font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
       </div>
 
-      {owner && (
-        <section>
-          <h2 className="px-6 pb-1 pt-2 text-caption font-semibold tracking-wide text-neutral-400">
-            호스트
-          </h2>
-          <ul className="divide-y divide-neutral-100 border-y border-neutral-100">
-            <CrewRow person={owner} isOwner />
-          </ul>
-        </section>
-      )}
-
-      <section className="mt-6">
-        <h2 className="px-6 pb-1 text-caption font-semibold tracking-wide text-neutral-400">
-          함께하는 크루 ({crew.length})
+      {/* 호스트는 따로 칸을 두지 않고 목록 맨 위 + 이름 옆 배지 (Day14 통일안) */}
+      <section>
+        <h2 className="px-6 py-2 text-label font-bold text-neutral-500">
+          함께하는 크루 ({crew.length + (owner ? 1 : 0)})
         </h2>
-        {crew.length === 0 ? (
+        <ul className="divide-y divide-neutral-100 border-y border-neutral-100">
+          {owner && <CrewRow person={owner} isOwner />}
+          {crew.map((p) => (
+            <CrewRow key={p.id} person={p} />
+          ))}
+        </ul>
+        {crew.length === 0 && (
           <EmptyState
             icon="👋"
             title="아직 함께하는 크루가 없어요"
             description="가장 먼저 참여한 사람이 되어보세요."
           />
-        ) : (
-          <ul className="divide-y divide-neutral-100 border-y border-neutral-100">
-            {crew.map((p) => (
-              <CrewRow key={p.id} person={p} />
-            ))}
-          </ul>
         )}
       </section>
 
       {isMultiDay && (
-        <section className="px-6 pb-4 pt-6">
-          <h2 className="pb-2 text-caption font-semibold tracking-wide text-neutral-400">
+        <section className="px-6 py-5">
+          <h2 className="mb-3 text-label font-bold text-neutral-500">
             항목별 참여 현황
           </h2>
           {personGroups.length === 0 ? (
-            <p className="rounded-xl bg-neutral-50 px-4 py-6 text-center text-label leading-relaxed text-neutral-500">
+            <p className="rounded-xl bg-neutral-100 px-4 py-6 text-center text-label leading-relaxed text-neutral-500">
               아직 확인할 수 있는 항목별 참여 정보가 없어요.
             </p>
           ) : (
             <div className="flex flex-col gap-3">
               {personGroups.map((group) => (
-                <div key={group.itemId} className="rounded-xl border border-neutral-200 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="shrink-0 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">
-                          사람
-                        </span>
-                        <h3 className="truncate text-sm font-semibold text-neutral-900">
-                          {group.name}
-                        </h3>
-                      </div>
+                <div key={group.itemId} className="rounded-xl bg-brand-soft p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-brand">
+                        <UsersRound className="h-4 w-4 text-white" aria-hidden="true" />
+                      </span>
+                      <h3 className="truncate text-sm font-semibold text-neutral-900">
+                        {group.name}
+                      </h3>
                     </div>
-                    <span className="shrink-0 text-label font-bold tabular-nums text-neutral-700">
+                    <span className="shrink-0 rounded-full border border-brand px-2.5 py-[3px] text-xs font-bold tabular-nums text-brand">
                       총 {group.total}
                       {group.unit}
                     </span>
                   </div>
 
-                  <ul className="mt-3 flex flex-col gap-2 border-t border-neutral-100 pt-3">
+                  <ul className="mt-3 flex flex-col gap-2.5 border-t border-white pt-3">
                     {group.members.map(({ person }) => (
                       <li key={person.id} className="flex items-center gap-2.5">
                         <Avatar name={person.nickname} size="sm" />
@@ -185,26 +180,13 @@ export default async function CrewPage({
         </section>
       )}
 
-      {/* 하단 고정 버튼. 탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 bg-white p-4">
+      {/* 하단 고정 버튼 — 참여 완료 화면과 같은 연한 그린 CTA. 탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 bg-white px-6 py-4">
         <Link
           href={`/action/${id}/chat`}
-          className="flex min-h-14 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-base font-bold text-white transition-colors active:bg-neutral-800"
+          className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl border border-brand bg-brand-soft text-body font-semibold text-brand transition-colors active:bg-white"
         >
-          <svg
-            className="mr-2.5 h-5 w-5 flex-none"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
+          <MessageSquareQuote className="h-5 w-5 flex-none" aria-hidden="true" />
           <span>함께하는 크루와 이야기하기</span>
         </Link>
       </div>

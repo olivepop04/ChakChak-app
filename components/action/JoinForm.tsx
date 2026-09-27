@@ -132,7 +132,7 @@ export function JoinForm({
                 <span
                   aria-hidden="true"
                   className={cn(
-                    'mt-2 flex h-5 w-5 flex-none items-center justify-center rounded',
+                    'mt-1 flex h-5 w-5 flex-none items-center justify-center rounded',
                     sel?.checked ? 'bg-brand' : 'border-[1.5px] border-neutral-300 bg-white',
                   )}
                 >
@@ -159,7 +159,7 @@ export function JoinForm({
                       </div>
 
                       <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-1">
-                        <span className="text-sm font-bold text-neutral-900">{item.name}</span>
+                        <span className="text-body font-semibold text-neutral-900">{item.name}</span>
                         {genderReq !== 'ANY' && (
                           <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-caption font-medium text-neutral-600">
                             {GENDER_REQUIREMENT_LABEL[genderReq]}
@@ -175,7 +175,7 @@ export function JoinForm({
                       {/* 최종 모집 수만 표시 (목표 수 미표시) */}
                       <span
                         className={cn(
-                          'shrink-0 text-sm font-bold tabular-nums',
+                          'shrink-0 text-body font-bold tabular-nums',
                           state.isMinMet ? 'text-brand' : 'text-neutral-900',
                         )}
                       >
@@ -183,33 +183,33 @@ export function JoinForm({
                       </span>
                     </div>
 
-                    {/* 프로그레스바 게이지 (앞까지 옴) */}
-                    <div
-                      className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200"
-                      role="progressbar"
-                      aria-valuenow={Math.round(state.ratio * 100)}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={`${item.name} 모집 현황`}
-                    >
+                    {/* 프로그레스바 게이지 (아이콘 앞까지 옴) + 안내 문구(막대와 4px) */}
+                    <div className="flex flex-col gap-1">
                       <div
+                        className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200"
+                        role="progressbar"
+                        aria-valuenow={Math.round(state.ratio * 100)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`${item.name} 모집 현황`}
+                      >
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all duration-300',
+                            state.isMinMet ? 'bg-brand' : 'bg-neutral-400',
+                          )}
+                          style={{ width: `${Math.max(state.ratio * 100, 2)}%` }}
+                        />
+                      </div>
+                      <p
                         className={cn(
-                          'h-full rounded-full transition-all duration-300',
-                          state.isMinMet ? 'bg-brand' : 'bg-neutral-400',
+                          'text-caption font-medium',
+                          state.isMinMet ? 'text-brand' : 'text-neutral-500',
                         )}
-                        style={{ width: `${Math.max(state.ratio * 100, 2)}%` }}
-                      />
+                      >
+                        {state.hint}
+                      </p>
                     </div>
-
-                    {/* 상태 안내 문구 */}
-                    <p
-                      className={cn(
-                        'text-xs font-medium',
-                        state.isMinMet ? 'text-brand' : 'text-neutral-500',
-                      )}
-                    >
-                      {state.hint}
-                    </p>
                   </div>
                 </div>
               </label>
@@ -282,7 +282,8 @@ export function JoinForm({
       )}
 
       {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white px-6 py-4">
+        {/* 못 누를 때는 흐린 그린이 아니라 회색 한 가지 (Day14 통일안) */}
         <Button
           type="button"
           size="lg"
@@ -290,6 +291,7 @@ export function JoinForm({
           loading={busy}
           disabled={chosen.length === 0}
           onClick={handleSubmit}
+          className="disabled:bg-neutral-200 disabled:text-neutral-400 disabled:opacity-100"
         >
           참여 확정하기
         </Button>

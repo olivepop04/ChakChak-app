@@ -10,14 +10,13 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UsersRound, Package } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { saveActionResult, completeAction } from '@/lib/mutations';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
-import { SectionTitle } from '@/components/ui/SectionTitle';
 import { useToast } from '@/components/ui/Toast';
 import { describeResultRatio } from '@/lib/utils/quota';
 import { cn } from '@/lib/utils/cn';
@@ -100,21 +99,22 @@ export function ResultWriteForm({
   }
 
   return (
-    <div className="flex flex-col gap-7 px-6 pb-[calc(8.5rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
+    <div className="flex flex-col gap-6 px-6 pb-[calc(8.5rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
       {/* 자동 집계 — 수정 불가 */}
-      <section className="flex flex-col gap-2.5">
+      <section className="flex flex-col gap-3">
         <div>
-          <SectionTitle>자동 집계</SectionTitle>
-          <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+          <h2 className="text-subtitle font-bold text-neutral-900">자동 집계</h2>
+          <p className="mt-1 text-label leading-relaxed text-neutral-500">
             참여 기록으로 자동 계산되어 수정할 수 없어요. 실제 활동 내용이 다를 경우 아래 입력칸에 적어주세요.
           </p>
         </div>
 
-        <div className="mt-1 flex flex-col divide-y divide-neutral-100">
+        {/* 결과 보기 "함께 모은 것"과 같은 형식 — 박스 테두리 없이 항목 사이 구분선 */}
+        <div className="flex flex-col gap-5 p-4">
           {items.length === 0 ? (
-            <p className="py-4 text-sm text-neutral-400">모집 항목이 없어요.</p>
+            <p className="text-label text-neutral-400">모집 항목이 없어요.</p>
           ) : (
-            items.map((item) => {
+            items.map((item, idx) => {
               const { ratio, isMet } = describeResultRatio(item, item.currentCount);
               const Icon = item.type === 'PERSON' ? UsersRound : Package;
               const statusText = isMet
@@ -124,7 +124,9 @@ export function ResultWriteForm({
                   : `${item.currentCount}${item.unit} 참여했어요`;
 
               return (
-                <div key={item.id} className="flex flex-col gap-2 py-4 first:pt-2 last:pb-2">
+                <Fragment key={item.id}>
+                {idx > 0 && <div className="h-px bg-neutral-200" />}
+                <div className="flex flex-col gap-2">
                   {/* 상단: 아이콘 + 항목명 + 최종 모집 수 (한 row) */}
                   <div className="flex items-center gap-2">
                     {/* 원 안의 아이콘 (테두리 없음) */}
@@ -143,14 +145,14 @@ export function ResultWriteForm({
                       />
                     </div>
 
-                    <span className="flex-1 truncate text-sm font-bold text-neutral-900">
+                    <span className="flex-1 truncate text-body font-semibold text-neutral-900">
                       {item.name}
                     </span>
 
                     {/* 최종 모집 수만 표시 (목표 수 미표시) */}
                     <span
                       className={cn(
-                        'shrink-0 text-sm font-bold tabular-nums',
+                        'shrink-0 text-body font-bold tabular-nums',
                         isMet ? 'text-brand' : 'text-neutral-900',
                       )}
                     >
@@ -158,7 +160,7 @@ export function ResultWriteForm({
                     </span>
                   </div>
 
-                  {/* 프로그레스바 게이지 (앞까지 옴) */}
+                  {/* 프로그레스바 게이지 (아이콘 앞까지 옴) */}
                   <div
                     className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200"
                     role="progressbar"
@@ -179,13 +181,14 @@ export function ResultWriteForm({
                   {/* 상태 안내 문구 */}
                   <p
                     className={cn(
-                      'text-xs font-medium',
+                      'text-caption font-medium',
                       isMet ? 'text-brand' : 'text-neutral-500',
                     )}
                   >
                     {statusText}
                   </p>
                 </div>
+                </Fragment>
               );
             })
           )}
@@ -193,22 +196,22 @@ export function ResultWriteForm({
       </section>
 
       {/* 이렇게 마무리했어요 */}
-      <div className="flex flex-col gap-2.5">
-        <SectionTitle>이렇게 마무리했어요</SectionTitle>
+      <label className="flex flex-col gap-2">
+        <span className="text-subtitle font-bold text-neutral-500">이렇게 마무리했어요</span>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          rows={5}
+          rows={3}
           placeholder="어떤 활동을 했는지, 어떤 변화가 있었는지 적어주세요."
-          className="w-full rounded-2xl border border-neutral-200 p-4 text-sm leading-relaxed text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-neutral-900 resize-none"
+          className="min-h-[120px] w-full resize-none rounded-xl border border-hairline p-4 text-body leading-relaxed text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-hairline-focus"
         />
-      </div>
+      </label>
 
       {/* 결과 사진 */}
-      <div className="flex flex-col gap-2.5">
-        <SectionTitle>
-          결과 사진 <span className="text-red-500">*</span>
-        </SectionTitle>
+      <div className="flex flex-col gap-2">
+        <span className="text-subtitle font-bold text-neutral-500">
+          결과 사진 <span className="text-danger">*</span>
+        </span>
         <ImageUploader
           bucket="result-images"
           actionId={actionId}
@@ -216,33 +219,33 @@ export function ResultWriteForm({
           urls={imageUrls}
           onChange={setImageUrls}
         />
-        <p className="text-xs text-neutral-400">
+        <p className="text-caption text-neutral-400">
           최소 {UPLOAD.RESULT_IMAGE_MIN}장, 최대 {UPLOAD.RESULT_IMAGE_MAX}장이에요.
         </p>
       </div>
 
       {/* 호스트의 한마디 */}
-      <div className="flex flex-col gap-2.5">
-        <SectionTitle>호스트의 한마디</SectionTitle>
+      <label className="flex flex-col gap-2">
+        <span className="text-subtitle font-bold text-neutral-500">호스트의 한마디</span>
         <textarea
           value={ownerVoice}
           onChange={(e) => setOwnerVoice(e.target.value)}
-          rows={4}
+          rows={2}
           placeholder="함께해준 크루들에게 남기고 싶은 말을 적어주세요."
-          className="w-full rounded-2xl border border-neutral-200 p-4 text-sm leading-relaxed text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-neutral-900 resize-none"
+          className="min-h-[80px] w-full resize-none rounded-xl border border-hairline p-4 text-body leading-relaxed text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-hairline-focus"
         />
-      </div>
+      </label>
 
       {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white p-4">
-        <div className="flex items-center gap-2.5">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white px-6 py-4">
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="secondary"
             size="lg"
             onClick={handleSave}
             loading={busy}
-            className="w-24 shrink-0 rounded-xl font-bold text-sm whitespace-nowrap flex-row"
+            className="min-w-[76px] shrink-0 px-5"
           >
             저장
           </Button>
@@ -252,12 +255,12 @@ export function ResultWriteForm({
             fullWidth
             onClick={handlePublish}
             loading={busy}
-            className="flex-1 min-w-0 rounded-xl font-bold text-sm whitespace-nowrap flex-row"
+            className="min-w-0 flex-1"
           >
             결과 공개하기
           </Button>
         </div>
-        <p className="mt-2 text-center text-xs text-neutral-400">
+        <p className="mt-2 text-center text-caption text-neutral-400">
           공개하면 참여한 크루들에게 알림이 가고, 크루들도 소감을 남길 수 있게 돼요.
         </p>
       </div>

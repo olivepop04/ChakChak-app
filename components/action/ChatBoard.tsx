@@ -251,7 +251,7 @@ export function ChatBoard({
       )}
 
       {/* 하단 입력창. 탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white px-6 py-4">
         {canWrite ? (
           <div className="flex min-h-11 items-center gap-2 rounded-xl border border-hairline py-1 pl-3.5 pr-1">
             <textarea
