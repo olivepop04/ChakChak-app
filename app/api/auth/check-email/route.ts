@@ -11,6 +11,8 @@ const PAGE_SIZE = 200;
 const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60_000;
 const attempts = new Map<string, { count: number; resetAt: number }>();
+/** 이 수를 넘으면 새 IP 가 들어올 때 만료 항목을 한 번 치웁니다. */
+const SWEEP_THRESHOLD = 500;
 
 function clientKey(request: NextRequest): string {
   return (
@@ -20,9 +22,22 @@ function clientKey(request: NextRequest): string {
   );
 }
 
+/**
+ * 창이 끝난 항목을 치웁니다.
+ *
+ * 이게 없으면 인스턴스가 사는 동안 찾아온 IP 마다 항목이 남아 계속 쌓입니다.
+ * 새 IP 가 들어올 때만, 그것도 항목이 많을 때만 돌려서 평소에는 비용이 없습니다.
+ */
+function sweepExpired(now: number) {
+  for (const [key, state] of attempts) {
+    if (state.resetAt <= now) attempts.delete(key);
+  }
+}
+
 function isRateLimited(key: string, now = Date.now()): boolean {
   const current = attempts.get(key);
   if (!current || current.resetAt <= now) {
+    if (attempts.size > SWEEP_THRESHOLD) sweepExpired(now);
     attempts.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
     return false;
   }

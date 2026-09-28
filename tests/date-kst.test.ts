@@ -117,3 +117,20 @@ test('date.ts 가 환경 시간대 함수를 다시 쓰지 않는다', async () 
     );
   }
 });
+
+test('scoring.ts 도 환경 시간대 함수를 쓰지 않는다 — 추천 점수가 여기 걸려 있다', async () => {
+  const { readFileSync } = await import('node:fs');
+  const raw = readFileSync(new URL('../lib/utils/scoring.ts', import.meta.url), 'utf8');
+
+  // 2026-09-28 지수님 PR1. 배포(UTC)에서 토요일 오전 10시 활동이 「밤」 으로 판정돼
+  // 「주말 오전」 만 되는 사람에게 시간 점수 15점이 통째로 안 붙었습니다.
+  // scoring.ts 는 @/ 별칭을 값으로 가져와 이 러너가 import 하지 못하므로 소스를 읽습니다.
+  // 주석 안의 설명(「getHours() 가 9시간 어긋났습니다」)은 빼고 코드만 봅니다.
+  const code = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  for (const banned of ['getMonth()', 'getDate()', 'getDay()', 'getHours()', 'getMinutes()', 'toDateString()']) {
+    assert.ok(
+      !code.includes(`.${banned}`),
+      `scoring.ts 가 .${banned} 를 씁니다 — 배포(UTC)에서 추천 점수가 틀어집니다. KST 로 옮긴 뒤 getUTC* 를 쓰세요 (CLAUDE.md 규칙 17)`,
+    );
+  }
+});
