@@ -588,22 +588,22 @@ test('[피드백 3] 난이도에서 전문지식/자격/재능 활용 선택 시
   const answersExpert = extractAdaptiveAnswers(['전문지식/자격/재능 활용']);
   assert.equal(answersExpert.difficultyPreference, 'expert');
 
-  // 1. 프로필에 재능이 있는 경우: '그대로 활용' vs '새로운 재능' 2지선다 노출
+  // 1. 프로필에 재능이 있는 경우: '예, 그럴게요' vs '아니요, 다른 재능으로 할게요' 2지선다 노출
   const profileSkills = ['디자인', '사진 촬영'];
   const talentOptions = getQuestionOptions('skills', [], 'B', true, {
     profileSkills,
     answers: answersExpert,
   });
   assert.deepEqual(talentOptions, [
-    '프로필 재능 그대로 활용 👍',
-    '새로운 재능 이용 🔄',
+    '예, 그럴게요 👍',
+    '아니요, 다른 재능으로 할게요 🔄',
   ]);
 
-  // 2. '프로필 재능 그대로 활용' 선택 시 재능 확정 후 환경으로 전진
+  // 2. '예, 그럴게요 👍' 선택 시 재능 확정 후 환경으로 전진
   const answersUseProfile = {
     ...extractAdaptiveAnswers([
       '전문지식/자격/재능 활용',
-      '프로필 재능 그대로 활용 👍',
+      '예, 그럴게요 👍',
     ]),
     fieldPreference: 'familiar' as const,
     vibePreference: 'social' as const,
@@ -946,10 +946,18 @@ test('[추천 이유 폴백 검증] fallbackReason이 건조한 나열이 아닌
   assert.equal(reason.includes('조건에 맞아요.'), false);
 });
 
-test('[프로필 재능 그대로 활용 선택 검증] 그대로 살릴/그대로 활용 답변 시 profile 재능으로 파싱된다', () => {
-  const answers = extractAdaptiveAnswers(['프로필 재능 그대로 활용 👍']);
-  assert.equal(answers.selectedSkill, 'profile');
-  assert.equal(answers.talentPreference, 'use');
+test('[프로필 재능 그대로 활용 선택 검증] 그대로 살릴/그대로 활용/예, 그럴게요 답변 시 profile 재능으로 파싱된다', () => {
+  const answers1 = extractAdaptiveAnswers(['프로필 재능 그대로 활용 👍']);
+  assert.equal(answers1.selectedSkill, 'profile');
+  assert.equal(answers1.talentPreference, 'use');
+
+  const answers2 = extractAdaptiveAnswers(['예, 그럴게요 👍']);
+  assert.equal(answers2.selectedSkill, 'profile');
+  assert.equal(answers2.talentPreference, 'use');
+
+  const answers3 = extractAdaptiveAnswers(['예 그럴께요']);
+  assert.equal(answers3.selectedSkill, 'profile');
+  assert.equal(answers3.talentPreference, 'use');
 });
 
 

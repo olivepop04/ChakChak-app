@@ -119,7 +119,9 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
 5. 지난 특정 액션 제목을 일일이 언급하며 "참여는 즐거우셨나요?" 같은 사적인 감상을 묻지 마세요.
 6. 없는 사실이나 사용자 정보를 추측하거나 임의로 지어내지 마세요.
 7. 말풍선(reply) 본문에 선택지 항목이나 예시 목록(불릿 기호 -, •, * 등)을 절대 나열하지 마세요. 모든 선택지는 화면 하단 선택 버튼(options)으로만 노출됩니다. 말풍선에는 질문과 다정한 안내 멘트(1~2문장)만 간결하게 작성하세요.
-8. 재능(skills) 질문의 options 배열은 반드시 사전 정의된 16종 목록 ['사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공', '기타']을 정확히 제공하세요. 말풍선 멘트에는 절대 "위 16종"이라고 하지 말고, 반드시 "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요"라고 안내하세요.
+8. 재능(skills) 질문의 options 배열:
+   - 프로필에 재능이 있는 사용자에게 처음 물을 때는 반드시 2지선다 ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"]를 제공하세요.
+   - 프로필에 재능이 없거나 사용자가 "다른 재능으로 할게요"를 선택한 경우에만 사전 정의된 16종 목록 ['사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공', '기타']을 정확히 제공하세요. 말풍선 멘트에는 절대 "위 16종"이라고 하지 말고, 반드시 "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요"라고 안내하세요.
 9. question_key는 반드시 시스템이 제공한 '남은질문' 배열에 존재하는 키 중에서만 선택해야 합니다. 남은질문에 없는 질문 키(예: 난이도에서 '기초 체력 필요'나 '누구나 참여가능'을 선택하여 재능 질문이 생략된 상황에서 "skills")를 반환하는 것은 엄격히 금지됩니다.
 
 [질문 순서 및 분기 제어 시나리오 (우선순위 0~5)]
@@ -153,8 +155,8 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
      ★ 절대로 재능(skills) 질문을 하지 마세요! question_key를 "skills"로 반환하지 마세요!
      ★ 재능 질문을 완전히 생략하고 즉시 4번 활동 환경(activity_types) 질문으로 전진해야 합니다! (question_key: "activity_types")
    - 사용자가 '전문지식/자격/재능 활용'을 선택한 경우에만 재능(skills) 질문으로 이동합니다.
-     - 프로필 재능이 있는 경우: "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?" (options: ["프로필 재능 그대로 활용 👍", "새로운 재능 이용 🔄"])
-     - 프로필 재능이 없거나 '새로운 재능 이용' 선택 시: "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: 16종 재능 목록)
+     - 프로필 재능이 있는 경우: "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?" (options: ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"])
+     - 프로필 재능이 없거나 '다른 재능으로 할게요' 선택 시: "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: 16종 재능 목록)
 
 4. 활동 환경 (activity_types):
    - 멘트: 직전에 사용자가 재능을 선택한 경우 "알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨"를 앞머리에 붙이고, "어떤 환경에서 활동하고 싶으세요?"라고 질문하세요. (재능 중 하나만 임의로 골라 대표로 지정하지 마세요)
@@ -193,10 +195,14 @@ function extractSkillsAnswer(messages: ChatMessage[]): string[] | null {
   if (userText.includes('재능 없음')) return [];
   if (userText.includes('아직 모르겠음')) return null;
 
+  const cleanText = userText
+    .replace(/교류·교육·소통형/g, '')
+    .replace(/전문지식\/자격\/재능 활용/g, '');
+
   const selected = ALL_15_SKILLS.filter((skill) => {
     if (skill === '기타') return false;
     const words = skill.split(/[·\s]+/).filter((word) => word.length >= 2);
-    return words.some((word) => userText.includes(word));
+    return words.some((word) => cleanText.includes(word));
   });
   return selected.length > 0 ? [...selected] : null;
 }
@@ -373,7 +379,7 @@ export async function POST(request: Request) {
     ...extractAnswersFromDialogue(messages),
   };
   if (
-    (adaptiveAnswers.selectedSkill === 'profile' || adaptiveAnswers.talentPreference === 'use') &&
+    adaptiveAnswers.selectedSkill === 'profile' &&
     profile.skills &&
     profile.skills.length > 0 &&
     (!adaptiveAnswers.selectedSkills || adaptiveAnswers.selectedSkills.length === 0)
@@ -565,8 +571,8 @@ export async function POST(request: Request) {
       });
     }
 
-    const isProfileConfirm = /그대로 살릴|그대로 활용|프로필 재능|기존 재능/.test(lastUserMsg);
-    const isNewSkillRequest = /새로운 재능|다른 재능|새 재능/.test(lastUserMsg);
+    const isProfileConfirm = /예.*그럴|그럴게|그럴께|네.*그럴|그대로 살릴|그대로 활용|프로필 재능|기존 재능/.test(lastUserMsg);
+    const isNewSkillRequest = /아니요|다른 재능|새로운 재능|새 재능/.test(lastUserMsg);
     const isSkipSkill = /특별한 재능 없이|재능.*상관|부담 없이|상관없음/.test(lastUserMsg);
     const isKnownSkill = ALL_15_SKILLS.some((s) => lastUserMsg.includes(s));
 

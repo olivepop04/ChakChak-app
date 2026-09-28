@@ -1175,6 +1175,7 @@ async function seed() {
     .from('profiles')
     .update({
       bio: demoUser.bio,
+      skills: ['교육·멘토링'],
       categories: ['동물', '환경', '지역사회', '아동·청소년', '노인', '장애', '교육', '기타'],
       available_times: ['주말', '오후', '평일', '저녁'],
       time_prefs: [

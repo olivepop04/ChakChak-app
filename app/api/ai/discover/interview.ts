@@ -490,9 +490,10 @@ export function getQuestionOptions(
     if (
       context?.profileSkills &&
       context.profileSkills.length > 0 &&
-      context.answers?.talentPreference !== 'new_skill'
+      context.answers?.talentPreference !== 'new_skill' &&
+      context.answers?.selectedSkill !== 'profile'
     ) {
-      return ['프로필 재능 그대로 활용 👍', '새로운 재능 이용 🔄'];
+      return ['예, 그럴게요 👍', '아니요, 다른 재능으로 할게요 🔄'];
     }
     return [...ALL_15_SKILLS];
   }
@@ -943,22 +944,25 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.difficultyPreference = 'physical';
   } else if (/전문지식|전문|자격|역량|기술|재능 활용|전문지식\/자격\/재능 활용/.test(text)) {
     answers.difficultyPreference = 'expert';
-    answers.talentPreference = 'use';
   }
 
   // 재능 선호 & 구체적 재능
-  if (/그대로 살릴|그대로 활용|이 재능|프로필 재능|기존 재능/.test(text)) {
+  if (/예.*그럴|그럴게요|네.*그럴|그대로 살릴|그대로 활용|이 재능|프로필 재능|기존 재능/.test(text)) {
     answers.talentPreference = 'use';
     answers.selectedSkill = 'profile';
-  } else if (/새로운 재능|다른 재능|새 재능/.test(text)) {
+  } else if (/아니요|다른 재능|새로운 재능|새 재능/.test(text)) {
     answers.talentPreference = 'new_skill';
   } else if (/특별한 재능 없이|재능.*상관|특별한 기술 없이|부담 없이 가볍게/.test(text)) {
     answers.talentPreference = 'any';
   }
 
+  const textForSkills = text
+    .replace(/교류·교육·소통형/g, '')
+    .replace(/전문지식\/자격\/재능 활용/g, '');
+
   const matchedSkills: string[] = [];
   for (const s of ALL_15_SKILLS) {
-    if (s !== '기타' && text.includes(s)) {
+    if (s !== '기타' && textForSkills.includes(s)) {
       matchedSkills.push(s);
     }
   }
@@ -966,7 +970,7 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.selectedSkill = matchedSkills[0];
     answers.selectedSkills = matchedSkills;
     answers.talentPreference = 'use';
-  } else if (/^기타$|기타/.test(text)) {
+  } else if (/^기타$|기타/.test(textForSkills)) {
     answers.selectedSkill = '기타';
     answers.selectedSkills = ['기타'];
     answers.talentPreference = 'any';
