@@ -134,16 +134,25 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
    - 프로필에 지역과 시간이 등록되어 있는 경우:
      - 멘트: "안녕하세요, {nickname}님! 😊 {nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 기본 조건을 확인해 봤어요.\n\n📍 활동 지역 : {profileRegion}\n⏰ 선호 시간 : {profileTimesSummary}\n\n이 조건 그대로 액션을 찾아드릴까요?"
      - options: ["네, 이 조건으로 찾을게요 👍", "이번엔 다른 조건으로 찾을래요 🔄"]
-   - 프로필에 지역이나 시간이 없는 경우:
-     - 멘트: "안녕하세요, {nickname}님! 만나서 반가워요. 😊 {nickname}님에게 딱 맞는 액션을 찾아드리기 위해 활동하실 지역과 시간을 먼저 확인하고 싶어요.\n\n먼저, 이번에 어느 지역에서 활동하고 싶으세요?"
-     - options: ["활동할 지역 선택하기 📍", "지역 상관없이 전국 액션 볼래요 🌏"]
+   - 프로필에 지역이나 시간이 없는 경우 (신규가입자 등):
+     - 첫 질문 (지역 확인):
+       - 멘트: "안녕하세요, {nickname}님! 만나서 반가워요. 😊 {nickname}님에게 딱 맞는 액션을 찾아드리기 위해 활동하실 지역과 시간을 먼저 확인하고 싶어요.\n\n먼저, 이번에 어느 지역에서 활동하고 싶으세요?"
+       - options: ["활동할 지역 선택하기 📍", "지역 상관없이 전국 액션 볼래요 🌏"]
+     - 지역 선택 후 시간대가 미확인된 경우:
+       ★ 반드시 다음 질문으로 선호 시간대(time_pref)를 물어보세요!
+       - 멘트: "보통 언제 참여하기 편하신가요? (복수 선택 가능)"
+       - options: ["주말 오전", "주말 오후", "평일 낮", "평일 저녁", "시간 상관없음"]
 
 1. 카테고리 (categories) - 분야 선택:
    - 과거 활동 이력 카테고리가 있는 경우:
      - 멘트: "{nickname}님의 지난 활동들을 살펴보니 [{historyCategories}] 분야에 주로 참여하셨네요. 이번에도 비슷한 분야로 찾아드릴까요?"
-     - options: ["같은 분야로 찾을래요", "새로운 분야에 도전해볼래요"]
+     - options: ["같은 분야로 찾을래요 👍", "새로운 분야에 도전해볼래요 ✨"]
      - ("새로운 분야" 선택 시: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"])
-   - 활동 이력이 없는 경우:
+   - 활동 이력은 없으나 프로필에 관심 분야가 등록된 경우 ({profileCategories}):
+     - 멘트: "{nickname}님의 프로필 관심 분야인 [{profileCategories}] 위주로 찾아드릴까요?"
+     - options: ["네, 이 분야로 찾을게요 👍", "다른 분야도 볼래요 🔄", "상관없음"]
+     - ("다른 분야도 볼래요" 선택 시: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"])
+   - 프로필 관심 분야도 없고 활동 이력도 없는 경우:
      - 멘트: "어떤 분야의 액션에 가장 관심이 가시나요?"
      - options: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"]
 
@@ -279,6 +288,7 @@ function fallbackConversation({
         userState,
         knownFacts,
         pastActivitySummary,
+        profileCategories: profileCategories ?? [],
       }),
       question_key: questionKey,
       enough: false,
@@ -286,6 +296,7 @@ function fallbackConversation({
         hasHistory,
         answers,
         profileSkills,
+        profileCategories: profileCategories ?? [],
       }),
       categories,
       participation_mode: participationMode,
@@ -445,7 +456,11 @@ export async function POST(request: Request) {
   try {
     const rawProfileSkills = profile.skills ?? [];
     const profileSkillsStr = rawProfileSkills.length > 0 ? rawProfileSkills.join(', ') : '없음';
-    const dynamicSystem = CHAT_SYSTEM.replace(/\{userSkills\}/g, profileSkillsStr);
+    const rawProfileCats = (profile.categories ?? []).filter((c) => c !== '전체');
+    const profileCatsStr = rawProfileCats.length > 0 ? rawProfileCats.join(', ') : '없음';
+    const dynamicSystem = CHAT_SYSTEM
+      .replace(/\{userSkills\}/g, profileSkillsStr)
+      .replace(/\{profileCategories\}/g, profileCatsStr);
 
     conversation = await callStructuredAI({
       agent: 'DISCOVER',
@@ -641,6 +656,7 @@ export async function POST(request: Request) {
       isAiSuccess && conversation.reply ? conversation.reply : fallback.reply;
 
     const hasProfileSkills = (profile.skills ?? []).length > 0;
+    const rawProfileCatsForReply = (profile.categories ?? []).filter((c) => c !== '전체');
 
     // 1) 재능(skills) 질문인 경우:
     // AI의 프로필 재능 거짓말/할루시네이션을 원천 차단하고,
@@ -654,6 +670,17 @@ export async function POST(request: Request) {
       reply = fallback.reply;
     }
 
+    // 3) 카테고리(categories/field_preference) 질문인 경우:
+    // 프로필 관심분야가 있고, 과거 활동 이력이 없으며, 아직 '새로운/다른 분야'를 선택하지 않았다면 프로필 관심분야 맞춤 질문 100% 강제 적용
+    if (
+      (chosenQuestionKey === 'categories' || chosenQuestionKey === 'field_preference') &&
+      rawProfileCatsForReply.length > 0 &&
+      !hasHistory &&
+      adaptiveAnswers.fieldPreference !== 'new'
+    ) {
+      reply = fallback.reply;
+    }
+
     // 만약 AI가 이미 답변된 질문 축을 되묻거나, 남은 질문 축과 불일치하는 질문을 냈다면, 다음 남은 질문의 안내로 교체
     const isMismatchedReply =
       isAiSuccess &&
@@ -661,7 +688,8 @@ export async function POST(request: Request) {
       (
         (conversation.question_key && !remainingQuestionKeys.includes(conversation.question_key)) ||
         (chosenQuestionKey !== conversation.question_key) ||
-        (/재능|기술|특기|어떤 재능/.test(reply) && (chosenQuestionKey === 'activity_types' || chosenQuestionKey === 'activity_type'))
+        (/재능|기술|특기|어떤 재능/.test(reply) && (chosenQuestionKey === 'activity_types' || chosenQuestionKey === 'activity_type')) ||
+        (chosenQuestionKey === 'time_pref' && !/시간|언제|주말|평일|오전|오후|저녁|낮/.test(reply))
       );
 
     if (isMismatchedReply) {
@@ -686,6 +714,7 @@ export async function POST(request: Request) {
         hasRegionAndTime: userContext.hasRegionAndTime,
         answers: adaptiveAnswers,
         profileSkills: profile.skills ?? [],
+        profileCategories: profile.categories ?? [],
       },
     );
 
@@ -721,6 +750,18 @@ export async function POST(request: Request) {
     selectedSkills,
     fieldReferenceCategories,
   });
+
+  // 사용자가 대화에서 프로필 관심 분야를 확인하고 수락한 경우 (familiar) 카테고리 자동 설정
+  if (
+    adaptiveAnswers.fieldPreference === 'familiar' &&
+    (!adaptiveAnswers.selectedCategories || adaptiveAnswers.selectedCategories.length === 0)
+  ) {
+    const validCats = (profile.categories ?? []).filter((c) => c !== '전체');
+    if (validCats.length > 0) {
+      adaptiveAnswers.selectedCategories = validCats;
+      adaptiveAnswers.selectedCategory = validCats[0];
+    }
+  }
 
   // 사용자가 대화에서 명시적으로 카테고리를 선택한 경우 이를 최우선으로 반영 (복수 카테고리 지원)
   let filterCategories: string[] = [];
@@ -989,8 +1030,9 @@ export async function POST(request: Request) {
 1. [대화 맥락 및 매칭 이유 구체적 서술]:
    - 사용자가 이번 대화에서 선택한 관심 분야, 재능(skills: 예: 요리, 디자인, 교육·멘토링 등), 활동 성격(교류·소통형/과업·집중형), 활동 환경(실내/야외)과 이 액션의 특성을 직접 연결하여 설명하세요.
    - 예: "선택하신 교육 분야에서 교육·멘토링 재능을 발휘하며 어르신들과 따뜻하게 소통할 수 있는 액션이에요."
-2. [조건 완화(대체 추천) 솔직한 안내]:
-   - 만약 사용자가 희망한 특정 조건(예: 야외 활동 희망)과 달리 추천된 액션이 다른 환경(실내)이거나 조건에 완전히 맞지 않는 경우, 거짓말하지 말고 "원하시던 야외 활동은 아니지만, 선택하신 교육 분야와 교육·멘토링 재능을 나누기에 꼭 맞아 추천해 드려요"처럼 솔직하고 친절하게 설명하세요.
+2. [조건 완화(대체 추천) 솔직한 안내 및 '상관없음' 규칙]:
+   - 사용자가 특정 조건을 명확히 요구했으나(예: 반드시 야외 활동 희망) 부득이하게 다른 환경(실내)을 추천할 때만 조건 완화를 솔직하게 설명하세요.
+   ★ [매우 중요] 사용자가 활동 환경(실내/실외)이나 모임 규모 등을 '상관없음'으로 선택한 경우에는, 절대로 '실내에서 진행되지만', '야외 활동이지만', '비록 ~이지만' 같은 변명이나 아쉬움의 뉘앙스를 쓰지 마세요! 사용자는 상관없다고 하였으므로 아무런 제약 없이 이 액션의 장점과 선택 분야/재능 위주로 긍정적이고 자연스럽게 설명하세요.
 3. [일정 및 시간대 날조(할루시네이션) 엄격 금지]:
    - 액션의 실제 일정(actualSchedule: 날짜, 요일, 시간대)과 다른 요일이나 시간대를 절대 지어내지 마세요.
    - 액션의 실제 일정이 평일인 경우 "주말에 참여할 수 있어...", "주말 오전이나 오후에..."처럼 거짓된 일정을 지어내어 설명하면 절대 안 됩니다.
@@ -1027,6 +1069,14 @@ export async function POST(request: Request) {
   const topItems = codeRanked.map((item) => {
     let reason = reasonsMap[item.action.id]?.trim();
     if (reason) {
+      // 사용자가 활동 환경을 '상관없음'으로 선택했거나 환경 제약이 없는 경우, 불필요한 '실내에서 진행되지만' 등의 변명 멘트 제거
+      if (scoringAnswers.activityTypePreference === 'any' || !scoringAnswers.activityTypePreference) {
+        reason = reason
+          .replace(/(실내|야외|실외)에서\s*진행되지만,?\s*/g, '')
+          .replace(/원하시던\s*(실내|실외|야외)[^,]*아니지만,?\s*/g, '')
+          .replace(/비록\s*(실내|실외|야외)[^,]*지만,?\s*/g, '')
+          .trim();
+      }
       if (item.action.activityStartAt) {
         const isWk = isWeekend(item.action.activityStartAt);
         // 평일 액션인데 주말을 지어낸 경우

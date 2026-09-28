@@ -78,6 +78,7 @@ export interface QuestionCopyContext {
   profileRegion?: string;
   profileTimesSummary?: string;
   hasRegionAndTime?: boolean;
+  profileCategories?: readonly string[];
 }
 
 /**
@@ -426,6 +427,7 @@ export interface QuestionOptionContext {
   hasRegionAndTime?: boolean;
   answers?: AdaptiveAnswers;
   profileSkills?: readonly string[];
+  profileCategories?: readonly string[];
 }
 
 /**
@@ -466,10 +468,15 @@ export function getQuestionOptions(
   }
 
   // 1순위: 카테고리 (categories / field_preference)
-  // 과거 활동 이력이 있는 경우, 유저가 아직 '새로운 분야'를 고르지 않은 상태라면 2지선다 우선 제공
+  // 과거 활동 이력이 있는 경우 2지선다 우선 제공
+  // 활동 이력은 없으나 프로필 관심분야가 있는 경우 맞춤 3지선다 우선 제공
   if (key === 'categories' || key === 'field_preference') {
     if (context?.hasHistory && context.answers?.fieldPreference !== 'new') {
       return ['같은 분야로 찾을래요 👍', '새로운 분야에 도전해볼래요 ✨'];
+    }
+    const profileCats = (context?.profileCategories ?? []).filter((c) => c !== '전체');
+    if (profileCats.length > 0 && context?.answers?.fieldPreference !== 'new') {
+      return ['네, 이 분야로 찾을게요 👍', '다른 분야도 볼래요 🔄', '상관없음'];
     }
     return [
       '동물',
@@ -587,6 +594,7 @@ export function getQuestionReply(
     profileRegion = '등록된 지역',
     profileTimesSummary = '등록된 시간대',
     hasRegionAndTime = true,
+    profileCategories = [],
   } = context;
 
   // 0순위: 오프닝 및 지역/시간 상시 확인
@@ -686,6 +694,14 @@ export function getQuestionReply(
     if (categories && hasHistory) {
       return [
         `${nickname}님의 지난 활동들을 살펴보니 [${categories}] 분야에 주로 참여하셨네요. 이번에도 비슷한 분야로 찾아드릴까요?`,
+      ].join('\n');
+    }
+
+    const profileCats = (profileCategories ?? []).filter((c) => c !== '전체');
+    if (profileCats.length > 0) {
+      const catsStr = profileCats.slice(0, 3).join(', ');
+      return [
+        `${nickname}님의 프로필 관심 분야인 [${catsStr}] 위주로 찾아드릴까요?`,
       ].join('\n');
     }
 
@@ -977,9 +993,9 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
   }
 
   // 관심 분야 (categories)
-  if (/같은 분야|비슷한 분야|하던 분야|익숙한 분야|원래 하던|기존/.test(text)) {
+  if (/같은 분야|비슷한 분야|하던 분야|익숙한 분야|원래 하던|기존|네,\s*이 분야로|이 분야로 찾을게요|프로필 관심\s*분야/.test(text)) {
     answers.fieldPreference = 'familiar';
-  } else if (/새로운 분야|새 분야|도전|다양한|새로운 것|새로운 분야에 도전/.test(text)) {
+  } else if (/새로운 분야|새 분야|도전|다양한|새로운 것|새로운 분야에 도전|다른 분야도 볼래요|다른 분야/.test(text)) {
     answers.fieldPreference = 'new';
   }
 
@@ -1045,7 +1061,8 @@ export function extractAnswersFromDialogue(
       }
 
       // 0-1. 이동 범위 / 지역 질문에 대한 답변
-      if (/어느 지역|활동 장소|지역에서 활동|이동 범위|거리/.test(q)) {
+      const isAskingRegion = /어느 지역|활동 장소|지역에서 활동|이동 범위|거리/.test(q);
+      if (isAskingRegion) {
         if (/상관없|전국|어디든/.test(a)) {
           answers.travelRange = 'any';
         } else {
@@ -1056,9 +1073,18 @@ export function extractAnswersFromDialogue(
       }
 
       // 0-2. 시간대 질문에 대한 답변 (복수 선택 지원)
-      if (/언제 참여|시간|주말|평일|오전|오후|저녁|낮/.test(q)) {
+      // 주의: 오프닝 인사("지역과 시간을 먼저 확인하고 싶어요. 먼저, 어느 지역...")에서 지역 질문을 먼저 한 경우,
+      // 사용자의 '상관없음'은 지역에 대한 답변이므로 시간대 답변으로 처리하면 안 됨
+      const isAskingTime =
+        /언제 참여|시간대|선호하는 시간|보통 언제/.test(q) ||
+        (/시간|주말|평일|오전|오후|저녁|낮/.test(q) && !isAskingRegion);
+
+      if (isAskingTime || (!isAskingRegion && /시간\s*상관|주말|평일|오전|오후|저녁|낮/.test(a))) {
         const timePrefsSet = new Set<string>();
-        if (/상관없/.test(a)) {
+        if (isAskingTime && /상관없/.test(a)) {
+          answers.timePreference = 'any';
+          timePrefsSet.add('시간 상관없음');
+        } else if (/시간\s*상관없음|시간은\s*상관없음/.test(a)) {
           answers.timePreference = 'any';
           timePrefsSet.add('시간 상관없음');
         }
@@ -1128,10 +1154,25 @@ export function extractAnswersFromDialogue(
         if (/상관없/.test(a)) {
           answers.fieldPreference = 'any';
           answers.selectedCategory = '상관없음';
-        } else if (/새로운|도전/.test(a)) {
+          answers.selectedCategories = ['상관없음'];
+        } else if (/새로운|도전|다른 분야/.test(a)) {
           answers.fieldPreference = 'new';
-        } else if (/비슷|익숙|같은 분야/.test(a)) {
+        } else if (/비슷|익숙|같은 분야|네,\s*이 분야로|이 분야로|프로필 관심/.test(a)) {
           answers.fieldPreference = 'familiar';
+          const bracketMatch = q.match(/\[(.*?)\]/);
+          if (bracketMatch && bracketMatch[1]) {
+            const raw = bracketMatch[1];
+            const parsedCats: string[] = [];
+            for (const cat of ['동물', '환경', '지역사회', '아동·청소년', '노인', '장애', '교육', '기타']) {
+              if (raw.includes(cat)) {
+                parsedCats.push(cat);
+              }
+            }
+            if (parsedCats.length > 0) {
+              answers.selectedCategories = parsedCats;
+              answers.selectedCategory = parsedCats[0];
+            }
+          }
         }
 
         const matchedCats: string[] = [];
@@ -1374,20 +1415,23 @@ export function formatSummaryChips(
         userText,
       );
     if (isAny) {
-      if (/난이도|체력|누구나 참여/.test(assistantText)) {
+      if (/시간|요일|언제/.test(assistantText)) {
+        chips.push('시간 상관없음');
+      } else if (/환경|실내|실외|야외|날씨/.test(assistantText)) {
+        chips.push('실내외 상관없음');
+      } else if (/규모|크루|인원|모임|오붓한|북적/.test(assistantText)) {
+        chips.push('규모 상관없음');
+      } else if (/난이도|체력|누구나 참여/.test(assistantText)) {
         chips.push('액션 난이도 상관없음');
       } else if (/분야|관심/.test(assistantText)) {
         chips.push('분야 상관없음');
       } else if (/분위기|성격|소통|집중|과업|도란도란/.test(assistantText)) {
         chips.push('액션 성격 상관없음');
       } else if (/재능|기술/.test(assistantText)) {
-        chips.push('재능 상관없음');
-      } else if (/환경|실내|실외|야외|날씨/.test(assistantText)) {
-        chips.push('실내외 상관없음');
-      } else if (/규모|크루|인원|모임|오붓한|북적/.test(assistantText)) {
-        chips.push('규모 상관없음');
-      } else if (/시간|요일|언제/.test(assistantText)) {
-        chips.push('시간 상관없음');
+        const hasSpecificSkill = chips.some((c) => (ALL_15_SKILLS as readonly string[]).includes(c));
+        if (!hasSpecificSkill) {
+          chips.push('재능 상관없음');
+        }
       } else {
         chips.push('조건 상관없음');
       }
@@ -1401,7 +1445,7 @@ export function formatSummaryChips(
     }
 
     // 5. 프로필 재능 확인 긍정 응답 ('예, 그럴게요')
-    if (/예.*그럴|그럴게요|네.*그럴|그대로 살릴|그대로 활용/.test(userText)) {
+    if (/예.*그럴|그럴게요|그럴께요|네.*그럴|그대로 살릴|그대로 활용/.test(userText)) {
       const skillBracketMatch = assistantText.match(/\[(.*?)\]/);
       if (skillBracketMatch && skillBracketMatch[1]) {
         chips.push(skillBracketMatch[1]);
@@ -1411,10 +1455,21 @@ export function formatSummaryChips(
       continue;
     }
 
+    // 5-1. 프로필 관심 분야 확인 긍정 응답 ('네, 이 분야로 찾을게요')
+    if (/네.*이 분야로|이 분야로 찾을게요|프로필 관심/.test(userText)) {
+      const catBracketMatch = assistantText.match(/\[(.*?)\]/);
+      if (catBracketMatch && catBracketMatch[1]) {
+        chips.push(catBracketMatch[1]);
+      } else {
+        chips.push('프로필 관심 분야');
+      }
+      continue;
+    }
+
     // 6. 기타 명시적 답변 (예: '동물', '교류·교육·소통형', '실외 활동', '중규모 모임 (10-20명)' 등)
     chips.push(userText);
   }
 
-  return chips;
+  return [...new Set(chips)];
 }
 

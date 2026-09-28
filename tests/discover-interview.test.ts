@@ -1052,6 +1052,109 @@ test('[요약 칩 포맷팅 검증] 프로필 재능 활용 확인 시 프로필
   ]);
 });
 
+test('[신규가입자 시간 질문 검증] 지역 선택 후 시간이 아직 확인되지 않은 경우 시간대 질문(time_pref)이 다음 질문으로 반환된다', () => {
+  // 1. 오프닝 멘트에 '시간'이라는 단어가 포함되어 있어도 지역 선택 시 시간대로 오인되지 않는다
+  const messages = [
+    {
+      role: 'assistant' as const,
+      content:
+        '안녕하세요, 리네님! 만나서 반가워요. 😊\n리네님에게 딱 맞는 액션을 찾아드리기 위해 활동하실 지역과 시간을 먼저 확인하고 싶어요.\n\n먼저, 이번에 어느 지역에서 활동하고 싶으세요?',
+    },
+    { role: 'user' as const, content: '지역 상관없이 전국 액션 볼래요 🌏' },
+  ];
+
+  const answers = extractAnswersFromDialogue(messages);
+  assert.equal(answers.travelRange, 'any');
+  // timePreference가 any로 오인되지 않아야 함!
+  assert.equal(answers.timePreference, undefined);
+
+  // remainingQuestionKeys의 첫 번째가 time_pref여야 함
+  const remaining = getRemainingQuestionKeys({
+    answers,
+    userState: 'B',
+    hasRegionAndTime: false,
+    hasHistory: false,
+  });
+  assert.equal(remaining[0], 'time_pref');
+
+  // getQuestionReply('time_pref') 및 옵션 검증
+  const reply = getQuestionReply('time_pref', {
+    nickname: '리네',
+    answers,
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+  });
+  assert.match(reply, /보통 언제 참여하기 편하신가요/);
+
+  const options = getQuestionOptions('time_pref');
+  assert.deepEqual(options, ['주말 오전', '주말 오후', '평일 낮', '평일 저녁', '시간 상관없음']);
+});
+
+test('[프로필 관심분야 확인 검증] 프로필에 관심분야가 있는 사용자는 해당 분야 확인 질문 및 맞춤 옵션이 제공된다', () => {
+  const profileCategories = ['동물', '아동·청소년'];
+
+  // 1. 질문 멘트 검증
+  const reply = getQuestionReply('categories', {
+    nickname: '리네',
+    answers: {},
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileCategories,
+  });
+  assert.match(reply, /리네님의 프로필 관심 분야인 \[동물, 아동·청소년\] 위주로 찾아드릴까요\?/);
+
+  // 2. 질문 옵션 검증
+  const options = getQuestionOptions('categories', [], 'B', true, {
+    hasHistory: false,
+    profileCategories,
+    answers: {},
+  });
+  assert.deepEqual(options, ['네, 이 분야로 찾을게요 👍', '다른 분야도 볼래요 🔄', '상관없음']);
+
+  // 3. '네, 이 분야로 찾을게요' 답변 파싱 검증
+  const messages = [
+    { role: 'assistant' as const, content: reply },
+    { role: 'user' as const, content: '네, 이 분야로 찾을게요 👍' },
+  ];
+  const dialogueAnswers = extractAnswersFromDialogue(messages);
+  assert.equal(dialogueAnswers.fieldPreference, 'familiar');
+  assert.deepEqual(dialogueAnswers.selectedCategories, ['동물', '아동·청소년']);
+
+  // 4. 요약 칩에 프로필 관심 분야가 정상 반영되는지 검증
+  const chips = formatSummaryChips(messages);
+  assert.deepEqual(chips, ['동물, 아동·청소년']);
+});
+
+test('[요약 칩 및 추천 이유 변명 방지 검증] 재능 선택 후 환경 상관없음 선택 시 재능 상관없음이 아닌 실내외 상관없음으로 처리된다', () => {
+  const messages = [
+    { role: 'assistant' as const, content: '어느 지역에서 활동하고 싶으세요?' },
+    { role: 'user' as const, content: '지역 상관없이 전국 액션 볼래요 🌏' },
+    { role: 'assistant' as const, content: '어떤 분야의 액션에 가장 관심이 가시나요?' },
+    { role: 'user' as const, content: '교육' },
+    { role: 'assistant' as const, content: '액션에 따라 난이도가 다를 수 있어요. 어떤 스타일을 원하세요?' },
+    { role: 'user' as const, content: '전문지식/자격/재능 활용' },
+    { role: 'assistant' as const, content: '활용할 수 있는 재능을 골라주세요.' },
+    { role: 'user' as const, content: '영상 촬영·편집' },
+    {
+      role: 'assistant' as const,
+      content:
+        '알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨\n어떤 환경에서 활동하고 싶으세요?\n날씨 걱정 없는 실내 활동이 좋으신가요, 활기찬 야외 활동이 끌리시나요?',
+    },
+    { role: 'user' as const, content: '상관없음' },
+  ];
+
+  const chips = formatSummaryChips(messages);
+  // '영상 촬영·편집'이 있고, 그 뒤의 상관없음은 '실내외 상관없음'이어야 하며, '재능 상관없음'이 중복되면 안 됨
+  assert.equal(chips.includes('영상 촬영·편집'), true);
+  assert.equal(chips.includes('실내외 상관없음'), true);
+  assert.equal(chips.includes('재능 상관없음'), false);
+});
+
+
 
 
 
