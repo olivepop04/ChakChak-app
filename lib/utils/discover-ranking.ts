@@ -51,8 +51,8 @@ export function scoreAdaptiveTraits({
   if (answers.talentPreference === 'use') {
     const userSelected =
       answers.selectedSkills && answers.selectedSkills.length > 0
-        ? answers.selectedSkills
-        : answers.selectedSkill
+        ? answers.selectedSkills.filter((s) => s !== '기타')
+        : answers.selectedSkill && answers.selectedSkill !== '기타'
           ? [answers.selectedSkill]
           : [];
     const candidateSkills = [
@@ -71,12 +71,14 @@ export function scoreAdaptiveTraits({
         score += 15;
         matched.push(`${keywordHit} 재능 활용`);
       }
+    } else if (answers.selectedSkills?.includes('기타') || answers.selectedSkill === '기타') {
+      // 기타 선택 시: 모든 액션에 차별 없이 열어주기 위해 15점 부여
+      score += 15;
+      matched.push('재능 상관없이 참여 가능');
     }
-  } else if (answers.talentPreference === 'any') {
-    if (actionSkills.length === 0) {
-      score += 10;
-      matched.push('누구나 가능한 활동');
-    }
+  } else if (answers.talentPreference === 'any' || answers.selectedSkill === '기타' || answers.selectedSkills?.includes('기타')) {
+    score += 15;
+    matched.push('재능 상관없이 참여 가능');
   }
 
   // 2) 모임 규모 (participation_modes) — 10점

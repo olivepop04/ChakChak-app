@@ -508,45 +508,15 @@ export async function POST(request: Request) {
     messages.slice(-3).some((m) => m.role === 'assistant' && /어떤 재능|재능을 활용|재능 목록|새로운 재능/.test(m.content));
 
   if (isSkillContext && lastUserMsg) {
-    // 1) 폭력적/비윤리적/범죄적 내용 가드레일
-    const harmful = validateHarmfulSkillInput(lastUserMsg);
-    if (harmful.isHarmful) {
-      return NextResponse.json({
-        done: false,
-        reply: harmful.reason,
-        options: getQuestionOptions('skills', SKILLS, userContext.state, userContext.hasRegionAndTime, {
-          hasHistory,
-          hasRegionAndTime: userContext.hasRegionAndTime,
-          answers: adaptiveAnswers,
-          profileSkills: profile.skills ?? [],
-        }),
-        questionKey: 'skills',
-        answeredCount: userTurnCount,
-        maxQuestions: MAX_USER_TURNS,
-      });
-    }
-
-    // 2) '기타' 버튼 클릭 시 직접 텍스트 입력 유도
-    if (/^기타$|^기타 \(직접 입력\)$/.test(lastUserMsg.trim())) {
-      return NextResponse.json({
-        done: false,
-        reply: '어떤 재능을 나누고 싶으신가요? 아래 입력창에 직접 적어주세요! 😊\n(예: 바리스타, 마술, 법률 상담 등)',
-        options: [],
-        questionKey: 'skills',
-        answeredCount: userTurnCount,
-        maxQuestions: MAX_USER_TURNS,
-      });
-    }
-
-    // 3) 단순 응원이나 잡담/비재능 단어 입력 시 친절한 응답 및 재안내
-    if (CHEERING_OR_CASUAL_REGEX.test(lastUserMsg.trim())) {
+    const isKnownSkill = ALL_15_SKILLS.some((s) => lastUserMsg.includes(s));
+    if (!isKnownSkill) {
       const isCheering = /파이팅|화이팅|힘내|응원/.test(lastUserMsg);
-      const friendlyLead = isCheering
+      const promptLead = isCheering
         ? `'${lastUserMsg.trim()}' 응원 말씀 정말 감사해요! 힘이 팍팍 나네요! 💪😊`
         : `말씀해 주셔서 감사해요! 😊`;
       return NextResponse.json({
         done: false,
-        reply: `${friendlyLead}\n이번 액션에서 함께 나누고 싶은 재능을 위 선택지에서 골라주시거나, 구체적인 재능(예: 요리, 사진, 교육 등)을 아래에 적어주세요!`,
+        reply: `${promptLead}\n이번 액션에서 함께 나누고 싶은 재능을 위 16종 선택지에서 골라주세요! 특정 재능에 상관없이 참여하고 싶으시다면 '기타'를 선택해주시면 됩니다.`,
         options: getQuestionOptions('skills', SKILLS, userContext.state, userContext.hasRegionAndTime, {
           hasHistory,
           hasRegionAndTime: userContext.hasRegionAndTime,

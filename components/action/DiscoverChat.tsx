@@ -80,14 +80,12 @@ export function DiscoverChat({
   const [regionModalOpen, setRegionModalOpen] = useState(false);
   const [selectedSido, setSelectedSido] = useState<string | null>(null);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [customSkillText, setCustomSkillText] = useState('');
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   const [isSubmittingFinal, setIsSubmittingFinal] = useState(false);
   const [isServerLastQuestion, setIsServerLastQuestion] = useState(false);
 
   useEffect(() => {
     setSelectedSkills([]);
-    setCustomSkillText('');
     setSelectedTimes([]);
   }, [options]);
 
@@ -181,29 +179,26 @@ export function DiscoverChat({
 
   function handleSkillToggle(skill: string) {
     if (loading) return;
-    if (selectedSkills.includes(skill)) {
-      setSelectedSkills(selectedSkills.filter((s) => s !== skill));
-    } else {
-      setSelectedSkills([...selectedSkills, skill]);
-      if (skill === '기타') {
-        setTimeout(() => inputRef.current?.focus(), 150);
+    if (skill === '기타') {
+      if (selectedSkills.includes('기타')) {
+        setSelectedSkills([]);
+      } else {
+        setSelectedSkills(['기타']);
       }
+      return;
+    }
+
+    const withoutEtc = selectedSkills.filter((s) => s !== '기타');
+    if (withoutEtc.includes(skill)) {
+      setSelectedSkills(withoutEtc.filter((s) => s !== skill));
+    } else {
+      setSelectedSkills([...withoutEtc, skill]);
     }
   }
 
   function handleConfirmSkills() {
     if (loading || selectedSkills.length === 0) return;
-    const finalSkills = selectedSkills
-      .map((s) => {
-        if (s === '기타') {
-          return customSkillText.trim() || null;
-        }
-        return s;
-      })
-      .filter((s): s is string => Boolean(s));
-
-    if (finalSkills.length === 0) return;
-    choose(finalSkills.join(', '));
+    choose(selectedSkills.join(', '));
   }
 
   function handleTimeToggle(time: string) {
@@ -434,36 +429,6 @@ export function DiscoverChat({
                   );
                 })}
               </div>
-
-              {selectedSkills.includes('기타') && (
-                <div className="flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2">
-                  <span className="text-[13px] font-semibold text-neutral-600 shrink-0">기타 재능:</span>
-                  <input
-                    type="text"
-                    value={customSkillText}
-                    onChange={(e) => setCustomSkillText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        if (customSkillText.trim()) {
-                          handleConfirmSkills();
-                        }
-                      }
-                    }}
-                    placeholder="어떤 재능인지 직접 적어주세요 (예: 바리스타, 마술 등)"
-                    className="flex-1 bg-transparent text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
-                  />
-                  {customSkillText.trim() && (
-                    <button
-                      type="button"
-                      onClick={handleConfirmSkills}
-                      className="text-xs font-bold text-brand hover:underline shrink-0"
-                    >
-                      적용
-                    </button>
-                  )}
-                </div>
-              )}
 
               <div className="flex items-center justify-end pt-1">
                 <button

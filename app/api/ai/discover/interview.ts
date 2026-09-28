@@ -729,10 +729,16 @@ export function getQuestionReply(
 
   // 4순위: 활동 환경 (activity_types / activity_type)
   if (key === 'activity_types' || key === 'activity_type') {
-    const skillLead =
-      answers.selectedSkill && answers.selectedSkill !== 'profile'
-        ? `${answers.selectedSkill} 재능을 살릴 수 있는 활동을 함께 찾아볼게요! ✨\n`
-        : '';
+    let skillLead = '';
+    if (
+      answers.selectedSkill === '기타' ||
+      answers.talentPreference === 'any' ||
+      answers.selectedSkills?.includes('기타')
+    ) {
+      skillLead = '재능과 상관없이 누구나 편하게 나눔을 시작할 수 있는 액션들을 찾아볼게요! ✨\n';
+    } else if (answers.selectedSkill && answers.selectedSkill !== 'profile') {
+      skillLead = `${answers.selectedSkill} 재능을 살릴 수 있는 활동을 함께 찾아볼게요! ✨\n`;
+    }
     return [
       `${skillLead}어떤 환경에서 활동하고 싶으세요?`,
       '날씨 걱정 없는 실내 활동이 좋으신가요, 활기찬 야외 활동이 끌리시나요?',
@@ -951,6 +957,10 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.selectedSkill = matchedSkills[0];
     answers.selectedSkills = matchedSkills;
     answers.talentPreference = 'use';
+  } else if (/^기타$|기타/.test(text)) {
+    answers.selectedSkill = '기타';
+    answers.selectedSkills = ['기타'];
+    answers.talentPreference = 'any';
   }
 
   // 관심 분야 (categories)
@@ -1139,19 +1149,10 @@ export function extractAnswersFromDialogue(
             answers.selectedSkill = matchedSkills[0];
             answers.selectedSkills = matchedSkills;
             answers.talentPreference = 'use';
-          }
-          if (
-            matchedSkills.length === 0 &&
-            a.trim() &&
-            !/기타/.test(a) &&
-            !CHEERING_OR_CASUAL_REGEX.test(a.trim())
-          ) {
-            const harmful = validateHarmfulSkillInput(a);
-            if (!harmful.isHarmful) {
-              answers.selectedSkill = a.trim();
-              answers.selectedSkills = [a.trim()];
-              answers.talentPreference = 'use';
-            }
+          } else if (/기타/.test(a)) {
+            answers.selectedSkill = '기타';
+            answers.selectedSkills = ['기타'];
+            answers.talentPreference = 'any';
           }
         }
       }

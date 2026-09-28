@@ -705,5 +705,43 @@ test('시간대 복수 선택(주말 오후, 평일 저녁) 시 모든 시간대
   assert.equal(answers.timePreference, 'weekday_evening');
 });
 
+test('재능 질문에서 기타 선택 시 talentPreference가 any로 처리되고 환경 질문에 안내 멘트가 정상 연결된다', () => {
+  const messages = [
+    { role: 'assistant' as const, content: '어떤 재능을 활용하고 싶으신가요?' },
+    { role: 'user' as const, content: '기타' },
+  ];
+  const answers = extractAnswersFromDialogue(messages);
+  assert.equal(answers.talentPreference, 'any');
+  assert.equal(answers.selectedSkill, '기타');
+  assert.deepEqual(answers.selectedSkills, ['기타']);
+
+  const nextReply = getQuestionReply('activity_type', {
+    nickname: '데모',
+    answers,
+    profileSkills: [],
+    selectedSkills: ['기타'],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '서울특별시 성동구',
+    profileTimesSummary: '주말 오후',
+    hasRegionAndTime: true,
+  });
+  assert.equal(
+    nextReply.includes('재능과 상관없이 누구나 편하게 나눔을 시작할 수 있는 액션들을 찾아볼게요! ✨'),
+    true,
+  );
+});
+
+test('사람 놀리기 같은 비재능/부적절 텍스트는 재능으로 추출되지 않는다', () => {
+  const messages = [
+    { role: 'assistant' as const, content: '어떤 재능을 활용하고 싶으신가요?' },
+    { role: 'user' as const, content: '사람 놀리기' },
+  ];
+  const answers = extractAnswersFromDialogue(messages);
+  assert.equal(answers.selectedSkill, undefined);
+  assert.equal(answers.selectedSkills, undefined);
+});
+
+
 
 
