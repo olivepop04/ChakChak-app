@@ -6,13 +6,12 @@
  */
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Info, TriangleAlert } from 'lucide-react';
+import { Info, TriangleAlert, Plus, Search, SearchX } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getMyJoinedActions } from '@/lib/queries/participations';
 import { syncHostNotifications } from '@/lib/notifications/lazy';
 import { getMyCreatedActions } from '@/lib/queries/actions';
 import { ActionCard } from '@/components/ui/ActionCard';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { ParticipationBadge } from '@/components/ui/Badge';
 import { Chip } from '@/components/ui/Chip';
 import { Header } from '@/components/layout/Header';
@@ -35,6 +34,47 @@ const primary = `${btn} flex-1 bg-brand text-white`;
 const secondary = `${btn} flex-1 border border-hairline bg-white text-neutral-700`;
 const primaryFixed = `${btn} w-[92px] shrink-0 bg-brand text-white`;
 const secondaryFixed = `${btn} w-[92px] shrink-0 border border-hairline bg-white text-neutral-700`;
+
+/**
+ * 빈 목록(호스트한 액션·참여한 액션 자체가 0개) — 카드가 놓일 자리에 점선 카드 한 장.
+ * 하단 탭(+·액션 찾기)과 같은 목적지라 버튼을 따로 두지 않고 카드 전체를 링크로 씁니다.
+ */
+function EmptyActionCard({
+  href,
+  icon,
+  title,
+  description,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="px-6 py-5">
+      <Link
+        href={href}
+        className="flex h-[280px] flex-col items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed border-faint bg-white p-6 text-center"
+      >
+        <span className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
+          {icon}
+        </span>
+        <p className="text-body font-semibold leading-relaxed text-[#333333]">{title}</p>
+        <p className="text-label leading-relaxed text-[#7a7a7a]">{description}</p>
+      </Link>
+    </div>
+  );
+}
+
+/** 필터 결과 없음(목록엔 있지만 고른 필터에 해당하는 게 없음) — 작고 조용하게, 버튼 없음 */
+function EmptyFilterResult({ filterLabel }: { filterLabel: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 px-6 py-10 text-center">
+      <SearchX className="mb-1 h-6 w-6 text-faint" strokeWidth={2} aria-hidden="true" />
+      <p className="text-label font-semibold text-[#7a7a7a]">&apos;{filterLabel}&apos; 액션이 없어요</p>
+    </div>
+  );
+}
 
 /** 참여 액션 상태별 버튼 */
 function JoinedFooter({ item }: { item: JoinedActionData }) {
@@ -434,18 +474,15 @@ export default async function ActivityPage({
       {/* 목록 */}
       {isCreated ? (
         created.length === 0 ? (
-          <EmptyState
-            icon="✏️"
-            title="아직 호스트한 액션이 없어요"
-            description="함께할 사람을 모아보세요."
-            action={{ label: '액션 만들기', href: '/action/create' }}
+          <EmptyActionCard
+            href="/action/create"
+            icon={<Plus className="h-6 w-6 text-[#7a7a7a]" strokeWidth={2.2} aria-hidden="true" />}
+            title="첫 액션을 만들어보세요"
+            description="아직 호스트한 액션이 없어요. 함께할 사람을 모아보세요."
           />
         ) : filteredCreated.length === 0 ? (
-          <EmptyState
-            icon="🔍"
-            title="아직 해당 액션이 없어요"
-
-            action={{ label: '전체 보기', href: '/activity' }}
+          <EmptyFilterResult
+            filterLabel={CREATED_FILTERS.find((f) => f.key === createdFilter)?.label ?? ''}
           />
         ) : (
           <div className="flex flex-col gap-8 px-6 py-5">
@@ -465,18 +502,15 @@ export default async function ActivityPage({
           </div>
         )
       ) : joined.length === 0 ? (
-        <EmptyState
-          icon="🌱"
-          title="아직 참여한 액션이 없어요"
-          description="마음에 드는 액션을 찾아보세요."
-          action={{ label: '액션 찾아보기', href: '/discover' }}
+        <EmptyActionCard
+          href="/discover"
+          icon={<Search className="h-6 w-6 text-[#7a7a7a]" strokeWidth={2.2} aria-hidden="true" />}
+          title="참여할 액션을 찾아보세요"
+          description="아직 참여한 액션이 없어요. 마음에 드는 액션에 함께해 보세요."
         />
       ) : filteredJoined.length === 0 ? (
-        <EmptyState
-          icon="🔍"
-          title="아직 해당 액션이 없어요"
-
-          action={{ label: '전체 보기', href: '/activity?tab=joined' }}
+        <EmptyFilterResult
+          filterLabel={JOINED_FILTERS.find((f) => f.key === joinedFilter)?.label ?? ''}
         />
       ) : (
         <div className="flex flex-col gap-8 px-6 py-5">
