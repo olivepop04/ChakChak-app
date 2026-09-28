@@ -36,7 +36,7 @@ export function useToast() {
 const TONE: Record<ToastTone, string> = {
   default: 'bg-neutral-900 text-white',
   error: 'bg-red-600 text-white',
-  success: 'bg-emerald-600 text-white',
+  success: 'bg-brand text-white',
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -65,7 +65,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             className={cn(
-              'pointer-events-auto w-full rounded-xl px-4 py-3 text-[13px] font-medium shadow-lg text-center',
+              'pointer-events-auto w-full rounded-xl px-4 py-3 text-label font-medium text-center',
               'animate-[toast-in_180ms_ease-out]',
               TONE[t.tone],
             )}

@@ -20,19 +20,19 @@ export function CrewVoiceList({
         {visibleVoices.map((voice) => (
           <li
             key={voice.id}
-            className="flex gap-3 rounded-xl border border-neutral-200 p-4"
+            className="flex gap-2.5 rounded-xl bg-neutral-50 p-4"
           >
             <Avatar name={voice.author.nickname} size="sm" />
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline gap-2">
-                <span className="text-[13px] font-semibold text-neutral-900">
+                <span className="text-label font-semibold text-neutral-900">
                   @{voice.author.nickname}
                 </span>
-                <span className="text-[11px] text-neutral-400">
+                <span className="text-caption text-neutral-400">
                   {formatRelative(voice.createdAt)}
                 </span>
               </div>
-              <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-neutral-700">
+              <p className="mt-1 whitespace-pre-wrap text-body leading-relaxed text-neutral-700">
                 {voice.content}
               </p>
             </div>
@@ -45,7 +45,7 @@ export function CrewVoiceList({
           type="button"
           aria-expanded={expanded}
           onClick={() => setExpanded((current) => !current)}
-          className="self-center rounded-lg px-4 py-2 text-[13px] font-semibold text-neutral-600 hover:bg-neutral-50"
+          className="self-center rounded-full px-4 py-2 text-label font-semibold text-neutral-600 hover:bg-neutral-50"
         >
           {expanded ? '접기' : '+ 더보기'}
         </button>

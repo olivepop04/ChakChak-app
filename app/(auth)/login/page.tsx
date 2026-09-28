@@ -56,8 +56,8 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col px-6 pb-10 pt-16">
-      <div className="mb-10">
+    <main className="flex min-h-dvh flex-col px-6 pb-8 pt-8">
+      <div className="mb-8">
         <p className="text-2xl font-bold tracking-tight text-neutral-900">착착</p>
         <p className="mt-2 text-sm leading-relaxed text-neutral-500">
           착한 일을 착착,
@@ -66,7 +66,7 @@ function LoginForm() {
         </p>
 
         {notice && (
-          <p className="mt-5 rounded-xl bg-neutral-100 px-4 py-3 text-[13px] leading-relaxed text-neutral-700">
+          <p className="mt-5 rounded-xl bg-neutral-100 px-4 py-3 text-label leading-relaxed text-neutral-700">
             {notice}
           </p>
         )}
@@ -96,7 +96,7 @@ function LoginForm() {
         </label>
 
         {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-600">
+          <p className="rounded-xl bg-red-50 px-3 py-2 text-label text-red-600">
             {error}
           </p>
         )}
@@ -106,7 +106,7 @@ function LoginForm() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-[13px] text-neutral-500">
+      <p className="mt-6 text-center text-label text-neutral-500">
         아직 계정이 없나요?{' '}
         <Link
           href={withNext('/signup', next)}

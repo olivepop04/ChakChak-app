@@ -45,15 +45,15 @@ export function InsightPanel() {
         <span className="text-base" aria-hidden="true">
           ✦
         </span>
-        <h2 className="text-[14px] font-bold">착착 AI가 읽은 흐름</h2>
+        <h2 className="text-body font-bold">착착 AI가 읽은 흐름</h2>
       </div>
 
       {insights === null && (
-        <p className="text-[13px] text-white/60">데이터를 살펴보는 중…</p>
+        <p className="text-label text-white/60">데이터를 살펴보는 중…</p>
       )}
 
       {insights !== null && insights.length === 0 && (
-        <p className="text-[13px] leading-relaxed text-white/60">
+        <p className="text-label leading-relaxed text-white/60">
           {note ?? '아직 분석할 내용이 충분하지 않아요.'}
         </p>
       )}
@@ -62,8 +62,8 @@ export function InsightPanel() {
         <ul className="flex flex-col gap-3.5">
           {insights.map((i, idx) => (
             <li key={idx} className="flex flex-col gap-1">
-              <p className="text-[13px] font-semibold">{i.title}</p>
-              <p className="text-[13px] leading-relaxed text-white/70">
+              <p className="text-label font-semibold">{i.title}</p>
+              <p className="text-label leading-relaxed text-white/70">
                 {i.detail}
               </p>
             </li>
@@ -71,7 +71,7 @@ export function InsightPanel() {
         </ul>
       )}
 
-      <p className="mt-1 text-[11px] leading-relaxed text-white/40">
+      <p className="mt-1 text-caption leading-relaxed text-white/40">
         착착 안에 쌓인 활동 기록만 사용합니다. 현재 현황과 변화 패턴을 설명하며,
         미래를 예측하지는 않습니다.
       </p>

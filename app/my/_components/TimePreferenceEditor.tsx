@@ -75,7 +75,7 @@ export function TimePreferenceEditor({
       {value.map((pref, index) => (
         <div
           key={`${pref.day}-${index}`}
-          className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4"
+          className="rounded-xl border border-neutral-200 bg-neutral-50 p-4"
         >
           <div className="flex items-center justify-between gap-3">
             <FieldLabel>선호시간 {index + 1}</FieldLabel>
@@ -83,7 +83,7 @@ export function TimePreferenceEditor({
               <button
                 type="button"
                 onClick={() => removePreference(index)}
-                className="text-[12px] font-medium text-neutral-400 hover:text-red-500"
+                className="text-label font-medium text-neutral-400 hover:text-red-500"
               >
                 삭제
               </button>
@@ -91,7 +91,7 @@ export function TimePreferenceEditor({
           </div>
 
           <div className="mt-3 flex flex-col gap-2">
-            <span className="text-[12px] text-neutral-500">1. 가능한 요일</span>
+            <span className="text-label text-neutral-500">1. 가능한 요일</span>
             <div className="flex gap-2">
               {TIME_DAYS.map((day) => {
                 const usedByOther = value.some(
@@ -104,7 +104,7 @@ export function TimePreferenceEditor({
                     disabled={usedByOther}
                     aria-pressed={pref.day === day}
                     onClick={() => changeDay(index, day)}
-                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-[12px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-label font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
                       pref.day === day
                         ? 'border-neutral-900 bg-neutral-900 text-white'
                         : 'border-neutral-300 bg-white text-neutral-600'
@@ -118,7 +118,7 @@ export function TimePreferenceEditor({
           </div>
 
           <div className="mt-4 flex flex-col gap-2">
-            <span className="text-[12px] text-neutral-500">
+            <span className="text-label text-neutral-500">
               2. 가능한 시간대 · 여러 개 선택 가능
             </span>
             <ChipGroup
@@ -131,7 +131,7 @@ export function TimePreferenceEditor({
       ))}
 
       {value.length === 0 && (
-        <p className="rounded-xl bg-amber-50 px-4 py-3 text-[12px] text-amber-700">
+        <p className="rounded-xl bg-amber-50 px-4 py-3 text-caption text-amber-700">
           선호시간을 한 개 이상 추가해주세요.
         </p>
       )}
@@ -140,14 +140,14 @@ export function TimePreferenceEditor({
         <button
           type="button"
           onClick={addPreference}
-          className="flex min-h-11 items-center justify-center rounded-xl border border-dashed border-neutral-300 py-3 text-[13px] font-semibold text-neutral-600 hover:bg-neutral-50"
+          className="flex min-h-11 items-center justify-center rounded-xl border border-dashed border-neutral-300 py-3 text-label font-semibold text-neutral-600 hover:bg-neutral-50"
         >
           + 선호시간 추가
         </button>
       )}
 
       {summary && (
-        <p className="rounded-xl bg-neutral-100 px-4 py-3 text-[12px] leading-relaxed text-neutral-600">
+        <p className="rounded-xl bg-neutral-100 px-4 py-3 text-caption leading-relaxed text-neutral-600">
           선택한 시간: <b className="font-semibold text-neutral-900">{summary}</b>
         </p>
       )}

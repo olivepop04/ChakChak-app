@@ -2,9 +2,8 @@
  * 입력칸 라벨 (④ 층).
  *
  * "이메일" · "닉네임" · "결과 사진" 처럼 입력칸·업로더 위에 붙는 이름표입니다.
- * 12px · semibold · neutral-500 — 섹션 제목(15px·bold·neutral-900)과
- * 2px·굵기 한 단계 차이로는 같은 층처럼 읽혀서, 3px·색 2단계로 더 벌렸습니다
- * (app/my/_components/TimePreferenceEditor.tsx:80 에 있던 조합을 그대로 가져왔습니다).
+ * 13px(label) · semibold · neutral-500 — 섹션 제목(15px·bold·neutral-900)과
+ * 굵기·색 2단계 차이로 구분합니다 (2026-09-23, 확정 타입 스케일에 맞춰 12px→13px 조정).
  *
  *   <FieldLabel>닉네임</FieldLabel>
  *   <FieldLabel required>결과 사진</FieldLabel>
@@ -25,7 +24,7 @@ export function FieldLabel({
   className?: string;
 }) {
   return (
-    <span className={cn('text-[12px] font-semibold text-neutral-500', className)}>
+    <span className={cn('text-label font-semibold text-neutral-500', className)}>
       {children}
       {required && <span className="text-red-500"> *</span>}
     </span>

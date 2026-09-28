@@ -44,7 +44,7 @@ interface Initial {
 }
 
 const locked =
-  'flex min-h-11 items-center justify-between rounded-xl bg-neutral-100 px-4 py-3 text-[15px] text-neutral-500';
+  'flex min-h-11 items-center justify-between rounded-xl bg-neutral-100 px-4 py-3 text-body text-neutral-500';
 
 export function ProfileEditForm({
   userId,
@@ -156,13 +156,13 @@ export function ProfileEditForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-[calc(7rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
+    <div className="flex flex-col gap-6 px-6 pb-[calc(7rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
       {/* 수정 불가 항목 */}
       <div className="flex flex-col gap-1.5">
         <FieldLabel>이름</FieldLabel>
         <div className={locked}>
           {initial.name}
-          <span className="text-[11px]">🔒 수정 불가</span>
+          <span className="text-caption">🔒 수정 불가</span>
         </div>
       </div>
 
@@ -170,9 +170,9 @@ export function ProfileEditForm({
         <FieldLabel>성별</FieldLabel>
         <div className={locked}>
           {GENDER_LABEL[initial.gender]}
-          <span className="text-[11px]">🔒 수정 불가</span>
+          <span className="text-caption">🔒 수정 불가</span>
         </div>
-        <span className="text-[11px] text-neutral-400">
+        <span className="text-caption text-neutral-400">
           성별 조건이 있는 액션을 안내하는 데 쓰여서 변경할 수 없어요.
         </span>
       </div>
@@ -194,9 +194,9 @@ export function ProfileEditForm({
           maxLength={LIMITS.BIO_MAX}
           rows={3}
           placeholder="어떤 활동에 관심이 있는지, 어떤 변화를 만들고 싶은지 등 자유롭게 적어보세요."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
         />
-        <span className="text-right text-[11px] text-neutral-400">
+        <span className="text-right text-caption text-neutral-400">
           {bio.length}/{LIMITS.BIO_MAX}
         </span>
       </label>
@@ -228,12 +228,12 @@ export function ProfileEditForm({
       <section id="notification-settings" className="flex flex-col gap-3 pt-2">
         <div>
           <SectionTitle>알림 설정</SectionTitle>
-          <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">
+          <p className="mt-1 text-caption leading-relaxed text-neutral-500">
             끈 알림은 더이상 받지 않아요. 이미 받은 알림은 그대로 남아요.
           </p>
         </div>
 
-        <div className="divide-y divide-neutral-100 overflow-hidden rounded-2xl border border-neutral-200">
+        <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200">
           {NOTIFICATION_TYPES.map((type) => {
             const enabled = !notifyOff.includes(type);
             const template = NOTIFICATION_TEMPLATE[type];
@@ -243,7 +243,7 @@ export function ProfileEditForm({
                 className="flex items-center justify-between gap-4 bg-white px-4 py-3.5"
               >
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium text-neutral-800">
+                  <p className="text-label font-medium text-neutral-800">
                     <span className="mr-2" aria-hidden="true">
                       {template.icon}
                     </span>
@@ -261,7 +261,7 @@ export function ProfileEditForm({
                   }`}
                 >
                   <span
-                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                    className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
                       enabled ? 'left-6' : 'left-1'
                     }`}
                   />
@@ -273,7 +273,7 @@ export function ProfileEditForm({
       </section>
 
       {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white p-4">
         <Button size="lg" fullWidth loading={busy} onClick={handleSave}>
           저장
         </Button>

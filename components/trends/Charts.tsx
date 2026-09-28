@@ -60,8 +60,8 @@ function Card({
   return (
     <section className="flex flex-col gap-3 rounded-xl border border-neutral-200 p-4">
       <div>
-        <h3 className="text-[14px] font-bold text-neutral-900">{title}</h3>
-        {hint && <p className="mt-0.5 text-[11px] text-neutral-500">{hint}</p>}
+        <h3 className="text-body font-bold text-neutral-900">{title}</h3>
+        {hint && <p className="mt-0.5 text-caption text-neutral-500">{hint}</p>}
       </div>
       {children}
     </section>
@@ -84,10 +84,10 @@ export function SummaryTiles({ stats }: { stats: TrendStats }) {
           key={t.label}
           className="flex flex-col gap-0.5 rounded-xl bg-neutral-50 px-4 py-3.5"
         >
-          <span className="text-[22px] font-bold tabular-nums text-neutral-900">
+          <span className="text-2xl font-bold tabular-nums text-neutral-900">
             {t.value}
           </span>
-          <span className="text-[11px] text-neutral-500">{t.label}</span>
+          <span className="text-caption text-neutral-500">{t.label}</span>
         </div>
       ))}
     </div>
@@ -201,7 +201,7 @@ export function StatusBar({ stats }: { stats: TrendStats }) {
         {stats.byStatus.map((s) => (
           <li key={s.status} className="flex items-center gap-1.5">
             <span className={`h-2 w-2 rounded-full ${TONE[s.status]}`} />
-            <span className="text-[12px] text-neutral-600">
+            <span className="text-caption text-neutral-600">
               {ACTION_STATUS_LABEL[s.status]}{' '}
               <b className="font-semibold tabular-nums text-neutral-900">
                 {s.count}

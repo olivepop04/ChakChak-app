@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { cancelAction, endActionEarly } from '@/lib/mutations';
+import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils/cn';
 import { ReasonModal } from '@/components/action/ReasonModal';
@@ -110,7 +112,7 @@ export function ActionHostActions({
             type="button"
             onClick={() => setMenuOpen((prev) => !prev)}
             aria-label="호스트 액션 관리 메뉴"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
           >
             <svg
               className="h-5 w-5"
@@ -126,12 +128,12 @@ export function ActionHostActions({
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full z-40 mt-1 min-w-[140px] rounded-xl border border-neutral-200 bg-white py-1.5 shadow-lg">
+            <div className="absolute right-0 top-full z-40 mt-1 min-w-[140px] rounded-xl border border-neutral-200 bg-white py-1.5">
               {canEarlyEnd && (
                 <button
                   type="button"
                   onClick={() => openModal('early_end')}
-                  className="flex w-full items-center px-4 py-2.5 text-left text-[13px] font-medium text-red-600 hover:bg-red-50"
+                  className="flex w-full items-center px-4 py-2.5 text-left text-label font-medium text-red-600 hover:bg-red-50"
                 >
                   조기 종료
                 </button>
@@ -140,7 +142,7 @@ export function ActionHostActions({
                 <button
                   type="button"
                   onClick={() => openModal('cancel')}
-                  className="flex w-full items-center px-4 py-2.5 text-left text-[13px] font-medium text-neutral-700 hover:bg-neutral-50"
+                  className="flex w-full items-center px-4 py-2.5 text-left text-label font-medium text-neutral-700 hover:bg-neutral-50"
                 >
                   액션 취소
                 </button>
@@ -154,19 +156,22 @@ export function ActionHostActions({
             <button
               type="button"
               onClick={() => openModal('early_end')}
-              className="inline-flex self-start rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[12px] font-semibold text-red-600 transition-colors hover:bg-red-100"
+              className="inline-flex self-start rounded-full border border-red-200 bg-red-50 px-3 py-2 text-label font-semibold text-red-600 transition-colors hover:bg-red-100"
             >
               조기 종료
             </button>
           )}
           {canCancel && (
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => openModal('cancel')}
-              className="inline-flex self-start rounded-lg border border-neutral-200 px-3 py-2 text-[12px] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+              className="self-start"
             >
-              취소하기
-            </button>
+              <Trash2 className="h-3.5 w-3.5" />
+              액션 취소
+            </Button>
           )}
         </div>
       )}

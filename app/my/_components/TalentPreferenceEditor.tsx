@@ -61,7 +61,7 @@ export function TalentPreferenceEditor({
               type="button"
               aria-pressed={active}
               onClick={() => toggle(option)}
-              className={`rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors ${
+              className={`rounded-full border px-3.5 py-2 text-label font-medium transition-colors ${
                 active
                   ? 'border-neutral-900 bg-neutral-900 text-white'
                   : 'border-neutral-300 bg-white text-neutral-600 hover:border-neutral-500'
@@ -75,7 +75,7 @@ export function TalentPreferenceEditor({
 
       {selected.includes(SKILL_OTHER_OPTION) && (
         <label className="flex flex-col gap-1.5">
-          <span className="text-[12px] font-medium text-neutral-600">
+          <span className="text-caption font-medium text-neutral-600">
             목록에 없는 재능
           </span>
           <Input
@@ -84,13 +84,13 @@ export function TalentPreferenceEditor({
             onChange={(event) => commit(selected, event.target.value)}
             placeholder="예: 수어 통역"
           />
-          <span className="text-right text-[11px] text-neutral-400">
+          <span className="text-right text-caption text-neutral-400">
             {other.length} / 40
           </span>
         </label>
       )}
 
-      <p className="text-[11px] leading-relaxed text-neutral-400">
+      <p className="text-caption leading-relaxed text-neutral-400">
         여러 개를 고를 수 있어요. 목록에 없다면 기타에 직접 입력하고,
         나중에 프로필에서 바꿀 수 있습니다.
       </p>

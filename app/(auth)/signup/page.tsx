@@ -88,7 +88,6 @@ function SignUpForm() {
         const parsed = JSON.parse(savedData);
         if (typeof parsed.step === 'number') setStep(parsed.step);
         if (typeof parsed.email === 'string') setEmail(parsed.email);
-        if (typeof parsed.password === 'string') setPassword(parsed.password);
         if (typeof parsed.bio === 'string') setBio(parsed.bio);
         if (typeof parsed.agreeTerms === 'boolean') setAgreeTerms(parsed.agreeTerms);
         if (typeof parsed.agreePrivacy === 'boolean') setAgreePrivacy(parsed.agreePrivacy);
@@ -107,14 +106,18 @@ function SignUpForm() {
     }
   }, []);
 
-  // 폼 입력 변경 시 실시간 임시 저장 (이메일 및 비밀번호 포함 모든 필드)
+  // 폼 입력 변경 시 실시간 임시 저장.
+  //
+  // 비밀번호는 담지 않습니다 (2026-09-24). sessionStorage 는 같은 출처의
+  // 스크립트와 확장 프로그램이 그대로 읽습니다. 단계 복원 편의보다 잃는 것이
+  // 큽니다. 복원해서 3단계로 바로 들어오면 비밀번호가 비어 있으므로,
+  // handleSignUp 이 한 번 더 확인하고 1단계로 돌려보냅니다.
   useEffect(() => {
     if (!isRestored || typeof window === 'undefined') return;
     try {
       const draft = {
         step,
         email,
-        password,
         bio,
         agreeTerms,
         agreePrivacy,
@@ -134,7 +137,6 @@ function SignUpForm() {
     isRestored,
     step,
     email,
-    password,
     bio,
     agreeTerms,
     agreePrivacy,
@@ -224,8 +226,21 @@ function SignUpForm() {
   // ── 3단계: 계정 생성 ──────────────────────────────────────
   async function handleSignUp() {
     setError('');
-    // 3단계의 모든 취향 정보(카테고리, 시간, 재능, 지역)는 선택 항목입니다.
-    // 미입력 정보는 Discover AI 대화 안에서 자연스럽게 파악합니다.
+    if (
+      timePrefs.length === 0 ||
+      timePrefs.some((preference) => preference.slots.length === 0)
+    ) {
+      setError('참여 가능한 요일과 시간대를 하나 이상 선택해주세요.');
+      return;
+    }
+    // 임시저장에 비밀번호를 담지 않으므로, 단계를 복원해 들어오면 여기서
+    // 비밀번호가 비어 있습니다. 막지 않으면 빈 값으로 가입 요청이 나갑니다.
+    // 6자 기준은 1단계 검증과 같습니다.
+    if (password.length < 6) {
+      setError('보안을 위해 비밀번호는 저장하지 않아요. 1단계에서 다시 입력해주세요.');
+      setStep(1);
+      return;
+    }
     setBusy(true);
     const supabase = createClient();
 
@@ -278,6 +293,20 @@ function SignUpForm() {
         setError(profileSaveError);
         return;
       }
+    } else {
+      // getUser() 가 사용자를 못 돌려주는 경우입니다 (가입 직후 세션이 없을 때).
+      // 지금은 Confirm email 이 꺼져 있어 바로 세션이 생기지만, 그 설정을 켜면
+      // 상시 이 경로를 탑니다.
+      //
+      // 그냥 지나가면 자기소개·관심 분야·지역·참여 시간·재능이 하나도 저장되지
+      // 않은 채 완료 화면으로 넘어갑니다. 오류가 안 나서 본인도 나중에야 압니다.
+      // 저장 실패와 똑같이 화면에 세워 둡니다. 임시저장도 남겨서 다시 들어오면
+      // 고른 값이 그대로 복원됩니다.
+      setBusy(false);
+      setError(
+        '계정은 만들어졌지만 취향 정보를 저장하지 못했어요. 로그인한 뒤 프로필에서 설정해주세요.',
+      );
+      return;
     }
 
     if (typeof window !== 'undefined') {
@@ -292,7 +321,7 @@ function SignUpForm() {
   // 버튼 줄이 mt-auto 로 화면 맨 아래에 붙는데 pb-10 은 40px 뿐이라 탭(62px) 아래로 들어갔습니다.
   // 글자 200% 에서 탭이 107px 이 되므로, 탭을 피하는 값인 pb-28(112px) 로 잡습니다.
   return (
-    <main className="flex min-h-dvh flex-col px-6 pb-28 pt-14">
+    <main className="flex min-h-dvh flex-col px-6 pb-28 pt-8">
       {/* 진행 표시 */}
       <div className="mb-8 flex items-center gap-2">
         {[1, 2, 3].map((s) => (
@@ -308,12 +337,12 @@ function SignUpForm() {
       {/* ── 1단계 ── */}
       {step === 1 && (
         <>
-          <h1 className="text-[22px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900">
             착한 일을 착착,
             <br />
             쉽고 즐겁게!
           </h1>
-          <p className="mt-2 text-[13px] text-neutral-500">
+          <p className="mt-2 text-label text-neutral-500">
             이메일로 간단히 시작할 수 있어요.
           </p>
 
@@ -336,7 +365,7 @@ function SignUpForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <span className="text-[11px] text-neutral-400">6자 이상</span>
+              <span className="text-caption text-neutral-400">6자 이상</span>
             </label>
 
             <label className="flex flex-col gap-1.5">
@@ -349,16 +378,16 @@ function SignUpForm() {
                 maxLength={LIMITS.BIO_MAX}
                 rows={3}
                 placeholder="어떤 활동에 관심이 있는지, 어떤 변화를 만들고 싶은지 등 자유롭게 적어보세요."
-                className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+                className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
               />
-              <span className="text-right text-[11px] text-neutral-400">
+              <span className="text-right text-caption text-neutral-400">
                 {bio.length}/{LIMITS.BIO_MAX}
               </span>
             </label>
 
             <div className="mt-2 flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
-                <label className="flex min-w-0 items-center gap-2.5 text-[13px] text-neutral-700">
+                <label className="flex min-w-0 items-center gap-2.5 text-label text-neutral-700">
                   <input
                     type="checkbox"
                     checked={agreeTerms}
@@ -371,13 +400,13 @@ function SignUpForm() {
                 <Link
                   href="/terms?from=signup"
                   aria-label="이용약관 내용 보기"
-                  className="shrink-0 text-[12px] font-semibold text-neutral-500 underline underline-offset-4 hover:text-neutral-900"
+                  className="shrink-0 text-label font-semibold text-neutral-500 underline underline-offset-4 hover:text-neutral-900"
                 >
                   내용 보기
                 </Link>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <label className="flex min-w-0 items-center gap-2.5 text-[13px] text-neutral-700">
+                <label className="flex min-w-0 items-center gap-2.5 text-label text-neutral-700">
                   <input
                     type="checkbox"
                     checked={agreePrivacy}
@@ -390,7 +419,7 @@ function SignUpForm() {
                 <Link
                   href="/privacy?from=signup"
                   aria-label="개인정보 처리방침 내용 보기"
-                  className="shrink-0 text-[12px] font-semibold text-neutral-500 underline underline-offset-4 hover:text-neutral-900"
+                  className="shrink-0 text-label font-semibold text-neutral-500 underline underline-offset-4 hover:text-neutral-900"
                 >
                   내용 보기
                 </Link>
@@ -403,12 +432,12 @@ function SignUpForm() {
       {/* ── 2단계 ── */}
       {step === 2 && (
         <>
-          <h1 className="text-[22px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900">
             먼저, 당신을
             <br />
             조금만 알려주세요.
           </h1>
-          <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
+          <p className="mt-2 text-label leading-relaxed text-neutral-500">
             액션에 참여하고 다른 사람들과 연결되기 위해
             <br />꼭 필요한 정보만 받을게요.
           </p>
@@ -420,7 +449,7 @@ function SignUpForm() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
-              <span className="text-[11px] text-neutral-400">
+              <span className="text-caption text-neutral-400">
                 안전한 활동 참여를 위해 실명 사용을 권장해요.
               </span>
             </label>
@@ -431,7 +460,7 @@ function SignUpForm() {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
               />
-              <span className="text-[11px] text-neutral-400">
+              <span className="text-caption text-neutral-400">
                 다른 사람에게는 닉네임이 먼저 보여요.
               </span>
             </label>
@@ -444,7 +473,7 @@ function SignUpForm() {
                     key={g}
                     type="button"
                     onClick={() => setGender(g)}
-                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-[15px] font-medium ${
+                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-body font-medium ${
                       gender === g
                         ? 'border-neutral-900 bg-neutral-900 text-white'
                         : 'border-neutral-300 bg-white text-neutral-600'
@@ -454,7 +483,7 @@ function SignUpForm() {
                   </button>
                 ))}
               </div>
-              <span className="text-[11px] text-neutral-400">
+              <span className="text-caption text-neutral-400">
                 성별 조건이 있는 액션(예: 남성 어르신 목욕 봉사)을 안내하는 데
                 쓰입니다. 가입 후에는 바꿀 수 없어요.
               </span>
@@ -466,12 +495,12 @@ function SignUpForm() {
       {/* ── 3단계 ── */}
       {step === 3 && (
         <>
-          <h1 className="text-[22px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900">
             어떻게
             <br />
             활동하고 싶으세요?
           </h1>
-          <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
+          <p className="mt-2 text-label leading-relaxed text-neutral-500">
             알려주신 정보를 바탕으로 딱 맞는 액션을 찾아드려요.
             <br />
             나중에 프로필에서 언제든 바꿀 수 있으니 편하게 선택해 보세요.
@@ -518,7 +547,7 @@ function SignUpForm() {
       )}
 
       {error && (
-        <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-600">
+        <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-label text-red-600">
           {error}
         </p>
       )}
@@ -575,7 +604,7 @@ function SignUpForm() {
       </div>
 
       {step === 1 && (
-        <p className="mt-5 text-center text-[13px] text-neutral-500">
+        <p className="mt-5 text-center text-label text-neutral-500">
           이미 계정이 있나요?{' '}
           <Link
             href={withNext('/login', next)}

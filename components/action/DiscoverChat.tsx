@@ -8,9 +8,19 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import {
+  Check,
+  ListFilter,
+  Lock,
+  MapPin,
+  MessageCircleQuestion,
+  Sparkle,
+  Sparkles,
+} from 'lucide-react';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { cn } from '@/lib/utils/cn';
 import type { ActionCardData } from '@/lib/types/view';
 import {
   REGIONS,
@@ -19,6 +29,16 @@ import {
   PROVINCE_WIDE,
   formatRegion,
 } from '@/lib/constants/regions';
+
+/** 질문 수 — 서버(app/api/ai/discover)가 다섯 답변을 받으면 추천을 돌려준다 */
+const QUESTION_COUNT = 5;
+
+/** 비로그인 안내 3줄 (문구는 기존 안내 카드 그대로) */
+const GUEST_POINTS = [
+  { icon: MapPin, text: '내 지역과 가능한 시간에 맞춰 추천해요.' },
+  { icon: ListFilter, text: '이미 참여한 액션과 내가 만든 액션은 자동으로 빼요.' },
+  { icon: MessageCircleQuestion, text: '질문을 통해 내 성향을 파악하고 맞춤 액션을 찾아요.' },
+] as const;
 
 interface ChatMessage {
   role: 'assistant' | 'user';
@@ -154,25 +174,77 @@ export function DiscoverChat({
 
   if (!authenticated) {
     return (
-      <div className="flex flex-col gap-5 px-5 pb-24 pt-6">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-          <p className="text-[14px] font-semibold text-neutral-900">
-            로그인 후 Discover AI로 내게 맞는 액션을 찾아보세요.
+      <div className="flex flex-col gap-5 px-6 pb-24 pt-4">
+        <div>
+          <h2 className="font-paperlogy text-body font-medium leading-relaxed text-neutral-900">
+            나에게 딱 맞는 액션을
+            <br />
+            AI가 골라드려요
+          </h2>
+          <p className="mt-1 text-label leading-relaxed text-neutral-500">
+            5가지 질문에 답하면, 추천 이유와 함께 보여드려요.
           </p>
-          <ul className="mt-3 flex flex-col gap-2 text-[13px] leading-relaxed text-neutral-600">
-            <li>· 내 지역과 가능한 시간에 맞춰 액션을 추천해요.</li>
-            <li>· 이미 참여한 액션과 내가 만든 액션은 자동으로 빼요.</li>
-            <li>· 편안한 대화를 통해 내게 꼭 맞는 좋은 일을 찾아요.</li>
-          </ul>
-          <Link
-            href="/login?next=/discover"
-            className="mt-5 flex min-h-13 items-center justify-center rounded-xl bg-neutral-900 py-3 text-[15px] font-semibold text-white"
-          >
+        </div>
+
+        {/* 결과 미리보기 — 흐린 추천 칸 위에 흰 잠금 안내 카드 (2026-09-27 목업 확정) */}
+        <section className="-mx-6 bg-[#F5F5F7] px-6 py-5">
+          <div className="relative">
+            <div
+              aria-hidden="true"
+              className="overflow-hidden rounded-xl border border-hairline bg-white"
+            >
+              <div className="flex gap-2 bg-brand-soft px-4 py-3">
+                <Sparkles className="mt-px h-4 w-4 flex-none text-brand" />
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <p className="text-caption font-bold tracking-wider text-brand">착착의 추천 이유</p>
+                  <span className="block h-2.5 w-[90%] rounded-full bg-brand/20" />
+                  <span className="block h-2.5 w-[60%] rounded-full bg-brand/20" />
+                </div>
+              </div>
+              {/* 예시 데이터 대신 회색 막대 — 진짜 추천처럼 보이지 않게 */}
+              <div className="blur-[3px]">
+                <div className="flex items-center gap-1.5 px-4 pb-2 pt-3">
+                  <span className="h-8 w-8 flex-none rounded-full bg-hairline" />
+                  <span className="block h-2.5 w-20 rounded-full bg-neutral-200" />
+                </div>
+                <div className="h-40 bg-gradient-to-br from-brand-soft to-[#F5F5F7]" />
+                <div className="flex flex-col gap-2 px-4 pb-4 pt-3">
+                  <span className="block h-5 w-[52px] rounded-full bg-brand" />
+                  <span className="block h-4 w-3/4 rounded-full bg-neutral-300" />
+                  <span className="block h-2.5 w-[95%] rounded-full bg-neutral-200" />
+                  <span className="block h-2.5 w-[70%] rounded-full bg-neutral-200" />
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute inset-x-4 bottom-4 flex flex-col gap-3 rounded-xl border border-hairline bg-white p-4">
+              <p className="flex items-center gap-1.5 text-label font-bold text-neutral-900">
+                <Lock className="h-4 w-4 flex-none" aria-hidden="true" />
+                로그인하면 나만의 추천을 볼 수 있어요
+              </p>
+              <ul className="flex flex-col gap-2.5">
+                {GUEST_POINTS.map(({ icon: Icon, text }) => (
+                  <li key={text} className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-brand-soft">
+                      <Icon className="h-3.5 w-3.5 text-brand" aria-hidden="true" />
+                    </span>
+                    <span className="text-label font-medium leading-normal text-neutral-800">
+                      {text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <div className="flex flex-col gap-2">
+          <Button href="/login?next=/discover" size="lg" fullWidth>
             로그인하고 추천받기
-          </Link>
+          </Button>
           <Link
             href="/signup"
-            className="mt-2 flex min-h-11 items-center justify-center rounded-xl border border-neutral-300 py-3 text-[13px] font-semibold text-neutral-700"
+            className="flex min-h-11 items-center justify-center rounded-xl border border-neutral-300 bg-white text-label font-semibold text-neutral-700"
           >
             처음이라면 가입하기
           </Link>
@@ -181,23 +253,41 @@ export function DiscoverChat({
     );
   }
 
-  const answeredCount = messages.filter(
-    (message) => message.role === 'user',
-  ).length;
+  const userAnswers = messages.filter((message) => message.role === 'user');
+  const answeredCount = userAnswers.length;
+  const isDone = items !== null;
 
   return (
-    <div className="flex flex-col gap-4 px-5 pb-24 pt-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[12px] text-neutral-500">
-            <b className="font-semibold text-neutral-800">{nickname}</b>님 맞춤 대화
-          </p>
+    <div className="flex flex-col gap-4 px-6 pb-24 pt-4">
+      {/* 인트로 제목 + 숫자 칩 5개 — 답함=초록 채움 · 지금=초록 테두리 · 남음=회색 (2026-09-27 목업 확정) */}
+      <div className="flex flex-col gap-3 border-b border-neutral-100 pb-5">
+        <h2 className="font-paperlogy text-body font-medium leading-relaxed text-neutral-900">
+          {nickname}님에게 딱 맞는 액션, 5가지만 물어볼게요
+        </h2>
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: QUESTION_COUNT }, (_, i) => i + 1).map((n) => {
+            const answered = isDone || n <= answeredCount;
+            const current = !answered && n === answeredCount + 1;
+            return (
+              <span
+                key={n}
+                className={cn(
+                  'flex h-7 w-7 flex-none items-center justify-center rounded-full border-[1.5px] text-label font-bold tabular-nums',
+                  answered
+                    ? 'border-brand bg-brand text-white'
+                    : current
+                      ? 'border-brand bg-white text-brand'
+                      : 'border-neutral-100 bg-neutral-100 text-neutral-400',
+                )}
+              >
+                {n}
+              </span>
+            );
+          })}
+          {!isDone && (
+            <span className="ml-auto text-caption text-neutral-400">맞춤 추천 준비 중</span>
+          )}
         </div>
-        {items === null && (
-          <span className="text-[11px] tabular-nums text-neutral-400">
-            맞춤 추천 대화 중 · {answeredCount}회 답변
-          </span>
-        )}
       </div>
 
       {messages.map((message, index) =>
@@ -205,13 +295,13 @@ export function DiscoverChat({
           <Bubble key={`${message.role}-${index}`}>{message.content}</Bubble>
         ) : (
           <div key={`${message.role}-${index}`} className="flex justify-end">
-            <span className="max-w-[80%] rounded-2xl rounded-br-sm bg-neutral-900 px-4 py-2.5 text-[14px] leading-relaxed text-white">
+            {/* 내 답변 — 검정 → 연한 포인트 그린 + 초록 글씨 (2026-09-27) */}
+            <span className="max-w-[80%] rounded-xl rounded-br-sm bg-brand-soft px-4 py-2.5 text-body font-semibold leading-relaxed text-brand">
               {message.content}
             </span>
           </div>
         ),
       )}
-
       {loading && (
         <Bubble>
           <span className="inline-flex items-center gap-2">
@@ -274,7 +364,7 @@ export function DiscoverChat({
       <div ref={chatEndRef} />
 
       {error && (
-        <div className="flex flex-col gap-3 rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-600">
+        <div className="flex flex-col gap-3 rounded-xl bg-red-50 px-4 py-3 text-label text-red-600">
           <p>{error}</p>
           <Button variant="secondary" size="sm" onClick={restart}>
             다시 시도
@@ -283,12 +373,53 @@ export function DiscoverChat({
       )}
 
       {items && (
-        <div className="flex flex-col gap-4">
+        // 추천 결과 — 채팅(흰 바탕)과 나누는 가로 전체 회색 판 (2026-09-27 목업 확정: B+C)
+        <section className="-mx-6 -mb-24 mt-4 flex flex-col gap-5 bg-[#F5F5F7] px-6 pb-32 pt-6">
+          {/* 질문 완료 요약 — 사용자가 누른 답 문구 그대로 칩으로 */}
+          <div className="flex flex-col gap-3 rounded-xl bg-white p-4">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-brand">
+                <Check className="h-3.5 w-3.5 stroke-[3] text-white" aria-hidden="true" />
+              </span>
+              <p className="text-body font-bold text-neutral-900">
+                {answeredCount}가지 질문 완료
+              </p>
+            </div>
+            <div>
+              <p className="text-label text-neutral-500">이 조건으로 찾았어요</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {userAnswers.map((answer, index) => (
+                  <span
+                    key={`${answer.content}-${index}`}
+                    className="inline-flex items-center rounded-full bg-brand-soft px-3 py-1.5 text-label font-semibold text-brand"
+                  >
+                    {answer.content}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 조건 완화 안내 — 보라 → 기능색 "주의" · 아이콘은 AI 검수 REVISE 와 같은 Sparkle */}
           {relaxation.length > 0 && (
-            <p className="rounded-xl bg-violet-50 px-4 py-3 text-[12px] leading-relaxed text-violet-700">
-              {relaxation[0]}
-            </p>
+            <div className="flex gap-2.5 rounded-xl bg-warning-soft px-4 py-3">
+              <span className="flex h-6 w-6 flex-none items-center justify-center rounded-lg bg-warning">
+                <Sparkle className="h-3.5 w-3.5 stroke-[2.25] text-warning-ink" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-label font-bold leading-relaxed text-warning-ink">
+                  비슷한 조건까지 찾아봤어요
+                </p>
+                <p className="mt-0.5 text-label leading-relaxed text-warning-ink">
+                  {relaxation[0] || '딱 맞는 액션이 많지 않아, 가장 가까운 것부터 보여드려요.'}
+                </p>
+              </div>
+            </div>
           )}
+
+          <h2 className="font-paperlogy text-subtitle font-bold leading-snug text-neutral-900">
+            {nickname}님을 위한 추천 액션
+          </h2>
 
           {items.length === 0 ? (
             <EmptyState
@@ -298,16 +429,23 @@ export function DiscoverChat({
               action={{ label: '직접 액션 만들기', href: '/action/create' }}
             />
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-6">
               {items.map((item) => (
-                <div key={item.action.id} className="flex flex-col gap-2">
-                  {item.reason && (
-                    <div className="flex items-start gap-2 rounded-xl bg-neutral-50 px-3.5 py-2.5 text-[13px] leading-snug text-neutral-700">
-                      <span className="shrink-0 text-base">✨</span>
-                      <span>{item.reason}</span>
+                // 추천 하나 = 둥근 테두리 칸 하나(액션 찾기 전용) — 맨 위 "착착의 추천 이유" 띠
+                <div
+                  key={item.action.id}
+                  className="overflow-hidden rounded-xl border border-hairline bg-white"
+                >
+                  <div className="flex gap-2 bg-brand-soft px-4 py-3">
+                    <Sparkles className="mt-px h-4 w-4 flex-none text-brand" aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-caption font-bold tracking-wider text-brand">착착의 추천 이유</p>
+                      <p className="mt-0.5 text-label font-semibold leading-relaxed text-neutral-900">
+                        {item.reason}
+                      </p>
                     </div>
-                  )}
-                  <ActionCard action={item.action} />
+                  </div>
+                  <ActionCard action={item.action} variant="boxed" />
                 </div>
               ))}
             </div>
@@ -316,7 +454,7 @@ export function DiscoverChat({
           <Button variant="secondary" fullWidth onClick={restart}>
             다시 추천받기
           </Button>
-        </div>
+        </section>
       )}
 
       {/* 활동 지역 1곳 선택 바텀시트 모달 */}
@@ -418,10 +556,16 @@ export function DiscoverChat({
 function Bubble({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex gap-2">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-bold text-white">
-        착
-      </span>
-      <p className="max-w-[80%] whitespace-pre-line rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-2.5 text-[14px] leading-relaxed text-neutral-800">
+      {/* 착착 AI 아바타 — 검정 원 "착" 글자 → 초록 픽셀 표정 (2026-09-27, public/avatars/discover_avatar_01.svg) */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/avatars/discover_avatar_01.svg"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className="h-7 w-7 shrink-0 rounded-full"
+      />
+      <p className="max-w-[80%] whitespace-pre-line rounded-xl rounded-tl-sm bg-neutral-100 px-4 py-2.5 text-body leading-relaxed text-neutral-800">
         {children}
       </p>
     </div>

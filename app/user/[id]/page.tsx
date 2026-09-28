@@ -56,13 +56,13 @@ export default async function UserProfilePage({
       />
 
       {profile.categories.length > 0 && (
-        <section className="mt-7 px-5">
+        <section className="mt-6 px-6">
           <SectionTitle className="pb-3">관심 카테고리</SectionTitle>
           <div className="flex flex-wrap gap-1.5">
             {profile.categories.map((c) => (
               <span
                 key={c}
-                className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-medium text-neutral-600"
+                className="rounded-full bg-neutral-100 px-3 py-1.5 text-caption font-medium text-neutral-600"
               >
                 {c}
               </span>

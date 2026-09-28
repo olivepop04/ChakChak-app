@@ -52,22 +52,22 @@ export default async function JoinPage({
       <Header title="참여하기" back backHref={`/action/${id}`} sticky />
 
       {/* 액션 요약 */}
-      <section className="flex flex-col gap-3 border-b border-neutral-100 px-5 py-5">
-        <h1 className="text-[18px] font-bold leading-snug tracking-tight text-neutral-900">
+      <section className="flex flex-col gap-3 border-b border-neutral-100 px-6 py-5">
+        <h1 className="font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
         <div className="flex items-center gap-2">
           <Avatar name={action.owner.nickname} size="sm" />
-          <span className="text-[13px] text-neutral-600">
+          <span className="text-label text-neutral-600">
             @{action.owner.nickname}
           </span>
         </div>
-        <div className="rounded-xl bg-neutral-50 p-3.5">
-          <p className="text-[13px] font-medium text-neutral-900">
+        <div className="rounded-xl bg-neutral-100 p-4">
+          <p className="text-label font-medium text-neutral-900">
             {formatActivityPeriod(action.activityStartAt, action.activityEndAt)}
           </p>
           {action.address && (
-            <p className="mt-0.5 text-[12px] text-neutral-500">{action.address}</p>
+            <p className="mt-0.5 text-caption text-neutral-500">{action.address}</p>
           )}
         </div>
       </section>

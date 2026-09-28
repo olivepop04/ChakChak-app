@@ -77,10 +77,23 @@ function guessMode(action: ActionCardData): string {
   return action.category === '환경' ? '직접 행동으로' : '시간을 내서';
 }
 
-/** KST (UTC+9) 기준 시(0~23)를 돌려줍니다. 배포 서버의 TZ(UTC 등)에 무관하게 항상 KST 기준으로 판정합니다. */
+/**
+ * 시간대(오전·오후·저녁·밤)는 한국 시각으로 봅니다.
+ *
+ * 이 파일은 서버 라우트(`app/api/ai/discover`)에서만 돕니다. 배포 서버는 UTC 라서
+ * `new Date(iso).getHours()` 가 9시간 어긋났습니다 — 토요일 오전 10시 활동이
+ * 「밤」 으로 판정돼, 「주말 오전」 만 가능한 사람에게 시간 점수 15점이
+ * 통째로 안 붙었습니다 (TZ 를 바꿔 실측). 우리 PC 는 KST 라 로컬에서는
+ * 재현되지 않습니다.
+ *
+ * 요일 판정은 `lib/utils/date.ts` 의 `isWeekend` 가 2026-09-24 에 KST 로
+ * 고정됐으므로 그대로 씁니다. 여기서는 시각 판정만 맞춥니다.
+ */
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
 function getKstHours(iso: string): number {
   const d = new Date(iso);
-  return new Date(d.getTime() + 9 * 60 * 60 * 1000).getUTCHours();
+  return new Date(d.getTime() + KST_OFFSET_MS).getUTCHours();
 }
 
 function getTimeSlot(iso: string | null): TimeSlot | null {
@@ -179,6 +192,10 @@ export function scoreAction(
   const matched: string[] = [];
 
   // 1) 관심 카테고리 (categories) — 25점
+  // 프로필과 이번 답변 둘 다 봅니다.
+  // '전체' 는 "가리지 않는다" 는 뜻이므로 어떤 카테고리와도 맞는 것으로 봅니다.
+  // 이 방어가 없으면 '전체' 를 고른 사람은 8개 중 어느 것과도 안 맞아
+  // 관심 분야 25점이 영구히 0점이 됩니다. 에러가 안 나서 알아채기 어렵습니다.
   const wanted = new Set(
     [...profile.categories, answers.category].filter(Boolean) as string[],
   );

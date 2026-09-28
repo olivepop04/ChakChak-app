@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import { SharePanel } from '@/components/action/SharePanel';
 
 interface ShareModalProps {
@@ -53,39 +54,45 @@ export function ShareModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="share-modal-title"
-        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl bg-white p-5 transition-all"
+        className="relative flex w-full max-w-sm sm:max-w-md max-h-[90vh] flex-col overflow-hidden rounded-xl bg-white transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 상단 헤더: 타이틀 & 닫기 버튼 */}
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-          <h2 id="share-modal-title" className="text-[17px] font-bold text-neutral-900">
+        {/* 상단 브랜드 컬러 바 (모달 상단 라운드 테두리 곡률과 일치) */}
+        <div className="h-[5px] w-full flex-none bg-brand" />
+
+        {/* 상단 헤더: 타이틀 & 닫기 버튼 — 모달 안쪽 여백 20px 안에서 구분선 */}
+        <div className="mx-5 flex items-center justify-between border-b border-neutral-100 pb-3 pt-5">
+          <h2 id="share-modal-title" className="text-subtitle font-bold text-neutral-900">
             공유하기
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
           >
-            ✕
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* 모임 제목 영역 */}
         {actionTitle && (
-          <div className="border-b border-neutral-100 py-3">
-            <p className="line-clamp-2 text-[15px] font-bold leading-snug text-neutral-900">
+          <div className="mx-5 border-b border-neutral-100 py-3">
+            <p className="line-clamp-2 font-paperlogy text-subtitle font-bold leading-snug text-neutral-900">
               {actionTitle}
             </p>
           </div>
         )}
 
         {/* 공유 패널 (친구 전송 & 링크 복사) */}
-        <SharePanel
-          actionId={actionId}
-          viewerId={viewerId}
-          className="flex flex-col gap-6 pt-4"
-        />
+        <div className="overflow-y-auto">
+          <SharePanel
+            actionId={actionId}
+            viewerId={viewerId}
+            variant="modal"
+            className="flex flex-col gap-6 px-5 pb-5 pt-4"
+          />
+        </div>
       </div>
     </div>,
     document.body,

@@ -32,9 +32,9 @@ export default async function CreatedActionsPage({
         sticky
       />
 
-      <div className="px-5 py-4">
+      <div className="px-6 py-4">
         <SectionTitle>{actions.length}개</SectionTitle>
-        <p className="mt-0.5 text-[12px] text-neutral-500">
+        <p className="mt-0.5 text-caption text-neutral-500">
           @{profile.nickname}님이 호스트한 공개 액션
         </p>
       </div>

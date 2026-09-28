@@ -10,16 +10,15 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { UsersRound, Package } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { saveActionResult, completeAction } from '@/lib/mutations';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Button } from '@/components/ui/Button';
-import { SectionTitle } from '@/components/ui/SectionTitle';
-import { FieldLabel } from '@/components/ui/FieldLabel';
 import { useToast } from '@/components/ui/Toast';
-import { describeResult, describeResultCount, describeResultRatio } from '@/lib/utils/quota';
+import { describeResultRatio } from '@/lib/utils/quota';
 import { cn } from '@/lib/utils/cn';
 import { UPLOAD } from '@/lib/constants';
 import type { ActionItemWithProgress } from '@/lib/types/view';
@@ -100,80 +99,119 @@ export function ResultWriteForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-5 pb-[calc(9rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
+    <div className="flex flex-col gap-6 px-6 pb-[calc(8.5rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
       {/* 자동 집계 — 수정 불가 */}
       <section className="flex flex-col gap-3">
         <div>
-          <SectionTitle>자동 집계</SectionTitle>
-          <p className="mt-0.5 text-[12px] text-neutral-500">
+          <h2 className="text-subtitle font-bold text-neutral-900">자동 집계</h2>
+          <p className="mt-1 text-label leading-relaxed text-neutral-500">
             참여 기록으로 자동 계산되어 수정할 수 없어요. 실제 활동 내용이 다를 경우 아래 입력칸에 적어주세요.
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-xl bg-neutral-50 p-4">
+        {/* 결과 보기 "함께 모은 것"과 같은 형식 — 박스 테두리 없이 항목 사이 구분선 */}
+        <div className="flex flex-col gap-5 p-4">
           {items.length === 0 ? (
-            <p className="text-[13px] text-neutral-400">모집 항목이 없어요.</p>
+            <p className="text-label text-neutral-400">모집 항목이 없어요.</p>
           ) : (
-            items.map((item) => {
+            items.map((item, idx) => {
               const { ratio, isMet } = describeResultRatio(item, item.currentCount);
+              const Icon = item.type === 'PERSON' ? UsersRound : Package;
+              const statusText = isMet
+                ? '목표를 채웠어요'
+                : item.type === 'GOODS'
+                  ? `${item.currentCount}${item.unit} 모았어요`
+                  : `${item.currentCount}${item.unit} 참여했어요`;
+
               return (
-                <div key={item.id} className="flex flex-col gap-1.5">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-sm font-semibold text-neutral-900">
+                <Fragment key={item.id}>
+                {idx > 0 && <div className="h-px bg-neutral-200" />}
+                <div className="flex flex-col gap-2">
+                  {/* 상단: 아이콘 + 항목명 + 최종 모집 수 (한 row) */}
+                  <div className="flex items-center gap-2">
+                    {/* 원 안의 아이콘 (테두리 없음) */}
+                    <div
+                      className={cn(
+                        'flex h-9 w-9 flex-none items-center justify-center rounded-full',
+                        isMet ? 'bg-brand-soft' : 'bg-neutral-100',
+                      )}
+                    >
+                      <Icon
+                        className={cn(
+                          'h-[18px] w-[18px]',
+                          isMet ? 'text-brand' : 'text-neutral-500',
+                        )}
+                        aria-hidden="true"
+                      />
+                    </div>
+
+                    <span className="flex-1 truncate text-body font-semibold text-neutral-900">
                       {item.name}
                     </span>
-                    <span className="text-[15px] font-bold tabular-nums text-neutral-900">
-                      {describeResultCount(item, item.currentCount)}
+
+                    {/* 최종 모집 수만 표시 (목표 수 미표시) */}
+                    <span
+                      className={cn(
+                        'shrink-0 text-body font-bold tabular-nums',
+                        isMet ? 'text-brand' : 'text-neutral-900',
+                      )}
+                    >
+                      {item.currentCount}{item.unit}
                     </span>
                   </div>
 
-                  {/* 게이지(그래프) */}
+                  {/* 프로그레스바 게이지 (아이콘 앞까지 옴) */}
                   <div
                     className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200"
                     role="progressbar"
                     aria-valuenow={Math.round(ratio * 100)}
                     aria-valuemin={0}
                     aria-valuemax={100}
+                    aria-label={`${item.name} 모집 현황`}
                   >
                     <div
                       className={cn(
                         'h-full rounded-full transition-all duration-300',
-                        isMet ? 'bg-emerald-500' : 'bg-neutral-400',
+                        isMet ? 'bg-brand' : 'bg-neutral-400',
                       )}
                       style={{ width: `${Math.round(ratio * 100)}%` }}
                     />
                   </div>
 
+                  {/* 상태 안내 문구 */}
                   <p
                     className={cn(
-                      'text-[12px] font-medium',
-                      isMet ? 'text-emerald-700' : 'text-neutral-500',
+                      'text-caption font-medium',
+                      isMet ? 'text-brand' : 'text-neutral-500',
                     )}
                   >
-                    {describeResult(item, item.currentCount)}
+                    {statusText}
                   </p>
                 </div>
+                </Fragment>
               );
             })
           )}
         </div>
       </section>
 
-      {/* 결과 내용 */}
-      <label className="flex flex-col gap-1.5">
-        <FieldLabel>이렇게 마무리했어요</FieldLabel>
+      {/* 이렇게 마무리했어요 */}
+      <label className="flex flex-col gap-2">
+        <span className="text-subtitle font-bold text-neutral-500">이렇게 마무리했어요</span>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          rows={6}
+          rows={3}
           placeholder="어떤 활동을 했는지, 어떤 변화가 있었는지 적어주세요."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="min-h-[120px] w-full resize-none rounded-xl border border-hairline p-4 text-body leading-relaxed text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-hairline-focus"
         />
       </label>
 
       {/* 결과 사진 */}
       <div className="flex flex-col gap-2">
-        <FieldLabel required>결과 사진</FieldLabel>
+        <span className="text-subtitle font-bold text-neutral-500">
+          결과 사진 <span className="text-danger">*</span>
+        </span>
         <ImageUploader
           bucket="result-images"
           actionId={actionId}
@@ -181,25 +219,25 @@ export function ResultWriteForm({
           urls={imageUrls}
           onChange={setImageUrls}
         />
-        <p className="text-[11px] text-neutral-400">
+        <p className="text-caption text-neutral-400">
           최소 {UPLOAD.RESULT_IMAGE_MIN}장, 최대 {UPLOAD.RESULT_IMAGE_MAX}장이에요.
         </p>
       </div>
 
       {/* 호스트의 한마디 */}
-      <label className="flex flex-col gap-1.5">
-        <FieldLabel>호스트의 한마디</FieldLabel>
+      <label className="flex flex-col gap-2">
+        <span className="text-subtitle font-bold text-neutral-500">호스트의 한마디</span>
         <textarea
           value={ownerVoice}
           onChange={(e) => setOwnerVoice(e.target.value)}
-          rows={4}
+          rows={2}
           placeholder="함께해준 크루들에게 남기고 싶은 말을 적어주세요."
-          className="rounded-xl border border-neutral-300 p-4 text-[15px] leading-relaxed outline-none focus:border-neutral-900"
+          className="min-h-[80px] w-full resize-none rounded-xl border border-hairline p-4 text-body leading-relaxed text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-hairline-focus"
         />
       </label>
 
       {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app border-t border-neutral-200 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white px-6 py-4">
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -207,7 +245,7 @@ export function ResultWriteForm({
             size="lg"
             onClick={handleSave}
             loading={busy}
-            className="shrink-0 min-w-[76px] whitespace-nowrap flex-row"
+            className="min-w-[76px] shrink-0 px-5"
           >
             저장
           </Button>
@@ -217,12 +255,12 @@ export function ResultWriteForm({
             fullWidth
             onClick={handlePublish}
             loading={busy}
-            className="shrink flex-1 min-w-0 whitespace-nowrap flex-row"
+            className="min-w-0 flex-1"
           >
             결과 공개하기
           </Button>
         </div>
-        <p className="mt-2 text-center text-[11px] text-neutral-400">
+        <p className="mt-2 text-center text-caption text-neutral-400">
           공개하면 참여한 크루들에게 알림이 가고, 크루들도 소감을 남길 수 있게 돼요.
         </p>
       </div>

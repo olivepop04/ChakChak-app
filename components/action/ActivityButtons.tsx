@@ -14,7 +14,7 @@ import { ReasonModal } from '@/components/action/ReasonModal';
 import { Button } from '@/components/ui/Button';
 
 const btn =
-  'inline-flex min-h-9 items-center justify-center rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors';
+  'inline-flex min-h-9 items-center justify-center rounded-full px-3 py-2 text-label font-semibold transition-colors';
 const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
 
 /**
