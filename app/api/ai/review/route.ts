@@ -29,7 +29,7 @@ import { callStructuredAI, ReviewSchema, AIError, type ReviewResult } from '@/li
 import { getPlaceErrors, getPlaceWarnings } from '@/lib/utils/place-validation';
 import { applyCodeFindings, type CodeWarning } from '@/lib/utils/review-result';
 
-const PROMPT_VERSION = 'review-v6';
+const PROMPT_VERSION = 'review-v7';
 // v2: 착착·'인원' · v3: Owner→호스트 · v4: 장소 검수
 // v5: 심사 → 거들기. BLOCK 사유를 5가지로 좁히고, 작은 선행을 PASS 시키고,
 //     AI 가 보지도 못하는 날짜·이미지를 판단하지 않게 했습니다.
@@ -38,6 +38,9 @@ const PROMPT_VERSION = 'review-v6';
 //        → 서비스 취지를 설명하는 말투로 바꿨습니다.
 //     ② 프롬프트에 없는 "신청 방법을 알려주세요" 를 AI 가 지어냈습니다.
 //        → 신청은 「참여하기」 버튼이 처리하므로 지적 금지로 명시했습니다.
+// v7: 「"사회공헌성이 충분한가"」 → 「"거창한 공익성이 있는가"」 (2026-09-28, 성은님 PR 2731121).
+//     classify · trends 와 함께 「사회공헌」 낱말을 걷어낸 용어 정리입니다. 판단 기준은 그대로입니다.
+//     문장이 바뀌었는데 v6 으로 남아 있어, ai_runs 의 버전별 집계가 섞이지 않게 병합 때 올렸습니다.
 
 const SYSTEM = `당신은 "착착(CHAK CHAK)" 의 액션 검수 도우미입니다.
 
