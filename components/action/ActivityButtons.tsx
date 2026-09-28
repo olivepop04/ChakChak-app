@@ -11,11 +11,14 @@ import { createClient } from '@/lib/supabase/client';
 import { deleteDraft, cancelAction, endActionEarly } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
 import { ReasonModal } from '@/components/action/ReasonModal';
-import { Button } from '@/components/ui/Button';
 
+// 되돌리기 어려운 것(취소하기·조기종료·삭제하기)은 튀지 않게 진한 회색(text-ink) 테두리로 통일 (조장 요청, 2026-09-28).
 const btn =
-  'inline-flex min-h-9 items-center justify-center rounded-full px-3 py-2 text-label font-semibold transition-colors';
-const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
+  'inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl px-3 text-body font-semibold transition-colors border border-[#333333] bg-white text-[#333333]';
+// 크루 채팅 옆 — 고정 92px(줄바꿈 없음)
+const grayFixed = `${btn} w-[92px] shrink-0`;
+// 크루 채팅이 없는 줄(삭제하기+계속 작성하기) — 1:1
+const grayFlex = `${btn} flex-1`;
 
 /**
  * 참여 취소 버튼은 components/action/LeaveButton.tsx 로 옮겼습니다 (개발 B 담당).
@@ -46,9 +49,9 @@ export function DeleteDraftButton({ actionId }: { actionId: string }) {
 
   return (
     <>
-      <Button type="button" variant="danger" size="sm" onClick={() => setOpen(true)} disabled={busy}>
+      <button type="button" className={grayFlex} onClick={() => setOpen(true)} disabled={busy}>
         삭제하기
-      </Button>
+      </button>
       <ReasonModal
         open={open}
         title="작성 중인 액션을 삭제할까요?"
@@ -87,7 +90,7 @@ export function CancelActionButton({ actionId }: { actionId: string }) {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={secondary}>
+      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={grayFixed}>
         취소하기
       </button>
       <ReasonModal
@@ -128,7 +131,7 @@ export function EarlyEndButton({ actionId }: { actionId: string }) {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={secondary}>
+      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={grayFixed}>
         조기종료
       </button>
       <ReasonModal

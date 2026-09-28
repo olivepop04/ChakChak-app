@@ -386,7 +386,7 @@ export function ActionCard({
       </div>
 
       {footer && (
-        <div className="relative z-10 border-t border-neutral-100 px-4 py-3 pointer-events-auto">
+        <div className="relative z-10 py-3 pointer-events-auto">
           {footer}
         </div>
       )}

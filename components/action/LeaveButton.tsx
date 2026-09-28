@@ -25,10 +25,10 @@ import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils/cn';
 import { ReasonModal } from '@/components/action/ReasonModal';
 
-// 카드 하단 트리거 버튼은 CREW CHAT 등 다른 버튼과 같은 중립 스타일(하양 바탕 · 회색 글씨).
-// 실제 파괴적 확인은 아래 모달의 빨강 '나가기 진행' 버튼에서 받습니다.
+// 카드 하단 트리거 버튼은 "크루 채팅" 옆 92px 고정폭 · 진한 회색(text-ink) 테두리.
+// 튀지 않게(조장 요청, 2026-09-28) — 실제 파괴적 확인은 아래 모달의 '나가기 진행' 버튼에서 받습니다.
 const secondary =
-  'inline-flex min-h-9 items-center justify-center rounded-full border border-neutral-300 bg-white px-3 py-2 text-label font-semibold text-neutral-700 transition-colors';
+  'inline-flex min-h-11 w-[92px] shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-[#333333] bg-white px-3 text-body font-semibold text-[#333333] transition-colors';
 
 export function LeaveButton({
   actionId,
