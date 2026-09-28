@@ -25,7 +25,6 @@ import type { ActionCardData } from '@/lib/types/view';
 import {
   REGIONS,
   SIDO_LIST,
-  NATIONWIDE,
   PROVINCE_WIDE,
   formatRegion,
 } from '@/lib/constants/regions';
@@ -710,16 +709,6 @@ export function DiscoverChat({
             <div className="max-h-[60vh] overflow-y-auto">
               {!selectedSido ? (
                 <ul className="divide-y divide-neutral-100">
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => handleRegionSelect(NATIONWIDE)}
-                      className="flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] font-medium text-neutral-900 hover:bg-neutral-50"
-                    >
-                      <span>🌏 전국 전체 (모든 지역 액션)</span>
-                      <span className="text-neutral-300">›</span>
-                    </button>
-                  </li>
                   {SIDO_LIST.map((sido) => (
                     <li key={sido}>
                       <button
