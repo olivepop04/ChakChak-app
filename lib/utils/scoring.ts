@@ -49,6 +49,7 @@ export interface ScoringAnswers {
   difficultyPreference?: AdaptiveScoringAnswers['difficultyPreference'];
   activityTypePreference?: AdaptiveScoringAnswers['activityTypePreference'];
   selectedSkill?: string | null;
+  selectedSkills?: string[];
   userKeywords?: string[];
   userTimePreferences?: string[];
   selectedRegion?: string | null;
@@ -273,6 +274,7 @@ export function scoreAction(
       difficultyPreference: answers.difficultyPreference ?? null,
       activityTypePreference: answers.activityTypePreference ?? null,
       selectedSkill: answers.selectedSkill ?? null,
+      selectedSkills: answers.selectedSkills ?? (answers.selectedSkill ? [answers.selectedSkill] : []),
       userKeywords: answers.userKeywords ?? [],
     },
   });

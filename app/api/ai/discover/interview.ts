@@ -38,6 +38,7 @@ export interface AdaptiveAnswers {
   timePreference?: string | null;
   talentPreference?: 'use' | 'any' | 'new_skill' | null;
   selectedSkill?: string | null;
+  selectedSkills?: string[];
   activityType?: 'indoor' | 'outdoor' | 'both' | 'any' | null;
   vibePreference?: 'social' | 'task' | 'any' | null;
   groupSizePreference?: 'small' | 'medium' | 'large' | 'any' | null;
@@ -930,12 +931,16 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.talentPreference = 'any';
   }
 
+  const matchedSkills: string[] = [];
   for (const s of ALL_15_SKILLS) {
-    if (text.includes(s)) {
-      answers.selectedSkill = s;
-      answers.talentPreference = 'use';
-      break;
+    if (s !== '기타' && text.includes(s)) {
+      matchedSkills.push(s);
     }
+  }
+  if (matchedSkills.length > 0) {
+    answers.selectedSkill = matchedSkills[0];
+    answers.selectedSkills = matchedSkills;
+    answers.talentPreference = 'use';
   }
 
   // 관심 분야 (categories)
@@ -1091,17 +1096,22 @@ export function extractAnswersFromDialogue(
         } else if (/새로운 재능|다른 재능/.test(a)) {
           answers.talentPreference = 'new_skill';
         } else {
+          const matchedSkills: string[] = [];
           for (const s of ALL_15_SKILLS) {
-            if (a.includes(s)) {
-              answers.selectedSkill = s;
-              answers.talentPreference = 'use';
-              break;
+            if (s !== '기타' && a.includes(s)) {
+              matchedSkills.push(s);
             }
           }
-          if (!answers.selectedSkill && a.trim() && !/기타/.test(a)) {
+          if (matchedSkills.length > 0) {
+            answers.selectedSkill = matchedSkills[0];
+            answers.selectedSkills = matchedSkills;
+            answers.talentPreference = 'use';
+          }
+          if (matchedSkills.length === 0 && a.trim() && !/기타/.test(a)) {
             const harmful = validateHarmfulSkillInput(a);
             if (!harmful.isHarmful) {
               answers.selectedSkill = a.trim();
+              answers.selectedSkills = [a.trim()];
               answers.talentPreference = 'use';
             }
           }
@@ -1194,6 +1204,7 @@ export function getRemainingQuestionKeys({
       answers.talentPreference === 'any' ||
       answers.selectedSkill === 'profile' ||
       Boolean(answers.selectedSkill && answers.selectedSkill !== 'profile') ||
+      Boolean(answers.selectedSkills && answers.selectedSkills.length > 0) ||
       skillsAnswered;
 
     if (!skillDone) {

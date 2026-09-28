@@ -79,6 +79,13 @@ export function DiscoverChat({
   const [error, setError] = useState('');
   const [regionModalOpen, setRegionModalOpen] = useState(false);
   const [selectedSido, setSelectedSido] = useState<string | null>(null);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [customSkillText, setCustomSkillText] = useState('');
+
+  useEffect(() => {
+    setSelectedSkills([]);
+    setCustomSkillText('');
+  }, [options]);
 
   useEffect(() => {
     if (!authenticated || started.current) return;
@@ -147,6 +154,34 @@ export function DiscoverChat({
       return;
     }
     choose(option);
+  }
+
+  const isSkillSelection =
+    options.length >= 15 &&
+    options.includes('사진 촬영') &&
+    options.includes('요리');
+
+  function handleSkillToggle(skill: string) {
+    if (loading) return;
+    if (selectedSkills.includes(skill)) {
+      setSelectedSkills(selectedSkills.filter((s) => s !== skill));
+    } else {
+      setSelectedSkills([...selectedSkills, skill]);
+      if (skill === '기타') {
+        setTimeout(() => inputRef.current?.focus(), 150);
+      }
+    }
+  }
+
+  function handleConfirmSkills() {
+    if (loading || selectedSkills.length === 0) return;
+    const finalSkills = selectedSkills.map((s) => {
+      if (s === '기타' && customSkillText.trim()) {
+        return customSkillText.trim();
+      }
+      return s;
+    });
+    choose(finalSkills.join(', '));
   }
 
   function handleRegionSelect(region: string) {
@@ -317,7 +352,71 @@ export function DiscoverChat({
 
       {!loading && items === null && (
         <div className="flex flex-col gap-2.5 pt-1">
-          {options.length > 0 && (
+          {options.length > 0 && isSkillSelection ? (
+            <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-label font-bold text-neutral-900">
+                  나눌 수 있는 재능을 모두 골라보세요 (복수 선택)
+                </span>
+                <span className="text-caption font-semibold text-brand">
+                  {selectedSkills.length}개 선택됨
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {options.map((option) => {
+                  const isSelected = selectedSkills.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleSkillToggle(option)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all',
+                        isSelected
+                          ? 'border border-brand bg-brand text-white font-semibold shadow-sm'
+                          : 'border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-900 hover:bg-neutral-50',
+                      )}
+                    >
+                      {isSelected && (
+                        <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
+                      )}
+                      <span>{option}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedSkills.includes('기타') && (
+                <div className="flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 py-2">
+                  <span className="text-[13px] font-semibold text-neutral-600 shrink-0">기타 재능:</span>
+                  <input
+                    type="text"
+                    value={customSkillText}
+                    onChange={(e) => setCustomSkillText(e.target.value)}
+                    placeholder="어떤 재능인지 직접 적어주세요 (예: 바리스타, 마술 등)"
+                    className="flex-1 bg-transparent text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-end pt-1">
+                <button
+                  type="button"
+                  disabled={selectedSkills.length === 0}
+                  onClick={handleConfirmSkills}
+                  className="rounded-full bg-neutral-900 px-5 py-2 text-label font-bold text-white transition-opacity hover:bg-neutral-800 disabled:opacity-30 flex items-center gap-1.5"
+                >
+                  <span>선택 완료</span>
+                  {selectedSkills.length > 0 && (
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold">
+                      {selectedSkills.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : options.length > 0 ? (
             <div className="flex flex-wrap justify-end gap-2">
               {options.map((option) => (
                 <button
@@ -330,7 +429,7 @@ export function DiscoverChat({
                 </button>
               ))}
             </div>
-          )}
+          ) : null}
 
           <form onSubmit={handleSubmit} className="flex items-center gap-2 pt-1">
             <input

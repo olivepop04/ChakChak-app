@@ -188,11 +188,12 @@ function extractSkillsAnswer(messages: ChatMessage[]): string[] | null {
   if (userText.includes('재능 없음')) return [];
   if (userText.includes('아직 모르겠음')) return null;
 
-  const selected = SKILLS.filter((skill) => {
+  const selected = ALL_15_SKILLS.filter((skill) => {
+    if (skill === '기타') return false;
     const words = skill.split(/[·\s]+/).filter((word) => word.length >= 2);
     return words.some((word) => userText.includes(word));
   });
-  return selected.length > 0 ? selected : null;
+  return selected.length > 0 ? [...selected] : null;
 }
 
 function fallbackConversation({
@@ -759,10 +760,13 @@ export async function POST(request: Request) {
   }
 
   const participationMode = conversation.participation_mode ?? null;
-  const resolvedSkill =
-    adaptiveAnswers.selectedSkill === 'profile'
-      ? (profile.skills?.[0] ?? null)
-      : (adaptiveAnswers.selectedSkill ?? (selectedSkills[0] ?? null));
+  const resolvedSkills =
+    adaptiveAnswers.selectedSkills && adaptiveAnswers.selectedSkills.length > 0
+      ? adaptiveAnswers.selectedSkills
+      : (adaptiveAnswers.selectedSkill === 'profile'
+          ? (profile.skills ?? [])
+          : (adaptiveAnswers.selectedSkill ? [adaptiveAnswers.selectedSkill] : selectedSkills));
+  const resolvedSkill = resolvedSkills[0] ?? null;
   const resolvedCategory =
     adaptiveAnswers.selectedCategory && adaptiveAnswers.selectedCategory !== '상관없음'
       ? adaptiveAnswers.selectedCategory
@@ -786,6 +790,7 @@ export async function POST(request: Request) {
     difficultyPreference: adaptiveAnswers.difficultyPreference ?? null,
     activityTypePreference: adaptiveAnswers.activityType ?? null,
     selectedSkill: resolvedSkill,
+    selectedSkills: resolvedSkills,
     userKeywords: adaptiveAnswers.userKeywords ?? [],
     userTimePreferences: adaptiveAnswers.timePreferences ?? [],
     selectedRegion: adaptiveAnswers.selectedRegion ?? null,

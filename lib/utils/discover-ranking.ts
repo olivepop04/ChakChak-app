@@ -6,6 +6,7 @@ export interface AdaptiveScoringAnswers {
   difficultyPreference?: 'easy' | 'physical' | 'expert' | 'any' | null;
   activityTypePreference?: 'indoor' | 'outdoor' | 'both' | 'any' | null;
   selectedSkill?: string | null;
+  selectedSkills?: string[];
   userKeywords?: string[];
 }
 
@@ -46,22 +47,29 @@ export function scoreAdaptiveTraits({
   let score = 0;
   const matched: string[] = [];
 
-  // 1) 재능 활용 (skills) — 15점
+  // 1) 재능 활용 (skills) — 15점 (복수 선택 지원)
   if (answers.talentPreference === 'use') {
-    const candidateSkills = answers.selectedSkill
-      ? [answers.selectedSkill, ...profileSkills]
-      : profileSkills;
+    const userSelected =
+      answers.selectedSkills && answers.selectedSkills.length > 0
+        ? answers.selectedSkills
+        : answers.selectedSkill
+          ? [answers.selectedSkill]
+          : [];
+    const candidateSkills = [
+      ...userSelected,
+      ...profileSkills,
+    ];
     const sharedSkill = candidateSkills.find((skill) => actionSkills.includes(skill));
     if (sharedSkill) {
       score += 15;
       matched.push(`${sharedSkill} 재능 활용`);
-    } else if (answers.selectedSkill) {
-      const keywordHit = actionKeywords.find(
-        (k) => k.includes(answers.selectedSkill!) || answers.selectedSkill!.includes(k),
+    } else if (userSelected.length > 0) {
+      const keywordHit = userSelected.find((userSkill) =>
+        actionKeywords.some((k) => k.includes(userSkill) || userSkill.includes(k)),
       );
       if (keywordHit) {
         score += 15;
-        matched.push(`${answers.selectedSkill} 재능 활용`);
+        matched.push(`${keywordHit} 재능 활용`);
       }
     }
   } else if (answers.talentPreference === 'any') {

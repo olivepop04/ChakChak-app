@@ -26,6 +26,17 @@ test('Discover 재능 선택지는 사전 정의된 16개 버튼만 정확히 �
   assert.equal(options.includes('상관없음'), false);
 });
 
+test('대화에서 복수의 재능을 선택/입력했을 때 모든 재능이 배열로 추출된다', () => {
+  const messages = [
+    { role: 'assistant' as const, content: '어떤 재능을 활용하고 싶으신가요?' },
+    { role: 'user' as const, content: '사진 촬영, 영상 촬영·편집, 요리' },
+  ];
+  const answers = extractAnswersFromDialogue(messages);
+  assert.equal(answers.talentPreference, 'use');
+  assert.deepEqual(answers.selectedSkills, ['사진 촬영', '영상 촬영·편집', '요리']);
+  assert.equal(answers.selectedSkill, '사진 촬영');
+});
+
 test('재능 직접 입력 시 유해하거나 부적절한 내용은 가드레일에 의해 차단되고 정상 재능은 통과한다', () => {
   // 1. 유해 단어 차단
   assert.equal(validateHarmfulSkillInput('해킹 기술').isHarmful, true);
