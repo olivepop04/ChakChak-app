@@ -58,6 +58,7 @@ interface DiscoverResponse {
   relaxation?: string[];
   items?: Recommendation[];
   error?: string;
+  isLastQuestion?: boolean;
 }
 
 export function DiscoverChat({
@@ -81,10 +82,14 @@ export function DiscoverChat({
   const [selectedSido, setSelectedSido] = useState<string | null>(null);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [customSkillText, setCustomSkillText] = useState('');
+  const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
+  const [isSubmittingFinal, setIsSubmittingFinal] = useState(false);
+  const [isServerLastQuestion, setIsServerLastQuestion] = useState(false);
 
   useEffect(() => {
     setSelectedSkills([]);
     setCustomSkillText('');
+    setSelectedTimes([]);
   }, [options]);
 
   useEffect(() => {
@@ -121,16 +126,25 @@ export function DiscoverChat({
       setMessages(withReply);
       setOptions(data.options ?? []);
       setRelaxation(data.relaxation ?? []);
+      setIsServerLastQuestion(Boolean(data.isLastQuestion));
       if (data.done) setItems(data.items ?? []);
     } catch {
       setError('추천을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setLoading(false);
+      setIsSubmittingFinal(false);
     }
   }
 
+  const isCurrentLastQuestion =
+    isServerLastQuestion ||
+    options.some((o) => o.includes('모임') || o.includes('소규모'));
+
   function choose(value: string) {
     if (loading) return;
+    if (isCurrentLastQuestion) {
+      setIsSubmittingFinal(true);
+    }
     const nextMessages: ChatMessage[] = [
       ...messages,
       { role: 'user', content: value },
@@ -161,6 +175,11 @@ export function DiscoverChat({
     options.includes('사진 촬영') &&
     options.includes('요리');
 
+  const isTimeSelection =
+    options.length >= 4 &&
+    options.includes('주말 오전') &&
+    options.includes('시간 상관없음');
+
   function handleSkillToggle(skill: string) {
     if (loading) return;
     if (selectedSkills.includes(skill)) {
@@ -175,13 +194,41 @@ export function DiscoverChat({
 
   function handleConfirmSkills() {
     if (loading || selectedSkills.length === 0) return;
-    const finalSkills = selectedSkills.map((s) => {
-      if (s === '기타' && customSkillText.trim()) {
-        return customSkillText.trim();
-      }
-      return s;
-    });
+    const finalSkills = selectedSkills
+      .map((s) => {
+        if (s === '기타') {
+          return customSkillText.trim() || null;
+        }
+        return s;
+      })
+      .filter((s): s is string => Boolean(s));
+
+    if (finalSkills.length === 0) return;
     choose(finalSkills.join(', '));
+  }
+
+  function handleTimeToggle(time: string) {
+    if (loading) return;
+    if (time === '시간 상관없음') {
+      if (selectedTimes.includes('시간 상관없음')) {
+        setSelectedTimes([]);
+      } else {
+        setSelectedTimes(['시간 상관없음']);
+      }
+      return;
+    }
+
+    const withoutAny = selectedTimes.filter((t) => t !== '시간 상관없음');
+    if (withoutAny.includes(time)) {
+      setSelectedTimes(withoutAny.filter((t) => t !== time));
+    } else {
+      setSelectedTimes([...withoutAny, time]);
+    }
+  }
+
+  function handleConfirmTimes() {
+    if (loading || selectedTimes.length === 0) return;
+    choose(selectedTimes.join(', '));
   }
 
   function handleRegionSelect(region: string) {
@@ -342,7 +389,9 @@ export function DiscoverChat({
           <span className="inline-flex items-center gap-2">
             {messages.length === 0
               ? '잠시만요. AI가 대화를 준비하고 있어요 😊'
-              : 'AI가 맞춤 활동을 생각하고 있어요 😊'}
+              : isSubmittingFinal
+                ? 'AI가 딱 맞는 맞춤 액션을 찾고 있어요 😊'
+                : 'AI가 질문을 준비하고 있어요 😊'}
             <span className="inline-flex gap-0.5">
               <Dot /> <Dot /> <Dot />
             </span>
@@ -394,9 +443,26 @@ export function DiscoverChat({
                     type="text"
                     value={customSkillText}
                     onChange={(e) => setCustomSkillText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (customSkillText.trim()) {
+                          handleConfirmSkills();
+                        }
+                      }
+                    }}
                     placeholder="어떤 재능인지 직접 적어주세요 (예: 바리스타, 마술 등)"
                     className="flex-1 bg-transparent text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
                   />
+                  {customSkillText.trim() && (
+                    <button
+                      type="button"
+                      onClick={handleConfirmSkills}
+                      className="text-xs font-bold text-brand hover:underline shrink-0"
+                    >
+                      적용
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -411,6 +477,57 @@ export function DiscoverChat({
                   {selectedSkills.length > 0 && (
                     <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold">
                       {selectedSkills.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : options.length > 0 && isTimeSelection ? (
+            <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-label font-bold text-neutral-900">
+                  참여하기 편한 시간을 모두 골라보세요 (복수 선택)
+                </span>
+                <span className="text-caption font-semibold text-brand">
+                  {selectedTimes.length}개 선택됨
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {options.map((option) => {
+                  const isSelected = selectedTimes.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleTimeToggle(option)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all',
+                        isSelected
+                          ? 'border border-brand bg-brand text-white font-semibold shadow-sm'
+                          : 'border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-900 hover:bg-neutral-50',
+                      )}
+                    >
+                      {isSelected && (
+                        <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
+                      )}
+                      <span>{option}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-end pt-1">
+                <button
+                  type="button"
+                  disabled={selectedTimes.length === 0}
+                  onClick={handleConfirmTimes}
+                  className="rounded-full bg-neutral-900 px-5 py-2 text-label font-bold text-white transition-opacity hover:bg-neutral-800 disabled:opacity-30 flex items-center gap-1.5"
+                >
+                  <span>선택 완료</span>
+                  {selectedTimes.length > 0 && (
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold">
+                      {selectedTimes.length}
                     </span>
                   )}
                 </button>
@@ -556,7 +673,7 @@ export function DiscoverChat({
         </section>
       )}
 
-      {/* 활동 지역 1곳 선택 바텀시트 모달 */}
+      {/* 활동 지역 선택 바텀시트 모달 */}
       {regionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center">
           <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl">
@@ -575,7 +692,7 @@ export function DiscoverChat({
                   </button>
                 )}
                 <h3 className="text-[16px] font-semibold text-neutral-900">
-                  {selectedSido ? selectedSido : '활동할 지역 1곳 선택'}
+                  {selectedSido ? selectedSido : '활동할 지역 선택'}
                 </h3>
               </div>
               <button

@@ -43,6 +43,7 @@ import {
   analyzeUserContext,
   validateHarmfulSkillInput,
   ALL_15_SKILLS,
+  CHEERING_OR_CASUAL_REGEX,
   type QuestionKey,
   type UserStateCategory,
 } from '@/app/api/ai/discover/interview';
@@ -124,11 +125,11 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
 
 0. 오프닝 및 지역/시간 상시 확인 (모든 유저 공통):
    - 프로필에 지역과 시간이 등록되어 있는 경우:
-     - 멘트: "안녕하세요, {nickname}님! 😊 {nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 기본 조건을 확인해 봤어요.\n\n📍 활동 지역 : {profileRegion} (집 근처)\n⏰ 선호 시간 : {profileTimesSummary}\n\n이 조건 그대로 액션을 찾아드릴까요?"
+     - 멘트: "안녕하세요, {nickname}님! 😊 {nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 기본 조건을 확인해 봤어요.\n\n📍 활동 지역 : {profileRegion}\n⏰ 선호 시간 : {profileTimesSummary}\n\n이 조건 그대로 액션을 찾아드릴까요?"
      - options: ["네, 이 조건으로 찾을게요 👍", "이번엔 다른 조건으로 찾을래요 🔄"]
    - 프로필에 지역이나 시간이 없는 경우:
      - 멘트: "안녕하세요, {nickname}님! 만나서 반가워요. 😊 {nickname}님에게 딱 맞는 액션을 찾아드리기 위해 활동하실 지역과 시간을 먼저 확인하고 싶어요.\n\n먼저, 이번에 어느 지역에서 활동하고 싶으세요?"
-     - options: ["활동할 지역 1곳 선택하기 📍", "지역 상관없이 전국 액션 볼래요 🌏"]
+     - options: ["활동할 지역 선택하기 📍", "지역 상관없이 전국 액션 볼래요 🌏"]
 
 1. 카테고리 (categories) - 분야 선택:
    - 과거 활동 이력 카테고리가 있는 경우:
@@ -412,6 +413,7 @@ export async function POST(request: Request) {
       options: openingOptions,
       relaxation: [],
       items: null,
+      isLastQuestion: false,
     });
   }
 
@@ -535,6 +537,27 @@ export async function POST(request: Request) {
         maxQuestions: MAX_USER_TURNS,
       });
     }
+
+    // 3) 단순 응원이나 잡담/비재능 단어 입력 시 친절한 응답 및 재안내
+    if (CHEERING_OR_CASUAL_REGEX.test(lastUserMsg.trim())) {
+      const isCheering = /파이팅|화이팅|힘내|응원/.test(lastUserMsg);
+      const friendlyLead = isCheering
+        ? `'${lastUserMsg.trim()}' 응원 말씀 정말 감사해요! 힘이 팍팍 나네요! 💪😊`
+        : `말씀해 주셔서 감사해요! 😊`;
+      return NextResponse.json({
+        done: false,
+        reply: `${friendlyLead}\n이번 액션에서 함께 나누고 싶은 재능을 위 선택지에서 골라주시거나, 구체적인 재능(예: 요리, 사진, 교육 등)을 아래에 적어주세요!`,
+        options: getQuestionOptions('skills', SKILLS, userContext.state, userContext.hasRegionAndTime, {
+          hasHistory,
+          hasRegionAndTime: userContext.hasRegionAndTime,
+          answers: adaptiveAnswers,
+          profileSkills: profile.skills ?? [],
+        }),
+        questionKey: 'skills',
+        answeredCount: userTurnCount,
+        maxQuestions: MAX_USER_TURNS,
+      });
+    }
   }
 
   // 사용자가 개념 문의를 한 게 아닌데 AI가 이미 답변된 질문 키를 반환한 경우, 남은 질문으로 강제 전환
@@ -594,6 +617,7 @@ export async function POST(request: Request) {
       },
     );
 
+    const isLastQuestion = remainingQuestionKeys.length === 1;
     return NextResponse.json({
       done: false,
       reply,
@@ -601,6 +625,7 @@ export async function POST(request: Request) {
       questionKey: chosenQuestionKey,
       answeredCount: userTurnCount,
       maxQuestions: MAX_USER_TURNS,
+      isLastQuestion,
     });
   }
 
@@ -832,7 +857,12 @@ export async function POST(request: Request) {
       promptVersion: RECOMMEND_PROMPT_VERSION,
       system: `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트입니다.
 선정된 각 액션에 대해 사용자의 성향과 대화 내용을 바탕으로 왜 이 액션이 사용자에게 꼭 맞는지 1~2문장의 다정하고 구체적인 추천 이유를 작성하세요.
-영어 'Action'이나 '봉사/수혜자' 단어를 절대 쓰지 말고 한글 '액션'으로 서술하세요.
+영어 'Action'이나 '봉사/봉사활동/수혜자' 단어를 절대 쓰지 말고 한글 '액션'으로 서술하세요.
+
+[필수 작성 규칙]
+1. '익숙한 환경'이라는 부정확한 표현은 절대 사용하지 마세요. (과거 이력을 언급할 때는 '익숙한 분야'라고 표현하고, 활동 환경은 사용자가 이번 대화에서 선택한 실내/야외 등 환경 선호와 액션의 특성을 자연스럽게 연결하세요.)
+2. 사용자가 이번 대화에서 선택한 활동 환경(실내/야외), 관심 분야, 모임 규모, 재능 활용 등의 구체적 매칭 이유를 1~2문장의 따뜻한 문장으로 설명하세요.
+
 반드시 JSON 형식으로만 답하세요:
 {"reasons": {"actionId1": "추천 이유 1", "actionId2": "추천 이유 2", ...}}`,
       temperature: 0.3,

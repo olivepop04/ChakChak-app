@@ -239,6 +239,12 @@ export const ALL_15_SKILLS = [
 ] as const;
 
 /**
+ * 재능 질문 시 들어올 수 있는 단순 응원이나 잡담/비재능 표현
+ */
+export const CHEERING_OR_CASUAL_REGEX =
+  /^(파이팅|화이팅|힘내|힘내요|힘내세요|응원|응원해요|응원합니다|안녕|안녕하세요|반가워|반가워요|반갑습니다|ㅋㅋㅋ+|ㅎㅎ+|헤헤|글쎄|글쎄요|몰라|몰라요|아무거나|그냥|네|아니오|좋아|좋아요|응|ㅇㅇ)$/;
+
+/**
  * 재능 직접 입력 시 폭력적/비윤리적/범죄적 내용 검증 가드레일
  */
 export function validateHarmfulSkillInput(text: string): {
@@ -436,7 +442,7 @@ export function getQuestionOptions(
     if (hasRegionAndTime) {
       return ['네, 이 조건으로 찾을게요 👍', '이번엔 다른 조건으로 찾을래요 🔄'];
     }
-    return ['활동할 지역 1곳 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'];
+    return ['활동할 지역 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'];
   }
 
   // 1순위: 관심 분야 (과거 활동 이력 질문 vs 전체 카테고리)
@@ -493,7 +499,7 @@ export function getQuestionOptions(
   const options: Record<string, readonly string[]> = {
     opening: hasRegionAndTime
       ? ['네, 이 조건으로 찾을게요 👍', '이번엔 다른 조건으로 찾을래요 🔄']
-      : ['활동할 지역 1곳 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'],
+      : ['활동할 지역 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'],
     target_groups: [
       '교류·교육·소통형',
       '육체·과업·집중형',
@@ -535,7 +541,7 @@ export function getQuestionOptions(
       '상관없음',
     ],
     travel_range: [
-      '활동할 지역 1곳 선택하기 📍',
+      '활동할 지역 선택하기 📍',
       '지역 상관없이 전국 액션 볼래요 🌏',
     ],
     time_pref: [
@@ -588,7 +594,7 @@ export function getQuestionReply(
         `안녕하세요, ${nickname}님! 😊`,
         `${nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 기본 조건을 확인해 봤어요.`,
         '',
-        `📍 활동 지역 : ${profileRegion} (집 근처)`,
+        `📍 활동 지역 : ${profileRegion}`,
         `⏰ 선호 시간 : ${profileTimesSummary}`,
         '',
         '이 조건 그대로 액션을 찾아드릴까요?',
@@ -723,8 +729,12 @@ export function getQuestionReply(
 
   // 4순위: 활동 환경 (activity_types / activity_type)
   if (key === 'activity_types' || key === 'activity_type') {
+    const skillLead =
+      answers.selectedSkill && answers.selectedSkill !== 'profile'
+        ? `${answers.selectedSkill} 재능을 살릴 수 있는 활동을 함께 찾아볼게요! ✨\n`
+        : '';
     return [
-      '어떤 환경에서 활동하고 싶으세요?',
+      `${skillLead}어떤 환경에서 활동하고 싶으세요?`,
       '날씨 걱정 없는 실내 활동이 좋으신가요, 활기찬 야외 활동이 끌리시나요?',
     ].join('\n');
   }
@@ -1006,7 +1016,7 @@ export function extractAnswersFromDialogue(
       }
 
       // 0-1. 이동 범위 / 지역 질문에 대한 답변
-      if (/어느 지역|활동 장소|지역에서 활동|이동 범위|거리|집 근처/.test(q)) {
+      if (/어느 지역|활동 장소|지역에서 활동|이동 범위|거리/.test(q)) {
         if (/상관없|전국|어디든/.test(a)) {
           answers.travelRange = 'any';
         } else {
@@ -1016,15 +1026,38 @@ export function extractAnswersFromDialogue(
         }
       }
 
-      // 0-2. 시간대 질문에 대한 답변
+      // 0-2. 시간대 질문에 대한 답변 (복수 선택 지원)
       if (/언제 참여|시간|주말|평일|오전|오후|저녁|낮/.test(q)) {
-        if (/상관없/.test(a)) answers.timePreference = 'any';
-        else if (/주말 오전/.test(a)) answers.timePreference = 'weekend_morning';
-        else if (/주말 오후/.test(a)) answers.timePreference = 'weekend_afternoon';
-        else if (/평일 낮/.test(a)) answers.timePreference = 'weekday_day';
-        else if (/평일 저녁/.test(a)) answers.timePreference = 'weekday_evening';
-        else if (/주말/.test(a)) answers.timePreference = 'weekend';
-        else if (/평일/.test(a)) answers.timePreference = 'weekday';
+        const timePrefsSet = new Set<string>();
+        if (/상관없/.test(a)) {
+          answers.timePreference = 'any';
+          timePrefsSet.add('시간 상관없음');
+        }
+        if (/주말 오전/.test(a)) {
+          answers.timePreference = 'weekend_morning';
+          timePrefsSet.add('주말 오전');
+        }
+        if (/주말 오후/.test(a)) {
+          answers.timePreference = 'weekend_afternoon';
+          timePrefsSet.add('주말 오후');
+        }
+        if (/평일 낮/.test(a)) {
+          answers.timePreference = 'weekday_day';
+          timePrefsSet.add('평일 낮');
+        }
+        if (/평일 저녁/.test(a)) {
+          answers.timePreference = 'weekday_evening';
+          timePrefsSet.add('평일 저녁');
+        }
+        if (/주말/.test(a) && !/주말 오전|주말 오후/.test(a)) {
+          answers.timePreference = 'weekend';
+        }
+        if (/평일/.test(a) && !/평일 낮|평일 저녁/.test(a)) {
+          answers.timePreference = 'weekday';
+        }
+        if (timePrefsSet.size > 0) {
+          answers.timePreferences = Array.from(timePrefsSet);
+        }
       }
 
       // 1. 모임 규모 질문에 대한 답변 (5순위)
@@ -1107,7 +1140,12 @@ export function extractAnswersFromDialogue(
             answers.selectedSkills = matchedSkills;
             answers.talentPreference = 'use';
           }
-          if (matchedSkills.length === 0 && a.trim() && !/기타/.test(a)) {
+          if (
+            matchedSkills.length === 0 &&
+            a.trim() &&
+            !/기타/.test(a) &&
+            !CHEERING_OR_CASUAL_REGEX.test(a.trim())
+          ) {
             const harmful = validateHarmfulSkillInput(a);
             if (!harmful.isHarmful) {
               answers.selectedSkill = a.trim();

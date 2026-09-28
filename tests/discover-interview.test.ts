@@ -469,7 +469,7 @@ test('0순위 오프닝은 프로필 등록 여부에 따라 케이스 A/B 멘�
 
   const optionsB = getQuestionOptions('opening', [], 'A', false);
   assert.deepEqual(optionsB, [
-    '활동할 지역 1곳 선택하기 📍',
+    '활동할 지역 선택하기 📍',
     '지역 상관없이 전국 액션 볼래요 🌏',
   ]);
 });
@@ -567,7 +567,7 @@ test('[피드백 2] 오프닝에서 다른 조건으로 찾을래요 선택 시 
   // 지역 질문 시 카테고리가 아니라 지역 선택지가 제공됨
   const regionOptions = getQuestionOptions('travel_range');
   assert.deepEqual(regionOptions, [
-    '활동할 지역 1곳 선택하기 📍',
+    '활동할 지역 선택하기 📍',
     '지역 상관없이 전국 액션 볼래요 🌏',
   ]);
 
@@ -668,5 +668,42 @@ test('[지역 선택 버그 수정 검증] 시군구 선택 및 지역명이 대
   assert.equal(remainingAfterTime.includes('time_pref'), false);
   assert.equal(remainingAfterTime[0], 'field_preference');
 });
+
+test('오프닝 멘트에 (집 근처) 문구가 포함되지 않는다', () => {
+  const reply = getQuestionReply('opening', {
+    nickname: '데모',
+    answers: {},
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '서울특별시 성동구',
+    profileTimesSummary: '주말 오후, 평일 저녁',
+    hasRegionAndTime: true,
+  });
+  assert.equal(reply.includes('(집 근처)'), false);
+  assert.equal(reply.includes('📍 활동 지역 : 서울특별시 성동구'), true);
+});
+
+test('파이팅 등 단순 응원/비재능 입력은 재능으로 저장되지 않는다', () => {
+  const messages = [
+    { role: 'assistant' as const, content: '어떤 재능을 활용하고 싶으신가요?' },
+    { role: 'user' as const, content: '파이팅' },
+  ];
+  const answers = extractAnswersFromDialogue(messages);
+  assert.equal(answers.selectedSkill, undefined);
+  assert.equal(answers.selectedSkills, undefined);
+});
+
+test('시간대 복수 선택(주말 오후, 평일 저녁) 시 모든 시간대가 timePreferences 배열로 추출된다', () => {
+  const messages = [
+    { role: 'assistant' as const, content: '보통 언제 참여하기 편하신가요? (복수 선택 가능)' },
+    { role: 'user' as const, content: '주말 오후, 평일 저녁' },
+  ];
+  const answers = extractAnswersFromDialogue(messages);
+  assert.deepEqual(answers.timePreferences, ['주말 오후', '평일 저녁']);
+  assert.equal(answers.timePreference, 'weekday_evening');
+});
+
 
 
