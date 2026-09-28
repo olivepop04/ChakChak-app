@@ -258,7 +258,7 @@ export function DiscoverChat({
             AI가 골라드려요
           </h2>
           <p className="mt-1 text-label leading-relaxed text-neutral-500">
-            5가지 질문에 답하면, 추천 이유와 함께 보여드려요.
+            몇 가지 질문에 답하면, 추천 이유와 함께 보여드려요.
           </p>
         </div>
 
@@ -349,7 +349,7 @@ export function DiscoverChat({
       {/* 인트로 제목 + 숫자 칩 5개 — 답함=초록 채움 · 지금=초록 테두리 · 남음=회색 (2026-09-27 목업 확정) */}
       <div className="flex flex-col gap-3 border-b border-neutral-100 pb-5">
         <h2 className="font-paperlogy text-body font-medium leading-relaxed text-neutral-900">
-          {nickname}님에게 딱 맞는 액션, 5가지만 물어볼게요
+          {nickname}님에게 맞는 액션을 찾기 위해 몇 가지만 물어볼게요
         </h2>
         <div className="flex items-center gap-1.5">
           {Array.from({ length: QUESTION_COUNT }, (_, i) => i + 1).map((n) => {

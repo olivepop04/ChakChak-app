@@ -315,10 +315,43 @@ export function rankActions(
     .slice(0, take);
 }
 
-/** AI 가 실패했을 때 쓰는 기본 추천 이유 */
+/** AI 가 실패하거나 기본 문구가 필요할 때 쓰는 다정한 맞춤 추천 이유 */
 export function fallbackReason(scored: ScoredAction): string {
-  if (scored.matched.length === 0) {
-    return `${scored.action.category} 분야의 액션이에요.`;
+  const matched = scored.matched;
+  if (!matched || matched.length === 0) {
+    return `${scored.action.category} 분야에서 보람 있게 참여할 수 있는 액션이에요.`;
   }
-  return `${scored.matched.slice(0, 2).join(' · ')} 조건에 맞아요.`;
+
+  const skill = matched.find((m) => m.includes('재능 활용'));
+  const vibe = matched.find((m) => m.includes('교류·소통형') || m.includes('과업·집중형'));
+  const env = matched.find((m) => m.includes('실내') || m.includes('야외'));
+  const category = matched.find((m) => m.includes('분야'));
+  const region = matched.find((m) => m.includes('지역'));
+
+  const skillName = skill ? skill.replace(' 재능 활용', '') : null;
+  const rawCat = category
+    ? category.replace(/관심 분야\(|\)| 익숙한 분야| 새로운 분야/g, '')
+    : scored.action.category;
+  const catName = rawCat || scored.action.category;
+
+  if (skillName && vibe) {
+    return `선택하신 ${catName} 분야에서 ${skillName} 재능을 살릴 수 있는 ${vibe}이에요.`;
+  }
+  if (skillName) {
+    return `선택하신 ${catName} 분야에서 ${skillName} 재능을 나누며 함께할 수 있는 액션이에요.`;
+  }
+  if (vibe && env) {
+    return `선택하신 ${catName} 분야에서 ${env}로 진행되는 따뜻한 ${vibe}이에요.`;
+  }
+  if (vibe) {
+    return `선택하신 ${catName} 분야의 성격에 부합하는 ${vibe}이에요.`;
+  }
+  if (region && env) {
+    return `${region}에서 ${env}로 ${catName} 분야의 나눔에 참여할 수 있는 액션이에요.`;
+  }
+  if (region) {
+    return `참여하기 좋은 ${region}에서 ${catName} 분야의 뜻깊은 활동을 시작할 수 있는 액션이에요.`;
+  }
+
+  return `${matched.slice(0, 3).join(' · ')} 조건에 잘 어울리는 맞춤 액션이에요.`;
 }

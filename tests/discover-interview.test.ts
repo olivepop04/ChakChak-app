@@ -16,6 +16,8 @@ import {
   ALL_15_SKILLS,
 } from '../app/api/ai/discover/interview.ts';
 import { SKILLS } from '../lib/constants/index.ts';
+import { fallbackReason, type ScoredAction } from '../lib/utils/scoring.ts';
+import type { ActionCardData } from '../lib/types/view.ts';
 
 test('Discover 재능 선택지는 사전 정의된 16개 버튼만 정확히 제공하며 불필요한 버튼은 포함하지 않는다', () => {
   const options = getQuestionOptions('skills', SKILLS);
@@ -918,6 +920,36 @@ test('[재능 선택 멘트 검증] 16종 목록 제공 시 아래 선택지 표
 
   assert.equal(reply.includes('지수님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요.'), true);
   assert.equal(reply.includes('위 16종'), false);
+});
+
+test('[추천 이유 폴백 검증] fallbackReason이 건조한 나열이 아닌 자연스럽고 따뜻한 문장을 생성한다', () => {
+  const mockScored: ScoredAction = {
+    action: {
+      id: 'act-1',
+      title: '시니어 컴퓨터 교실 보조',
+      category: '교육',
+      categories: ['교육'],
+      address: '서울특별시 구로구',
+      owner: { id: 'host-1', nickname: '호스트' },
+    } as unknown as ActionCardData,
+    score: 85,
+    matched: [
+      '관심 분야(교육)',
+      '가까운 지역',
+      '교육·멘토링 재능 활용',
+      '교류·소통형 활동',
+    ],
+  };
+
+  const reason = fallbackReason(mockScored);
+  assert.equal(reason.includes('선택하신 교육 분야에서 교육·멘토링 재능을 살릴 수 있는 교류·소통형 활동이에요.'), true);
+  assert.equal(reason.includes('조건에 맞아요.'), false);
+});
+
+test('[프로필 재능 그대로 활용 선택 검증] 그대로 살릴/그대로 활용 답변 시 profile 재능으로 파싱된다', () => {
+  const answers = extractAdaptiveAnswers(['프로필 재능 그대로 활용 👍']);
+  assert.equal(answers.selectedSkill, 'profile');
+  assert.equal(answers.talentPreference, 'use');
 });
 
 

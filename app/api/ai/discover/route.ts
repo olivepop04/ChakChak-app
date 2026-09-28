@@ -372,6 +372,16 @@ export async function POST(request: Request) {
     ...extractAdaptiveAnswers(userAnswers),
     ...extractAnswersFromDialogue(messages),
   };
+  if (
+    (adaptiveAnswers.selectedSkill === 'profile' || adaptiveAnswers.talentPreference === 'use') &&
+    profile.skills &&
+    profile.skills.length > 0 &&
+    (!adaptiveAnswers.selectedSkills || adaptiveAnswers.selectedSkills.length === 0)
+  ) {
+    adaptiveAnswers.selectedSkills = profile.skills;
+    adaptiveAnswers.selectedSkill = 'profile';
+    adaptiveAnswers.talentPreference = 'use';
+  }
   const inferredSkills = extractSkillsAnswer(messages);
   const effectiveSkills = inferredSkills ?? profile.skills;
   const selectedSkills =
@@ -511,18 +521,31 @@ export async function POST(request: Request) {
   }
 
   // 2. 재능 질문 맥락에서의 입력 검증 (가드레일 & 기타 선택)
-  // 재능 질문 맥락은 '직전 어시스턴트 질문이 재능에 대한 질문'이었고, '이번 턴에서 재능 질문 단계가 유효할 때'만 해당함
+  // 재능 질문 맥락은 '직전 어시스턴트 질문이 실제로 재능에 대한 질문'이었고, '이번 턴에서 재능 질문 단계가 유효할 때'만 해당함
   const assistantMessages = messages.filter((m) => m.role === 'assistant');
   const lastAssistantMsg = assistantMessages[assistantMessages.length - 1]?.content ?? '';
+
+  // 직전 어시스턴트 질문이 다른 축(환경, 모임 규모, 성격, 난이도 등)을 묻는 질문이었는지 판별
+  const isOtherQuestionAsked =
+    /어떤 환경|실내.*실외|실외.*실내|날씨.*걱정|실내 활동|야외 활동|모임 규모|인원 규모|소규모|대규모|소그룹|중그룹|대그룹|어떤 분위기|도란도란|소통하고|땀 흘리|과업|난이도|어떤 스타일을 원하세요|어느 지역|선호 시간/.test(lastAssistantMsg);
+
+  // 이번 턴 이전의 답변들만 분석하여, 이미 재능 질문이 완료되었는지 확인
+  const priorUserAnswers = userAnswers.slice(0, -1);
+  const priorAdaptive = extractAdaptiveAnswers(priorUserAnswers);
+  const skillAlreadyDecided =
+    Boolean(priorAdaptive.selectedSkills && priorAdaptive.selectedSkills.length > 0) ||
+    priorAdaptive.selectedSkill === 'profile' ||
+    priorAdaptive.talentPreference === 'any';
+
   const lastAssistantAskedSkill =
-    /어떤 재능|새로운 재능|재능을 살릴|재능으로 찾아|재능을 활용|재능을 나누|16종 선택지|나눌 수 있는 재능/.test(lastAssistantMsg) &&
-    !/난이도|어떤 스타일을 원하세요/.test(lastAssistantMsg);
+    !isOtherQuestionAsked &&
+    !skillAlreadyDecided &&
+    /어떤 재능|새로운 재능|활용할 수 있는 재능|나눌 수 있는 재능|프로필에.*재능이 있다고 알려주셨는데|재능을 살릴 수 있는 액션을 찾아볼까요|아래 선택지에서 골라주세요/.test(lastAssistantMsg);
 
-  const isSkillEligible =
-    adaptiveAnswers.difficultyPreference === 'expert' ||
-    remainingQuestionKeys.includes('skills');
-
-  const isSkillContext = isSkillEligible && lastAssistantAskedSkill;
+  const isSkillContext =
+    lastAssistantAskedSkill &&
+    !skillAlreadyDecided &&
+    (adaptiveAnswers.difficultyPreference === 'expert' || remainingQuestionKeys.includes('skills'));
 
   if (isSkillContext && lastUserMsg) {
     const harmfulCheck = validateHarmfulSkillInput(lastUserMsg);
@@ -542,8 +565,27 @@ export async function POST(request: Request) {
       });
     }
 
+    const isProfileConfirm = /그대로 살릴|그대로 활용|프로필 재능|기존 재능/.test(lastUserMsg);
+    const isNewSkillRequest = /새로운 재능|다른 재능|새 재능/.test(lastUserMsg);
+    const isSkipSkill = /특별한 재능 없이|재능.*상관|부담 없이|상관없음/.test(lastUserMsg);
     const isKnownSkill = ALL_15_SKILLS.some((s) => lastUserMsg.includes(s));
-    if (!isKnownSkill) {
+
+    if (isProfileConfirm) {
+      // 프로필 재능 그대로 활용 확정 ➔ 재능 바인딩 후 다음 질문으로 정상 진행
+      adaptiveAnswers.selectedSkill = 'profile';
+      adaptiveAnswers.selectedSkills = profile.skills ?? [];
+      adaptiveAnswers.talentPreference = 'use';
+    } else if (isNewSkillRequest) {
+      // 새로운 재능 선택 요청 ➔ 16종 선택지 노출
+      return NextResponse.json({
+        done: false,
+        reply: `새로운 재능을 펼치고 싶으시군요! 멋져요 ✨\n${profile.nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요!`,
+        options: [...ALL_15_SKILLS, '기타'],
+        questionKey: 'skills',
+        answeredCount: userTurnCount,
+        maxQuestions: MAX_USER_TURNS,
+      });
+    } else if (!isKnownSkill && !isSkipSkill) {
       const isCheering = /파이팅|화이팅|힘내|응원/.test(lastUserMsg);
       const promptLead = isCheering
         ? `'${lastUserMsg.trim()}' 응원 말씀 정말 감사해요! 힘이 팍팍 나네요! 💪😊`
@@ -551,12 +593,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         done: false,
         reply: `${promptLead}\n이번 액션에서 ${profile.nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요! 특정 재능에 상관없이 참여하고 싶으시다면 '기타'를 선택해주시면 됩니다.`,
-        options: getQuestionOptions('skills', SKILLS, userContext.state, userContext.hasRegionAndTime, {
-          hasHistory,
-          hasRegionAndTime: userContext.hasRegionAndTime,
-          answers: adaptiveAnswers,
-          profileSkills: profile.skills ?? [],
-        }),
+        options: [...ALL_15_SKILLS, '기타'],
         questionKey: 'skills',
         answeredCount: userTurnCount,
         maxQuestions: MAX_USER_TURNS,
@@ -929,20 +966,21 @@ export async function POST(request: Request) {
       agent: 'DISCOVER',
       promptVersion: RECOMMEND_PROMPT_VERSION,
       system: `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트입니다.
-선정된 각 액션에 대해 사용자의 성향과 대화 내용을 바탕으로 왜 이 액션이 사용자에게 꼭 맞는지 1~2문장의 다정하고 구체적인 추천 이유를 작성하세요.
+선정된 각 액션에 대해 사용자의 성향과 대화 내용을 바탕으로 왜 이 액션이 사용자에게 꼭 맞는지 1~2문장의 다정하고 구체적인 추천 이유(reason)를 작성하세요.
 영어 'Action'이나 '봉사/봉사활동/수혜자' 단어를 절대 쓰지 말고 한글 '액션'으로 서술하세요.
 
 [필수 작성 규칙 및 사실 검증 원칙 - 절대 위반 금지]
-1. [일정 및 시간대 날조(할루시네이션) 엄격 금지]:
+1. [대화 맥락 및 매칭 이유 구체적 서술]:
+   - 사용자가 이번 대화에서 선택한 관심 분야, 재능(skills: 예: 요리, 디자인, 교육·멘토링 등), 활동 성격(교류·소통형/과업·집중형), 활동 환경(실내/야외)과 이 액션의 특성을 직접 연결하여 설명하세요.
+   - 예: "선택하신 교육 분야에서 교육·멘토링 재능을 발휘하며 어르신들과 따뜻하게 소통할 수 있는 액션이에요."
+2. [조건 완화(대체 추천) 솔직한 안내]:
+   - 만약 사용자가 희망한 특정 조건(예: 야외 활동 희망)과 달리 추천된 액션이 다른 환경(실내)이거나 조건에 완전히 맞지 않는 경우, 거짓말하지 말고 "원하시던 야외 활동은 아니지만, 선택하신 교육 분야와 교육·멘토링 재능을 나누기에 꼭 맞아 추천해 드려요"처럼 솔직하고 친절하게 설명하세요.
+3. [일정 및 시간대 날조(할루시네이션) 엄격 금지]:
    - 액션의 실제 일정(actualSchedule: 날짜, 요일, 시간대)과 다른 요일이나 시간대를 절대 지어내지 마세요.
-   - 예: 사용자가 '주말'을 희망했더라도, 액션의 실제 일정이 평일(화요일 등)인 경우 '주말에 참여할 수 있어...', '주말 오전이나 오후에...'처럼 거짓된 사실을 지어내어 설명하면 절대 안 됩니다.
-   - 시간대나 요일 언급은 오직 matchedReasons에 시간 매칭('주말 활동', '평일 오후 활동' 등)이 명시적으로 포함되어 있을 때만 하세요. matchedReasons에 시간 관련 항목이 없다면 시간대나 요일(주말, 평일, 오전, 오후 등)에 대해 일절 언급하지 마세요.
-2. [근거 중심 서술]:
-   - 추천 이유는 오직 matchedReasons에 포함된 실제 매칭 근거와 액션의 실제 내용(제목, 활동 내용, 환경)만을 기반으로 작성하세요.
-   - 사용자가 원했지만 이 액션에 매칭되지 않은 조건(예: 사용자는 주말을 원했으나 액션은 화요일인 경우)을 마치 이 액션이 충족하는 것처럼 거짓말하지 마세요.
-3. [표현 규칙]:
-   - '익숙한 환경'이라는 부정확한 표현은 절대 사용하지 마세요. (과거 이력을 언급할 때는 '익숙한 분야'라고 표현하고, 활동 환경은 사용자가 이번 대화에서 선택한 실내/야외 등 환경 선호와 액션의 특성을 자연스럽게 연결하세요.)
-   - 사용자가 이번 대화에서 선택한 활동 환경(실내/야외), 관심 분야, 모임 규모, 재능 활용 등의 구체적 매칭 이유를 1~2문장의 따뜻한 문장으로 설명하세요.
+   - 액션의 실제 일정이 평일인 경우 "주말에 참여할 수 있어...", "주말 오전이나 오후에..."처럼 거짓된 일정을 지어내어 설명하면 절대 안 됩니다.
+   - 일정이 정해져 있다면 actualSchedule에 맞는 요일(예: 10월 5일 월요일)은 정확하게 안내해도 좋습니다. 단, 주말 액션을 평일로, 평일 액션을 주말로 속이지 마세요.
+4. [표현 규칙]:
+   - '익숙한 환경'이라는 부정확한 표현은 절대 사용하지 마세요. (과거 이력을 언급할 때는 '익숙한 분야'라고 표현하세요.)
 
 반드시 JSON 형식으로만 답하세요:
 {"reasons": {"actionId1": "추천 이유 1", "actionId2": "추천 이유 2", ...}}`,
@@ -951,6 +989,13 @@ export async function POST(request: Request) {
         사용자답변: messages.filter((m) => m.role === 'user'),
         사용자닉네임: profile.nickname,
         선정된액션목록: candidateSummaries,
+        사용자선택조건: {
+          관심분야: scoringAnswers.categories ?? [scoringAnswers.category],
+          선택재능: scoringAnswers.selectedSkills,
+          활동성격: scoringAnswers.targetGroupPreference,
+          활동환경: scoringAnswers.activityTypePreference,
+          모임규모: scoringAnswers.groupSizePreference,
+        },
       }),
       schema: z.object({
         reasons: z.record(z.string(), z.string()).catch({}).default({}),
@@ -966,19 +1011,18 @@ export async function POST(request: Request) {
   const topItems = codeRanked.map((item) => {
     let reason = reasonsMap[item.action.id]?.trim();
     if (reason) {
-      const hasTimeMatch = item.matched.some(
-        (m) => m.includes('활동') && (m.includes('오전') || m.includes('오후') || m.includes('저녁') || m.includes('주말') || m.includes('평일')),
-      );
-      // matched에 시간 매칭이 전혀 없는데 요일/시간대를 지어낸 경우 안전하게 fallback 처리
-      if (!hasTimeMatch && (reason.includes('주말') || reason.includes('평일') || reason.includes('오전') || reason.includes('오후') || reason.includes('저녁') || /월요일|화요일|수요일|목요일|금요일|토요일|일요일/.test(reason))) {
-        reason = fallbackReason(item);
-      } else if (item.action.activityStartAt) {
+      if (item.action.activityStartAt) {
         const isWk = isWeekend(item.action.activityStartAt);
         // 평일 액션인데 주말을 지어낸 경우
         if (!isWk && (reason.includes('주말') || reason.includes('토요일') || reason.includes('일요일'))) {
           reason = fallbackReason(item);
         } else if (isWk && (reason.includes('평일') || /월요일|화요일|수요일|목요일|금요일/.test(reason))) {
           // 주말 액션인데 평일을 지어낸 경우
+          reason = fallbackReason(item);
+        }
+      } else {
+        // 일정이 미정인 액션인데 특정 요일/주말을 지어낸 경우
+        if (reason.includes('주말') || reason.includes('평일') || /월요일|화요일|수요일|목요일|금요일|토요일|일요일/.test(reason)) {
           reason = fallbackReason(item);
         }
       }
