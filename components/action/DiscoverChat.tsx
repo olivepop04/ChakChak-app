@@ -591,7 +591,7 @@ export function DiscoverChat({
                   비슷한 조건까지 찾아봤어요
                 </p>
                 <p className="mt-0.5 text-label leading-relaxed text-warning-ink">
-                  {relaxation[0] || '딱 맞는 액션이 많지 않아, 가장 가까운 것부터 보여드려요.'}
+                  {relaxation.join(' ') || '딱 맞는 액션이 많지 않아, 가장 가까운 것부터 보여드려요.'}
                 </p>
               </div>
             </div>

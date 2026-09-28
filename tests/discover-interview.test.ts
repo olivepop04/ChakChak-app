@@ -742,6 +742,58 @@ test('사람 놀리기 같은 비재능/부적절 텍스트는 재능으로 추�
   assert.equal(answers.selectedSkills, undefined);
 });
 
+test('재능 복수 선택 시 알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요 안내 멘트가 출력된다', () => {
+  const messages = [
+    { role: 'assistant' as const, content: '어떤 재능을 활용하고 싶으신가요?' },
+    { role: 'user' as const, content: '운전, 청소·정리, 수리·시공' },
+  ];
+  const answers = extractAnswersFromDialogue(messages);
+  assert.deepEqual(answers.selectedSkills, ['운전', '청소·정리', '수리·시공']);
+
+  const nextReply = getQuestionReply('activity_type', {
+    nickname: '민우',
+    answers,
+    profileSkills: [],
+    selectedSkills: ['운전', '청소·정리', '수리·시공'],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '서울특별시 마포구',
+    profileTimesSummary: '주말 오후',
+    hasRegionAndTime: true,
+  });
+  assert.equal(
+    nextReply.includes('알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨'),
+    true,
+  );
+  // 특정 하나만 임의로 대표 지정하여 출력하지 않는다
+  assert.equal(nextReply.includes('운전 재능을 살릴 수 있는'), false);
+});
+
+test('재능 단일 선택 시에도 알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요 안내 멘트가 출력된다', () => {
+  const messages = [
+    { role: 'assistant' as const, content: '어떤 재능을 활용하고 싶으신가요?' },
+    { role: 'user' as const, content: '요리' },
+  ];
+  const answers = extractAnswersFromDialogue(messages);
+  assert.deepEqual(answers.selectedSkills, ['요리']);
+
+  const nextReply = getQuestionReply('activity_type', {
+    nickname: '민우',
+    answers,
+    profileSkills: [],
+    selectedSkills: ['요리'],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '서울특별시 마포구',
+    profileTimesSummary: '주말 오후',
+    hasRegionAndTime: true,
+  });
+  assert.equal(
+    nextReply.includes('알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨'),
+    true,
+  );
+});
+
 
 
 

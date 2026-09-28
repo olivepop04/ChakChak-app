@@ -49,9 +49,10 @@ import {
 } from '@/app/api/ai/discover/interview';
 import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
+import { formatDate, formatTime, isWeekend } from '@/lib/utils/date';
 
 const CHAT_PROMPT_VERSION = 'discover-v3-zero-assumption';
-const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v3-reason-desc';
+const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v4-anti-hallucination';
 const MAX_USER_TURNS = 15;
 const PARTICIPATION_MODES = [
   '시간을 내서',
@@ -153,7 +154,7 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
      - 프로필 재능이 없거나 다른 재능 선택 시: 사전 정의된 16종 재능 목록(15종 + 기타) 제공. (기타 입력 시 부적절한 내용은 재작성 유도)
 
 4. 활동 환경 (activity_types):
-   - 멘트: "어떤 환경에서 활동하고 싶으세요?"
+   - 멘트: 직전에 사용자가 재능을 선택한 경우 "알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨"를 앞머리에 붙이고, "어떤 환경에서 활동하고 싶으세요?"라고 질문하세요. (재능 중 하나만 임의로 골라 대표로 지정하지 마세요)
    - options: ["실내 활동", "실외 활동", "실내외 병행", "상관없음"]
 
 5. 모임 규모 (participation_modes) 및 추천 전환:
@@ -800,10 +801,53 @@ export async function POST(request: Request) {
     3,
   );
 
+  // 조건 완화(Relaxation) 안내 검사: 사용자가 선택한 핵심 조건에 부합하는 액션이 top 3에 없는 경우 안내
+  if (scoringAnswers.targetGroupPreference === 'task') {
+    const hasTask = codeRanked.some((it) => it.matched.includes('과업·집중형 활동'));
+    if (!hasTask) {
+      relaxation.push('선택하신 활동 성격(육체·과업·집중형)에 딱 맞는 액션이 많지 않아, 조건을 넓혀 가장 가까운 액션으로 추천해 드렸어요.');
+    }
+  } else if (scoringAnswers.targetGroupPreference === 'social') {
+    const hasSocial = codeRanked.some((it) => it.matched.includes('교류·소통형 활동'));
+    if (!hasSocial) {
+      relaxation.push('선택하신 활동 성격(교류·교육·소통형)에 딱 맞는 액션이 많지 않아, 조건을 넓혀 가장 가까운 액션으로 추천해 드렸어요.');
+    }
+  }
+
+  const userRequestedSpecificSkills =
+    scoringAnswers.selectedSkills &&
+    scoringAnswers.selectedSkills.length > 0 &&
+    !scoringAnswers.selectedSkills.includes('기타');
+  if (userRequestedSpecificSkills) {
+    const hasSkillMatch = codeRanked.some((it) =>
+      it.matched.some((m) => m.includes('재능 활용')),
+    );
+    if (!hasSkillMatch) {
+      relaxation.push('선택하신 재능에 딱 맞는 액션이 많지 않아, 참여 가능한 가장 가까운 액션으로 추천해 드렸어요.');
+    }
+  }
+
+  if (scoringAnswers.activityTypePreference === 'outdoor') {
+    const hasOutdoor = codeRanked.some((it) => it.matched.includes('야외 활동') || it.matched.includes('실내외 병행 활동'));
+    if (!hasOutdoor) {
+      relaxation.push('선택하신 야외 활동 조건에 딱 맞는 액션이 많지 않아, 조건을 넓혀 추천해 드렸어요.');
+    }
+  } else if (scoringAnswers.activityTypePreference === 'indoor') {
+    const hasIndoor = codeRanked.some((it) => it.matched.includes('실내 활동') || it.matched.includes('실내외 병행 활동'));
+    if (!hasIndoor) {
+      relaxation.push('선택하신 실내 활동 조건에 딱 맞는 액션이 많지 않아, 조건을 넓혀 추천해 드렸어요.');
+    }
+  }
+
+  const uniqueRelaxation = Array.from(new Set(relaxation));
+
   // 2) 선정된 Top 3 후보에 대해 AI가 개인화 맞춤 추천 이유(reason) 서술
   const candidateSummaries = codeRanked.map((item) => {
     const action = item.action;
     const meta = metasById.get(action.id);
+    const scheduleStr = action.activityStartAt
+      ? `${formatDate(action.activityStartAt)} ${formatTime(action.activityStartAt)} (${isWeekend(action.activityStartAt) ? '주말' : '평일'})`
+      : '일정 미정';
     return {
       actionId: action.id,
       title: action.title,
@@ -815,6 +859,7 @@ export async function POST(request: Request) {
       skills: meta?.skills ?? [],
       keywords: meta?.keywords ?? [],
       difficulty: meta?.difficulty ?? null,
+      actualSchedule: scheduleStr,
       matchedReasons: item.matched,
     };
   });
@@ -829,9 +874,17 @@ export async function POST(request: Request) {
 선정된 각 액션에 대해 사용자의 성향과 대화 내용을 바탕으로 왜 이 액션이 사용자에게 꼭 맞는지 1~2문장의 다정하고 구체적인 추천 이유를 작성하세요.
 영어 'Action'이나 '봉사/봉사활동/수혜자' 단어를 절대 쓰지 말고 한글 '액션'으로 서술하세요.
 
-[필수 작성 규칙]
-1. '익숙한 환경'이라는 부정확한 표현은 절대 사용하지 마세요. (과거 이력을 언급할 때는 '익숙한 분야'라고 표현하고, 활동 환경은 사용자가 이번 대화에서 선택한 실내/야외 등 환경 선호와 액션의 특성을 자연스럽게 연결하세요.)
-2. 사용자가 이번 대화에서 선택한 활동 환경(실내/야외), 관심 분야, 모임 규모, 재능 활용 등의 구체적 매칭 이유를 1~2문장의 따뜻한 문장으로 설명하세요.
+[필수 작성 규칙 및 사실 검증 원칙 - 절대 위반 금지]
+1. [일정 및 시간대 날조(할루시네이션) 엄격 금지]:
+   - 액션의 실제 일정(actualSchedule: 날짜, 요일, 시간대)과 다른 요일이나 시간대를 절대 지어내지 마세요.
+   - 예: 사용자가 '주말'을 희망했더라도, 액션의 실제 일정이 평일(화요일 등)인 경우 '주말에 참여할 수 있어...', '주말 오전이나 오후에...'처럼 거짓된 사실을 지어내어 설명하면 절대 안 됩니다.
+   - 시간대나 요일 언급은 오직 matchedReasons에 시간 매칭('주말 활동', '평일 오후 활동' 등)이 명시적으로 포함되어 있을 때만 하세요. matchedReasons에 시간 관련 항목이 없다면 시간대나 요일(주말, 평일, 오전, 오후 등)에 대해 일절 언급하지 마세요.
+2. [근거 중심 서술]:
+   - 추천 이유는 오직 matchedReasons에 포함된 실제 매칭 근거와 액션의 실제 내용(제목, 활동 내용, 환경)만을 기반으로 작성하세요.
+   - 사용자가 원했지만 이 액션에 매칭되지 않은 조건(예: 사용자는 주말을 원했으나 액션은 화요일인 경우)을 마치 이 액션이 충족하는 것처럼 거짓말하지 마세요.
+3. [표현 규칙]:
+   - '익숙한 환경'이라는 부정확한 표현은 절대 사용하지 마세요. (과거 이력을 언급할 때는 '익숙한 분야'라고 표현하고, 활동 환경은 사용자가 이번 대화에서 선택한 실내/야외 등 환경 선호와 액션의 특성을 자연스럽게 연결하세요.)
+   - 사용자가 이번 대화에서 선택한 활동 환경(실내/야외), 관심 분야, 모임 규모, 재능 활용 등의 구체적 매칭 이유를 1~2문장의 따뜻한 문장으로 설명하세요.
 
 반드시 JSON 형식으로만 답하세요:
 {"reasons": {"actionId1": "추천 이유 1", "actionId2": "추천 이유 2", ...}}`,
@@ -852,17 +905,36 @@ export async function POST(request: Request) {
     // AI 실패 시 기본 이유(fallbackReason) 사용
   }
 
-  const topItems = codeRanked.map((item) => ({
-    action: item.action,
-    score: item.score,
-    reason: reasonsMap[item.action.id] || fallbackReason(item),
-  }));
+  const topItems = codeRanked.map((item) => {
+    let reason = reasonsMap[item.action.id]?.trim();
+    if (reason && item.action.activityStartAt) {
+      const isWk = isWeekend(item.action.activityStartAt);
+      const hasTimeMatch = item.matched.some(
+        (m) => m.includes('활동') && (m.includes('오전') || m.includes('오후') || m.includes('저녁') || m.includes('주말') || m.includes('평일')),
+      );
+      // 평일 액션인데 주말을 지어낸 경우
+      if (!isWk && (reason.includes('주말') || reason.includes('토요일') || reason.includes('일요일'))) {
+        reason = fallbackReason(item);
+      } else if (isWk && (reason.includes('평일') || /월요일|화요일|수요일|목요일|금요일/.test(reason))) {
+        // 주말 액션인데 평일을 지어낸 경우
+        reason = fallbackReason(item);
+      } else if (!hasTimeMatch && (reason.includes('주말') || reason.includes('평일') || reason.includes('오전') || reason.includes('오후') || reason.includes('저녁'))) {
+        // matched에 시간 매칭이 전혀 없는데 시간대를 지어낸 경우 안전하게 fallback 처리
+        reason = fallbackReason(item);
+      }
+    }
+    return {
+      action: item.action,
+      score: item.score,
+      reason: reason || fallbackReason(item),
+    };
+  });
 
   return NextResponse.json({
     done: true,
     reply: finalReply,
     options: [],
-    relaxation,
+    relaxation: uniqueRelaxation,
     items: topItems,
   });
 }

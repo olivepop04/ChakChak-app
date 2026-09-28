@@ -736,8 +736,11 @@ export function getQuestionReply(
       answers.selectedSkills?.includes('기타')
     ) {
       skillLead = '재능과 상관없이 누구나 편하게 나눔을 시작할 수 있는 액션들을 찾아볼게요! ✨\n';
-    } else if (answers.selectedSkill && answers.selectedSkill !== 'profile') {
-      skillLead = `${answers.selectedSkill} 재능을 살릴 수 있는 활동을 함께 찾아볼게요! ✨\n`;
+    } else if (
+      (answers.selectedSkills && answers.selectedSkills.length > 0) ||
+      (answers.selectedSkill && answers.selectedSkill !== 'profile')
+    ) {
+      skillLead = '알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨\n';
     }
     return [
       `${skillLead}어떤 환경에서 활동하고 싶으세요?`,
