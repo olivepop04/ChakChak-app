@@ -433,7 +433,7 @@ export default async function ActivityPage({
       </div>
 
       {/* 상태 필터 탭 */}
-      <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto border-b border-neutral-100 bg-white px-6 py-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto bg-white px-6 py-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {isCreated
           ? CREATED_FILTERS.map((f) => (
             <Link

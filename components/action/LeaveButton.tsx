@@ -19,6 +19,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CircleX } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { leaveActionWithReason } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
@@ -79,14 +80,20 @@ export function LeaveButton({
       <ReasonModal
         open={open}
         title="참여를 취소할까요?"
-        description="사유는 크루 게시판에 남으며, 참여를 취소하면 게시판에 들어갈 수 없어요."
-        warning="이 내용은 크루에게 공개되며, 한번 보내면 지울 수 없습니다."
+        icon={CircleX}
+        warning={
+          <>
+            사유는 크루 게시판에 공개되고 <b className="font-bold">지울 수 없어요</b>. 나가면
+            게시판에도 들어갈 수 없어요.
+          </>
+        }
         warningTone="warning"
         reason={{
           label: '참여 취소 사유',
-          placeholder: '크루가 상황을 이해할 수 있도록 사유를 적어주세요.',
+          placeholder: '크루가 이해할 수 있게 5자 이상 적어주세요.',
         }}
-        confirmLabel="나가기 진행"
+        confirmLabel="나가기"
+        confirmVariant="muted"
         busy={busy}
         onClose={closeModal}
         onConfirm={handleLeave}

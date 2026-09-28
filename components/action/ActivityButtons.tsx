@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Eraser, CircleX, CircleCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { deleteDraft, cancelAction, endActionEarly } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
@@ -55,8 +56,13 @@ export function DeleteDraftButton({ actionId }: { actionId: string }) {
       <ReasonModal
         open={open}
         title="작성 중인 액션을 삭제할까요?"
-        description="되돌릴 수 없습니다."
-        confirmLabel="삭제 진행"
+        icon={Eraser}
+        description={
+          <span className="text-danger">
+            지금까지 작성한 내용이 모두 사라지고, <b className="font-bold">다시 되돌릴 수 없어요</b>.
+          </span>
+        }
+        confirmLabel="삭제하기"
         confirmVariant="danger"
         busy={busy}
         onClose={() => setOpen(false)}
@@ -96,9 +102,18 @@ export function CancelActionButton({ actionId }: { actionId: string }) {
       <ReasonModal
         open={open}
         title="액션을 취소할까요?"
+        icon={CircleX}
         description="취소 사유는 참여자에게 그대로 전달됩니다."
-        reason={{ label: '취소 사유' }}
-        confirmLabel="취소 진행"
+        warning={
+          <>
+            <b className="font-bold">시작 시각 이후에는 취소할 수 없고</b>, 취소하지 않으면
+            예정대로 진행돼요.
+          </>
+        }
+        warningTone="warning"
+        reason={{ label: '취소 사유', placeholder: '사유를 5자 이상 적어주세요.' }}
+        confirmLabel="취소하기"
+        confirmVariant="muted"
         busy={busy}
         onClose={() => setOpen(false)}
         onConfirm={handle}
@@ -137,9 +152,18 @@ export function EarlyEndButton({ actionId }: { actionId: string }) {
       <ReasonModal
         open={open}
         title="활동을 조기 종료할까요?"
+        icon={CircleCheck}
         description="조기 종료 사유는 크루들에게 그대로 전달됩니다."
-        reason={{ label: '조기 종료 사유' }}
-        confirmLabel="조기 종료 진행"
+        warning={
+          <>
+            악천후·장소 문제·많은 불참처럼 <b className="font-bold">부득이한 사정</b>이 있거나,
+            액션을 <b className="font-bold">일찍 달성했을 때</b> 써주세요.
+          </>
+        }
+        warningTone="warning"
+        reason={{ label: '조기 종료 사유', placeholder: '사유를 5자 이상 적어주세요.' }}
+        confirmLabel="조기종료하기"
+        confirmVariant="muted"
         busy={busy}
         onClose={() => setOpen(false)}
         onConfirm={handle}
