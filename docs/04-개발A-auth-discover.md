@@ -42,8 +42,8 @@ git merge origin/dev        # ← 이 줄을 빼면 안 됩니다
 
 ## 프로필 저장은 준비된 함수로 (2026-09-01 추가)
 
-가입 3단계와 프로필 수정이 지금은 `profiles` 를 직접 고치고 있습니다.
-**아래 함수로 바꿔주세요.** 닉네임 중복·길이 검사가 안에 들어 있습니다.
+가입 3단계와 프로필 수정은 **아래 함수로 저장합니다** (이미 바꿨습니다 — `signup/page.tsx` · `ProfileEditForm.tsx`).
+닉네임 중복·길이 검사가 안에 들어 있습니다.
 
 ```tsx
 const res = await updateProfile(supabase, userId, {
@@ -57,8 +57,8 @@ if (!res.ok) { toast(res.message, 'error'); return; }
 ```
 
 > **왜 직접 고치면 안 되나** — `timePrefs` 를 넘기면 이 함수가 **예전 `available_times` 컬럼도 함께**
-> 채웁니다. 추천 점수(`scoring.ts`)가 아직 옛 컬럼을 보고 있어서, 한쪽만 채우면
-> **추천이 조용히 어긋납니다.** 나중에 `scoring.ts` 를 `time_prefs` 로 옮기면 그때 이 변환을 지웁니다.
+> 채웁니다. 추천 점수(`scoring.ts`)는 `time_prefs` 를 먼저 보고, 그게 빈 옛 회원만 옛 컬럼으로 판정합니다(9/2 부터).
+> 두 값이 어긋나지 않게 **이 함수로만 저장하세요.**
 
 알림 설정(F25)은 이렇게 저장합니다. **끈 것만** 넘기면 됩니다.
 
@@ -114,18 +114,17 @@ await supabase.auth.signUp({
 
 ### ③ Discover는 자유 대화가 아닙니다
 
-**지금은** 정해진 질문 3개(참여 방식 · 분야 · 이동 범위)에 선택지로 답합니다.
+**지금은** AI 가 대화를 이끌며 답을 모읍니다 — 선택지를 누르거나 직접 입력할 수 있습니다 (F36 · 2026-09-28 성은님 개편 병합).
+질문 흐름과 AI 역할은 **[DISCOVER-AI-대화추천-시스템-명세서.md](./DISCOVER-AI-대화추천-시스템-명세서.md)** 에 있습니다.
 
-> ⚠️ 이 부분은 **F36 에서 바뀝니다** — AI 가 대화를 이끄는 방식으로. 아래 "이번 개편에서 할 일" 을 보세요.
-> 다만 **후보 선정을 코드가 한다는 원칙은 그대로 유지**합니다. 자유 대화로 바뀌어도 AI 에게 순위를 맡기지 않습니다.
+> 대화 방식은 바뀌었지만 **후보 선정을 코드가 한다는 원칙은 그대로**입니다. AI 에게 순위를 맡기지 않습니다.
 
 **순위는 AI가 아니라 코드가 정합니다.**
 
-```
-관심 카테고리 30 · 지역 25 · 요일 20 · 참여 방식 15 · 팔로우한 사람 10  = 100
-```
+배점은 `lib/utils/scoring.ts` · `lib/utils/discover-ranking.ts` 의 코드 본문이 원본입니다.
+9/28 개편으로 항목이 늘어 **9/29 모임에서 다시 정합니다** — 이 문서에 숫자를 옮겨 적지 마세요 (여기 있던 「30 · 25 · 20 · 15 · 10」 은 9/3 전 값이었습니다).
 
-AI가 하는 일은 두 가지뿐입니다 — ① 답변을 검색 필터 JSON으로 바꾸기 ② 추천 이유를 문장으로 쓰기. **LLM이 SQL을 만들지 않습니다.**
+AI가 하는 일은 두 가지뿐입니다 — ① 대화로 답을 모으기 ② 추천 이유를 문장으로 쓰기. **LLM이 SQL을 만들지 않고, 순위도 정하지 않습니다.**
 
 > AI 추천 이유가 `✦ 관심 분야(동물) · 가까운 지역 조건에 맞아요.` 처럼 딱딱하면 AI 호출이 실패하고 기본 문구가 나온 것입니다. `✦ 주말에 가까운 곳에서 동물 봉사해요!` 처럼 나오면 정상입니다.
 
@@ -229,7 +228,7 @@ me.notifyOff;   // ['SCHEDULE'] — 꺼둔 것 목록
 await updateNotifySettings(supabase, userId, ['SCHEDULE', 'VOICE_REQUEST']);
 ```
 
-알림은 **8종**입니다. `NOTIFICATION_TYPES` 를 목록으로 쓰고,
+알림은 **9종**입니다(당시 8종 + 조기 종료). `NOTIFICATION_TYPES` 를 목록으로 쓰고,
 이름은 `NOTIFICATION_TEMPLATE[type].title` 을 쓰면 됩니다.
 껐다고 표시한 알림은 **DB 트리거가 아예 만들지 않으니** 화면에서 거를 필요가 없습니다.
 
@@ -265,7 +264,7 @@ await updateNotifySettings(supabase, userId, ['SCHEDULE', 'VOICE_REQUEST']);
 
 ### 제일 큰 것 — F36 Discover 고도화 (이틀, 따로 잡기)
 
-지금은 정해진 질문 3개 → 점수 → AI는 이유만 씁니다. 이걸 **AI가 대화를 이끄는 방식**으로 바꿉니다.
+9/1 당시에는 정해진 질문 3개 → 점수 → AI는 이유만 썼습니다. 이걸 **AI가 대화를 이끄는 방식**으로 바꿉니다.
 
 지켜야 할 규칙 6개:
 1. **프로필에 있는 건 묻지 않는다** — 카테고리·지역·시간은 가입 때 이미 받았습니다
@@ -331,7 +330,7 @@ components/my/ · app/api/auth/check-email/ · lib/utils/discover-ranking.ts 는
    화면에서 supabase.from(...) 이나 supabase.rpc(...) 를 직접 호출하지 않는다.
    필요한 함수가 없으면 새로 만들지 말고 "없다"고 알려준다.
    profiles 도 예외가 아니다 — 저장은 updateProfile() 하나만 쓴다.
-   (직접 update 하면 available_times 동기화가 빠져 추천 점수가 조용히 어긋난다)
+   (직접 update 하면 available_times 동기화가 빠져 두 값이 어긋난다)
 
 4. 쓰기 함수는 { ok: true, data } 또는 { ok: false, message } 를 돌려준다.
    message 는 그대로 사용자에게 보여주면 되는 한국어다. try/catch 를 쓰지 않는다.
@@ -345,7 +344,7 @@ components/my/ · app/api/auth/check-email/ · lib/utils/discover-ranking.ts 는
    { name, nickname, gender } 를 넣으면 DB 트리거가 profiles 를 만든다.
    나머지 값은 가입 직후 updateProfile() 로 채운다. profiles 를 직접 update 하지 않는다.
    updateProfile(supabase, userId, { categories, regions, timePrefs })
-   timePrefs 를 넘기면 옛 available_times 컬럼도 함께 채워진다 (추천 점수가 아직 그걸 본다).
+   timePrefs 를 넘기면 옛 available_times 컬럼도 함께 채워진다 (time_prefs 가 빈 옛 회원은 추천 점수가 그걸 본다).
 
 7. 타인 프로필에는 "참여 예정" 액션을 절대 노출하지 않는다.
    getParticipatedActions() 가 완료된 것만 돌려주므로 그 함수를 쓴다.
@@ -423,9 +422,10 @@ null       아직 안 물어봄  →  AI 가 물어봐도 됩니다
 
 `?? []` 로 받으면 구분이 사라져서, **재능이 없는 사람에게 AI 가 계속
 재능을 묻게 됩니다.** 회의에서 특히 짚으신 부분입니다.
+(지금 Discover 는 이 구분을 쓰지 않습니다 — 2026-09-09 부터. `CLAUDE.md` 규칙 11 참고)
 
 - "나눌 수 있는 재능 없음" 을 고르면 → `[]`
-- "아직 잘 모르겠음" 을 고르면 → `null` (저장하지 않음)
+- 아무것도 안 고르고 넘어가면 → `null` (저장하지 않음)
 
 ### Discover 범위 — 최소로 확정
 
@@ -451,8 +451,7 @@ null       아직 안 물어봄  →  AI 가 물어봐도 됩니다
 
 ### 회의에서 정해진 그 외
 
-- **비밀번호 변경은 미룸** → `app/my/page.tsx:143~149` 의 링크 블록을 **지우세요**
-  (누르면 `/my/edit` 로 가는데 거기엔 그 기능이 없습니다)
+- **비밀번호 변경은 미룸** → 링크 블록은 9/3 에 지웠습니다 (`a7475f7`)
 - **회원탈퇴는 발표 후로 미룸**
 - **실명 확인은 안내 문구로** — "실명을 권장합니다"
 - ~~약관 보기는 **성은님이 원문을 주셔야** 시작할 수 있습니다~~ → **들어왔습니다** (2026-09-04, `a3701fd`).
