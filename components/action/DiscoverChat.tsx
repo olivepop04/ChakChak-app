@@ -28,6 +28,7 @@ import {
   PROVINCE_WIDE,
   formatRegion,
 } from '@/lib/constants/regions';
+import { formatSummaryChips } from '@/app/api/ai/discover/interview';
 
 /** 질문 수 — 서버(app/api/ai/discover)가 다섯 답변을 받으면 추천을 돌려준다 */
 const QUESTION_COUNT = 5;
@@ -56,6 +57,7 @@ interface DiscoverResponse {
   options?: string[];
   relaxation?: string[];
   items?: Recommendation[];
+  summaryChips?: string[];
   error?: string;
   isLastQuestion?: boolean;
 }
@@ -75,6 +77,7 @@ export function DiscoverChat({
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(authenticated);
   const [items, setItems] = useState<Recommendation[] | null>(null);
+  const [summaryChips, setSummaryChips] = useState<string[]>([]);
   const [relaxation, setRelaxation] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [regionModalOpen, setRegionModalOpen] = useState(false);
@@ -124,7 +127,10 @@ export function DiscoverChat({
       setOptions(data.options ?? []);
       setRelaxation(data.relaxation ?? []);
       setIsServerLastQuestion(Boolean(data.isLastQuestion));
-      if (data.done) setItems(data.items ?? []);
+      if (data.done) {
+        setItems(data.items ?? []);
+        if (data.summaryChips) setSummaryChips(data.summaryChips);
+      }
     } catch {
       setError('추천을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
@@ -243,6 +249,7 @@ export function DiscoverChat({
     setMessages([]);
     setOptions([]);
     setItems(null);
+    setSummaryChips([]);
     setRelaxation([]);
     setError('');
     void requestNext([]);
@@ -573,18 +580,18 @@ export function DiscoverChat({
                 <Check className="h-3.5 w-3.5 stroke-[3] text-white" aria-hidden="true" />
               </span>
               <p className="text-body font-bold text-neutral-900">
-                {answeredCount}가지 질문 완료
+                {nickname}님의 선택
               </p>
             </div>
             <div>
               <p className="text-label text-neutral-500">이 조건으로 찾았어요</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {userAnswers.map((answer, index) => (
+                {(summaryChips.length > 0 ? summaryChips : formatSummaryChips(messages)).map((chip, index) => (
                   <span
-                    key={`${answer.content}-${index}`}
+                    key={`${chip}-${index}`}
                     className="inline-flex items-center rounded-full bg-brand-soft px-3 py-1.5 text-label font-semibold text-brand"
                   >
-                    {answer.content}
+                    {chip}
                   </span>
                 ))}
               </div>

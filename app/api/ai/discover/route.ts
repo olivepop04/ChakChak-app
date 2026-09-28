@@ -42,6 +42,7 @@ import {
   shouldRecommendNow,
   analyzeUserContext,
   validateHarmfulSkillInput,
+  formatSummaryChips,
   ALL_15_SKILLS,
   CHEERING_OR_CASUAL_REGEX,
   type QuestionKey,
@@ -1046,5 +1047,6 @@ export async function POST(request: Request) {
     options: [],
     relaxation: uniqueRelaxation,
     items: topItems,
+    summaryChips: formatSummaryChips(messages),
   });
 }

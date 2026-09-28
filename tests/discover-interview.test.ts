@@ -13,6 +13,7 @@ import {
   getRemainingQuestionKeys,
   shouldRecommendNow,
   validateHarmfulSkillInput,
+  formatSummaryChips,
   ALL_15_SKILLS,
 } from '../app/api/ai/discover/interview.ts';
 import { SKILLS } from '../lib/constants/index.ts';
@@ -959,6 +960,76 @@ test('[프로필 재능 그대로 활용 선택 검증] 그대로 살릴/그대�
   assert.equal(answers3.selectedSkill, 'profile');
   assert.equal(answers3.talentPreference, 'use');
 });
+
+test('[요약 칩 포맷팅 검증] 모든 질문에 상관없음 선택 시 항목명이 명시된 칩으로 변환된다', () => {
+  const messages = [
+    { role: 'assistant', content: '활동할 지역을 알려주세요!' },
+    { role: 'user', content: '지역 상관없이 전국 액션 볼래요 🌏' },
+    { role: 'assistant', content: '어떤 분야의 액션에 가장 관심이 가시나요?' },
+    { role: 'user', content: '상관없음' },
+    { role: 'assistant', content: '어떤 분위기의 활동이 더 끌리시나요? 도란도란 소통 vs 집중' },
+    { role: 'user', content: '상관없음' },
+    { role: 'assistant', content: '액션에 따라 난이도가 다를 수 있어요. 어떤 스타일을 원하세요?' },
+    { role: 'user', content: '상관없음' },
+    { role: 'assistant', content: '어떤 환경에서 활동하고 싶으세요? 실내 vs 야외' },
+    { role: 'user', content: '상관없음' },
+    { role: 'assistant', content: '함께하는 크루의 규모는 어느 정도가 편하세요?' },
+    { role: 'user', content: '상관없음' },
+  ];
+
+  const chips = formatSummaryChips(messages);
+  assert.deepEqual(chips, [
+    '전국 어디나',
+    '분야 상관없음',
+    '액션 성격 상관없음',
+    '액션 난이도 상관없음',
+    '실내외 상관없음',
+    '규모 상관없음',
+  ]);
+});
+
+test('[요약 칩 포맷팅 검증] 특정 조건과 상관없음이 섞인 경우에도 적절한 칩으로 생성된다', () => {
+  const messages = [
+    { role: 'assistant', content: '활동할 지역을 알려주세요!' },
+    { role: 'user', content: '지역 상관없이 전국 액션 볼래요 🌏' },
+    { role: 'assistant', content: '어떤 분야의 액션에 가장 관심이 가시나요?' },
+    { role: 'user', content: '상관없음' },
+    { role: 'assistant', content: '어떤 분위기의 활동이 더 끌리시나요?' },
+    { role: 'user', content: '육체·과업·집중형' },
+    { role: 'assistant', content: '액션에 따라 난이도가 다를 수 있어요.' },
+    { role: 'user', content: '기초 체력 필요' },
+    { role: 'assistant', content: '어떤 환경에서 활동하고 싶으세요?' },
+    { role: 'user', content: '실외 활동' },
+    { role: 'assistant', content: '함께하는 크루의 규모는 어느 정도가 편하세요?' },
+    { role: 'user', content: '중규모 모임 (10-20명)' },
+  ];
+
+  const chips = formatSummaryChips(messages);
+  assert.deepEqual(chips, [
+    '전국 어디나',
+    '분야 상관없음',
+    '육체·과업·집중형',
+    '기초 체력 필요',
+    '실외 활동',
+    '중규모 모임 (10-20명)',
+  ]);
+});
+
+test('[요약 칩 포맷팅 검증] 프로필 재능 활용 확인 시 프로필 재능명이 칩으로 노출된다', () => {
+  const messages = [
+    { role: 'assistant', content: '활동 난이도는 어떤 것을 원하세요?' },
+    { role: 'user', content: '전문지식/자격/재능 활용' },
+    { role: 'assistant', content: '프로필에 [교육·멘토링] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?' },
+    { role: 'user', content: '예, 그럴게요 👍' },
+  ];
+
+  const chips = formatSummaryChips(messages);
+  assert.deepEqual(chips, [
+    '전문지식/자격/재능 활용',
+    '교육·멘토링',
+  ]);
+});
+
 
 
 

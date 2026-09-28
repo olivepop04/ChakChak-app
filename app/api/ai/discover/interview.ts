@@ -1323,3 +1323,98 @@ export function getDiscoverReply({
 }): string {
   return recommendNow ? DISCOVER_RECOMMENDATION_REPLY : conversationReply;
 }
+
+/**
+ * 대화 내역(messages)을 분석하여 추천 결과 상단 '사용자의 선택' 요약 칩 목록을 생성합니다.
+ * - '상관없음' 단독 노출 방지: 분야 상관없음, 액션 성격 상관없음, 액션 난이도 상관없음, 실내외 상관없음, 규모 상관없음 등 항목명 명시
+ * - '지역 상관없이...' -> '전국 어디나'
+ * - 화면 전환용 선택지(다른 조건으로, 다른 재능으로 등) 제외
+ */
+export function formatSummaryChips(
+  messages: { role: string; content: string }[],
+): string[] {
+  const chips: string[] = [];
+
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    if (msg.role !== 'user') continue;
+
+    const userText = msg.content.trim();
+
+    // 1. 단순 화면 전환용 선택지는 요약 칩에서 제외
+    if (/다른 조건으로|다른 재능으로|활동할 지역 선택하기/.test(userText)) {
+      continue;
+    }
+
+    // 직전 어시스턴트 질문 문맥 파악
+    const prevAssistant = messages
+      .slice(0, i)
+      .reverse()
+      .find((m) => m.role === 'assistant');
+    const assistantText = prevAssistant?.content ?? '';
+
+    // 2. 지역 / 오프닝 관련
+    if (/전국 액션|전국 어디나|지역 상관없이/.test(userText)) {
+      chips.push('전국 어디나');
+      continue;
+    }
+    if (/^📍\s*(.+)$/.test(userText)) {
+      const regionMatch = userText.match(/^📍\s*(.+)$/);
+      chips.push(regionMatch ? regionMatch[1] : userText);
+      continue;
+    }
+    if (/네,\s*이 조건으로|프로필 조건 그대로|이 조건으로 찾을게요/.test(userText)) {
+      chips.push('프로필 조건 (지역·시간)');
+      continue;
+    }
+
+    // 3. '상관없음' 또는 포괄적 수락 답변의 경우 항목명을 명시
+    const isAny =
+      /^상관\s*없음$|^상관없음|^아무거나|^다\s*좋|^다\s*괜찮|^특별한.*없이|^부담\s*없이/.test(
+        userText,
+      );
+    if (isAny) {
+      if (/난이도|체력|누구나 참여/.test(assistantText)) {
+        chips.push('액션 난이도 상관없음');
+      } else if (/분야|관심/.test(assistantText)) {
+        chips.push('분야 상관없음');
+      } else if (/분위기|성격|소통|집중|과업|도란도란/.test(assistantText)) {
+        chips.push('액션 성격 상관없음');
+      } else if (/재능|기술/.test(assistantText)) {
+        chips.push('재능 상관없음');
+      } else if (/환경|실내|실외|야외|날씨/.test(assistantText)) {
+        chips.push('실내외 상관없음');
+      } else if (/규모|크루|인원|모임|오붓한|북적/.test(assistantText)) {
+        chips.push('규모 상관없음');
+      } else if (/시간|요일|언제/.test(assistantText)) {
+        chips.push('시간 상관없음');
+      } else {
+        chips.push('조건 상관없음');
+      }
+      continue;
+    }
+
+    // 4. 시간 상관없음 명시 답변
+    if (/시간\s*상관없음/.test(userText)) {
+      chips.push('시간 상관없음');
+      continue;
+    }
+
+    // 5. 프로필 재능 확인 긍정 응답 ('예, 그럴게요')
+    if (/예.*그럴|그럴게요|네.*그럴|그대로 살릴|그대로 활용/.test(userText)) {
+      const skillBracketMatch = assistantText.match(/\[(.*?)\]/);
+      if (skillBracketMatch && skillBracketMatch[1]) {
+        chips.push(skillBracketMatch[1]);
+      } else {
+        chips.push('프로필 재능 활용');
+      }
+      continue;
+    }
+
+    // 6. 기타 명시적 답변 (예: '동물', '교류·교육·소통형', '실외 활동', '중규모 모임 (10-20명)' 등)
+    chips.push(userText);
+  }
+
+  return chips;
+}
+
