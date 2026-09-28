@@ -88,7 +88,6 @@ function SignUpForm() {
         const parsed = JSON.parse(savedData);
         if (typeof parsed.step === 'number') setStep(parsed.step);
         if (typeof parsed.email === 'string') setEmail(parsed.email);
-        if (typeof parsed.password === 'string') setPassword(parsed.password);
         if (typeof parsed.bio === 'string') setBio(parsed.bio);
         if (typeof parsed.agreeTerms === 'boolean') setAgreeTerms(parsed.agreeTerms);
         if (typeof parsed.agreePrivacy === 'boolean') setAgreePrivacy(parsed.agreePrivacy);
@@ -107,14 +106,18 @@ function SignUpForm() {
     }
   }, []);
 
-  // 폼 입력 변경 시 실시간 임시 저장 (이메일 및 비밀번호 포함 모든 필드)
+  // 폼 입력 변경 시 실시간 임시 저장.
+  //
+  // 비밀번호는 담지 않습니다 (2026-09-24). sessionStorage 는 같은 출처의
+  // 스크립트와 확장 프로그램이 그대로 읽습니다. 단계 복원 편의보다 잃는 것이
+  // 큽니다. 복원해서 3단계로 바로 들어오면 비밀번호가 비어 있으므로,
+  // handleSignUp 이 한 번 더 확인하고 1단계로 돌려보냅니다.
   useEffect(() => {
     if (!isRestored || typeof window === 'undefined') return;
     try {
       const draft = {
         step,
         email,
-        password,
         bio,
         agreeTerms,
         agreePrivacy,
@@ -134,7 +137,6 @@ function SignUpForm() {
     isRestored,
     step,
     email,
-    password,
     bio,
     agreeTerms,
     agreePrivacy,
@@ -231,6 +233,14 @@ function SignUpForm() {
       setError('참여 가능한 요일과 시간대를 하나 이상 선택해주세요.');
       return;
     }
+    // 임시저장에 비밀번호를 담지 않으므로, 단계를 복원해 들어오면 여기서
+    // 비밀번호가 비어 있습니다. 막지 않으면 빈 값으로 가입 요청이 나갑니다.
+    // 6자 기준은 1단계 검증과 같습니다.
+    if (password.length < 6) {
+      setError('보안을 위해 비밀번호는 저장하지 않아요. 1단계에서 다시 입력해주세요.');
+      setStep(1);
+      return;
+    }
     setBusy(true);
     const supabase = createClient();
 
@@ -283,6 +293,20 @@ function SignUpForm() {
         setError(profileSaveError);
         return;
       }
+    } else {
+      // getUser() 가 사용자를 못 돌려주는 경우입니다 (가입 직후 세션이 없을 때).
+      // 지금은 Confirm email 이 꺼져 있어 바로 세션이 생기지만, 그 설정을 켜면
+      // 상시 이 경로를 탑니다.
+      //
+      // 그냥 지나가면 자기소개·관심 분야·지역·참여 시간·재능이 하나도 저장되지
+      // 않은 채 완료 화면으로 넘어갑니다. 오류가 안 나서 본인도 나중에야 압니다.
+      // 저장 실패와 똑같이 화면에 세워 둡니다. 임시저장도 남겨서 다시 들어오면
+      // 고른 값이 그대로 복원됩니다.
+      setBusy(false);
+      setError(
+        '계정은 만들어졌지만 취향 정보를 저장하지 못했어요. 로그인한 뒤 프로필에서 설정해주세요.',
+      );
+      return;
     }
 
     if (typeof window !== 'undefined') {
