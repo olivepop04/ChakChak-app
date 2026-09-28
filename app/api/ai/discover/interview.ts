@@ -732,7 +732,6 @@ export function getQuestionReply(
     let skillLead = '';
     if (
       answers.selectedSkill === '기타' ||
-      answers.talentPreference === 'any' ||
       answers.selectedSkills?.includes('기타')
     ) {
       skillLead = '재능과 상관없이 누구나 편하게 나눔을 시작할 수 있는 액션들을 찾아볼게요! ✨\n';
@@ -741,6 +740,12 @@ export function getQuestionReply(
       (answers.selectedSkill && answers.selectedSkill !== 'profile')
     ) {
       skillLead = '알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨\n';
+    } else if (answers.difficultyPreference === 'physical') {
+      skillLead = '땀 흘리며 함께할 수 있는 활기차고 보람찬 액션들로 찾아볼게요! 💪\n';
+    } else if (answers.difficultyPreference === 'easy') {
+      skillLead = '누구나 부담 없이 편안하게 참여할 수 있는 액션들로 찾아볼게요! 😊\n';
+    } else if (answers.talentPreference === 'any') {
+      skillLead = '재능과 상관없이 누구나 편하게 나눔을 시작할 수 있는 액션들을 찾아볼게요! ✨\n';
     }
     return [
       `${skillLead}어떤 환경에서 활동하고 싶으세요?`,
@@ -946,7 +951,7 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.selectedSkill = 'profile';
   } else if (/새로운 재능|다른 재능|새 재능/.test(text)) {
     answers.talentPreference = 'new_skill';
-  } else if (/특별한 재능 없이|재능.*상관|부담 없이|누구나/.test(text)) {
+  } else if (/특별한 재능 없이|재능.*상관|특별한 기술 없이|부담 없이 가볍게/.test(text)) {
     answers.talentPreference = 'any';
   }
 

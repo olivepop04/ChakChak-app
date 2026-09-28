@@ -794,6 +794,83 @@ test('재능 단일 선택 시에도 알려주신 재능을 살릴 수 있는 �
   );
 });
 
+test('[난이도 분기 버그 수정 검증] 기초 체력 필요 선택 시 재능 질문을 완전히 생략하고 환경(activity_type)으로 직행한다', () => {
+  const messages = [
+    {
+      role: 'assistant' as const,
+      content:
+        '활동의 분위기를 명확히 선택하셨군요! 땀 흘리며 함께 하는 활동은 정말 보람차죠. 😊 액션에 따라 난이도가 다를 수 있어요. 어떤 스타일을 원하세요?',
+    },
+    { role: 'user' as const, content: '기초 체력 필요' },
+  ];
+
+  const answers = {
+    ...extractAdaptiveAnswers(['기초 체력 필요']),
+    ...extractAnswersFromDialogue(messages),
+    fieldPreference: 'familiar' as const,
+    vibePreference: 'task' as const,
+  };
+
+  assert.equal(answers.difficultyPreference, 'physical');
+
+  const remaining = getRemainingQuestionKeys({
+    answers,
+    profileSkills: ['요리'],
+  });
+
+  // 재능(skills) 질문이 절대 포함되지 않고, 첫 질문이 활동 환경(activity_type)이어야 함
+  assert.equal(remaining.includes('skills'), false);
+  assert.equal(remaining[0], 'activity_type');
+
+  // 환경 질문 멘트에 활기차고 보람찬 액션 연결 문구가 포함됨
+  const nextReply = getQuestionReply('activity_type', {
+    nickname: '지수',
+    answers,
+    profileSkills: ['요리'],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '서울특별시 성동구',
+    profileTimesSummary: '주말 오후',
+    hasRegionAndTime: true,
+  });
+
+  assert.equal(nextReply.includes('땀 흘리며 함께할 수 있는 활기차고 보람찬 액션들로 찾아볼게요! 💪'), true);
+  assert.equal(nextReply.includes('어떤 환경에서 활동하고 싶으세요?'), true);
+});
+
+test('[난이도 분기 검증] 누구나 참여가능 선택 시에도 재능 질문 생략 후 환경으로 직행한다', () => {
+  const answers = {
+    ...extractAdaptiveAnswers(['누구나 참여가능']),
+    fieldPreference: 'familiar' as const,
+    vibePreference: 'social' as const,
+  };
+
+  assert.equal(answers.difficultyPreference, 'easy');
+
+  const remaining = getRemainingQuestionKeys({
+    answers,
+    profileSkills: ['디자인'],
+  });
+
+  assert.equal(remaining.includes('skills'), false);
+  assert.equal(remaining[0], 'activity_type');
+
+  const nextReply = getQuestionReply('activity_type', {
+    nickname: '지수',
+    answers,
+    profileSkills: ['디자인'],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '서울특별시 성동구',
+    profileTimesSummary: '주말 오후',
+    hasRegionAndTime: true,
+  });
+
+  assert.equal(nextReply.includes('누구나 부담 없이 편안하게 참여할 수 있는 액션들로 찾아볼게요! 😊'), true);
+});
+
 
 
 

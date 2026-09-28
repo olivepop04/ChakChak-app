@@ -120,6 +120,7 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
 6. 없는 사실이나 사용자 정보를 추측하거나 임의로 지어내지 마세요.
 7. 말풍선(reply) 본문에 선택지 항목이나 예시 목록(불릿 기호 -, •, * 등)을 절대 나열하지 마세요. 모든 선택지는 화면 하단 선택 버튼(options)으로만 노출됩니다. 말풍선에는 질문과 다정한 안내 멘트(1~2문장)만 간결하게 작성하세요.
 8. 재능(skills) 질문의 options 배열은 반드시 사전 정의된 16종 목록 ['사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공', '기타']을 정확히 제공하세요.
+9. question_key는 반드시 시스템이 제공한 '남은질문' 배열에 존재하는 키 중에서만 선택해야 합니다. 남은질문에 없는 질문 키(예: 난이도에서 '기초 체력 필요'나 '누구나 참여가능'을 선택하여 재능 질문이 생략된 상황에서 "skills")를 반환하는 것은 엄격히 금지됩니다.
 
 [질문 순서 및 분기 제어 시나리오 (우선순위 0~5)]
 대화는 아래 우선순위에 따라 순서대로 진행합니다. 이미 파악되었거나 스킵 조건에 해당하는 질문은 절대 반복하지 마세요.
@@ -148,8 +149,10 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
 3. 난이도 (difficulty) & 재능 (skills) [★ 조건부 분기]:
    - 멘트: "액션에 따라 난이도가 다를 수 있어요. 어떤 스타일을 원하세요?"
    - options: ["누구나 참여가능", "기초 체력 필요", "전문지식/자격/재능 활용", "상관없음"]
-   - ('누구나 참여가능' 또는 '기초 체력 필요' 선택 시 재능 질문을 완전히 생략하고 4번 환경으로 즉시 전진)
-   - ('전문지식/자격/재능 활용' 선택 시):
+   - [필수 규칙] 사용자가 '누구나 참여가능' 또는 '기초 체력 필요'를 선택한 경우:
+     ★ 절대로 재능(skills) 질문을 하지 마세요! question_key를 "skills"로 반환하지 마세요!
+     ★ 재능 질문을 완전히 생략하고 즉시 4번 활동 환경(activity_types) 질문으로 전진해야 합니다! (question_key: "activity_types")
+   - 사용자가 '전문지식/자격/재능 활용'을 선택한 경우에만 재능(skills) 질문으로 이동합니다.
      - 프로필 재능이 있는 경우: "{nickname}님의 프로필에 [{userSkills}] 재능이 등록되어 있어요. 이 재능을 활용하는 액션으로 찾아볼까요?" (options: ["그래요, 이 재능을 살릴래요", "다른 재능으로 찾아볼래요"])
      - 프로필 재능이 없거나 다른 재능 선택 시: 사전 정의된 16종 재능 목록(15종 + 기타) 제공. (기타 입력 시 부적절한 내용은 재작성 유도)
 
@@ -502,13 +505,43 @@ export async function POST(request: Request) {
   const lastUserMsg = userAnswers[userAnswers.length - 1] ?? '';
   const isQuestionInquiry = /\?|어떤 거야|뭐야|있나요|없나요|어때요/.test(lastUserMsg);
 
-  // 재능 질문 맥락에서의 입력 검증 (가드레일 & 기타 선택)
-  const isSkillContext =
-    fallbackQuestionKey === 'skills' ||
-    chosenQuestionKey === 'skills' ||
-    messages.slice(-3).some((m) => m.role === 'assistant' && /어떤 재능|재능을 활용|재능 목록|새로운 재능/.test(m.content));
+  // 1. AI가 반환한 question_key가 남은 질문 축에 없으면, 남은 질문 중 첫 번째로 즉시 강제 보정 (사용자의 질문형 되묻기 제외)
+  if (!isQuestionInquiry && remainingQuestionKeys.length > 0 && !remainingQuestionKeys.includes(chosenQuestionKey)) {
+    chosenQuestionKey = remainingQuestionKeys[0];
+  }
+
+  // 2. 재능 질문 맥락에서의 입력 검증 (가드레일 & 기타 선택)
+  // 재능 질문 맥락은 '직전 어시스턴트 질문이 재능에 대한 질문'이었고, '이번 턴에서 재능 질문 단계가 유효할 때'만 해당함
+  const assistantMessages = messages.filter((m) => m.role === 'assistant');
+  const lastAssistantMsg = assistantMessages[assistantMessages.length - 1]?.content ?? '';
+  const lastAssistantAskedSkill =
+    /어떤 재능|새로운 재능|재능을 살릴|재능으로 찾아|재능을 활용|재능을 나누|16종 선택지|나눌 수 있는 재능/.test(lastAssistantMsg) &&
+    !/난이도|어떤 스타일을 원하세요/.test(lastAssistantMsg);
+
+  const isSkillEligible =
+    adaptiveAnswers.difficultyPreference === 'expert' ||
+    remainingQuestionKeys.includes('skills');
+
+  const isSkillContext = isSkillEligible && lastAssistantAskedSkill;
 
   if (isSkillContext && lastUserMsg) {
+    const harmfulCheck = validateHarmfulSkillInput(lastUserMsg);
+    if (harmfulCheck.isHarmful) {
+      return NextResponse.json({
+        done: false,
+        reply: harmfulCheck.reason,
+        options: getQuestionOptions('skills', SKILLS, userContext.state, userContext.hasRegionAndTime, {
+          hasHistory,
+          hasRegionAndTime: userContext.hasRegionAndTime,
+          answers: adaptiveAnswers,
+          profileSkills: profile.skills ?? [],
+        }),
+        questionKey: 'skills',
+        answeredCount: userTurnCount,
+        maxQuestions: MAX_USER_TURNS,
+      });
+    }
+
     const isKnownSkill = ALL_15_SKILLS.some((s) => lastUserMsg.includes(s));
     if (!isKnownSkill) {
       const isCheering = /파이팅|화이팅|힘내|응원/.test(lastUserMsg);
@@ -529,11 +562,6 @@ export async function POST(request: Request) {
         maxQuestions: MAX_USER_TURNS,
       });
     }
-  }
-
-  // 사용자가 개념 문의를 한 게 아닌데 AI가 이미 답변된 질문 키를 반환한 경우, 남은 질문으로 강제 전환
-  if (!isQuestionInquiry && remainingQuestionKeys.length > 0 && !remainingQuestionKeys.includes(chosenQuestionKey)) {
-    chosenQuestionKey = remainingQuestionKeys[0];
   }
 
   const recommendNow = shouldRecommendNow({
@@ -560,13 +588,17 @@ export async function POST(request: Request) {
     let reply =
       isAiSuccess && conversation.reply ? conversation.reply : fallback.reply;
 
-    // 만약 AI가 이미 답변된 질문 축을 되묻는 응답을 냈다면, 다음 남은 질문의 안내로 교체
-    if (
+    // 만약 AI가 이미 답변된 질문 축을 되묻거나, 남은 질문 축과 불일치하는 질문을 냈다면, 다음 남은 질문의 안내로 교체
+    const isMismatchedReply =
       isAiSuccess &&
       !isQuestionInquiry &&
-      conversation.question_key &&
-      !remainingQuestionKeys.includes(conversation.question_key)
-    ) {
+      (
+        (conversation.question_key && !remainingQuestionKeys.includes(conversation.question_key)) ||
+        (chosenQuestionKey !== conversation.question_key) ||
+        (/재능|기술|특기|어떤 재능/.test(reply) && (chosenQuestionKey === 'activity_types' || chosenQuestionKey === 'activity_type'))
+      );
+
+    if (isMismatchedReply) {
       reply = fallback.reply;
     }
 
