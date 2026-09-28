@@ -64,6 +64,7 @@ export interface ActionScoringMetadata {
   difficulty?: string | null;
   activityTypes?: string[];
   keywords?: string[];
+  categories?: string[];
 }
 
 export interface ScoredAction {
@@ -153,7 +154,7 @@ function matchesFlexibleTime(
     const hits = userTimeSlots.some((slot) => {
       if (slot === currentCombination) return true;
       if (slot === '평일 낮' && day === '평일' && (slotLabel === '오전' || slotLabel === '오후')) return true;
-      if (slot.includes(day)) return true;
+      if (slot === day) return true;
       return false;
     });
 
@@ -201,9 +202,13 @@ export function scoreAction(
     [...profile.categories, answers.category].filter(Boolean) as string[],
   );
   const wantsAll = wanted.has('전체') || answers.category === '상관없음';
-  const actionCats = action.categories?.length
-    ? action.categories
-    : [action.category];
+  const actionCats = Array.from(
+    new Set([
+      ...(action.categories ?? []),
+      action.category,
+      ...(metadata.categories ?? []),
+    ]),
+  ).filter(Boolean);
   const hit = actionCats.find((c) => wanted.has(c));
   if (wantsAll || hit) {
     score += 25;
@@ -266,6 +271,7 @@ export function scoreAction(
     actionDifficulty: metadata.difficulty ?? null,
     actionActivityTypes: metadata.activityTypes ?? [],
     actionKeywords: metadata.keywords ?? [],
+    actionParticipationModes: metadata.participationModes ?? [],
     answers: {
       talentPreference: answers.talentPreference ?? null,
       groupSizePreference: answers.groupSizePreference ?? null,

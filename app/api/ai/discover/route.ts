@@ -734,6 +734,7 @@ export async function POST(request: Request) {
   for (const metadata of metas ?? []) {
     metasById.set(metadata.action_id, metadata);
     metadataByAction[metadata.action_id] = {
+      categories: metadata.categories ?? [],
       participationModes: metadata.participation_modes ?? [],
       skills: metadata.skills ?? [],
       groupSize: totalGroupSize(itemsByAction.get(metadata.action_id) ?? []),
@@ -745,6 +746,7 @@ export async function POST(request: Request) {
   }
   for (const candidateId of candidateIds) {
     metadataByAction[candidateId] ??= {
+      categories: [],
       participationModes: [],
       skills: [],
       groupSize: totalGroupSize(itemsByAction.get(candidateId) ?? []),
@@ -907,20 +909,22 @@ export async function POST(request: Request) {
 
   const topItems = codeRanked.map((item) => {
     let reason = reasonsMap[item.action.id]?.trim();
-    if (reason && item.action.activityStartAt) {
-      const isWk = isWeekend(item.action.activityStartAt);
+    if (reason) {
       const hasTimeMatch = item.matched.some(
         (m) => m.includes('활동') && (m.includes('오전') || m.includes('오후') || m.includes('저녁') || m.includes('주말') || m.includes('평일')),
       );
-      // 평일 액션인데 주말을 지어낸 경우
-      if (!isWk && (reason.includes('주말') || reason.includes('토요일') || reason.includes('일요일'))) {
+      // matched에 시간 매칭이 전혀 없는데 요일/시간대를 지어낸 경우 안전하게 fallback 처리
+      if (!hasTimeMatch && (reason.includes('주말') || reason.includes('평일') || reason.includes('오전') || reason.includes('오후') || reason.includes('저녁') || /월요일|화요일|수요일|목요일|금요일|토요일|일요일/.test(reason))) {
         reason = fallbackReason(item);
-      } else if (isWk && (reason.includes('평일') || /월요일|화요일|수요일|목요일|금요일/.test(reason))) {
-        // 주말 액션인데 평일을 지어낸 경우
-        reason = fallbackReason(item);
-      } else if (!hasTimeMatch && (reason.includes('주말') || reason.includes('평일') || reason.includes('오전') || reason.includes('오후') || reason.includes('저녁'))) {
-        // matched에 시간 매칭이 전혀 없는데 시간대를 지어낸 경우 안전하게 fallback 처리
-        reason = fallbackReason(item);
+      } else if (item.action.activityStartAt) {
+        const isWk = isWeekend(item.action.activityStartAt);
+        // 평일 액션인데 주말을 지어낸 경우
+        if (!isWk && (reason.includes('주말') || reason.includes('토요일') || reason.includes('일요일'))) {
+          reason = fallbackReason(item);
+        } else if (isWk && (reason.includes('평일') || /월요일|화요일|수요일|목요일|금요일/.test(reason))) {
+          // 주말 액션인데 평일을 지어낸 경우
+          reason = fallbackReason(item);
+        }
       }
     }
     return {
