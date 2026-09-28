@@ -704,7 +704,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
       </label>
 
       {/* 하단 고정 버튼. 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app items-center gap-2 border-t border-neutral-200 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app items-center gap-2 bg-white p-4">
         <Button
           type="button"
           variant="secondary"

@@ -374,7 +374,7 @@ export default async function ActionDetailPage({
           ★ 탭 높이는 globals.css 의 --nav-h 변수를 씁니다 (2026-09-18).
             숫자(4rem)를 직접 적지 마세요 — 탭 높이가 바뀌면 여기만 고쳐서는
             안 되고 변수를 쓰는 10곳이 전부 같이 바뀌어야 합니다. */}
-      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 border-t border-neutral-200 bg-white p-4">
+      <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 bg-white p-4">
         {cta.type === 'host_ended_write_result' ? (
           <div className="flex w-full items-center gap-2">
             <Button href={cta.chatHref} variant="secondary" size="md" className="flex-1">

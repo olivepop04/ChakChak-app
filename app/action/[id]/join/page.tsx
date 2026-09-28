@@ -53,7 +53,7 @@ export default async function JoinPage({
 
       {/* 액션 요약 */}
       <section className="flex flex-col gap-3 border-b border-neutral-100 px-6 py-5">
-        <h1 className="text-subtitle font-bold leading-snug tracking-tight text-neutral-900">
+        <h1 className="font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
         <div className="flex items-center gap-2">
@@ -62,7 +62,7 @@ export default async function JoinPage({
             @{action.owner.nickname}
           </span>
         </div>
-        <div className="rounded-xl bg-neutral-50 p-3.5">
+        <div className="rounded-xl bg-neutral-100 p-4">
           <p className="text-label font-medium text-neutral-900">
             {formatActivityPeriod(action.activityStartAt, action.activityEndAt)}
           </p>

@@ -7,6 +7,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getActionItems } from '@/lib/queries/actions';
+import { formatActivityPeriod } from '@/lib/utils/date';
 import { ResultWriteForm } from '@/components/action/ResultWriteForm';
 import { Header } from '@/components/layout/Header';
 
@@ -28,7 +29,7 @@ export default async function ResultWritePage({
 
   const { data: action } = await supabase
     .from('actions')
-    .select('id, title, status, owner_id')
+    .select('id, title, status, owner_id, place_name, address, activity_start_at, activity_end_at')
     .eq('id', id)
     .maybeSingle();
   if (!action) notFound();
@@ -49,14 +50,27 @@ export default async function ResultWritePage({
       .maybeSingle(),
   ]);
 
+  const location = action.place_name || action.address;
+  const period = formatActivityPeriod(action.activity_start_at, action.activity_end_at);
+
   return (
     <main>
       <Header title="결과 작성" back backHref={`/action/${id}`} sticky />
 
       <div className="border-b border-neutral-100 px-6 py-4">
-        <h1 className="line-clamp-2 text-subtitle font-bold leading-snug text-neutral-900">
+        <h1 className="font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
+        {/* 장소 | 일정 — 결과 보기 화면과 같은 형식 */}
+        <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-500">
+          {location && (
+            <>
+              <span>{location}</span>
+              {period && <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />}
+            </>
+          )}
+          {period && <span>{period}</span>}
+        </div>
       </div>
 
       <ResultWriteForm

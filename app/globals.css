@@ -5,7 +5,17 @@
 @font-face {
   font-family: 'Paperlogy';
   src: url('/fonts/Paperlogy-7Bold.woff2') format('woff2');
-  font-weight: 100 900;
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+/* 2026-09-24: 800(ExtraBold) 선언 추가 — 파일(Paperlogy-8ExtraBold.woff2)은 이미
+   public/fonts/ 에 있었는데 연결이 없어서 700(7Bold)으로 대신 그려지고 있었다.
+   제목1(24px)은 800, 제목2(20px)는 700을 쓰므로 둘 다 필요하다. */
+@font-face {
+  font-family: 'Paperlogy';
+  src: url('/fonts/Paperlogy-8ExtraBold.woff2') format('woff2');
+  font-weight: 800;
   font-style: normal;
   font-display: swap;
 }

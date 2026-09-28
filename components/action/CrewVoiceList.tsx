@@ -20,7 +20,7 @@ export function CrewVoiceList({
         {visibleVoices.map((voice) => (
           <li
             key={voice.id}
-            className="flex gap-3 rounded-xl border border-neutral-200 p-4"
+            className="flex gap-2.5 rounded-xl bg-neutral-50 p-4"
           >
             <Avatar name={voice.author.nickname} size="sm" />
             <div className="min-w-0 flex-1">
@@ -32,7 +32,7 @@ export function CrewVoiceList({
                   {formatRelative(voice.createdAt)}
                 </span>
               </div>
-              <p className="mt-1 whitespace-pre-wrap text-label leading-relaxed text-neutral-700">
+              <p className="mt-1 whitespace-pre-wrap text-body leading-relaxed text-neutral-700">
                 {voice.content}
               </p>
             </div>
