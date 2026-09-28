@@ -624,7 +624,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         done: false,
         reply: `새로운 재능을 펼치고 싶으시군요! 멋져요 ✨\n${profile.nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요!`,
-        options: [...ALL_15_SKILLS, '기타'],
+        options: [...ALL_15_SKILLS],
         questionKey: 'skills',
         answeredCount: userTurnCount,
         maxQuestions: MAX_USER_TURNS,
@@ -637,7 +637,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         done: false,
         reply: `${promptLead}\n이번 액션에서 ${profile.nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요! 특정 재능에 상관없이 참여하고 싶으시다면 '기타'를 선택해주시면 됩니다.`,
-        options: [...ALL_15_SKILLS, '기타'],
+        options: [...ALL_15_SKILLS],
         questionKey: 'skills',
         answeredCount: userTurnCount,
         maxQuestions: MAX_USER_TURNS,

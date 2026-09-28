@@ -12,7 +12,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { callStructuredAI, AI_MODEL } from '@/lib/openai';
-import { CATEGORIES } from '@/lib/constants';
+import { CATEGORIES, SKILLS } from '@/lib/constants';
 
 const PROMPT_VERSION = 'classify-v3';
 
@@ -43,24 +43,7 @@ const ALLOWED_PARTICIPATION_MODES = [
   '20명 이상 대그룹',
 ] as const;
 
-const ALLOWED_SKILLS = [
-  '사진 촬영',
-  '영상 촬영·편집',
-  '디자인',
-  '글쓰기',
-  'SNS 홍보',
-  '요리',
-  '운전',
-  '교육·멘토링',
-  '통역·번역',
-  '컴퓨터·IT',
-  '원예·식물관리',
-  '청소·정리',
-  '미술·공예',
-  '음악·공연',
-  '수리·시공',
-  '기타',
-] as const;
+const ALLOWED_SKILLS = [...SKILLS, '기타'] as const;
 
 const ALLOWED_DIFFICULTIES = [
   '누구나 참여가능',
@@ -94,7 +77,7 @@ const SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 전문 분석 
    - 모집 항목에 적힌 사람 인원수를 모두 합산하여 해당하는 규모 단 하나만 선택하세요. (인원수가 명시되지 않은 경우 본문 맥락에 따름)
 
 5. skills (이 액션에서 실제로 활용할 수 있는 재능):
-   - 허용 목록: 사진 촬영, 영상 촬영·편집, 디자인, 글쓰기, SNS 홍보, 요리, 운전, 교육·멘토링, 통역·번역, 컴퓨터·IT, 원예·식물관리, 청소·정리, 미술·공예, 음악·공연, 수리·시공, 기타
+   - 허용 목록: ${ALLOWED_SKILLS.join(', ')}
    - "잠재적으로 아무 도움이나 될 수 있는 재능"까지 무분별하게 넣지 마세요.
    - 모집 항목에 명시된 필수 역할/재능이거나, 본문 소개글에 명확한 근거가 있어 활동 수행에 실질적으로 도움이 되는 경우만 정밀하게 선택하세요.
    - 본문에 뚜렷한 근거가 없거나 누구나 할 수 있는 일반 활동인 경우 빈 배열 []로 두세요.

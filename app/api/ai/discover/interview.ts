@@ -218,27 +218,14 @@ export function extractRegionFromText(text: string): {
   return {};
 }
 
+import { SKILLS } from '../../../../lib/constants/index.ts';
+
+export { SKILLS };
+
 /**
- * 15종 전체 재능 목록 (7대 메타데이터 skills 기준)
+ * 15종 전체 재능 목록 (lib/constants/SKILLS 기준 + 직접 입력 '기타' = 16종)
  */
-export const ALL_15_SKILLS = [
-  '사진 촬영',
-  '영상 촬영·편집',
-  '디자인',
-  '글쓰기',
-  'SNS 홍보',
-  '요리',
-  '운전',
-  '교육·멘토링',
-  '통역·번역',
-  '컴퓨터·IT',
-  '원예·식물관리',
-  '청소·정리',
-  '미술·공예',
-  '음악·공연',
-  '수리·시공',
-  '기타',
-] as const;
+export const ALL_15_SKILLS = [...SKILLS, '기타'] as const;
 
 /**
  * 재능 질문 시 들어올 수 있는 단순 응원이나 잡담/비재능 표현
