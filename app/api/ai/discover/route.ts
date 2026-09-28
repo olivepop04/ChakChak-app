@@ -17,7 +17,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { callStructuredAI } from '@/lib/openai';
-import { getRecommendCandidates } from '@/lib/queries/actions';
+import { getRecommendCandidates, getMyCreatedActions } from '@/lib/queries/actions';
 import {
   getFollowing,
   getParticipatedActions,
@@ -43,6 +43,7 @@ import {
   analyzeUserContext,
   validateHarmfulSkillInput,
   formatSummaryChips,
+  resolveUnifiedCategories,
   ALL_15_SKILLS,
   CHEERING_OR_CASUAL_REGEX,
   type QuestionKey,
@@ -144,15 +145,11 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
        - options: ["주말 오전", "주말 오후", "평일 낮", "평일 저녁", "시간 상관없음"]
 
 1. 카테고리 (categories) - 분야 선택:
-   - 과거 활동 이력 카테고리가 있는 경우:
-     - 멘트: "{nickname}님의 지난 활동들을 살펴보니 [{historyCategories}] 분야에 주로 참여하셨네요. 이번에도 비슷한 분야로 찾아드릴까요?"
+   - 프로필 관심 분야나 과거 활동 이력이 있는 경우 ({unifiedCategories}):
+     - 멘트: "{nickname}님의 프로필 관심분야와 지난 활동들을 살펴보니 [{unifiedCategories}] 분야에 주로 관심과 경험이 있으시네요. 이번에도 이 분야 위주로 찾아드릴까요?" (프로필만 있는 경우 "프로필 관심 분야인 [{profileCategories}]", 활동 이력만 있는 경우 "지난 활동들을 살펴보니 [{historyCategories}]")
      - options: ["같은 분야로 찾을래요 👍", "새로운 분야에 도전해볼래요 ✨"]
      - ("새로운 분야" 선택 시: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"])
-   - 활동 이력은 없으나 프로필에 관심 분야가 등록된 경우 ({profileCategories}):
-     - 멘트: "{nickname}님의 프로필 관심 분야인 [{profileCategories}] 위주로 찾아드릴까요?"
-     - options: ["네, 이 분야로 찾을게요 👍", "다른 분야도 볼래요 🔄", "상관없음"]
-     - ("다른 분야도 볼래요" 선택 시: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"])
-   - 프로필 관심 분야도 없고 활동 이력도 없는 경우:
+   - 활동 이력도 없고 프로필 관심 분야도 없는 신규 회원인 경우:
      - 멘트: "어떤 분야의 액션에 가장 관심이 가시나요?"
      - options: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"]
 
@@ -348,9 +345,10 @@ export async function POST(request: Request) {
     (message) => message.role === 'user',
   ).length;
 
-  const [profile, history, following] = await Promise.all([
+  const [profile, participatedHistory, createdActions, following] = await Promise.all([
     getProfile(supabase, user.id, user.id),
     getParticipatedActions(supabase, user.id, user.id),
+    getMyCreatedActions(supabase, user.id),
     getFollowing(supabase, user.id, user.id),
   ]);
 
@@ -361,13 +359,27 @@ export async function POST(request: Request) {
     );
   }
 
-  const historyCategories = [
-    ...new Set(history.map((action) => action.category)),
-  ];
-  const hasHistory = history.length > 0;
-  const fieldReferenceCategories = hasHistory
-    ? historyCategories
-    : allowedCategories(profile.categories);
+  // 호스트한 액션 중 DRAFT나 CANCELLED가 아닌 활동 포함
+  const validCreatedActions = createdActions.filter(
+    (a) => a.status !== 'DRAFT' && a.status !== 'CANCELLED',
+  );
+  // 전체 과거 활동 (참여 + 호스트)
+  const allPastActions = [...participatedHistory, ...validCreatedActions];
+
+  // {통합분야} 도출: 프로필 관심분야와 과거 활동 빈도 패턴 분석
+  const {
+    unifiedCategories,
+    primaryHistoryCategories,
+    hasHistory,
+  } = resolveUnifiedCategories({
+    profileCategories: profile.categories,
+    pastActions: allPastActions,
+    maxCount: 3,
+  });
+
+  const fieldReferenceCategories = allowedCategories(unifiedCategories);
+  const historyCategories = primaryHistoryCategories;
+  const history = allPastActions;
 
   const historyActionIds = history.map((action) => action.id);
   const { data: pastMetasData } = historyActionIds.length > 0
@@ -458,9 +470,13 @@ export async function POST(request: Request) {
     const profileSkillsStr = rawProfileSkills.length > 0 ? rawProfileSkills.join(', ') : '없음';
     const rawProfileCats = (profile.categories ?? []).filter((c) => c !== '전체');
     const profileCatsStr = rawProfileCats.length > 0 ? rawProfileCats.join(', ') : '없음';
+    const historyCatsStr = historyCategories.length > 0 ? historyCategories.join(', ') : '없음';
+    const unifiedCatsStr = unifiedCategories.length > 0 ? unifiedCategories.join(', ') : '없음';
     const dynamicSystem = CHAT_SYSTEM
       .replace(/\{userSkills\}/g, profileSkillsStr)
-      .replace(/\{profileCategories\}/g, profileCatsStr);
+      .replace(/\{profileCategories\}/g, profileCatsStr)
+      .replace(/\{historyCategories\}/g, historyCatsStr)
+      .replace(/\{unifiedCategories\}/g, unifiedCatsStr);
 
     conversation = await callStructuredAI({
       agent: 'DISCOVER',
@@ -671,14 +687,17 @@ export async function POST(request: Request) {
     }
 
     // 3) 카테고리(categories/field_preference) 질문인 경우:
-    // 프로필 관심분야가 있고, 과거 활동 이력이 없으며, 아직 '새로운/다른 분야'를 선택하지 않았다면 프로필 관심분야 맞춤 질문 100% 강제 적용
+    // AI가 지난 활동 카테고리나 프로필 관심분야를 누락하고 엉뚱한 질문을 하는 것을 방지하고,
+    // 옵션([같은 분야로 찾을래요], [새로운 분야에 도전해볼래요] 등)과 100% 일치하는 맞춤 멘트 강제 적용!
     if (
       (chosenQuestionKey === 'categories' || chosenQuestionKey === 'field_preference') &&
-      rawProfileCatsForReply.length > 0 &&
-      !hasHistory &&
       adaptiveAnswers.fieldPreference !== 'new'
     ) {
-      reply = fallback.reply;
+      if (hasHistory) {
+        reply = fallback.reply;
+      } else if (rawProfileCatsForReply.length > 0) {
+        reply = fallback.reply;
+      }
     }
 
     // 만약 AI가 이미 답변된 질문 축을 되묻거나, 남은 질문 축과 불일치하는 질문을 냈다면, 다음 남은 질문의 안내로 교체

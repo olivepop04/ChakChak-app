@@ -422,6 +422,99 @@ export function analyzeUserContext({
   };
 }
 
+export interface ResolveUnifiedCategoriesParams {
+  profileCategories?: readonly string[] | null;
+  pastActions?: readonly { category: string; created_at?: string; activity_start_at?: string }[];
+  maxCount?: number;
+}
+
+export interface UnifiedCategoriesResult {
+  unifiedCategories: string[];
+  primaryHistoryCategories: string[];
+  profileCategories: string[];
+  hasHistory: boolean;
+  hasProfileCategories: boolean;
+}
+
+/**
+ * 프로필 관심분야와 과거 활동 이력(호스트 + 참여)을 분석하여
+ * 빈도 패턴을 필터링하고 최대 2~3개의 {통합분야} 목록을 도출합니다.
+ *
+ * 규칙:
+ * 1. 프로필 소개글(bio)은 분야 분류 시 일체 배제한다.
+ * 2. 과거 활동의 분야별 빈도를 집계한다.
+ * 3. 2회 이상 참여/호스트한 분야를 주력 분야로 우선 필터링한다. (2회 이상이 없으면 최다 빈도 상위 1~2개)
+ * 4. 프로필 관심분야와 과거 주력 활동 분야를 결합하되, 겹치는 교집합을 1순위, 프로필 등록 분야를 2순위, 주력 활동 분야를 3순위로 정렬한다.
+ * 5. 최대 3개(기본 2~3개)로 압축하여 대화 멘트 및 추천 랭킹에 전달한다.
+ */
+export function resolveUnifiedCategories({
+  profileCategories = [],
+  pastActions = [],
+  maxCount = 3,
+}: ResolveUnifiedCategoriesParams): UnifiedCategoriesResult {
+  // 1. 프로필 관심분야 정제 ('전체' 제외)
+  const validProfileCats = (profileCategories ?? [])
+    .filter((c): c is string => Boolean(c) && c !== '전체');
+
+  // 2. 과거 활동 액션의 카테고리 빈도 집계
+  const counts = new Map<string, number>();
+  for (const action of pastActions) {
+    if (action.category) {
+      counts.set(action.category, (counts.get(action.category) ?? 0) + 1);
+    }
+  }
+
+  // 3. 과거 활동 대표 분야 도출 (빈도 패턴 기반)
+  const sortedHistoryByFreq = Array.from(counts.entries()).sort(
+    (a, b) => b[1] - a[1],
+  );
+
+  let primaryHistoryCategories: string[] = [];
+  if (sortedHistoryByFreq.length > 0) {
+    // 2회 이상 참여한 카테고리 필터링
+    const freq2OrMore = sortedHistoryByFreq
+      .filter(([_, count]) => count >= 2)
+      .map(([cat]) => cat);
+
+    if (freq2OrMore.length > 0) {
+      primaryHistoryCategories = freq2OrMore.slice(0, 2);
+    } else {
+      // 2회 이상이 없으면(모두 1회씩 등) 최다 빈도 상위 1~2개
+      primaryHistoryCategories = sortedHistoryByFreq.slice(0, 2).map(([cat]) => cat);
+    }
+  }
+
+  // 4. 프로필 관심분야와 과거 주력 활동 분야 병합
+  // 1) 둘 다 겹치는 교집합 (최우선)
+  // 2) 프로필에 등록된 관심분야
+  // 3) 과거 주력 활동 분야
+  const intersection = validProfileCats.filter((c) =>
+    primaryHistoryCategories.includes(c),
+  );
+  const profileOnly = validProfileCats.filter(
+    (c) => !primaryHistoryCategories.includes(c),
+  );
+  const historyOnly = primaryHistoryCategories.filter(
+    (c) => !validProfileCats.includes(c),
+  );
+
+  const merged = [
+    ...intersection,
+    ...profileOnly,
+    ...historyOnly,
+  ];
+
+  const unifiedCategories = merged.slice(0, maxCount);
+
+  return {
+    unifiedCategories,
+    primaryHistoryCategories,
+    profileCategories: validProfileCats,
+    hasHistory: pastActions.length > 0,
+    hasProfileCategories: validProfileCats.length > 0,
+  };
+}
+
 export interface QuestionOptionContext {
   hasHistory?: boolean;
   hasRegionAndTime?: boolean;
@@ -690,14 +783,24 @@ export function getQuestionReply(
       ].join('\n');
     }
 
-    const categories = compactList(fieldReferenceCategories);
-    if (categories && hasHistory) {
+    const profileCats = (profileCategories ?? []).filter((c) => c !== '전체');
+    const allKnownCats = [
+      ...new Set([...profileCats, ...fieldReferenceCategories]),
+    ];
+    const combinedStr = compactList(allKnownCats);
+
+    if (hasHistory && profileCats.length > 0 && combinedStr) {
       return [
-        `${nickname}님의 지난 활동들을 살펴보니 [${categories}] 분야에 주로 참여하셨네요. 이번에도 비슷한 분야로 찾아드릴까요?`,
+        `${nickname}님의 프로필 관심분야와 지난 활동들을 살펴보니 [${combinedStr}] 분야에 주로 관심과 경험이 있으시네요. 이번에도 이 분야 위주로 찾아드릴까요?`,
       ].join('\n');
     }
 
-    const profileCats = (profileCategories ?? []).filter((c) => c !== '전체');
+    if (hasHistory && combinedStr) {
+      return [
+        `${nickname}님의 지난 활동들을 살펴보니 [${combinedStr}] 분야에 주로 참여하셨네요. 이번에도 비슷한 분야로 찾아드릴까요?`,
+      ].join('\n');
+    }
+
     if (profileCats.length > 0) {
       const catsStr = profileCats.slice(0, 3).join(', ');
       return [

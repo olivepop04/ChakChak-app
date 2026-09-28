@@ -14,6 +14,7 @@ import {
   shouldRecommendNow,
   validateHarmfulSkillInput,
   formatSummaryChips,
+  resolveUnifiedCategories,
   ALL_15_SKILLS,
 } from '../app/api/ai/discover/interview.ts';
 import { SKILLS } from '../lib/constants/index.ts';
@@ -1182,6 +1183,84 @@ test('[과거 활동 분야 유지 및 분위기 상관없음 검증] 같은 분
   assert.equal(chips.includes('액션 성격 상관없음'), true);
   assert.equal(chips.includes('분야 상관없음'), false);
 });
+
+test('[프로필 관심분야와 과거 활동 이력 종합 검증] 프로필 정보와 과거 활동 이력을 다같이 종합하여 분야 확인 질문과 선택지를 생성하고 파싱한다', () => {
+  // 1. 질문 생성 검증: 프로필 관심분야 [아동·청소년] + 과거 활동 [환경]
+  const reply = getQuestionReply('categories', {
+    nickname: '서연',
+    answers: {},
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: ['환경'],
+    hasHistory: true,
+    profileCategories: ['아동·청소년'],
+  });
+
+  assert.equal(
+    reply.includes('서연님의 프로필 관심분야와 지난 활동들을 살펴보니') &&
+      reply.includes('아동·청소년') &&
+      reply.includes('환경'),
+    true,
+  );
+
+  // 2. 대화에서 '같은 분야로 찾을래요' 답변 시 프로필과 활동 분야가 모두 추출되는지 검증
+  const messages = [
+    { role: 'assistant' as const, content: reply },
+    { role: 'user' as const, content: '같은 분야로 찾을래요 👍' },
+  ];
+  const answers = extractAnswersFromDialogue(messages);
+  assert.equal(answers.fieldPreference, 'familiar');
+  assert.equal(answers.selectedCategories?.includes('아동·청소년'), true);
+  assert.equal(answers.selectedCategories?.includes('환경'), true);
+});
+
+test('[통합분야 패턴 필터링 규칙 검증] 다회 참여(빈도 2회 이상) 분야만 선별하고 산발적 1회 참여는 걸러낸다', () => {
+  // A(노인) 3회, B(장애) 2회, C(환경) 1회, D(동물) 1회, E(교육) 1회, F(지역사회) 1회
+  const pastActions = [
+    { category: '노인' },
+    { category: '노인' },
+    { category: '노인' },
+    { category: '장애' },
+    { category: '장애' },
+    { category: '환경' },
+    { category: '동물' },
+    { category: '교육' },
+    { category: '지역사회' },
+  ];
+
+  // 1. 프로필에 '아동·청소년'이 있는 경우
+  const res = resolveUnifiedCategories({
+    profileCategories: ['아동·청소년'],
+    pastActions,
+    maxCount: 3,
+  });
+
+  // 주력 활동 분야는 빈도 2회 이상인 ['노인', '장애']만 선별되어야 함 (환경, 동물, 교육, 지역사회는 제외)
+  assert.deepEqual(res.primaryHistoryCategories, ['노인', '장애']);
+  // 통합분야는 프로필 '아동·청소년' + 주력 '노인', '장애' 총 3개로 압축
+  assert.deepEqual(res.unifiedCategories, ['아동·청소년', '노인', '장애']);
+});
+
+test('[통합분야 패턴 필터링 규칙 검증] 모든 분야가 1회씩만 참여한 경우 최다/최근 상위 2개로 압축한다', () => {
+  const pastActions = [
+    { category: '노인' },
+    { category: '장애' },
+    { category: '환경' },
+    { category: '동물' },
+  ];
+
+  const res = resolveUnifiedCategories({
+    profileCategories: ['동물'],
+    pastActions,
+    maxCount: 3,
+  });
+
+  assert.equal(res.unifiedCategories.length <= 3, true);
+  // 프로필과 겹치는 '동물'이 최우선 포함
+  assert.equal(res.unifiedCategories.includes('동물'), true);
+});
+
+
 
 
 
