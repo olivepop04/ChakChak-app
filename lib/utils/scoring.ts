@@ -45,6 +45,13 @@ export interface ScoringAnswers {
   groupSizePreference?: AdaptiveScoringAnswers['groupSizePreference'];
   fieldPreference?: AdaptiveScoringAnswers['fieldPreference'];
   travelRange?: 'exact' | 'province' | 'any' | null;
+  targetGroupPreference?: AdaptiveScoringAnswers['targetGroupPreference'];
+  difficultyPreference?: AdaptiveScoringAnswers['difficultyPreference'];
+  activityTypePreference?: AdaptiveScoringAnswers['activityTypePreference'];
+  selectedSkill?: string | null;
+  userKeywords?: string[];
+  userTimePreferences?: string[];
+  selectedRegion?: string | null;
 }
 
 export interface ActionScoringMetadata {
@@ -52,6 +59,10 @@ export interface ActionScoringMetadata {
   skills: string[];
   /** 사람 모집 항목의 최대 인원 합계. 최소 모집이면 min_required 합계 */
   groupSize: number | null;
+  targetGroups?: string[];
+  difficulty?: string | null;
+  activityTypes?: string[];
+  keywords?: string[];
 }
 
 export interface ScoredAction {
@@ -66,9 +77,15 @@ function guessMode(action: ActionCardData): string {
   return action.category === '환경' ? '직접 행동으로' : '시간을 내서';
 }
 
+/** KST (UTC+9) 기준 시(0~23)를 돌려줍니다. 배포 서버의 TZ(UTC 등)에 무관하게 항상 KST 기준으로 판정합니다. */
+function getKstHours(iso: string): number {
+  const d = new Date(iso);
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).getUTCHours();
+}
+
 function getTimeSlot(iso: string | null): TimeSlot | null {
   if (!iso) return null;
-  const hour = new Date(iso).getHours();
+  const hour = getKstHours(iso);
   if (hour >= 5 && hour < 12) return '오전';
   if (hour >= 12 && hour < 18) return '오후';
   if (hour >= 18 && hour < 22) return '저녁';
@@ -99,6 +116,55 @@ function matchesTimePreference(
   return { matched: true, label };
 }
 
+function matchesFlexibleTime(
+  action: ActionCardData,
+  timePrefs: TimePref[],
+  userTimeSlots: string[] = [],
+  availableTimes: string[] = [],
+): { matched: boolean; label: string } {
+  if (userTimeSlots.includes('시간 상관없음')) {
+    return { matched: true, label: '시간 상관없음' };
+  }
+
+  if (action.activityStartAt && userTimeSlots.length > 0) {
+    const day = isWeekend(action.activityStartAt) ? '주말' : '평일';
+    const hour = getKstHours(action.activityStartAt);
+    let slotLabel = '';
+    if (hour >= 5 && hour < 12) slotLabel = '오전';
+    else if (hour >= 12 && hour < 18) slotLabel = '오후';
+    else if (hour >= 18 && hour < 22) slotLabel = '저녁';
+    else slotLabel = '밤';
+
+    const currentCombination = `${day} ${slotLabel}`;
+    const hits = userTimeSlots.some((slot) => {
+      if (slot === currentCombination) return true;
+      if (slot === '평일 낮' && day === '평일' && (slotLabel === '오전' || slotLabel === '오후')) return true;
+      if (slot.includes(day)) return true;
+      return false;
+    });
+
+    if (hits) {
+      return { matched: true, label: `${currentCombination} 활동` };
+    }
+  }
+
+  const timeMatch = matchesTimePreference(action, timePrefs);
+  if (timeMatch.matched) return timeMatch;
+
+  const weekend = isWeekend(action.activityStartAt);
+  const legacyTimeMatch =
+    timePrefs.length === 0 &&
+    ((weekend && availableTimes.includes('주말')) ||
+      (!weekend && availableTimes.includes('평일')) ||
+      availableTimes.includes('시간이 생길 때마다'));
+
+  if (legacyTimeMatch) {
+    return { matched: true, label: weekend ? '주말 활동' : '평일 활동' };
+  }
+
+  return { matched: false, label: '' };
+}
+
 export function scoreAction(
   action: ActionCardData,
   profile: ScoringProfile,
@@ -112,18 +178,11 @@ export function scoreAction(
   let score = 0;
   const matched: string[] = [];
 
-  // 1) 관심 카테고리 — 프로필과 이번 답변 둘 다 봅니다
-  //
-  // '전체' 는 "가리지 않는다" 는 뜻이므로 어떤 카테고리와도 맞는 것으로 봅니다.
-  // 이 방어가 없으면 '전체' 를 고른 사람은 8개 중 어느 것과도 안 맞아
-  // 관심 분야 30점이 영구히 0점이 됩니다. 에러가 안 나서 알아채기 어렵습니다.
+  // 1) 관심 카테고리 (categories) — 25점
   const wanted = new Set(
     [...profile.categories, answers.category].filter(Boolean) as string[],
   );
-  const wantsAll = wanted.has('전체');
-  // 액션이 카테고리를 여러 개 가질 수 있습니다 (14).
-  // 그중 하나라도 관심 분야면 점수를 줍니다. 대표만 보면
-  // 두 번째 카테고리가 내 관심사인 액션이 추천에서 밀립니다.
+  const wantsAll = wanted.has('전체') || answers.category === '상관없음';
   const actionCats = action.categories?.length
     ? action.categories
     : [action.category];
@@ -133,37 +192,36 @@ export function scoreAction(
     matched.push(wantsAll ? '관심 분야' : `관심 분야(${hit})`);
   }
 
-  // 2) 활동 가능 지역
+  // 2) 활동 가능 지역 (region) — 10점
+  const targetRegions = answers.selectedRegion ? [answers.selectedRegion] : profile.regions;
   const travelRange = answers.travelRange ?? answers.range;
-  if (travelRange === 'any' || profile.regions.includes(NATIONWIDE)) {
-    score += 12;
+  if (travelRange === 'any' || targetRegions.includes(NATIONWIDE) || !action.address) {
+    score += 5;
     matched.push('지역 상관없음');
-  } else if (matchesRegion(action.address, profile.regions)) {
-    score += 20;
+  } else if (matchesRegion(action.address, targetRegions)) {
+    score += 10;
     matched.push('가까운 지역');
   } else if (
-    travelRange === 'province' &&
-    sameProvince(action.address, profile.regions)
+    (travelRange === 'province' || travelRange === undefined) &&
+    sameProvince(action.address, targetRegions)
   ) {
-    score += 16;
+    score += 7;
     matched.push('같은 시·도');
   }
 
-  // 3) 참여 가능 요일·시간대 — 새 2단계 설정을 우선 사용합니다.
-  // 아직 time_prefs 가 비어 있는 기존 회원만 available_times 로 보완합니다.
-  const timeMatch = matchesTimePreference(action, profile.timePrefs);
-  const weekend = isWeekend(action.activityStartAt);
-  const legacyTimeMatch =
-    profile.timePrefs.length === 0 &&
-    ((weekend && profile.availableTimes.includes('주말')) ||
-      (!weekend && profile.availableTimes.includes('평일')) ||
-      profile.availableTimes.includes('시간이 생길 때마다'));
-  if (timeMatch.matched || legacyTimeMatch) {
-    score += 15;
-    matched.push(timeMatch.label || (weekend ? '주말 활동' : '평일 활동'));
+  // 3) 참여 가능 시간대 (time) — 10점
+  const timeResult = matchesFlexibleTime(
+    action,
+    profile.timePrefs,
+    answers.userTimePreferences ?? [],
+    profile.availableTimes,
+  );
+  if (timeResult.matched) {
+    score += 10;
+    matched.push(timeResult.label);
   }
 
-  // 4) 참여 방식
+  // 4) 참여 방식 (participation_modes)
   const modes =
     metadata.participationModes.length > 0
       ? metadata.participationModes
@@ -179,16 +237,26 @@ export function scoreAction(
     matched.push('팔로우한 사람의 액션');
   }
 
+  // 6) 7대 메타데이터 어댑티브 트레이트 점수 합산 (재능 15, 성격 15, 난이도 15, 환경 10, 모임규모 10, 분야선호 ±10, 키워드 10)
   const adaptive = scoreAdaptiveTraits({
     profileSkills: profile.skills,
     historyCategories: profile.historyCategories,
     actionCategory: action.category,
     actionSkills: metadata.skills,
     actionGroupSize: metadata.groupSize,
+    actionTargetGroups: metadata.targetGroups ?? [],
+    actionDifficulty: metadata.difficulty ?? null,
+    actionActivityTypes: metadata.activityTypes ?? [],
+    actionKeywords: metadata.keywords ?? [],
     answers: {
       talentPreference: answers.talentPreference ?? null,
       groupSizePreference: answers.groupSizePreference ?? null,
       fieldPreference: answers.fieldPreference ?? null,
+      targetGroupPreference: answers.targetGroupPreference ?? null,
+      difficultyPreference: answers.difficultyPreference ?? null,
+      activityTypePreference: answers.activityTypePreference ?? null,
+      selectedSkill: answers.selectedSkill ?? null,
+      userKeywords: answers.userKeywords ?? [],
     },
   });
   score += adaptive.score;

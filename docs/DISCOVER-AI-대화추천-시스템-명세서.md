@@ -1,6 +1,6 @@
 # DISCOVER AI 대화·추천 시스템 종합 명세서
 
-> **프로젝트**: 착착(CHAK CHAK) 사회공헌 액션 플랫폼  
+> **프로젝트**: 착착(CHAK CHAK) 선한 영향력 액션 SNS  
 > **시스템 명칭**: DISCOVER AI 대화형 맞춤 추천 시스템  
 > **관련 파일**: `app/api/ai/discover/route.ts`, `app/api/ai/discover/interview.ts`, `lib/utils/scoring.ts`, `docs/AI-콘텐츠-자동분류-색인-시스템.md`  
 > **최종 갱신일**: 2026-09-26  

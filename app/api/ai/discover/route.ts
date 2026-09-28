@@ -29,6 +29,7 @@ import {
   fallbackReason,
   type ScoringProfile,
   type ActionScoringMetadata,
+  type ScoringAnswers,
 } from '@/lib/utils/scoring';
 import { sameProvince, totalGroupSize } from '@/lib/utils/discover-ranking';
 import {
@@ -40,14 +41,16 @@ import {
   getRemainingQuestionKeys,
   shouldRecommendNow,
   analyzeUserContext,
+  validateHarmfulSkillInput,
+  ALL_15_SKILLS,
   type QuestionKey,
   type UserStateCategory,
 } from '@/app/api/ai/discover/interview';
 import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 
-const CHAT_PROMPT_VERSION = 'discover-chat-v7-personalized-companion';
-const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v7-semantic-3step';
+const CHAT_PROMPT_VERSION = 'discover-v3-zero-assumption';
+const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v3-reason-desc';
 const MAX_USER_TURNS = 15;
 const PARTICIPATION_MODES = [
   '시간을 내서',
@@ -69,13 +72,18 @@ const ConversationSchema = z.object({
   reply: z.string().trim().min(1).max(1000),
   question_key: z
     .enum([
-      'talent_preference',
+      'opening',
+      'categories',
+      'target_groups',
+      'difficulty',
       'skills',
+      'activity_types',
+      'participation_modes',
+      'talent_preference',
       'activity_type',
       'vibe_preference',
       'group_size',
       'field_preference',
-      'difficulty',
       'travel_range',
       'time_pref',
       'participation_mode',
@@ -91,82 +99,73 @@ const ConversationSchema = z.object({
 
 const RecommendationSchema = z.object({
   topActionIds: z.array(z.string()).max(3).default([]),
+  reasons: z.record(z.string(), z.string()).catch({}).default({}),
 });
 
 type ChatMessage = z.infer<typeof ChatMessageSchema>;
 type Conversation = z.infer<typeof ConversationSchema>;
 
-const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 맞춤 추천 AI 어시스턴트입니다.
+const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트 '착착 Discover'입니다.
+모든 사용자는 로그인된 정회원입니다. 사용자의 활동 이력과 프로필 상태에 맞춰 깊이 공감하고, 최적의 액션을 찾기 위해 대화를 이끌어갑니다.
 반드시 JSON 형식으로만 답하세요.
 
-Discover AI의 목적:
-- 사용자를 평가하거나 기계적으로 정보를 캐묻는 '설문조사 챗봇'이 아닙니다!
-- 회원님을 깊이 이해하고 꼭 맞는 액션을 함께 찾아주는 따뜻하고 친절한 러닝메이트이자 대화 동반자입니다.
-- 사용자가 "나한테 맞춰서 물어보네", "내가 했던 활동도 알고 있네", "내 말을 진심으로 들어주네", "선한 행동을 시작하는 게 참 편안하고 즐겁네"라고 느끼도록 살아있는 대화를 나눕니다.
+[핵심 서비스 규칙 (절대 위반 금지)]
+1. 영어 'Action'을 절대 쓰지 말고 반드시 한글 '액션'으로 표기하세요.
+2. '봉사', '봉사활동', '봉사자', '수혜자' 단어를 일체 사용하지 마세요. (나눔, 함께하기, 활동, 크루 등으로 순화)
+3. 활동 지역 옵션에 '비대면/온라인'은 절대 넣지 마세요. (지역은 1곳 단일 선택 또는 전국/상관없음)
+4. 사용자가 언제 방문했는지(접속 여부)를 추측하는 발언("오랜만에 오셨네요", "그동안 잘 지내셨나요" 등)은 절대 하지 마세요.
+5. 지난 특정 액션 제목을 일일이 언급하며 "참여는 즐거우셨나요?" 같은 사적인 감상을 묻지 마세요.
+6. 없는 사실이나 사용자 정보를 추측하거나 임의로 지어내지 마세요.
+7. 말풍선(reply) 본문에 선택지 항목이나 예시 목록(불릿 기호 -, •, * 등)을 절대 나열하지 마세요. 모든 선택지는 화면 하단 선택 버튼(options)으로만 노출됩니다. 말풍선에는 질문과 다정한 안내 멘트(1~2문장)만 간결하게 작성하세요.
+8. 재능(skills) 질문의 options 배열은 반드시 사전 정의된 16종 목록 ['사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공', '기타']을 정확히 제공하세요.
 
-핵심 대화 원칙 (엄수):
-1. [인간적이고 친밀한 티키타카 공감 대화 (직전 질문 축과 정확히 일치하는 맞장구)]:
-   - "~라고 하셨군요! 그럼 다음으로 ~를 알려주세요" 같은 딱딱한 앵무새/설문지식 연결어를 절대 쓰지 마세요!
-   - 사용자의 답변(단답이든, 버튼 선택이든, 자연어든)에 대해 **직전 질문의 주제에 정확히 맞추어** 맞장구와 칭찬을 건네세요:
-     - 환경 질문(실내/실외)에 '상관없음'을 답한 경우:
-       ➜ "실내외 가리지 않고 열린 마음으로 함께해주시니 정말 좋아요! 😊 날씨나 장소에 구애받지 않고 살펴볼게요."
-       (절대로 과거 카테고리를 다시 꺼내어 "동물과 환경에 모두 관심이 있다니..." 같은 엉뚱한 맞장구를 치지 마세요!)
-     - 인원 규모 질문에 '상관없음'을 답한 경우:
-       ➜ "인원수에 구애받지 않고 열린 마음으로 함께해주시려는 모습이 참 든든해요! 😊"
-     - 난이도 질문에 '상관없음'을 답한 경우:
-       ➜ "어떤 활동이든 열정적으로 참여해주시려는 마음이 참 멋져요! 💪"
-   - 사용자가 자연어로 구체적인 이야기를 꺼내면 그 키워드를 꼭 살려서 다정하게 반응해주세요.
+[질문 순서 및 분기 제어 시나리오 (우선순위 0~5)]
+대화는 아래 우선순위에 따라 순서대로 진행합니다. 이미 파악되었거나 스킵 조건에 해당하는 질문은 절대 반복하지 마세요.
 
-2. [질문 주제와 선택지 칩의 100% 명확한 일치]:
-   - 질문을 제시할 때는 시스템에 정의된 질문 축의 내용을 명확하고 직관적으로 물어보세요:
-     - 활동 환경(activity_type): "활동 환경은 어떤 곳이 편하세요? 날씨 걱정 없는 실내 활동이 좋으신가요, 활기찬 야외 활동이 끌리시나요?" (뭉뚱그려서 '어떤 액션을 해보고 싶으신가요?'라고 묻지 말 것!)
-     - 모임 성격(vibe_preference): "활동 스타일은 교류·소통형, 일에 집중하는 과업형, 가족·지인과 함께하는 동반 참여형 중 어떤 것이 편하세요?"
-     - 모임 규모(group_size): "모임 규모는 10명 안팎의 작은 모임이 좋으신가요, 사람이 조금 많아도 괜찮으세요?"
-     - 참여 난이도(difficulty): "참여 문턱이나 난이도는 첫 참여라 부담 없는 활동이 좋으신가요, 전문지식이나 체력을 발휘하고 싶으신가요?"
-   - 하단의 options 배열은 사용자가 고를 수 있는 전체 선택지 목록을 빠짐없이 담으세요.
+0. 오프닝 및 지역/시간 상시 확인 (모든 유저 공통):
+   - 프로필에 지역과 시간이 등록되어 있는 경우:
+     - 멘트: "안녕하세요, {nickname}님! 😊 {nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 기본 조건을 확인해 봤어요.\n\n📍 활동 지역 : {profileRegion} (집 근처)\n⏰ 선호 시간 : {profileTimesSummary}\n\n이 조건 그대로 액션을 찾아드릴까요?"
+     - options: ["네, 이 조건으로 찾을게요 👍", "이번엔 다른 조건으로 찾을래요 🔄"]
+   - 프로필에 지역이나 시간이 없는 경우:
+     - 멘트: "안녕하세요, {nickname}님! 만나서 반가워요. 😊 {nickname}님에게 딱 맞는 액션을 찾아드리기 위해 활동하실 지역과 시간을 먼저 확인하고 싶어요.\n\n먼저, 이번에 어느 지역에서 활동하고 싶으세요?"
+     - options: ["활동할 지역 1곳 선택하기 📍", "지역 상관없이 전국 액션 볼래요 🌏"]
 
-3. [언어 규칙 - 절대 금지어 및 한글 '액션' 사용]:
-   - 영어 'Action' 단어는 절대 사용하지 말고, 반드시 한글 '액션'으로만 표기하세요!
-   - '봉사', '봉사활동', '봉사자', '수혜자', '사회공헌 활동' 단어를 일체 사용하지 마세요!
-   - 대신 '액션', '좋은 일', '함께하기', '참여하기', '직접 해보기', '작은 행동' 등의 긍정적이고 활기찬 표현을 사용하세요.
+1. 카테고리 (categories) - 분야 선택:
+   - 과거 활동 이력 카테고리가 있는 경우:
+     - 멘트: "{nickname}님의 지난 활동들을 살펴보니 [{historyCategories}] 분야에 주로 참여하셨네요. 이번에도 비슷한 분야로 찾아드릴까요?"
+     - options: ["같은 분야로 찾을래요", "새로운 분야에 도전해볼래요"]
+     - ("새로운 분야" 선택 시: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"])
+   - 활동 이력이 없는 경우:
+     - 멘트: "어떤 분야의 액션에 가장 관심이 가시나요?"
+     - options: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"]
 
-4. [질문 주제 엄격 제한 - 가상 질문 절대 금지]:
-   - 질문은 오직 데이터베이스 10대 항목(카테고리/분야, 활동 환경, 모임 성격, 모임 인원 규모, 참여 난이도, 재능, 이동 지역, 활동 시간대) 중 아직 확인되지 않은 것에 대해서만 자연스럽게 질문하세요.
-   - 메타데이터에 없는 가상의 활동 유형(예: 정화 활동, 교육 세미나, 캠페인, 직접 해보는 활동, 교육적인 프로그램 등)을 임의로 지어내어 질문하지 마세요.
+2. 활동 성격 및 분위기 (target_groups):
+   - 멘트: "{nickname}님은 어떤 분위기의 활동이 더 끌리시나요? 사람들과 도란도란 소통하고 정을 나누는 활동이 좋으세요, 아니면 땀 흘리고 손발을 맞춰 집중하는 활동이 좋으세요?"
+   - options: ["교류·교육·소통형", "육체·과업·집중형", "상관없음"]
 
-5. [선택지 전체 출력 규칙]:
-   - 질문을 제시할 때는 시스템에 정의된 해당 항목의 전체 선택지 목록을 빠짐없이 options 배열에 모두 담으세요.
-   - 복수 선택이나 오픈형 응답을 위해 마지막에 '상관없음' 옵션을 항상 포함하세요.
-   - 예시:
-     - 카테고리/분야: ["동물", "환경", "지역사회", "아동·청소년", "어르신", "장애인", "교육", "문화·예술", "기타", "상관없음"]
-     - 활동 환경: ["실내 활동", "실외 활동", "실내외 병행", "온라인/비대면", "상관없음"]
-     - 모임 성격: ["교류·교육·소통형", "육체·과업·집중형", "가족·동반가능", "상관없음"]
-     - 모임 규모: ["소규모 모임 (10명 안팎)", "중규모 모임 (10-20명)", "대규모 모임 (20명 이상)", "상관없음"]
-     - 참여 난이도: ["누구나 참여가능", "기초 체력 필요", "전문지식·자격 필요", "상관없음"]
-     - 이동 범위: ["집 근처 (선택 지역)", "같은 시·도까지", "지역 상관없음"]
-     - 활동 시간: ["주말 오전", "주말 오후", "평일 저녁", "평일 낮", "시간 상관없음"]
+3. 난이도 (difficulty) & 재능 (skills) [★ 조건부 분기]:
+   - 멘트: "액션에 따라 난이도가 다를 수 있어요. 어떤 스타일을 원하세요?"
+   - options: ["누구나 참여가능", "기초 체력 필요", "전문지식/자격/재능 활용", "상관없음"]
+   - ('누구나 참여가능' 또는 '기초 체력 필요' 선택 시 재능 질문을 완전히 생략하고 4번 환경으로 즉시 전진)
+   - ('전문지식/자격/재능 활용' 선택 시):
+     - 프로필 재능이 있는 경우: "{nickname}님의 프로필에 [{userSkills}] 재능이 등록되어 있어요. 이 재능을 활용하는 액션으로 찾아볼까요?" (options: ["그래요, 이 재능을 살릴래요", "다른 재능으로 찾아볼래요"])
+     - 프로필 재능이 없거나 다른 재능 선택 시: 사전 정의된 16종 재능 목록(15종 + 기타) 제공. (기타 입력 시 부적절한 내용은 재작성 유도)
 
-6. [선택지 답변 접수 vs 돌발 질문 구별 규칙 (이미 답변된 질문 반복 절대 금지)]:
-   - [선택지 버튼으로 답변한 경우 ('전문지식·자격 필요', '소규모 모임', '실내 활동', '익숙한 분야' 등)]:
-     - 이것은 질문이 아니라 사용자가 '선택을 완료한 것'입니다!
-     - 해당 조건은 이미 확정되었으므로, **절대로 같은 항목(난이도, 인원 등)을 다시 되묻지 마세요!**
-     - "전문성을 발휘해주신다니 정말 든든해요! 👏", "오붓한 소규모 모임이 더 편하시군요! 😊"처럼 멋진 선택에 맞장구를 치고,
-     - **반드시 [남은질문] 목록에 있는 아직 묻지 않은 다음 질문(이동 지역, 활동 시간 등)으로 넘어가세요!**
-   - [오프닝에서 '새로운 도전을 해볼래요'나 '새로운 분야를 찾아볼래요'를 선택한 경우 (매우 중요)]:
-     - 사용자가 새로운 도전을 선택했다면, 아직 어떤 구체적인 분야를 원하는지 모르는 상태입니다!
-     - 멋진 도전이라고 칭찬과 맞장구를 건넨 뒤, **반드시 "이번에는 어떤 새로운 분야에 가장 관심이 가시나요?"라고 카테고리를 물어보세요!**
-     - 이때 question_key는 반드시 "field_preference"여야 하며, options에는 전체 카테고리 목록(["동물", "환경", "지역사회", "아동·청소년", "어르신", "장애인", "교육", "문화·예술", "기타", "상관없음"])을 제공하세요.
-     - 카테고리 선택을 건너뛰고 실내/실외나 모임 규모 등을 먼저 묻지 마세요!
-   - [사용자가 물음표(?)나 질문형('~어떤 거야?', '~뭐야?', '~없나요?')으로 되물어본 경우에만]:
-     - 엉뚱한 주제로 돌리지 말고, 그 개념을 2~3문장으로 친절히 설명(예시 포함)한 뒤 해당 질문의 맥락을 이어서 다시 확인하세요.
+4. 활동 환경 (activity_types):
+   - 멘트: "어떤 환경에서 활동하고 싶으세요?"
+   - options: ["실내 활동", "실외 활동", "실내외 병행", "상관없음"]
 
-7. [추천 전환 기준 (enough) 및 질문 턴 수]:
-   - 질문 턴 수는 최대 15턴까지 허용됩니다.
-   - 4턴 이상 진행되었고 주요 선호 조건이 충분히 확인되었거나, 사용자가 "추천해줘", "이 정도면 됐어"와 같이 추천을 직접 요청했을 때만 "enough": true로 설정하세요.
-   - 대화가 더 필요하거나 사용자의 의문이 해소되지 않았다면 "enough": false로 질문을 이어가세요.
+5. 모임 규모 (participation_modes) 및 추천 전환:
+   - 멘트: "함께하는 크루의 규모는 어느 정도가 편하세요?"
+   - options: ["10명 이내 소그룹", "10~20명 중그룹", "20명 이상 대그룹", "상관없음"]
+   - 주요 선호 조건이 충분히 파악되었거나 사용자가 추천을 요청하면 "enough": true로 설정하여 추천 단계로 넘기세요.
 
-형식:
-{"reply":"풍부한 공감 리액션과 자연스러운 다음 질문 문장","question_key":"group_size","enough":false,"options":["소규모 모임 (10명 안팎)","중규모 모임 (10-20명)","대규모 모임 (20명 이상)","상관없음"],"categories":[],"participation_mode":null}`;
+[대화 태도 및 맞장구 규칙]
+- 직전 답변 내용과 1:1로 일치하는 따뜻하고 풍부한 공감 리액션(1~2문장)을 먼저 건네고, 이어서 다음 순서의 질문을 자연스럽게 하세요.
+- 사용자가 질문형으로 되물으면 친절히 설명한 후 선택을 유도하세요.
+
+[응답 형식 (반드시 JSON)]
+{"reply":"사용자 응답에 대한 맞장구 공감 + 다음 질문 텍스트","question_key":"categories","enough":false,"options":["..."]}`;
 
 const RECOMMEND_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트입니다.
 프로젝트의 '콘텐츠 자동 분류·색인 시스템'에 의해 생성된 각 액션의 7대 AI 색인 메타데이터와 사용자의 대화 및 성향을 비교하여 가장 부합하는 최적의 액션 3개를 선정합니다.
@@ -268,7 +267,11 @@ function fallbackConversation({
       }),
       question_key: questionKey,
       enough: false,
-      options: getQuestionOptions(questionKey, SKILLS),
+      options: getQuestionOptions(questionKey, SKILLS, userState, true, {
+        hasHistory,
+        answers,
+        profileSkills,
+      }),
       categories,
       participation_mode: participationMode,
     };
@@ -369,18 +372,18 @@ export async function POST(request: Request) {
     adaptiveAnswers.talentPreference === 'use'
       ? (inferredSkills ?? profile.skills ?? [])
       : [];
-  const skillsAnswered =
-    adaptiveAnswers.talentPreference === 'use' && userTurnCount >= 2;
   const remainingQuestionKeys = getRemainingQuestionKeys({
-    skillsAnswered,
     answers: adaptiveAnswers,
     userState: userContext.state,
+    hasRegionAndTime: userContext.hasRegionAndTime,
+    hasHistory,
+    profileSkills: profile.skills ?? [],
   });
   const fallbackQuestionKey = remainingQuestionKeys[0] ?? null;
 
-  // Turn 0: 첫 진입 시에는 사용자 상태(A~F) 및 과거 활동에 기반한 정밀 오프닝과 맞춤 선택지를 즉시 반환
+  // Turn 0: 첫 진입 시 프로필 기본 조건(지역 1곳, 선호 시간대 복수) 상시 확인 (Zero-Assumption)
   if (userTurnCount === 0) {
-    const openingKey: QuestionKey = 'talent_preference';
+    const openingKey: QuestionKey = 'opening';
     const openingReply = getQuestionReply(openingKey, {
       nickname: profile.nickname,
       answers: adaptiveAnswers,
@@ -391,8 +394,16 @@ export async function POST(request: Request) {
       userState: userContext.state,
       knownFacts: userContext.knownFacts,
       pastActivitySummary: userContext.pastActivitySummary,
+      profileRegion: userContext.profileRegion,
+      profileTimesSummary: userContext.profileTimesSummary,
+      hasRegionAndTime: userContext.hasRegionAndTime,
     });
-    const openingOptions = getQuestionOptions(openingKey, SKILLS, userContext.state);
+    const openingOptions = getQuestionOptions(
+      openingKey,
+      SKILLS,
+      userContext.state,
+      userContext.hasRegionAndTime,
+    );
 
     return NextResponse.json({
       done: false,
@@ -418,8 +429,8 @@ export async function POST(request: Request) {
         이미알고있는사실: userContext.knownFacts,
         프로필: {
           관심카테고리: profile.categories,
-          활동지역: profile.regions,
-          참여가능시간: profile.timePrefs,
+          활동지역: userContext.profileRegion,
+          선호시간대: userContext.profileTimesSummary,
           나눌수있는재능: effectiveSkills,
           자기소개: profile.bio,
         },
@@ -459,33 +470,71 @@ export async function POST(request: Request) {
     });
   }
 
-  let chosenQuestionKey: QuestionKey = fallbackQuestionKey ?? 'field_preference';
+  let chosenQuestionKey: QuestionKey = fallbackQuestionKey ?? 'categories';
 
   if (isAiSuccess && conversation.question_key) {
     chosenQuestionKey = conversation.question_key;
   } else if (isAiSuccess && conversation.reply) {
     const replyText = conversation.reply;
-    if (/모임 규모|인원|소규모|중규모|대규모/.test(replyText)) {
-      chosenQuestionKey = 'group_size';
-    } else if (/난이도|문턱|체력|전문지식/.test(replyText)) {
+    if (/모임 규모|인원|소규모|중규모|대규모|크루의 규모/.test(replyText)) {
+      chosenQuestionKey = 'participation_modes';
+    } else if (/난이도|문턱|어떤 스타일을 원하세요|체력/.test(replyText)) {
       chosenQuestionKey = 'difficulty';
-    } else if (/환경|실내|실외|야외|비대면/.test(replyText)) {
-      chosenQuestionKey = 'activity_type';
-    } else if (/스타일|성격|교류|소통|과업|집중형/.test(replyText)) {
-      chosenQuestionKey = 'vibe_preference';
-    } else if (/분야|카테고리|관심사/.test(replyText)) {
-      chosenQuestionKey = 'field_preference';
+    } else if (/환경|실내|실외|야외|어떤 환경/.test(replyText)) {
+      chosenQuestionKey = 'activity_types';
+    } else if (/분위기|스타일|성격|교류|소통|과업|집중/.test(replyText)) {
+      chosenQuestionKey = 'target_groups';
+    } else if (/분야|카테고리|관심사|비슷한 분야|새로운 분야/.test(replyText)) {
+      chosenQuestionKey = 'categories';
     } else if (/장소|지역|이동 범위|거리|집 근처/.test(replyText)) {
       chosenQuestionKey = 'travel_range';
-    } else if (/시간|주말|평일|오전|오후|저녁/.test(replyText)) {
+    } else if (/시간|주말|평일|오전|오후|저녁|낮/.test(replyText)) {
       chosenQuestionKey = 'time_pref';
-    } else if (/재능|기술|특기/.test(replyText)) {
+    } else if (/재능|기술|특기|어떤 재능/.test(replyText)) {
       chosenQuestionKey = 'skills';
     }
   }
 
   const lastUserMsg = userAnswers[userAnswers.length - 1] ?? '';
   const isQuestionInquiry = /\?|어떤 거야|뭐야|있나요|없나요|어때요/.test(lastUserMsg);
+
+  // 재능 질문 맥락에서의 입력 검증 (가드레일 & 기타 선택)
+  const isSkillContext =
+    fallbackQuestionKey === 'skills' ||
+    chosenQuestionKey === 'skills' ||
+    messages.slice(-3).some((m) => m.role === 'assistant' && /어떤 재능|재능을 활용|재능 목록|새로운 재능/.test(m.content));
+
+  if (isSkillContext && lastUserMsg) {
+    // 1) 폭력적/비윤리적/범죄적 내용 가드레일
+    const harmful = validateHarmfulSkillInput(lastUserMsg);
+    if (harmful.isHarmful) {
+      return NextResponse.json({
+        done: false,
+        reply: harmful.reason,
+        options: getQuestionOptions('skills', SKILLS, userContext.state, userContext.hasRegionAndTime, {
+          hasHistory,
+          hasRegionAndTime: userContext.hasRegionAndTime,
+          answers: adaptiveAnswers,
+          profileSkills: profile.skills ?? [],
+        }),
+        questionKey: 'skills',
+        answeredCount: userTurnCount,
+        maxQuestions: MAX_USER_TURNS,
+      });
+    }
+
+    // 2) '기타' 버튼 클릭 시 직접 텍스트 입력 유도
+    if (/^기타$|^기타 \(직접 입력\)$/.test(lastUserMsg.trim())) {
+      return NextResponse.json({
+        done: false,
+        reply: '어떤 재능을 나누고 싶으신가요? 아래 입력창에 직접 적어주세요! 😊\n(예: 바리스타, 마술, 법률 상담 등)',
+        options: [],
+        questionKey: 'skills',
+        answeredCount: userTurnCount,
+        maxQuestions: MAX_USER_TURNS,
+      });
+    }
+  }
 
   // 사용자가 개념 문의를 한 게 아닌데 AI가 이미 답변된 질문 키를 반환한 경우, 남은 질문으로 강제 전환
   if (!isQuestionInquiry && remainingQuestionKeys.length > 0 && !remainingQuestionKeys.includes(chosenQuestionKey)) {
@@ -526,7 +575,23 @@ export async function POST(request: Request) {
       reply = fallback.reply;
     }
 
-    const options = getQuestionOptions(chosenQuestionKey, SKILLS, userContext.state);
+    // 말풍선 본문에서 불릿 기호(-, •, * 등)나 번호 목록(1., 1) 등) 옵션 나열 목록 제거 (중복 노출 방지)
+    if (/(\n\s*[-•*]\s*|\n\s*\d+[.)]\s*)/.test(reply)) {
+      reply = reply.split(/\n\s*[-•*]\s*|\n\s*\d+[.)]\s*/)[0].trim();
+    }
+
+    const options = getQuestionOptions(
+      chosenQuestionKey,
+      SKILLS,
+      userContext.state,
+      userContext.hasRegionAndTime,
+      {
+        hasHistory,
+        hasRegionAndTime: userContext.hasRegionAndTime,
+        answers: adaptiveAnswers,
+        profileSkills: profile.skills ?? [],
+      },
+    );
 
     return NextResponse.json({
       done: false,
@@ -538,39 +603,50 @@ export async function POST(request: Request) {
     });
   }
 
+  const targetRegions = adaptiveAnswers.selectedRegion
+    ? [adaptiveAnswers.selectedRegion]
+    : profile.regions;
+
   const scoringProfile: ScoringProfile = {
     categories: profile.categories,
     skills: effectiveSkills ?? [],
     historyCategories: fieldReferenceCategories,
     timePrefs: profile.timePrefs,
     availableTimes: profile.availableTimes,
-    regions: profile.regions,
+    regions: targetRegions,
     followingIds: following.map((person) => person.id),
   };
 
-  const fallback = fallbackConversation({
-    messages,
-    nickname: profile.nickname,
-    answers: adaptiveAnswers,
-    profileSkills: profile.skills ?? [],
-    selectedSkills,
-    fieldReferenceCategories,
-    hasHistory,
-    profileCategories: profile.categories,
-    questionKey: null,
-    userState: userContext.state,
-    knownFacts: userContext.knownFacts,
-    pastActivitySummary: userContext.pastActivitySummary,
-  });
   const finalReply = getRecommendationReply({
     nickname: profile.nickname,
     answers: adaptiveAnswers,
     selectedSkills,
     fieldReferenceCategories,
   });
-  let filterCategories = allowedCategories(conversation.categories);
-  if (filterCategories.length === 0) {
-    filterCategories = allowedCategories(fallback.categories);
+
+  // 사용자가 대화에서 명시적으로 카테고리를 선택한 경우 이를 최우선으로 반영
+  let filterCategories: string[] = [];
+  if (adaptiveAnswers.selectedCategory && adaptiveAnswers.selectedCategory !== '상관없음') {
+    filterCategories = [adaptiveAnswers.selectedCategory];
+  } else {
+    filterCategories = allowedCategories(conversation.categories);
+    if (filterCategories.length === 0) {
+      const fallback = fallbackConversation({
+        messages,
+        nickname: profile.nickname,
+        answers: adaptiveAnswers,
+        profileSkills: profile.skills ?? [],
+        selectedSkills,
+        fieldReferenceCategories,
+        hasHistory,
+        profileCategories: profile.categories,
+        questionKey: null,
+        userState: userContext.state,
+        knownFacts: userContext.knownFacts,
+        pastActivitySummary: userContext.pastActivitySummary,
+      });
+      filterCategories = allowedCategories(fallback.categories);
+    }
   }
 
   const allCandidates = await getRecommendCandidates(supabase, user.id, {});
@@ -582,15 +658,15 @@ export async function POST(request: Request) {
       : allCandidates;
 
   const hasRegionFilter =
-    profile.regions.length > 0 &&
-    !profile.regions.includes(NATIONWIDE) &&
+    targetRegions.length > 0 &&
+    !targetRegions.includes(NATIONWIDE) &&
     adaptiveAnswers.travelRange !== 'any';
   let candidates = categoryCandidates;
   if (hasRegionFilter) {
     candidates = categoryCandidates.filter((action) =>
       adaptiveAnswers.travelRange === 'province'
-        ? sameProvince(action.address, profile.regions)
-        : matchesRegion(action.address, profile.regions),
+        ? sameProvince(action.address, targetRegions)
+        : matchesRegion(action.address, targetRegions),
     );
   }
   const relaxation: string[] = [];
@@ -626,18 +702,34 @@ export async function POST(request: Request) {
       .in('action_id', candidateIds),
     supabase
       .from('action_items')
-      .select('action_id, type, min_required, max_allowed')
+      .select('action_id, type, min_required, max_allowed, gender_requirement')
       .in('action_id', candidateIds),
   ]);
 
   const itemsByAction = new Map<
     string,
-    Array<{ type: string; min_required: number; max_allowed: number | null }>
+    Array<{ type: string; min_required: number; max_allowed: number | null; gender_requirement?: string }>
   >();
   for (const item of actionItems ?? []) {
     const items = itemsByAction.get(item.action_id) ?? [];
     items.push(item);
     itemsByAction.set(item.action_id, items);
+  }
+
+  // 0순위 성별 하드 필터링: 사용자 성별과 모집 성별 검증
+  const userGender = profile.gender;
+  if (userGender) {
+    const genderFiltered = candidates.filter((action) => {
+      const items = itemsByAction.get(action.id) ?? [];
+      const personItems = items.filter((it) => it.type === 'PERSON');
+      if (personItems.length === 0) return true;
+      return personItems.some(
+        (it) => !it.gender_requirement || it.gender_requirement === 'ANY' || it.gender_requirement === userGender,
+      );
+    });
+    if (genderFiltered.length > 0) {
+      candidates = genderFiltered;
+    }
   }
 
   type MetaRecord = NonNullable<typeof metas>[number];
@@ -648,6 +740,10 @@ export async function POST(request: Request) {
       participationModes: metadata.participation_modes ?? [],
       skills: metadata.skills ?? [],
       groupSize: totalGroupSize(itemsByAction.get(metadata.action_id) ?? []),
+      targetGroups: metadata.target_groups ?? [],
+      difficulty: metadata.difficulty ?? null,
+      activityTypes: metadata.activity_types ?? [],
+      keywords: metadata.keywords ?? [],
     };
   }
   for (const candidateId of candidateIds) {
@@ -655,28 +751,58 @@ export async function POST(request: Request) {
       participationModes: [],
       skills: [],
       groupSize: totalGroupSize(itemsByAction.get(candidateId) ?? []),
+      targetGroups: [],
+      difficulty: null,
+      activityTypes: [],
+      keywords: [],
     };
   }
 
-  const participationMode =
-    conversation.participation_mode ?? fallback.participation_mode;
-  const scoringAnswers = {
+  const participationMode = conversation.participation_mode ?? null;
+  const resolvedSkill =
+    adaptiveAnswers.selectedSkill === 'profile'
+      ? (profile.skills?.[0] ?? null)
+      : (adaptiveAnswers.selectedSkill ?? (selectedSkills[0] ?? null));
+  const resolvedCategory =
+    adaptiveAnswers.selectedCategory && adaptiveAnswers.selectedCategory !== '상관없음'
+      ? adaptiveAnswers.selectedCategory
+      : (filterCategories.length === 1 ? filterCategories[0] : null);
+
+  const scoringAnswers: ScoringAnswers = {
     participationMode,
-    category: filterCategories.length === 1 ? filterCategories[0] : null,
+    category: resolvedCategory,
     range: relaxation.length > 0 ? 'any' : null,
-    talentPreference: adaptiveAnswers.talentPreference ?? null,
-    groupSizePreference:
-      adaptiveAnswers.groupSizePreference === 'small'
-        ? ('small' as const)
-        : adaptiveAnswers.groupSizePreference
-          ? ('any' as const)
-          : null,
-    fieldPreference: adaptiveAnswers.fieldPreference ?? null,
+    talentPreference:
+      adaptiveAnswers.talentPreference === 'new_skill'
+        ? 'use'
+        : (adaptiveAnswers.talentPreference ?? null),
+    groupSizePreference: adaptiveAnswers.groupSizePreference ?? null,
+    fieldPreference:
+      adaptiveAnswers.fieldPreference === 'selected'
+        ? 'new'
+        : (adaptiveAnswers.fieldPreference ?? null),
     travelRange: adaptiveAnswers.travelRange ?? null,
+    targetGroupPreference: adaptiveAnswers.vibePreference ?? null,
+    difficultyPreference: adaptiveAnswers.difficultyPreference ?? null,
+    activityTypePreference: adaptiveAnswers.activityType ?? null,
+    selectedSkill: resolvedSkill,
+    userKeywords: adaptiveAnswers.userKeywords ?? [],
+    userTimePreferences: adaptiveAnswers.timePreferences ?? [],
+    selectedRegion: adaptiveAnswers.selectedRegion ?? null,
   };
 
-  // 1) Prepare compact indexed metadata for AI Semantic Matching (up to 15 candidates)
-  const candidateSummaries = candidates.slice(0, 15).map((action) => {
+  // 1) 서버 코드 100점 만점 랭킹 계산으로 Top 3 확정 (환각 및 점수 역전 원천 차단)
+  const codeRanked = rankActions(
+    candidates,
+    scoringProfile,
+    scoringAnswers,
+    metadataByAction,
+    3,
+  );
+
+  // 2) 선정된 Top 3 후보에 대해 AI가 개인화 맞춤 추천 이유(reason) 서술
+  const candidateSummaries = codeRanked.map((item) => {
+    const action = item.action;
     const meta = metasById.get(action.id);
     return {
       actionId: action.id,
@@ -689,84 +815,43 @@ export async function POST(request: Request) {
       skills: meta?.skills ?? [],
       keywords: meta?.keywords ?? [],
       difficulty: meta?.difficulty ?? null,
-      groupSize: metadataByAction[action.id]?.groupSize ?? null,
+      matchedReasons: item.matched,
     };
   });
 
-  let topItems: Array<{ action: (typeof candidates)[number]; score: number; reason: string }> = [];
+  const reasonsMap: Record<string, string> = {};
 
   try {
     const aiRec = await callStructuredAI({
       agent: 'DISCOVER',
       promptVersion: RECOMMEND_PROMPT_VERSION,
-      system: RECOMMEND_SYSTEM,
+      system: `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트입니다.
+선정된 각 액션에 대해 사용자의 성향과 대화 내용을 바탕으로 왜 이 액션이 사용자에게 꼭 맞는지 1~2문장의 다정하고 구체적인 추천 이유를 작성하세요.
+영어 'Action'이나 '봉사/수혜자' 단어를 절대 쓰지 말고 한글 '액션'으로 서술하세요.
+반드시 JSON 형식으로만 답하세요:
+{"reasons": {"actionId1": "추천 이유 1", "actionId2": "추천 이유 2", ...}}`,
       temperature: 0.3,
       user: JSON.stringify({
         사용자답변: messages.filter((m) => m.role === 'user'),
-        프로필: {
-          닉네임: profile.nickname,
-          관심카테고리: profile.categories,
-          재능: effectiveSkills,
-          선호지역: profile.regions,
-        },
-        후보액션색인목록: candidateSummaries,
+        사용자닉네임: profile.nickname,
+        선정된액션목록: candidateSummaries,
       }),
-      schema: RecommendationSchema,
+      schema: z.object({
+        reasons: z.record(z.string(), z.string()).catch({}).default({}),
+      }),
       userId: user.id,
     });
 
-    const chosenActions: (typeof candidates)[number][] = [];
-
-    for (const id of aiRec.topActionIds) {
-      const match = candidates.find((c) => c.id === id);
-      if (match && !chosenActions.some((c) => c.id === match.id)) {
-        chosenActions.push(match);
-      }
-    }
-
-    if (chosenActions.length < Math.min(3, candidates.length)) {
-      const remainingCandidates = candidates.filter(
-        (c) => !chosenActions.some((item) => item.id === c.id),
-      );
-      const codeRanked = rankActions(
-        remainingCandidates,
-        scoringProfile,
-        scoringAnswers,
-        metadataByAction,
-        3 - chosenActions.length,
-      );
-      for (const item of codeRanked) {
-        chosenActions.push(item.action);
-      }
-    }
-
-    topItems = chosenActions.slice(0, 3).map((action) => {
-      const scored = scoreAction(
-        action,
-        scoringProfile,
-        scoringAnswers,
-        metadataByAction[action.id],
-      );
-      return {
-        action,
-        score: scored.score,
-        reason: '',
-      };
-    });
+    Object.assign(reasonsMap, aiRec.reasons);
   } catch {
-    const codeTop = rankActions(
-      candidates,
-      scoringProfile,
-      scoringAnswers,
-      metadataByAction,
-      3,
-    );
-    topItems = codeTop.map((item) => ({
-      action: item.action,
-      score: item.score,
-      reason: '',
-    }));
+    // AI 실패 시 기본 이유(fallbackReason) 사용
   }
+
+  const topItems = codeRanked.map((item) => ({
+    action: item.action,
+    score: item.score,
+    reason: reasonsMap[item.action.id] || fallbackReason(item),
+  }));
 
   return NextResponse.json({
     done: true,

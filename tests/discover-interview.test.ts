@@ -12,14 +12,31 @@ import {
   getRecommendationReply,
   getRemainingQuestionKeys,
   shouldRecommendNow,
+  validateHarmfulSkillInput,
+  ALL_15_SKILLS,
 } from '../app/api/ai/discover/interview.ts';
 import { SKILLS } from '../lib/constants/index.ts';
 
-test('Discover 재능 선택지는 프로필의 공통 재능 목록과 열린 선택지를 제공한다', () => {
+test('Discover 재능 선택지는 사전 정의된 16개 버튼만 정확히 제공하며 불필요한 버튼은 포함하지 않는다', () => {
   const options = getQuestionOptions('skills', SKILLS);
+  assert.equal(options.length, 16);
   assert.equal(options.includes('사진 촬영'), true);
-  assert.equal(options.includes('특별한 재능 없이 참여'), true);
-  assert.equal(options.includes('상관없음'), true);
+  assert.equal(options.includes('기타'), true);
+  assert.equal(options.includes('특별한 재능 없이 참여'), false);
+  assert.equal(options.includes('상관없음'), false);
+});
+
+test('재능 직접 입력 시 유해하거나 부적절한 내용은 가드레일에 의해 차단되고 정상 재능은 통과한다', () => {
+  // 1. 유해 단어 차단
+  assert.equal(validateHarmfulSkillInput('해킹 기술').isHarmful, true);
+  assert.equal(validateHarmfulSkillInput('사기 치는 법').isHarmful, true);
+  assert.equal(validateHarmfulSkillInput('폭력').isHarmful, true);
+  assert.equal(validateHarmfulSkillInput('도박 노하우').isHarmful, true);
+
+  // 2. 건전한 재능 통과
+  assert.equal(validateHarmfulSkillInput('바리스타 커피 제조').isHarmful, false);
+  assert.equal(validateHarmfulSkillInput('캘리그라피 글씨').isHarmful, false);
+  assert.equal(validateHarmfulSkillInput('수어 통역').isHarmful, false);
 });
 
 test('상태 C와 D 사용자의 첫 질문 선택지는 익숙한 분야와 새로운 도전을 제공한다', () => {
@@ -44,41 +61,60 @@ test('모임 규모 질문의 선택지는 메타데이터 기준 4개 버튼을
   ]);
 });
 
-test('카테고리/분야 질문의 선택지는 전체 카테고리 9개 + 상관없음을 제공한다', () => {
+test('카테고리/분야 질문의 선택지는 7대 카테고리 + 기타 + 상관없음을 제공한다', () => {
   assert.deepEqual(getQuestionOptions('field_preference'), [
     '동물',
     '환경',
     '지역사회',
     '아동·청소년',
-    '어르신',
-    '장애인',
+    '노인',
+    '장애',
     '교육',
-    '문화·예술',
+    '기타',
+    '상관없음',
+  ]);
+  assert.deepEqual(getQuestionOptions('categories'), [
+    '동물',
+    '환경',
+    '지역사회',
+    '아동·청소년',
+    '노인',
+    '장애',
+    '교육',
     '기타',
     '상관없음',
   ]);
 });
 
-test('활동 환경 및 성격, 난이도 질문의 선택지에 상관없음이 포함된다', () => {
+test('활동 환경 및 성격, 난이도 질문의 선택지에 온라인/비대면과 가족·동반이 제외되고 상관없음이 포함된다', () => {
   assert.deepEqual(getQuestionOptions('activity_type'), [
     '실내 활동',
     '실외 활동',
     '실내외 병행',
-    '온라인/비대면',
+    '상관없음',
+  ]);
+  assert.deepEqual(getQuestionOptions('activity_types'), [
+    '실내 활동',
+    '실외 활동',
+    '실내외 병행',
     '상관없음',
   ]);
 
   assert.deepEqual(getQuestionOptions('vibe_preference'), [
     '교류·교육·소통형',
     '육체·과업·집중형',
-    '가족·동반가능',
+    '상관없음',
+  ]);
+  assert.deepEqual(getQuestionOptions('target_groups'), [
+    '교류·교육·소통형',
+    '육체·과업·집중형',
     '상관없음',
   ]);
 
   assert.deepEqual(getQuestionOptions('difficulty'), [
     '누구나 참여가능',
     '기초 체력 필요',
-    '전문지식·자격 필요',
+    '전문지식/자격/재능 활용',
     '상관없음',
   ]);
 });
@@ -182,7 +218,7 @@ test('사용자 상태 E(장기 미활동 30일 이상) 오프닝에 복귀를 �
   assert.equal(
     reply,
     [
-      '반가워요, 성은님! 😊 오랜만이에요.',
+      '반가워요, 성은님! 😊',
       '지난번 플로깅 액션하셨던 기억이 나네요.',
       '이번에 다시 가볍게 시작해볼 만한 액션을 찾아볼까요?',
     ].join('\n'),
@@ -384,3 +420,242 @@ test('대화 맥락(질문-답변 쌍)에서 사용자가 선택한 상관없음
   assert.equal(answers.difficultyPreference, 'any');
   assert.equal(answers.travelRange, 'any');
 });
+
+test('0순위 오프닝은 프로필 등록 여부에 따라 케이스 A/B 멘트와 선택지를 분기한다', () => {
+  // 케이스 A: 프로필 지역과 시간이 있는 경우 (1초 프리패스)
+  const replyA = getQuestionReply('opening', {
+    nickname: '민우',
+    answers: {},
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '서울특별시 강남구',
+    profileTimesSummary: '주말 오후, 평일 저녁',
+    hasRegionAndTime: true,
+  });
+  assert.equal(replyA.includes('활동 지역 : 서울특별시 강남구'), true);
+  assert.equal(replyA.includes('선호 시간 : 주말 오후, 평일 저녁'), true);
+  assert.equal(replyA.includes('이 조건 그대로 액션을 찾아드릴까요?'), true);
+
+  const optionsA = getQuestionOptions('opening', [], 'A', true);
+  assert.deepEqual(optionsA, [
+    '네, 이 조건으로 찾을게요 👍',
+    '이번엔 다른 조건으로 찾을래요 🔄',
+  ]);
+
+  // 케이스 B: 프로필 지역/시간이 미등록된 경우
+  const replyB = getQuestionReply('opening', {
+    nickname: '민우',
+    answers: {},
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    hasRegionAndTime: false,
+  });
+  assert.equal(replyB.includes('활동하실 지역과 시간을 먼저 확인하고 싶어요'), true);
+
+  const optionsB = getQuestionOptions('opening', [], 'A', false);
+  assert.deepEqual(optionsB, [
+    '활동할 지역 1곳 선택하기 📍',
+    '지역 상관없이 전국 액션 볼래요 🌏',
+  ]);
+});
+
+test('난이도에서 누구나 참여가능을 선택하면 재능 질문을 완전히 스킵하고 환경 질문으로 전진한다', () => {
+  const remaining = getRemainingQuestionKeys({
+    answers: {
+      fieldPreference: 'familiar',
+      vibePreference: 'social',
+      difficultyPreference: 'easy', // '누구나 참여가능' 선택
+    },
+  });
+
+  // 재능(skills) 질문이 포함되지 않고 바로 activity_type으로 전진
+  assert.equal(remaining.includes('skills'), false);
+  assert.equal(remaining[0], 'activity_type');
+});
+
+test('난이도에서 전문지식/자격/재능 활용을 선택하면 재능 질문으로 진입한다', () => {
+  const remaining = getRemainingQuestionKeys({
+    answers: {
+      fieldPreference: 'familiar',
+      vibePreference: 'social',
+      difficultyPreference: 'expert', // '전문지식/자격/재능 활용' 선택
+    },
+  });
+
+  // skills가 다음 질문으로 제시됨
+  assert.equal(remaining[0], 'skills');
+});
+
+test('5단계 순차 질문 퍼널 순서(분야 ➔ 성격 ➔ 난이도 ➔ 환경 ➔ 규모)가 정확히 유지된다', () => {
+  const emptyRemaining = getRemainingQuestionKeys({
+    answers: {},
+  });
+
+  assert.deepEqual(emptyRemaining, [
+    'field_preference',
+    'vibe_preference',
+    'difficulty',
+    'activity_type',
+    'group_size',
+  ]);
+});
+
+test('[피드백 1] 활동 이력이 있는 사용자는 같은 분야 vs 새로운 분야 2지선다를 제공하고 무한 루프 없이 전진한다', () => {
+  // 1. 이력 있는 유저에게는 2지선다 선택지 제공
+  const options = getQuestionOptions('field_preference', [], 'C', true, {
+    hasHistory: true,
+  });
+  assert.deepEqual(options, [
+    '같은 분야로 찾을래요 👍',
+    '새로운 분야에 도전해볼래요 ✨',
+  ]);
+
+  // 2. '같은 분야로 찾을래요' 선택 시 관심 분야가 확정되고 성격으로 즉시 전진
+  const answersFamiliar = extractAdaptiveAnswers(['같은 분야로 찾을래요 👍']);
+  assert.equal(answersFamiliar.fieldPreference, 'familiar');
+  const remainingFamiliar = getRemainingQuestionKeys({
+    answers: answersFamiliar,
+    hasHistory: true,
+  });
+  assert.equal(remainingFamiliar[0], 'vibe_preference');
+
+  // 3. '새로운 분야에 도전해볼래요' 선택 시 7대 카테고리 노출
+  const optionsNew = getQuestionOptions('field_preference', [], 'C', true, {
+    hasHistory: true,
+    answers: { fieldPreference: 'new' },
+  });
+  assert.equal(optionsNew.includes('노인'), true);
+  assert.equal(optionsNew.includes('동물'), true);
+
+  // 4. 유저가 카테고리 칩(예: 노인)을 선택하면 무한 루프 없이 즉시 성격으로 전진
+  const answersCat = extractAdaptiveAnswers(['노인']);
+  assert.equal(answersCat.selectedCategory, '노인');
+  const remainingCat = getRemainingQuestionKeys({
+    answers: answersCat,
+    hasHistory: true,
+  });
+  assert.equal(remainingCat[0], 'vibe_preference');
+});
+
+test('[피드백 2] 오프닝에서 다른 조건으로 찾을래요 선택 시 지역 ➔ 시간 순으로 질문 키와 선택지가 일치한다', () => {
+  const answersChange = extractAdaptiveAnswers(['이번엔 다른 조건으로 찾을래요 🔄']);
+  assert.equal(answersChange.openingDecision, 'change');
+
+  // 남은 질문 키의 최우선순위가 travel_range(지역), 그 다음이 time_pref(시간)이어야 함
+  const remaining = getRemainingQuestionKeys({
+    answers: answersChange,
+    hasRegionAndTime: true,
+  });
+  assert.equal(remaining[0], 'travel_range');
+  assert.equal(remaining[1], 'time_pref');
+
+  // 지역 질문 시 카테고리가 아니라 지역 선택지가 제공됨
+  const regionOptions = getQuestionOptions('travel_range');
+  assert.deepEqual(regionOptions, [
+    '활동할 지역 1곳 선택하기 📍',
+    '지역 상관없이 전국 액션 볼래요 🌏',
+  ]);
+
+  // 시간 질문 시 시간대 선택지가 제공됨
+  const timeOptions = getQuestionOptions('time_pref');
+  assert.deepEqual(timeOptions, [
+    '주말 오전',
+    '주말 오후',
+    '평일 낮',
+    '평일 저녁',
+    '시간 상관없음',
+  ]);
+});
+
+test('[피드백 3] 난이도에서 전문지식/자격/재능 활용 선택 시 프로필 재능 확인 2단계 분기가 동작한다', () => {
+  const answersExpert = extractAdaptiveAnswers(['전문지식/자격/재능 활용']);
+  assert.equal(answersExpert.difficultyPreference, 'expert');
+
+  // 1. 프로필에 재능이 있는 경우: '그대로 활용' vs '새로운 재능' 2지선다 노출
+  const profileSkills = ['디자인', '사진 촬영'];
+  const talentOptions = getQuestionOptions('skills', [], 'B', true, {
+    profileSkills,
+    answers: answersExpert,
+  });
+  assert.deepEqual(talentOptions, [
+    '프로필 재능 그대로 활용 👍',
+    '새로운 재능 이용 🔄',
+  ]);
+
+  // 2. '프로필 재능 그대로 활용' 선택 시 재능 확정 후 환경으로 전진
+  const answersUseProfile = {
+    ...extractAdaptiveAnswers([
+      '전문지식/자격/재능 활용',
+      '프로필 재능 그대로 활용 👍',
+    ]),
+    fieldPreference: 'familiar' as const,
+    vibePreference: 'social' as const,
+  };
+  assert.equal(answersUseProfile.selectedSkill, 'profile');
+  const remainingAfterProfile = getRemainingQuestionKeys({
+    answers: answersUseProfile,
+    profileSkills,
+  });
+  // 재능(skills) 질문이 사라지고 activity_type으로 전진
+  assert.equal(remainingAfterProfile.includes('skills'), false);
+  assert.equal(remainingAfterProfile[0], 'activity_type');
+
+  // 3. '새로운 재능 이용' 선택 시 15종 재능 목록 노출
+  const newTalentOptions = getQuestionOptions('skills', [], 'B', true, {
+    profileSkills,
+    answers: { ...answersExpert, talentPreference: 'new_skill' },
+  });
+  assert.equal(newTalentOptions.includes('요리'), true);
+  assert.equal(newTalentOptions.includes('컴퓨터·IT'), true);
+});
+
+test('[지역 선택 버그 수정 검증] 시군구 선택 및 지역명이 대화에 입력되면 selectedRegion이 정확히 추출되고 무한루프 없이 다음 단계로 진행된다', () => {
+  // 1. 피커에서 시군구를 선택한 경우 ("📍 서울특별시 성동구")
+  const answersFromPicker = extractAdaptiveAnswers([
+    '이번엔 다른 조건으로 찾을래요 🔄',
+    '📍 서울특별시 성동구',
+  ]);
+  assert.equal(answersFromPicker.selectedRegion, '서울특별시 성동구');
+  assert.equal(answersFromPicker.travelRange, 'exact');
+
+  // 2. 사용자가 자연어로 지역을 직접 입력한 경우 ("서울 성동구")
+  const answersFromTyping = extractAdaptiveAnswers([
+    '이번엔 다른 조건으로 찾을래요 🔄',
+    '서울 성동구',
+  ]);
+  assert.equal(answersFromTyping.selectedRegion, '서울특별시 성동구');
+  assert.equal(answersFromTyping.travelRange, 'exact');
+
+  // 3. '전국 액션 볼래요'를 선택한 경우
+  const answersNationwide = extractAdaptiveAnswers([
+    '이번엔 다른 조건으로 찾을래요 🔄',
+    '지역 상관없이 전국 액션 볼래요 🌏',
+  ]);
+  assert.equal(answersNationwide.travelRange, 'any');
+
+  // 4. 지역 선택 완료 후 travel_range 질문이 해소되고 시간 질문으로 정상 전진하는지 검증
+  const remainingAfterRegion = getRemainingQuestionKeys({
+    answers: answersFromPicker,
+  });
+  assert.equal(remainingAfterRegion.includes('travel_range'), false);
+  assert.equal(remainingAfterRegion[0], 'time_pref');
+
+  // 5. 시간대까지 선택 완료 시 1순위 질문(field_preference)으로 정상 전진
+  const answersWithTime = {
+    ...answersFromPicker,
+    ...extractAdaptiveAnswers(['주말 오후']),
+  };
+  assert.deepEqual(answersWithTime.timePreferences, ['주말 오후']);
+  const remainingAfterTime = getRemainingQuestionKeys({
+    answers: answersWithTime,
+  });
+  assert.equal(remainingAfterTime.includes('travel_range'), false);
+  assert.equal(remainingAfterTime.includes('time_pref'), false);
+  assert.equal(remainingAfterTime[0], 'field_preference');
+});
+
+

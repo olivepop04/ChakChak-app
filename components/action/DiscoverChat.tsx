@@ -12,6 +12,13 @@ import { ActionCard } from '@/components/ui/ActionCard';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { ActionCardData } from '@/lib/types/view';
+import {
+  REGIONS,
+  SIDO_LIST,
+  NATIONWIDE,
+  PROVINCE_WIDE,
+  formatRegion,
+} from '@/lib/constants/regions';
 
 interface ChatMessage {
   role: 'assistant' | 'user';
@@ -42,6 +49,7 @@ export function DiscoverChat({
 }) {
   const started = useRef(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [options, setOptions] = useState<string[]>([]);
   const [inputText, setInputText] = useState('');
@@ -49,6 +57,8 @@ export function DiscoverChat({
   const [items, setItems] = useState<Recommendation[] | null>(null);
   const [relaxation, setRelaxation] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [regionModalOpen, setRegionModalOpen] = useState(false);
+  const [selectedSido, setSelectedSido] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authenticated || started.current) return;
@@ -102,6 +112,27 @@ export function DiscoverChat({
     setOptions([]);
     setInputText('');
     void requestNext(nextMessages);
+  }
+
+  function handleOptionClick(option: string) {
+    if (loading) return;
+    if (option.includes('지역') && option.includes('선택')) {
+      setSelectedSido(null);
+      setRegionModalOpen(true);
+      return;
+    }
+    if (option === '기타' || option.includes('기타')) {
+      choose(option);
+      setTimeout(() => inputRef.current?.focus(), 150);
+      return;
+    }
+    choose(option);
+  }
+
+  function handleRegionSelect(region: string) {
+    setRegionModalOpen(false);
+    setSelectedSido(null);
+    choose(`📍 ${region}`);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -202,7 +233,7 @@ export function DiscoverChat({
                 <button
                   key={option}
                   type="button"
-                  onClick={() => choose(option)}
+                  onClick={() => handleOptionClick(option)}
                   className="rounded-full border border-neutral-900 px-3.5 py-1.5 text-[13px] font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
                 >
                   {option}
@@ -213,10 +244,16 @@ export function DiscoverChat({
 
           <form onSubmit={handleSubmit} className="flex items-center gap-2 pt-1">
             <input
+              ref={inputRef}
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="직접 입력하거나 위 선택지를 골라보세요"
+              placeholder={
+                messages.slice(-1)[0]?.content?.includes('어떤 특별한 재능') ||
+                messages.slice(-1)[0]?.content?.includes('직접 적어주세요')
+                  ? '어떤 재능인지 입력해주세요 (예: 바리스타, 마술, 법률 상담 등)'
+                  : '직접 입력하거나 위 선택지를 골라보세요'
+              }
               disabled={loading}
               className="flex-1 rounded-full border border-neutral-300 bg-white px-4 py-2.5 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none disabled:bg-neutral-50"
             />
@@ -263,7 +300,13 @@ export function DiscoverChat({
           ) : (
             <div className="flex flex-col gap-4">
               {items.map((item) => (
-                <div key={item.action.id} className="flex flex-col gap-1.5">
+                <div key={item.action.id} className="flex flex-col gap-2">
+                  {item.reason && (
+                    <div className="flex items-start gap-2 rounded-xl bg-neutral-50 px-3.5 py-2.5 text-[13px] leading-snug text-neutral-700">
+                      <span className="shrink-0 text-base">✨</span>
+                      <span>{item.reason}</span>
+                    </div>
+                  )}
                   <ActionCard action={item.action} />
                 </div>
               ))}
@@ -273,6 +316,99 @@ export function DiscoverChat({
           <Button variant="secondary" fullWidth onClick={restart}>
             다시 추천받기
           </Button>
+        </div>
+      )}
+
+      {/* 활동 지역 1곳 선택 바텀시트 모달 */}
+      {regionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center">
+          <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl">
+            <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+              <div className="flex items-center gap-2">
+                {selectedSido && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSido(null)}
+                    className="text-neutral-500 hover:text-neutral-800"
+                    aria-label="뒤로가기"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+                <h3 className="text-[16px] font-semibold text-neutral-900">
+                  {selectedSido ? selectedSido : '활동할 지역 1곳 선택'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setRegionModalOpen(false);
+                  setSelectedSido(null);
+                }}
+                className="text-[13px] font-medium text-neutral-500 hover:text-neutral-800"
+              >
+                닫기
+              </button>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto">
+              {!selectedSido ? (
+                <ul className="divide-y divide-neutral-100">
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => handleRegionSelect(NATIONWIDE)}
+                      className="flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] font-medium text-neutral-900 hover:bg-neutral-50"
+                    >
+                      <span>🌏 전국 전체 (모든 지역 액션)</span>
+                      <span className="text-neutral-300">›</span>
+                    </button>
+                  </li>
+                  {SIDO_LIST.map((sido) => (
+                    <li key={sido}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSido(sido)}
+                        className="flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] text-neutral-800 hover:bg-neutral-50"
+                      >
+                        <span>{sido}</span>
+                        <span className="text-neutral-300">›</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="divide-y divide-neutral-100">
+                  {[PROVINCE_WIDE, ...(REGIONS[selectedSido] ?? [])].map((g) => {
+                    const isAll = g === PROVINCE_WIDE;
+                    const regionString = formatRegion(selectedSido, g);
+                    return (
+                      <li key={g}>
+                        <button
+                          type="button"
+                          onClick={() => handleRegionSelect(regionString)}
+                          className={`flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] hover:bg-neutral-50 ${
+                            isAll
+                              ? 'bg-neutral-50 font-semibold text-neutral-900'
+                              : 'text-neutral-800'
+                          }`}
+                        >
+                          <span>{isAll ? `${selectedSido} 전체` : g}</span>
+                          {isAll && (
+                            <span className="rounded-md bg-neutral-900 px-2 py-0.5 text-[11px] font-medium text-white">
+                              전체 선택
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

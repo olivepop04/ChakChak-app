@@ -12,13 +12,19 @@
  */
 
 export type QuestionKey =
-  | 'talent_preference'
-  | 'skills'
-  | 'activity_type'
-  | 'vibe_preference'
-  | 'group_size'
-  | 'field_preference'
+  | 'opening'
+  | 'categories'
+  | 'target_groups'
   | 'difficulty'
+  | 'skills'
+  | 'activity_types'
+  | 'participation_modes'
+  // 하위 호환성 키:
+  | 'talent_preference'
+  | 'field_preference'
+  | 'vibe_preference'
+  | 'activity_type'
+  | 'group_size'
   | 'travel_range'
   | 'time_pref'
   | 'participation_mode';
@@ -26,17 +32,21 @@ export type QuestionKey =
 export type UserStateCategory = 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
 
 export interface AdaptiveAnswers {
-  talentPreference?: 'use' | 'any' | null;
+  openingDecision?: 'confirm' | 'change' | null;
+  selectedRegion?: string | null;
+  timePreferences?: string[];
+  timePreference?: string | null;
+  talentPreference?: 'use' | 'any' | 'new_skill' | null;
   selectedSkill?: string | null;
-  activityType?: 'indoor' | 'outdoor' | 'any' | null;
-  vibePreference?: 'social' | 'task' | 'family' | 'any' | null;
+  activityType?: 'indoor' | 'outdoor' | 'both' | 'any' | null;
+  vibePreference?: 'social' | 'task' | 'any' | null;
   groupSizePreference?: 'small' | 'medium' | 'large' | 'any' | null;
   difficultyPreference?: 'easy' | 'physical' | 'expert' | 'any' | null;
-  fieldPreference?: 'familiar' | 'new' | 'any' | null;
+  fieldPreference?: 'familiar' | 'new' | 'any' | 'selected' | null;
   selectedCategory?: string | null;
   travelRange?: 'exact' | 'province' | 'any' | null;
-  timePreference?: string | null;
   participationMode?: 'time' | 'goods' | 'direct' | null;
+  userKeywords?: string[];
 }
 
 export const DISCOVER_RECOMMENDATION_REPLY =
@@ -48,6 +58,9 @@ export interface UserContextSummary {
   knownFacts: string[];
   missingAxes: QuestionKey[];
   pastActivitySummary?: string;
+  profileRegion?: string;
+  profileTimesSummary?: string;
+  hasRegionAndTime: boolean;
 }
 
 export interface QuestionCopyContext {
@@ -60,10 +73,214 @@ export interface QuestionCopyContext {
   userState?: UserStateCategory;
   knownFacts?: string[];
   pastActivitySummary?: string;
+  profileRegion?: string;
+  profileTimesSummary?: string;
+  hasRegionAndTime?: boolean;
 }
 
 /**
- * 사용자 상태 6단계 (A~F) 분석
+ * 전국 시·도 및 시·군·구 매핑 테이블 (lib/constants/regions.ts 기준)
+ */
+export const SIDO_ALIASES: Record<string, string> = {
+  서울: '서울특별시',
+  서울특별시: '서울특별시',
+  부산: '부산광역시',
+  부산광역시: '부산광역시',
+  대구: '대구광역시',
+  대구광역시: '대구광역시',
+  인천: '인천광역시',
+  인천광역시: '인천광역시',
+  광주: '광주광역시',
+  광주광역시: '광주광역시',
+  대전: '대전광역시',
+  대전광역시: '대전광역시',
+  울산: '울산광역시',
+  울산광역시: '울산광역시',
+  세종: '세종특별자치시',
+  세종시: '세종특별자치시',
+  세종특별자치시: '세종특별자치시',
+  경기: '경기도',
+  경기도: '경기도',
+  강원: '강원특별자치도',
+  강원도: '강원특별자치도',
+  강원특별자치도: '강원특별자치도',
+  충북: '충청북도',
+  충청북도: '충청북도',
+  충남: '충청남도',
+  충청남도: '충청남도',
+  전북: '전북특별자치도',
+  전라북도: '전북특별자치도',
+  전북특별자치도: '전북특별자치도',
+  전남: '전라남도',
+  전라남도: '전라남도',
+  경북: '경상북도',
+  경상북도: '경상북도',
+  경남: '경상남도',
+  경상남도: '경상남도',
+  제주: '제주특별자치도',
+  제주도: '제주특별자치도',
+  제주특별자치도: '제주특별자치도',
+};
+
+export const ALL_SIGUNGU_MAP: Record<string, string[]> = {
+  서울특별시: [
+    '강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구',
+    '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구',
+    '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구',
+  ],
+  부산광역시: [
+    '강서구', '금정구', '기장군', '남구', '동구', '동래구', '부산진구', '북구',
+    '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '해운대구',
+  ],
+  대구광역시: ['남구', '달서구', '달성군', '동구', '북구', '서구', '수성구', '중구', '군위군'],
+  인천광역시: [
+    '강화군', '계양구', '미추홀구', '남동구', '동구', '부평구', '서구', '연수구', '옹진군', '중구',
+  ],
+  광주광역시: ['광산구', '남구', '동구', '북구', '서구'],
+  대전광역시: ['대덕구', '동구', '서구', '유성구', '중구'],
+  울산광역시: ['중구', '남구', '동구', '북구', '울주군'],
+  세종특별자치시: ['세종시'],
+  경기도: [
+    '가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시',
+    '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시',
+    '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시',
+    '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시',
+  ],
+  강원특별자치도: [
+    '강릉시', '동해시', '속초시', '원주시', '춘천시', '태백시', '삼척시', '홍천군', '평창군',
+  ],
+  충청북도: ['청주시', '충주시', '제천시', '음성군', '진천군', '옥천군', '영동군'],
+  충청남도: ['천안시', '아산시', '서산시', '당진시', '공주시', '논산시', '보령시', '예산군'],
+  전북특별자치도: ['전주시', '군산시', '익산시', '정읍시', '남원시', '김제시', '완주군'],
+  전라남도: ['목포시', '여수시', '순천시', '나주시', '광양시', '담양군', '해남군'],
+  경상북도: ['포항시', '경주시', '김천시', '안동시', '구미시', '영주시', '경산시', '칠곡군'],
+  경상남도: ['창원시', '진주시', '통영시', '사천시', '김해시', '밀양시', '거제시', '양산시'],
+  제주특별자치도: ['제주시', '서귀포시'],
+};
+
+/**
+ * 텍스트에서 시·도/시·군·구 지역명 및 이동 범위 추출
+ */
+export function extractRegionFromText(text: string): {
+  selectedRegion?: string;
+  travelRange?: 'exact' | 'province' | 'any';
+} {
+  if (/전국|어디든|어디나|지역.*상관|거리.*상관|위치.*상관/.test(text)) {
+    return { travelRange: 'any' };
+  }
+
+  const clean = text.replace(/📍/g, '').trim();
+
+  // 1. 시도 + 시군구 형태 (예: "서울특별시 성동구", "서울 성동구", "경기 수원시")
+  for (const [alias, fullSido] of Object.entries(SIDO_ALIASES)) {
+    if (clean.includes(alias)) {
+      const sigungus = ALL_SIGUNGU_MAP[fullSido] ?? [];
+      for (const sigungu of sigungus) {
+        if (clean.includes(sigungu)) {
+          return {
+            selectedRegion: `${fullSido} ${sigungu}`,
+            travelRange: 'exact',
+          };
+        }
+      }
+      if (/전체|전역|모든/.test(clean)) {
+        return {
+          selectedRegion: `${fullSido} 전체`,
+          travelRange: 'province',
+        };
+      }
+    }
+  }
+
+  // 2. 시도 없이 시군구 단독 매칭 (예: "성동구", "해운대구", "수원시")
+  for (const [sido, sigungus] of Object.entries(ALL_SIGUNGU_MAP)) {
+    for (const sigungu of sigungus) {
+      if (clean.includes(sigungu)) {
+        return {
+          selectedRegion: `${sido} ${sigungu}`,
+          travelRange: 'exact',
+        };
+      }
+    }
+  }
+
+  // 3. 근처 / 시도 매칭
+  if (/집 근처|선택 지역|가까운 곳|동네|근처/.test(clean)) {
+    return { travelRange: 'exact' };
+  }
+  if (/같은 시.?도|조금 멀어도|인근|광역/.test(clean)) {
+    return { travelRange: 'province' };
+  }
+
+  return {};
+}
+
+/**
+ * 15종 전체 재능 목록 (7대 메타데이터 skills 기준)
+ */
+export const ALL_15_SKILLS = [
+  '사진 촬영',
+  '영상 촬영·편집',
+  '디자인',
+  '글쓰기',
+  'SNS 홍보',
+  '요리',
+  '운전',
+  '교육·멘토링',
+  '통역·번역',
+  '컴퓨터·IT',
+  '원예·식물관리',
+  '청소·정리',
+  '미술·공예',
+  '음악·공연',
+  '수리·시공',
+  '기타',
+] as const;
+
+/**
+ * 재능 직접 입력 시 폭력적/비윤리적/범죄적 내용 검증 가드레일
+ */
+export function validateHarmfulSkillInput(text: string): {
+  isHarmful: boolean;
+  reason?: string;
+} {
+  const harmfulRegex =
+    /(살인|폭행|폭력|상해|마약|대마|필로폰|도박|사기|해킹|보이스피싱|성매매|음란|성착취|몰카|협박|갈취|불법|암살|테러|무기|밀수|다단계|자살|자해|절도|강도|횡령|성추행|성폭행|불법촬영)/;
+
+  if (harmfulRegex.test(text)) {
+    return {
+      isHarmful: true,
+      reason:
+        '입력해주신 내용에는 착착의 취지에 맞지 않거나 안전하지 않은 표현이 포함되어 있어요. 다른 분들과 함께 나눌 수 있는 긍정적인 재능으로 다시 입력해주세요. 😊',
+    };
+  }
+  return { isHarmful: false };
+}
+
+/**
+ * 시간대 선호 요약 텍스트 생성
+ */
+export function formatTimePrefsSummary(timePrefs?: readonly unknown[], availableTimes?: readonly string[]): string {
+  if (Array.isArray(timePrefs) && timePrefs.length > 0) {
+    const list: string[] = [];
+    for (const item of timePrefs as Array<{ day?: string; slots?: string[] }>) {
+      if (item.day === '상관없음' || item.slots?.includes('상관없음')) {
+        return '시간 상관없음';
+      }
+      if (item.day && item.slots && item.slots.length > 0) {
+        list.push(`${item.day} ${item.slots.join('·')}`);
+      }
+    }
+    if (list.length > 0) return list.slice(0, 2).join(', ');
+  }
+  if (Array.isArray(availableTimes) && availableTimes.length > 0) {
+    return availableTimes.slice(0, 2).join(', ');
+  }
+  return '시간 미설정';
+}
+
+/**
+ * 사용자 상태 6단계 (A~F) 분석 및 기본 지역/시간 확인
  */
 export function analyzeUserContext({
   profile,
@@ -106,7 +323,7 @@ export function analyzeUserContext({
 
   const hasSkills = Array.isArray(profile.skills) && profile.skills.length > 0;
   const hasCategories = Array.isArray(profile.categories) && profile.categories.length > 0 && !profile.categories.includes('전체');
-  const hasRegions = Array.isArray(profile.regions) && profile.regions.length > 0;
+  const hasRegions = Array.isArray(profile.regions) && profile.regions.length > 0 && profile.regions[0] !== '전국';
   const hasTimes =
     (Array.isArray(profile.timePrefs) && profile.timePrefs.length > 0) ||
     (Array.isArray(profile.availableTimes) && profile.availableTimes.length > 0);
@@ -172,16 +389,17 @@ export function analyzeUserContext({
     knownFacts.push(pastActivitySummary);
   }
 
+  const profileRegion = hasRegions && profile.regions ? profile.regions[0] : undefined;
+  const profileTimesSummary = hasTimes ? formatTimePrefsSummary(profile.timePrefs, profile.availableTimes) : undefined;
+  const hasRegionAndTime = Boolean(hasRegions && hasTimes);
+
   // 아직 모르는 정보 축 도출
   const missingAxes: QuestionKey[] = [];
-  if (!hasCategories) missingAxes.push('field_preference');
-  missingAxes.push('activity_type');
-  missingAxes.push('vibe_preference');
-  missingAxes.push('group_size');
+  if (!hasCategories) missingAxes.push('categories');
+  missingAxes.push('target_groups');
   missingAxes.push('difficulty');
-  if (!hasSkills) missingAxes.push('talent_preference');
-  if (!hasRegions) missingAxes.push('travel_range');
-  if (!hasTimes) missingAxes.push('time_pref');
+  missingAxes.push('activity_types');
+  missingAxes.push('participation_modes');
 
   return {
     state,
@@ -189,18 +407,40 @@ export function analyzeUserContext({
     knownFacts,
     missingAxes,
     pastActivitySummary,
+    profileRegion,
+    profileTimesSummary,
+    hasRegionAndTime,
   };
 }
 
+export interface QuestionOptionContext {
+  hasHistory?: boolean;
+  hasRegionAndTime?: boolean;
+  answers?: AdaptiveAnswers;
+  profileSkills?: readonly string[];
+}
+
 /**
- * 10대 메타데이터 기준과 1:1 일치하는 전체 선택지 목록 (+ '상관없음')
+ * 7대 AI 색인 메타데이터 기준과 1:1 일치하는 전체 선택지 목록 (+ '상관없음')
  */
 export function getQuestionOptions(
   key: QuestionKey,
   skills: readonly string[] = [],
   userState?: UserStateCategory,
+  hasRegionAndTime = true,
+  context?: QuestionOptionContext,
 ): string[] {
+  // 0순위: 오프닝
+  if (key === 'opening') {
+    if (hasRegionAndTime) {
+      return ['네, 이 조건으로 찾을게요 👍', '이번엔 다른 조건으로 찾을래요 🔄'];
+    }
+    return ['활동할 지역 1곳 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'];
+  }
+
+  // 1순위: 관심 분야 (과거 활동 이력 질문 vs 전체 카테고리)
   if (key === 'talent_preference') {
+    // 하위 호환성 유지: 이전 테스트 및 호출에서 talent_preference 키를 첫 질문으로 넘길 때
     if (userState === 'D') {
       return ['익숙한 분야가 좋아요', '새로운 도전을 해볼래요', '상관없음'];
     }
@@ -217,39 +457,74 @@ export function getQuestionOptions(
     ];
   }
 
-  const options: Record<QuestionKey, readonly string[]> = {
-    talent_preference: [
-      '가진 재능을 살릴래요',
-      '부담 없이 가볍게 시작할래요',
+  // 1순위: 카테고리 (categories / field_preference)
+  // 과거 활동 이력이 있는 경우, 유저가 아직 '새로운 분야'를 고르지 않은 상태라면 2지선다 우선 제공
+  if (key === 'categories' || key === 'field_preference') {
+    if (context?.hasHistory && context.answers?.fieldPreference !== 'new') {
+      return ['같은 분야로 찾을래요 👍', '새로운 분야에 도전해볼래요 ✨'];
+    }
+    return [
+      '동물',
+      '환경',
+      '지역사회',
+      '아동·청소년',
+      '노인',
+      '장애',
+      '교육',
+      '기타',
+      '상관없음',
+    ];
+  }
+
+  // 3-1순위: 재능 (skills)
+  // 프로필에 재능이 있는 유저이고 아직 '새로운 재능'을 누르지 않은 상태라면 확인 2지선다 우선 제공
+  if (key === 'skills') {
+    if (
+      context?.profileSkills &&
+      context.profileSkills.length > 0 &&
+      context.answers?.talentPreference !== 'new_skill'
+    ) {
+      return ['프로필 재능 그대로 활용 👍', '새로운 재능 이용 🔄'];
+    }
+    return [...ALL_15_SKILLS];
+  }
+
+  const options: Record<string, readonly string[]> = {
+    opening: hasRegionAndTime
+      ? ['네, 이 조건으로 찾을게요 👍', '이번엔 다른 조건으로 찾을래요 🔄']
+      : ['활동할 지역 1곳 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'],
+    target_groups: [
+      '교류·교육·소통형',
+      '육체·과업·집중형',
       '상관없음',
     ],
-    skills: [
-      ...(skills.length > 0
-        ? skills
-        : [
-            '사진 촬영',
-            '디자인',
-            '요리',
-            '교육·멘토링',
-            '컴퓨터·IT',
-            '글쓰기',
-            '음악·공연',
-            '청소·정리',
-          ]),
-      '특별한 재능 없이 참여',
+    vibe_preference: [
+      '교류·교육·소통형',
+      '육체·과업·집중형',
+      '상관없음',
+    ],
+    difficulty: [
+      '누구나 참여가능',
+      '기초 체력 필요',
+      '전문지식/자격/재능 활용',
+      '상관없음',
+    ],
+    activity_types: [
+      '실내 활동',
+      '실외 활동',
+      '실내외 병행',
       '상관없음',
     ],
     activity_type: [
       '실내 활동',
       '실외 활동',
       '실내외 병행',
-      '온라인/비대면',
       '상관없음',
     ],
-    vibe_preference: [
-      '교류·교육·소통형',
-      '육체·과업·집중형',
-      '가족·동반가능',
+    participation_modes: [
+      '10명 이내 소그룹',
+      '10~20명 중그룹',
+      '20명 이상 대그룹',
       '상관없음',
     ],
     group_size: [
@@ -258,34 +533,15 @@ export function getQuestionOptions(
       '대규모 모임 (20명 이상)',
       '상관없음',
     ],
-    difficulty: [
-      '누구나 참여가능',
-      '기초 체력 필요',
-      '전문지식·자격 필요',
-      '상관없음',
-    ],
-    field_preference: [
-      '동물',
-      '환경',
-      '지역사회',
-      '아동·청소년',
-      '어르신',
-      '장애인',
-      '교육',
-      '문화·예술',
-      '기타',
-      '상관없음',
-    ],
     travel_range: [
-      '집 근처 (선택 지역)',
-      '같은 시·도까지',
-      '지역 상관없음',
+      '활동할 지역 1곳 선택하기 📍',
+      '지역 상관없이 전국 액션 볼래요 🌏',
     ],
     time_pref: [
       '주말 오전',
       '주말 오후',
-      '평일 저녁',
       '평일 낮',
+      '평일 저녁',
       '시간 상관없음',
     ],
     participation_mode: [
@@ -319,11 +575,35 @@ export function getQuestionReply(
     hasHistory,
     userState = 'A',
     pastActivitySummary,
+    profileRegion = '등록된 지역',
+    profileTimesSummary = '등록된 시간대',
+    hasRegionAndTime = true,
   } = context;
 
-  // Turn 0: 첫 질문 / 오프닝 (상태 A~F 반영)
+  // 0순위: 오프닝 및 지역/시간 상시 확인
+  if (key === 'opening') {
+    if (hasRegionAndTime) {
+      return [
+        `안녕하세요, ${nickname}님! 😊`,
+        `${nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 기본 조건을 확인해 봤어요.`,
+        '',
+        `📍 활동 지역 : ${profileRegion} (집 근처)`,
+        `⏰ 선호 시간 : ${profileTimesSummary}`,
+        '',
+        '이 조건 그대로 액션을 찾아드릴까요?',
+      ].join('\n');
+    }
+
+    return [
+      `안녕하세요, ${nickname}님! 만나서 반가워요. 😊`,
+      `${nickname}님에게 딱 맞는 액션을 찾아드리기 위해 활동하실 지역과 시간을 먼저 확인하고 싶어요.`,
+      '',
+      '먼저, 이번에 어느 지역에서 활동하고 싶으세요?',
+    ].join('\n');
+  }
+
+  // 기존 talent_preference 키 오프닝 호환
   if (key === 'talent_preference') {
-    // 상태 F: 비로그인(게스트)
     if (userState === 'F') {
       return [
         '반가워요! 😊',
@@ -332,17 +612,15 @@ export function getQuestionReply(
       ].join('\n');
     }
 
-    // 상태 E: 장기 미활동자 (30일 이상)
     if (userState === 'E') {
-      const pastMention = pastActivitySummary ? `${pastActivitySummary}하셨던 기억이 나네요.` : '오랜만이에요.';
+      const pastMention = pastActivitySummary ? `${pastActivitySummary}하셨던 기억이 나네요.` : '다시 뵙게 되어 기뻐요.';
       return [
-        `반가워요, ${nickname}님! 😊 오랜만이에요.`,
+        `반가워요, ${nickname}님! 😊`,
         pastMention,
         '이번에 다시 가볍게 시작해볼 만한 액션을 찾아볼까요?',
       ].join('\n');
     }
 
-    // 상태 D: 활동 3건 이상 (성향 뚜렷)
     if (userState === 'D') {
       const cat = compactList(fieldReferenceCategories);
       const target = cat ? `${cat} 분야` : '다양한 활동';
@@ -353,7 +631,6 @@ export function getQuestionReply(
       ].join('\n');
     }
 
-    // 상태 C: 활동 1~2건
     if (userState === 'C') {
       const cat = compactList(fieldReferenceCategories);
       const target = cat ? `${cat} 분야` : '지난번 활동';
@@ -364,7 +641,6 @@ export function getQuestionReply(
       ].join('\n');
     }
 
-    // 상태 B: 프로필 기본 정보 있음, 활동 0건
     if (userState === 'B') {
       const skills = compactList(profileSkills);
       if (skills) {
@@ -381,7 +657,6 @@ export function getQuestionReply(
       ].join('\n');
     }
 
-    // 상태 A: 회원가입 직후 첫 진입
     return [
       `반가워요, ${nickname}님! 😊`,
       `몇 가지만 편하게 알려주시면 ${nickname}님에게 꼭 맞는 액션을 찾아볼게요.`,
@@ -389,113 +664,95 @@ export function getQuestionReply(
     ].join('\n');
   }
 
-  if (key === 'skills') {
-    const skills = compactList(profileSkills);
-    if (skills) {
-      return [
-        `좋아요! 프로필에 등록해주신 ${skills} 재능을 우선해서 찾아볼게요.`,
-        '혹시 이번에 특별히 더 살리고 싶은 세부 재능이 있다면 골라주세요.',
-      ].join('\n');
-    }
-    return [
-      '멋져요! 가진 재능을 살릴 수 있는 액션을 함께 찾아볼게요.',
-      '어떤 재능을 발휘하고 싶으신가요?',
-    ].join('\n');
-  }
-
-  // 활동 환경 질문 (activity_types)
-  if (key === 'activity_type') {
-    const bridge = answers.talentPreference === 'any'
-      ? '괜찮아요. 특별한 재능 없이도 누구나 즐겁게 참여할 수 있는 액션이 정말 많아요. 😊'
-      : '재능을 나누는 따뜻한 마음이 참 멋져요! 😊';
-    return [
-      bridge,
-      '활동 환경은 어떤 곳이 편하세요? 날씨 걱정 없는 실내 활동이 좋으신가요, 활기찬 야외 활동이 끌리시나요?',
-    ].join('\n');
-  }
-
-  // 활동 성격 질문 (target_groups)
-  if (key === 'vibe_preference') {
-    const bridge = answers.activityType === 'indoor'
-      ? '실내 활동이 편하시군요.'
-      : answers.activityType === 'outdoor'
-        ? '활기찬 야외 활동이 좋으시군요.'
-        : '환경은 자유롭게 열어둘게요.';
-    return [
-      bridge,
-      '활동 스타일은 사람들과 대화·교육을 나누는 **교류·소통형**이 좋으신가요, 몸 쓰며 깔끔하게 일에 집중하는 **과업형**이 끌리시나요, 아니면 가족·지인과 함께하기 좋은 **가족·동반가능** 액션을 찾으시나요?',
-    ].join('\n');
-  }
-
-  // 모임 인원 규모 질문 (participation_modes)
-  if (key === 'group_size') {
-    const bridge = answers.vibePreference === 'social'
-      ? '사람들과 소통하는 활동을 선호하시는군요.'
-      : answers.vibePreference === 'task'
-        ? '일에 집중하는 깔끔한 활동을 선호하시는군요.'
-        : '다양한 스타일로 찾아볼게요.';
-    return [
-      bridge,
-      '함께하는 모임 규모는 10명 안팎의 작은 모임이 편하신가요, 아니면 사람이 조금 많아도 괜찮으세요?',
-    ].join('\n');
-  }
-
-  // 참여 난이도 / 문턱 질문 (difficulty)
-  if (key === 'difficulty') {
-    return [
-      '활동 참여 문턱이나 난이도는 어느 정도가 편하세요? 첫 참여라 부담 없는 활동이 좋으신가요, 아니면 체력이나 전문성을 발휘해보고 싶으신가요?',
-    ].join('\n');
-  }
-
-  // 활동 분야 질문 (categories)
-  if (key === 'field_preference') {
+  // 1순위: 관심 분야 (categories / field_preference)
+  if (key === 'categories' || key === 'field_preference') {
     if (answers.fieldPreference === 'new') {
-      const categories = compactList(fieldReferenceCategories);
-      const pastNotice = categories ? `이전에 참여하셨던 ${categories} 분야 외에, ` : '';
       return [
         '새로운 도전을 원하신다니 멋진 선택이에요! ✨',
-        `${pastNotice}이번에는 어떤 새로운 분야에 가장 관심이 가시나요?`,
+        '이번에는 어떤 새로운 분야에 가장 관심이 가시나요?',
       ].join('\n');
     }
 
-    const bridge = answers.groupSizePreference === 'small'
-      ? '오붓한 소규모 모임이 더 편하시군요.'
-      : '북적북적 함께하는 규모도 좋으시군요.';
     const categories = compactList(fieldReferenceCategories);
     if (categories && hasHistory) {
       return [
-        bridge,
-        `이전에 ${categories} 관련 액션에 함께하셨는데, 이번에는 어떤 분야에 관심이 가시나요?`,
+        `${nickname}님의 지난 활동들을 살펴보니 [${categories}] 분야에 주로 참여하셨네요. 이번에도 비슷한 분야로 찾아드릴까요?`,
       ].join('\n');
     }
-    if (categories) {
+
+    return [
+      '어떤 분야의 액션에 가장 관심이 가시나요?',
+    ].join('\n');
+  }
+
+  // 2순위: 활동 성격 (target_groups / vibe_preference)
+  if (key === 'target_groups' || key === 'vibe_preference') {
+    return [
+      `${nickname}님은 어떤 분위기의 활동이 더 끌리시나요?`,
+      '사람들과 도란도란 소통하고 정을 나누는 활동이 좋으세요, 아니면 땀 흘리고 손발을 맞춰 집중하는 활동이 좋으세요?',
+    ].join('\n');
+  }
+
+  // 3순위: 참여 난이도 (difficulty)
+  if (key === 'difficulty') {
+    return [
+      '액션에 따라 난이도가 다를 수 있어요. 어떤 스타일을 원하세요?',
+    ].join('\n');
+  }
+
+  // 3-1: 재능 활용 (skills)
+  if (key === 'skills') {
+    const skills = compactList(profileSkills);
+    if (skills && answers.talentPreference !== 'new_skill') {
       return [
-        bridge,
-        `프로필에 관심사로 두신 ${categories} 분야를 비롯해 어떤 분야를 가장 해보고 싶으세요?`,
+        `${nickname}님의 프로필에 [${skills}] 재능이 등록되어 있어요. 이번에도 이 재능으로 찾아볼까요?`,
+      ].join('\n');
+    }
+    if (answers.talentPreference === 'new_skill') {
+      return [
+        '새로운 재능을 펼치고 싶으시군요! 멋져요 ✨',
+        '어떤 새로운 재능을 나누고 싶으신가요?',
       ].join('\n');
     }
     return [
-      bridge,
-      '특별히 관심이 가는 활동 분야가 있으신가요?',
+      '맞아요! 재능을 나눌 수 있다는 건 정말 멋진 일이에요.',
+      '어떤 재능을 활용하고 싶으신가요?',
+    ].join('\n');
+  }
+
+  // 4순위: 활동 환경 (activity_types / activity_type)
+  if (key === 'activity_types' || key === 'activity_type') {
+    return [
+      '어떤 환경에서 활동하고 싶으세요?',
+      '날씨 걱정 없는 실내 활동이 좋으신가요, 활기찬 야외 활동이 끌리시나요?',
+    ].join('\n');
+  }
+
+  // 5순위: 모임 규모 (participation_modes / group_size)
+  if (key === 'participation_modes' || key === 'group_size') {
+    return [
+      '함께하는 크루의 규모는 어느 정도가 편하세요?',
+      '10명 안팎의 오붓한 소규모가 좋으신가요, 아니면 북적북적한 큰 모임도 괜찮으세요?',
+    ].join('\n');
+  }
+
+  // 이동 범위 질문 (travel_range)
+  if (key === 'travel_range') {
+    return [
+      '다른 조건으로 액션을 찾아보는 것도 좋은 선택이에요! 😊',
+      '그럼, 이번에 어느 지역에서 활동하고 싶으세요?',
     ].join('\n');
   }
 
   // 활동 시간대 질문 (time_pref)
   if (key === 'time_pref') {
     return [
-      '주로 활동하기 편하신 시간대가 언제인가요? 주말이나 평일 중 원하시는 시간대를 알려주세요.',
+      '보통 언제 참여하기 편하신가요? (복수 선택 가능)',
     ].join('\n');
   }
 
-  // 이동 범위 질문 (travel_range)
-  const fieldBridge = answers.fieldPreference === 'new'
-    ? '새로운 분야에도 도전해보고 싶으시군요.'
-    : answers.fieldPreference === 'familiar'
-      ? '익숙한 분야를 이어가고 싶으시군요.'
-      : '분야는 넓게 열어둘게요.';
   return [
-    fieldBridge,
-    '마지막으로, 활동 장소는 집 근처가 좋으신가요, 아니면 조금 이동해도 괜찮으세요?',
+    '다음 조건에 대해 알려주세요.',
   ].join('\n');
 }
 
@@ -540,8 +797,6 @@ export function getRecommendationReply({
     parts.push('따뜻한 교류를 나누는');
   } else if (answers.vibePreference === 'task') {
     parts.push('활동에 집중할 수 있는');
-  } else if (answers.vibePreference === 'family') {
-    parts.push('가족·지인과 함께할 수 있는');
   }
 
   if (answers.groupSizePreference === 'small') {
@@ -575,11 +830,46 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
   const text = messages.join(' ');
   const answers: AdaptiveAnswers = {};
 
-  // 재능 선호
-  if (/재능.*활용|재능을 살|내 재능으로|재능.*기부|가진.*재능|재능 쓸래/.test(text)) {
-    answers.talentPreference = 'use';
-  } else if (/재능.*상관|재능 없이|특별한 재능|누구나|가볍게|첫 참여|부담 없이/.test(text)) {
-    answers.talentPreference = 'any';
+  // 오프닝 결정
+  if (/이 조건으로|네.*이 조건|이대로|좋아요.*이 조건/.test(text)) {
+    answers.openingDecision = 'confirm';
+  } else if (/다른 조건|지역.*선택|전국.*액션|지역 상관없이|바꿀/.test(text)) {
+    answers.openingDecision = 'change';
+  }
+
+  // 이동 범위 / 지역
+  const regResult = extractRegionFromText(text);
+  if (regResult.selectedRegion) {
+    answers.selectedRegion = regResult.selectedRegion;
+  }
+  if (regResult.travelRange) {
+    answers.travelRange = regResult.travelRange;
+  }
+
+  // 시간대
+  const timePrefsSet = new Set<string>();
+  if (/시간 상관없음|언제든/.test(text)) {
+    answers.timePreference = 'any';
+    timePrefsSet.add('시간 상관없음');
+  }
+  if (/주말 오전/.test(text)) {
+    answers.timePreference = 'weekend_morning';
+    timePrefsSet.add('주말 오전');
+  }
+  if (/주말 오후/.test(text)) {
+    answers.timePreference = 'weekend_afternoon';
+    timePrefsSet.add('주말 오후');
+  }
+  if (/평일 낮/.test(text)) {
+    answers.timePreference = 'weekday_day';
+    timePrefsSet.add('평일 낮');
+  }
+  if (/평일 저녁/.test(text)) {
+    answers.timePreference = 'weekday_evening';
+    timePrefsSet.add('평일 저녁');
+  }
+  if (timePrefsSet.size > 0) {
+    answers.timePreferences = Array.from(timePrefsSet);
   }
 
   // 참여 방식 (하위 호환성)
@@ -591,8 +881,10 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.participationMode = 'time';
   }
 
-  // 활동 환경
-  if (/실내|날씨 안 타|비 안 맞|안에서|실내 활동/.test(text)) {
+  // 활동 환경 (activity_types)
+  if (/실내외 병행|병행/.test(text)) {
+    answers.activityType = 'both';
+  } else if (/실내|날씨 안 타|비 안 맞|안에서|실내 활동/.test(text)) {
     answers.activityType = 'indoor';
   } else if (/실외|야외|바깥|공원|밖에서|야외 활동/.test(text)) {
     answers.activityType = 'outdoor';
@@ -600,69 +892,83 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.activityType = 'any';
   }
 
-  // 모임 성격 / 교류 형태
-  if (/가족|동반|자녀|아이와|친구와/.test(text)) {
-    answers.vibePreference = 'family';
-  } else if (/교류|대화|교육|소통|말벗|멘토링|가르침|아이돌봄/.test(text)) {
+  // 활동 성격 (target_groups)
+  if (/교류|대화|교육|소통|말벗|멘토링|가르침|아이돌봄|교류·교육·소통형/.test(text)) {
     answers.vibePreference = 'social';
-  } else if (/과업|몸 쓰|땀|집중|청소|플로깅|배달|일만|결과물/.test(text)) {
+  } else if (/과업|몸 쓰|땀|집중|청소|플로깅|배달|일만|결과물|육체·과업·집중형/.test(text)) {
     answers.vibePreference = 'task';
-  } else if (/스타일.*상관|성격.*상관/.test(text)) {
+  } else if (/스타일.*상관|성격.*상관|분위기.*상관/.test(text)) {
     answers.vibePreference = 'any';
   }
 
-  // 모임 인원 규모 (혼자하는 것 문의도 소규모로 반영)
-  if (/10명 이내|소규모|작은|적은|오붓|10명 안팎|혼자|혼자하는/.test(text)) {
+  // 모임 인원 규모 (participation_modes)
+  if (/10명 이내|소규모|작은|적은|오붓|10명 안팎|혼자|혼자하는|소그룹/.test(text)) {
     answers.groupSizePreference = 'small';
   } else if (/10~20|10-20|10명에서 20명|중규모|중그룹/.test(text)) {
     answers.groupSizePreference = 'medium';
-  } else if (/20명 이상|대규모|사람 많|북적|인원.*상관|규모.*상관|많아도/.test(text)) {
+  } else if (/20명 이상|대규모|사람 많|북적|인원.*상관|규모.*상관|많아도|대그룹/.test(text)) {
     answers.groupSizePreference = 'large';
   }
 
-  // 난이도 / 문턱
-  if (/누구나|첫 참여|쉬운|부담 없|초보/.test(text)) {
+  // 참여 난이도 (difficulty)
+  if (/누구나|첫 참여|쉬운|부담 없|초보|누구나 참여가능/.test(text)) {
     answers.difficultyPreference = 'easy';
-  } else if (/체력|몸 쓰는|힘쓰는|힘든/.test(text)) {
+  } else if (/기초 체력|체력|몸 쓰는|힘쓰는|힘든|기초 체력 필요/.test(text)) {
     answers.difficultyPreference = 'physical';
-  } else if (/전문|자격|역량|기술/.test(text)) {
+  } else if (/전문지식|전문|자격|역량|기술|재능 활용|전문지식\/자격\/재능 활용/.test(text)) {
     answers.difficultyPreference = 'expert';
+    answers.talentPreference = 'use';
   }
 
-  // 관심 분야
-  if (/동물/.test(text)) answers.selectedCategory = '동물';
-  else if (/환경/.test(text)) answers.selectedCategory = '환경';
-  else if (/지역사회/.test(text)) answers.selectedCategory = '지역사회';
-  else if (/아동|청소년/.test(text)) answers.selectedCategory = '아동·청소년';
-  else if (/어르신|노인/.test(text)) answers.selectedCategory = '어르신';
-  else if (/장애인|장애/.test(text)) answers.selectedCategory = '장애인';
-  else if (/교육/.test(text)) answers.selectedCategory = '교육';
-  else if (/문화|예술/.test(text)) answers.selectedCategory = '문화·예술';
-  else if (/기타/.test(text)) answers.selectedCategory = '기타';
+  // 재능 선호 & 구체적 재능
+  if (/그대로 살릴|그대로 활용|이 재능|프로필 재능|기존 재능/.test(text)) {
+    answers.talentPreference = 'use';
+    answers.selectedSkill = 'profile';
+  } else if (/새로운 재능|다른 재능|새 재능/.test(text)) {
+    answers.talentPreference = 'new_skill';
+  } else if (/특별한 재능 없이|재능.*상관|부담 없이|누구나/.test(text)) {
+    answers.talentPreference = 'any';
+  }
 
-  if (/새로운 분야|새 분야|도전|다양한|새로운 것/.test(text)) {
-    answers.fieldPreference = 'new';
-  } else if (/비슷한 분야|하던 분야|익숙한 분야|원래 하던|기존/.test(text)) {
+  for (const s of ALL_15_SKILLS) {
+    if (text.includes(s)) {
+      answers.selectedSkill = s;
+      answers.talentPreference = 'use';
+      break;
+    }
+  }
+
+  // 관심 분야 (categories)
+  if (/같은 분야|비슷한 분야|하던 분야|익숙한 분야|원래 하던|기존/.test(text)) {
     answers.fieldPreference = 'familiar';
-  } else if (/분야.*상관|주제.*상관/.test(text)) {
+  } else if (/새로운 분야|새 분야|도전|다양한|새로운 것|새로운 분야에 도전/.test(text)) {
+    answers.fieldPreference = 'new';
+  }
+
+  const categoryMap: Array<[RegExp, string]> = [
+    [/동물/, '동물'],
+    [/환경/, '환경'],
+    [/지역사회/, '지역사회'],
+    [/아동|청소년/, '아동·청소년'],
+    [/노인|어르신/, '노인'],
+    [/장애|장애인/, '장애'],
+    [/교육/, '교육'],
+    [/기타/, '기타'],
+  ];
+
+  for (const [regex, cat] of categoryMap) {
+    if (regex.test(text)) {
+      answers.selectedCategory = cat;
+      if (!answers.fieldPreference) {
+        answers.fieldPreference = 'selected';
+      }
+      break;
+    }
+  }
+
+  if (/분야.*상관|주제.*상관/.test(text)) {
     answers.fieldPreference = 'any';
     answers.selectedCategory = '상관없음';
-  }
-
-  // 이동 범위
-  if (/집 근처|선택 지역|가까운 곳|동네|근처/.test(text)) {
-    answers.travelRange = 'exact';
-  } else if (/같은 시.?도|조금 멀어도|인근|광역/.test(text)) {
-    answers.travelRange = 'province';
-  } else if (/지역.*상관|거리.*상관|어디든|전국/.test(text)) {
-    answers.travelRange = 'any';
-  }
-
-  // 시간대
-  if (/주말|토요일|일요일/.test(text)) {
-    answers.timePreference = 'weekend';
-  } else if (/평일/.test(text)) {
-    answers.timePreference = 'weekday';
   }
 
   return answers;
@@ -685,52 +991,79 @@ export function extractAnswersFromDialogue(
       const q = current.content;
       const a = next.content;
 
-      // 1. 모임 규모 질문에 대한 답변
-      if (/모임 규모|인원|소규모|중규모|대규모/.test(q)) {
+      // 0. 오프닝 확인 질문에 대한 답변
+      if (/이 조건 그대로|기본 조건을 확인|활동하실 지역과 시간/.test(q)) {
+        if (/이 조건으로|네|좋아요|이대로/.test(a)) {
+          answers.openingDecision = 'confirm';
+        } else if (/다른 조건|재선택|바꿀|전국/.test(a)) {
+          answers.openingDecision = 'change';
+        }
+      }
+
+      // 0-1. 이동 범위 / 지역 질문에 대한 답변
+      if (/어느 지역|활동 장소|지역에서 활동|이동 범위|거리|집 근처/.test(q)) {
+        if (/상관없|전국|어디든/.test(a)) {
+          answers.travelRange = 'any';
+        } else {
+          const regRes = extractRegionFromText(a);
+          if (regRes.selectedRegion) answers.selectedRegion = regRes.selectedRegion;
+          if (regRes.travelRange) answers.travelRange = regRes.travelRange;
+        }
+      }
+
+      // 0-2. 시간대 질문에 대한 답변
+      if (/언제 참여|시간|주말|평일|오전|오후|저녁|낮/.test(q)) {
+        if (/상관없/.test(a)) answers.timePreference = 'any';
+        else if (/주말 오전/.test(a)) answers.timePreference = 'weekend_morning';
+        else if (/주말 오후/.test(a)) answers.timePreference = 'weekend_afternoon';
+        else if (/평일 낮/.test(a)) answers.timePreference = 'weekday_day';
+        else if (/평일 저녁/.test(a)) answers.timePreference = 'weekday_evening';
+        else if (/주말/.test(a)) answers.timePreference = 'weekend';
+        else if (/평일/.test(a)) answers.timePreference = 'weekday';
+      }
+
+      // 1. 모임 규모 질문에 대한 답변 (5순위)
+      if (/모임 규모|인원|소규모|중규모|대규모|크루의 규모/.test(q)) {
         if (/상관없/.test(a)) answers.groupSizePreference = 'any';
-        else if (/소규모|10명 안팎|10명 이내|작은/.test(a)) answers.groupSizePreference = 'small';
+        else if (/소규모|10명 안팎|10명 이내|작은|소그룹/.test(a)) answers.groupSizePreference = 'small';
         else if (/중규모|10-20|10~20|중그룹/.test(a)) answers.groupSizePreference = 'medium';
         else if (/대규모|20명 이상|대그룹/.test(a)) answers.groupSizePreference = 'large';
       }
 
-      // 2. 참여 난이도 질문에 대한 답변
-      if (/난이도|문턱|체력|전문지식/.test(q)) {
+      // 2. 참여 난이도 질문에 대한 답변 (3순위)
+      if (/난이도|문턱|어떤 스타일을 원하세요|체력.*전문/.test(q)) {
         if (/상관없/.test(a)) answers.difficultyPreference = 'any';
         else if (/누구나|부담 없|초보/.test(a)) answers.difficultyPreference = 'easy';
         else if (/기초 체력|체력|몸 쓰는/.test(a)) answers.difficultyPreference = 'physical';
-        else if (/전문지식|자격|역량/.test(a)) answers.difficultyPreference = 'expert';
+        else if (/전문지식|전문|자격|재능 활용/.test(a)) {
+          answers.difficultyPreference = 'expert';
+          answers.talentPreference = 'use';
+        }
       }
 
-      // 3. 환경 질문에 대한 답변
-      if (/환경|실내|실외|야외|비대면|어떤 액션/.test(q)) {
+      // 3. 환경 질문에 대한 답변 (4순위)
+      if (/환경|실내|실외|야외|어떤 환경/.test(q)) {
         if (/상관없/.test(a)) answers.activityType = 'any';
+        else if (/실내외 병행|병행/.test(a)) answers.activityType = 'both';
         else if (/실내/.test(a)) answers.activityType = 'indoor';
         else if (/실외|야외/.test(a)) answers.activityType = 'outdoor';
       }
 
-      // 4. 모임 성격/스타일 질문에 대한 답변
-      if (/스타일|성격|교류|소통|과업|집중형|가족|동반/.test(q)) {
+      // 4. 활동 성격/스타일 질문에 대한 답변 (2순위)
+      if (/분위기|스타일|성격|교류|소통|과업|집중/.test(q)) {
         if (/상관없/.test(a)) answers.vibePreference = 'any';
-        else if (/가족|동반|자녀|아이와|친구와/.test(a)) answers.vibePreference = 'family';
         else if (/교류|소통|교육/.test(a)) answers.vibePreference = 'social';
-        else if (/과업|육체|집중/.test(a)) answers.vibePreference = 'task';
+        else if (/과업|육체|집중|땀/.test(a)) answers.vibePreference = 'task';
       }
 
-      // 5. 이동 범위 질문에 대한 답변
-      if (/장소|지역|이동 범위|거리|집 근처/.test(q)) {
-        if (/상관없/.test(a)) answers.travelRange = 'any';
-        else if (/집 근처|선택 지역/.test(a)) answers.travelRange = 'exact';
-        else if (/같은 시.?도|시·도/.test(a)) answers.travelRange = 'province';
-      }
-
-      // 6. 활동 분야 질문에 대한 답변
-      if (/분야|카테고리|관심사|비슷한 활동|익숙한|도전/.test(q)) {
+      // 5. 활동 분야 질문에 대한 답변 (1순위)
+      if (/분야|카테고리|관심사|비슷한 분야|새로운 분야/.test(q)) {
         if (/상관없/.test(a)) {
           answers.fieldPreference = 'any';
           answers.selectedCategory = '상관없음';
         } else if (/새로운|도전/.test(a)) {
           answers.fieldPreference = 'new';
-        } else if (/비슷|익숙|이어/.test(a)) {
+        } else if (/비슷|익숙|같은 분야/.test(a)) {
           answers.fieldPreference = 'familiar';
         }
 
@@ -738,24 +1071,41 @@ export function extractAnswersFromDialogue(
         else if (/환경/.test(a)) answers.selectedCategory = '환경';
         else if (/지역사회/.test(a)) answers.selectedCategory = '지역사회';
         else if (/아동|청소년/.test(a)) answers.selectedCategory = '아동·청소년';
-        else if (/어르신|노인/.test(a)) answers.selectedCategory = '어르신';
-        else if (/장애인|장애/.test(a)) answers.selectedCategory = '장애인';
+        else if (/노인|어르신/.test(a)) answers.selectedCategory = '노인';
+        else if (/장애|장애인/.test(a)) answers.selectedCategory = '장애';
         else if (/교육/.test(a)) answers.selectedCategory = '교육';
-        else if (/문화|예술/.test(a)) answers.selectedCategory = '문화·예술';
         else if (/기타/.test(a)) answers.selectedCategory = '기타';
+
+        if (answers.selectedCategory && !answers.fieldPreference) {
+          answers.fieldPreference = 'selected';
+        }
       }
 
-      // 7. 시간대 질문에 대한 답변
-      if (/시간|주말|평일|오전|오후|저녁/.test(q)) {
-        if (/상관없/.test(a)) answers.timePreference = 'any';
-        else if (/주말/.test(a)) answers.timePreference = 'weekend';
-        else if (/평일/.test(a)) answers.timePreference = 'weekday';
-      }
-
-      // 8. 재능 질문에 대한 답변
-      if (/재능|살려보고|발휘/.test(q)) {
-        if (/상관없|부담 없이|가볍게|특별한 재능 없이/.test(a)) answers.talentPreference = 'any';
-        else if (/재능|살릴/.test(a)) answers.talentPreference = 'use';
+      // 6. 재능 질문에 대한 답변 (3-1순위)
+      if (/재능|살려보고|발휘|어떤 재능|어떤 새로운 재능/.test(q)) {
+        if (/상관없|부담 없이|가볍게|특별한 재능 없이/.test(a)) {
+          answers.talentPreference = 'any';
+        } else if (/그대로|살릴|이 재능|프로필/.test(a)) {
+          answers.selectedSkill = 'profile';
+          answers.talentPreference = 'use';
+        } else if (/새로운 재능|다른 재능/.test(a)) {
+          answers.talentPreference = 'new_skill';
+        } else {
+          for (const s of ALL_15_SKILLS) {
+            if (a.includes(s)) {
+              answers.selectedSkill = s;
+              answers.talentPreference = 'use';
+              break;
+            }
+          }
+          if (!answers.selectedSkill && a.trim() && !/기타/.test(a)) {
+            const harmful = validateHarmfulSkillInput(a);
+            if (!harmful.isHarmful) {
+              answers.selectedSkill = a.trim();
+              answers.talentPreference = 'use';
+            }
+          }
+        }
       }
     }
   }
@@ -764,64 +1114,101 @@ export function extractAnswersFromDialogue(
 }
 
 /**
- * 다음 질문 키 추출 (남은 질문 축)
+ * 다음 질문 키 추출 (5단계 우선순위 파이프라인 + 스마트 조건부 분기)
+ *
+ * 0순위: travel_range & time_pref (조건 변경 요청 시 또는 미등록 시)
+ * 1순위: categories / field_preference (관심 분야)
+ * 2순위: target_groups / vibe_preference (활동 성격)
+ * 3순위: difficulty (참여 난이도)
+ *   ➔ skills (난이도가 expert일 때만 진입. 프로필 재능 확인 ➔ 15종 재능 선택)
+ * 4순위: activity_types / activity_type (활동 환경)
+ * 5순위: participation_modes / group_size (모임 규모)
  */
 export function getRemainingQuestionKeys({
   skillsAnswered = false,
   answers,
   userState = 'F',
+  hasRegionAndTime = true,
+  hasHistory = false,
+  profileSkills = [],
 }: {
   skillsAnswered?: boolean;
   answers: AdaptiveAnswers;
   userState?: UserStateCategory;
+  hasRegionAndTime?: boolean;
+  hasHistory?: boolean;
+  profileSkills?: readonly string[];
 }): QuestionKey[] {
   const remaining: QuestionKey[] = [];
 
-  // 1. 분야 선호 (가장 기본 관심사)
-  // fieldPreference가 아직 없거나, 'new'를 골랐는데 아직 구체적인 새 카테고리(selectedCategory)를 선택하지 않은 경우
-  const needsCategoryChoice =
-    !answers.fieldPreference ||
-    (answers.fieldPreference === 'new' && !answers.selectedCategory);
+  // 0순위: 다른 조건 변경이 요청되었거나 기본 지역/시간이 없는 경우
+  const needsRegion =
+    (answers.openingDecision === 'change' || !hasRegionAndTime) &&
+    !answers.travelRange &&
+    !answers.selectedRegion;
+  if (needsRegion) {
+    remaining.push('travel_range');
+  }
 
-  if (needsCategoryChoice) {
+  const needsTime =
+    (answers.openingDecision === 'change' || !hasRegionAndTime) &&
+    !answers.timePreference &&
+    (!answers.timePreferences || answers.timePreferences.length === 0);
+  if (needsTime) {
+    remaining.push('time_pref');
+  }
+
+  // 1순위: 관심 분야 (categories / field_preference)
+  // 카테고리 완료 판정:
+  // 1) 이력 유저가 '같은 분야'를 선택했거나
+  // 2) 특정 카테고리를 선택했거나 (selectedCategory 있음)
+  // 3) 분야 상관없음이거나
+  // 4) fieldPreference가 'selected'로 확정된 경우
+  const categoryDone =
+    answers.fieldPreference === 'familiar' ||
+    Boolean(answers.selectedCategory) ||
+    answers.fieldPreference === 'any' ||
+    answers.fieldPreference === 'selected';
+
+  if (!categoryDone) {
     remaining.push('field_preference');
   }
 
-  // 2. 환경 질문 (실내/실외)
-  if (!answers.activityType) {
-    remaining.push('activity_type');
-  }
-
-  // 3. 성격 질문 (교류형 vs 과업형)
+  // 2순위: 활동 성격 (target_groups / vibe_preference)
   if (!answers.vibePreference) {
     remaining.push('vibe_preference');
   }
 
-  // 4. 인원 규모 질문 (소규모 vs 중규모 vs 대규모)
-  if (!answers.groupSizePreference) {
-    remaining.push('group_size');
-  }
-
-  // 5. 난이도 / 문턱
+  // 3순위: 참여 난이도 (difficulty)
   if (!answers.difficultyPreference) {
     remaining.push('difficulty');
   }
 
-  // 6. 재능 질문
-  if (!answers.talentPreference) {
-    remaining.push('talent_preference');
-  } else if (answers.talentPreference === 'use' && !skillsAnswered) {
-    remaining.push('skills');
+  // 3-1순위: 재능 질문 (skills) — 난이도가 '전문지식/자격/재능 활용'일 때만 조건부 진입!
+  if (answers.difficultyPreference === 'expert') {
+    // 재능 완료 판정:
+    // 1) 상관없음/재능없이 참여
+    // 2) 프로필 재능 그대로 활용 확정 ('profile')
+    // 3) 15종 구체적 재능 선택 완료
+    const skillDone =
+      answers.talentPreference === 'any' ||
+      answers.selectedSkill === 'profile' ||
+      Boolean(answers.selectedSkill && answers.selectedSkill !== 'profile') ||
+      skillsAnswered;
+
+    if (!skillDone) {
+      remaining.push('skills');
+    }
   }
 
-  // 7. 이동 범위
-  if (!answers.travelRange) {
-    remaining.push('travel_range');
+  // 4순위: 활동 환경 (activity_types / activity_type)
+  if (!answers.activityType) {
+    remaining.push('activity_type');
   }
 
-  // 8. 활동 시간대
-  if (!answers.timePreference) {
-    remaining.push('time_pref');
+  // 5순위: 모임 규모 (participation_modes / group_size)
+  if (!answers.groupSizePreference) {
+    remaining.push('group_size');
   }
 
   return remaining;
