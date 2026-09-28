@@ -506,7 +506,10 @@ function SignUpForm() {
 
           <div className="mt-8 flex flex-col gap-6">
             <div className="flex flex-col gap-2.5">
-              <FieldLabel>관심 카테고리</FieldLabel>
+              <FieldLabel>
+                관심 카테고리{' '}
+                <span className="font-normal text-neutral-400">(선택)</span>
+              </FieldLabel>
               <ChipGroup
                 options={CATEGORY_OPTIONS}
                 selected={categories as (typeof CATEGORY_OPTIONS)[number][]}
@@ -515,7 +518,10 @@ function SignUpForm() {
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <FieldLabel>보통 언제 참여할 수 있나요?</FieldLabel>
+              <FieldLabel>
+                보통 언제 참여할 수 있나요?{' '}
+                <span className="font-normal text-neutral-400">(선택)</span>
+              </FieldLabel>
               <TimePreferenceEditor value={timePrefs} onChange={setTimePrefs} />
             </div>
 
@@ -528,7 +534,10 @@ function SignUpForm() {
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <FieldLabel>어느 지역이 편하세요?</FieldLabel>
+              <FieldLabel>
+                어느 지역이 편하세요?{' '}
+                <span className="font-normal text-neutral-400">(선택)</span>
+              </FieldLabel>
               <RegionPicker value={regions} onChange={setRegions} />
             </div>
           </div>
