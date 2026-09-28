@@ -6,11 +6,11 @@
  *   event_key 가 UNIQUE 라서 여러 번 호출해도 중복으로 쌓이지 않습니다.
  */
 import { redirect } from 'next/navigation';
+import { Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getNotifications } from '@/lib/queries/notifications';
 import { syncLazyNotifications, syncHostNotifications } from '@/lib/notifications/lazy';
 import { NotificationList } from '@/components/ui/NotificationList';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { Header } from '@/components/layout/Header';
 
 export default async function NotificationsPage() {
@@ -35,16 +35,20 @@ export default async function NotificationsPage() {
       {/* 2026-09-14 수정 NO9 — 화면 제목을 한글로 통일 */}
       <Header title="알림" back backHref="/" sticky />
 
+      {/* 2026-09-28 통일안 — 이모지·버튼 2개(하단 탭 "+"와 겹침) 없애고
+          회색 원 + 아이콘 + 문구만 (트렌드·내 액션 빈 화면과 같은 규칙) */}
       {items.length === 0 ? (
-        <EmptyState
-          icon="🔔"
-          title="새로운 알림이 없어요"
-          description="액션을 만들거나 참여해보세요. 일정과 결과를 알려드릴게요."
-          actions={[
-            { label: '액션 만들기', href: '/action/create', variant: 'secondary' },
-            { label: '액션 찾아보기', href: '/discover', variant: 'secondary' },
-          ]}
-        />
+        <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
+          <span className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
+            <Bell className="h-6 w-6 text-neutral-500" />
+          </span>
+          <p className="text-body font-semibold text-neutral-800">
+            새로운 알림이 없어요
+          </p>
+          <p className="text-label leading-relaxed text-neutral-500">
+            액션을 만들거나 참여해보세요. 일정과 결과를 알려드릴게요.
+          </p>
+        </div>
       ) : (
         <NotificationList items={items} />
       )}
