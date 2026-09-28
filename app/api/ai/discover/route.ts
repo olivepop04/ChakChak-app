@@ -751,15 +751,22 @@ export async function POST(request: Request) {
     fieldReferenceCategories,
   });
 
-  // 사용자가 대화에서 프로필 관심 분야를 확인하고 수락한 경우 (familiar) 카테고리 자동 설정
+  // 사용자가 대화에서 '같은 분야' 또는 프로필 관심 분야를 확인하고 수락한 경우 (familiar) 카테고리 자동 설정
   if (
     adaptiveAnswers.fieldPreference === 'familiar' &&
-    (!adaptiveAnswers.selectedCategories || adaptiveAnswers.selectedCategories.length === 0)
+    (!adaptiveAnswers.selectedCategories ||
+      adaptiveAnswers.selectedCategories.length === 0 ||
+      adaptiveAnswers.selectedCategories.includes('상관없음'))
   ) {
-    const validCats = (profile.categories ?? []).filter((c) => c !== '전체');
-    if (validCats.length > 0) {
-      adaptiveAnswers.selectedCategories = validCats;
-      adaptiveAnswers.selectedCategory = validCats[0];
+    if (fieldReferenceCategories && fieldReferenceCategories.length > 0) {
+      adaptiveAnswers.selectedCategories = [...fieldReferenceCategories];
+      adaptiveAnswers.selectedCategory = fieldReferenceCategories[0];
+    } else {
+      const validCats = (profile.categories ?? []).filter((c) => c !== '전체');
+      if (validCats.length > 0) {
+        adaptiveAnswers.selectedCategories = validCats;
+        adaptiveAnswers.selectedCategory = validCats[0];
+      }
     }
   }
 

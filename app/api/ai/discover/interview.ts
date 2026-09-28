@@ -1143,14 +1143,27 @@ export function extractAnswersFromDialogue(
       }
 
       // 4. 활동 성격/스타일 질문에 대한 답변 (2순위)
-      if (/분위기|스타일|성격|교류|소통|과업|집중/.test(q)) {
+      const isAskingVibe =
+        /어떤 분위기|분위기의 활동|도란도란|손발을 맞춰|소통하고 정|과업.*집중|성격|교류·교육·소통형|육체·과업·집중형/.test(q) ||
+        (/분위기|스타일|교류|소통|과업/.test(q) && !/어떤 스타일을 원하세요|체력/.test(q));
+
+      if (isAskingVibe) {
         if (/상관없/.test(a)) answers.vibePreference = 'any';
         else if (/교류|소통|교육/.test(a)) answers.vibePreference = 'social';
         else if (/과업|육체|집중|땀/.test(a)) answers.vibePreference = 'task';
       }
 
       // 5. 활동 분야 질문에 대한 답변 (1순위)
-      if (/분야|카테고리|관심사|비슷한 분야|새로운 분야/.test(q)) {
+      // 주의: 직전 답변 맞장구 멘트("선호하는 분야에 맞춰 액션을 찾아드릴게요!")로 인해
+      // 분위기 질문 등 다른 질문 축에 '분야' 단어가 포함된 경우, 분야 질문으로 오인하면 안 됨!
+      const isAskingCategory =
+        !isAskingVibe &&
+        !isAskingRegion &&
+        !isAskingTime &&
+        (/어떤 분야|어떤 새로운 분야|비슷한 분야로|이 분야로|분야 위주로|어느 분야|분야에 가장 관심|새로운 분야/.test(q) ||
+          (/분야|카테고리|관심사/.test(q) && !/난이도|환경|실내|실외|규모|크루/.test(q)));
+
+      if (isAskingCategory) {
         if (/상관없/.test(a)) {
           answers.fieldPreference = 'any';
           answers.selectedCategory = '상관없음';
@@ -1374,7 +1387,7 @@ export function getDiscoverReply({
 export function formatSummaryChips(
   messages: { role: string; content: string }[],
 ): string[] {
-  const chips: string[] = [];
+  let chips: string[] = [];
 
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i];
@@ -1415,18 +1428,18 @@ export function formatSummaryChips(
         userText,
       );
     if (isAny) {
-      if (/시간|요일|언제/.test(assistantText)) {
+      if (/시간|요일|언제/.test(assistantText) && !/어느 지역/.test(assistantText)) {
         chips.push('시간 상관없음');
-      } else if (/환경|실내|실외|야외|날씨/.test(assistantText)) {
+      } else if (/어떤 환경|실내.*야외|실외.*실내|날씨.*걱정/.test(assistantText) || (/환경|실내|실외|야외/.test(assistantText) && !/어떤 분위기|도란도란/.test(assistantText))) {
         chips.push('실내외 상관없음');
       } else if (/규모|크루|인원|모임|오붓한|북적/.test(assistantText)) {
         chips.push('규모 상관없음');
       } else if (/난이도|체력|누구나 참여/.test(assistantText)) {
         chips.push('액션 난이도 상관없음');
-      } else if (/분야|관심/.test(assistantText)) {
-        chips.push('분야 상관없음');
       } else if (/분위기|성격|소통|집중|과업|도란도란/.test(assistantText)) {
         chips.push('액션 성격 상관없음');
+      } else if (/분야|관심/.test(assistantText)) {
+        chips.push('분야 상관없음');
       } else if (/재능|기술/.test(assistantText)) {
         const hasSpecificSkill = chips.some((c) => (ALL_15_SKILLS as readonly string[]).includes(c));
         if (!hasSpecificSkill) {
@@ -1466,8 +1479,33 @@ export function formatSummaryChips(
       continue;
     }
 
+    // 5-2. 과거 이력 관심 분야 확인 긍정 응답 ('같은 분야로 찾을래요')
+    if (/같은 분야|비슷한 분야|기존 분야|하던 분야/.test(userText)) {
+      const catBracketMatch = assistantText.match(/\[(.*?)\]/);
+      if (catBracketMatch && catBracketMatch[1]) {
+        chips.push(catBracketMatch[1]);
+      } else {
+        chips.push('이전 참여 분야');
+      }
+      continue;
+    }
+
     // 6. 기타 명시적 답변 (예: '동물', '교류·교육·소통형', '실외 활동', '중규모 모임 (10-20명)' 등)
     chips.push(userText);
+  }
+
+  // 중복 및 모순 칩 정리:
+  // 1) 특정 카테고리가 칩에 이미 포함되어 있다면 '분야 상관없음' 제거
+  const KNOWN_CATS = ['동물', '환경', '지역사회', '아동·청소년', '노인', '장애', '교육', '기타'];
+  const hasSpecificCat = chips.some((c) => KNOWN_CATS.some((cat) => c.includes(cat)));
+  if (hasSpecificCat && chips.includes('분야 상관없음')) {
+    chips = chips.filter((c) => c !== '분야 상관없음');
+  }
+
+  // 2) 특정 재능이 칩에 이미 포함되어 있다면 '재능 상관없음' 제거
+  const hasSpecificSkill = chips.some((c) => (ALL_15_SKILLS as readonly string[]).includes(c));
+  if (hasSpecificSkill && chips.includes('재능 상관없음')) {
+    chips = chips.filter((c) => c !== '재능 상관없음');
   }
 
   return [...new Set(chips)];

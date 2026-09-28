@@ -1154,6 +1154,35 @@ test('[요약 칩 및 추천 이유 변명 방지 검증] 재능 선택 후 환�
   assert.equal(chips.includes('재능 상관없음'), false);
 });
 
+test('[과거 활동 분야 유지 및 분위기 상관없음 검증] 같은 분야 선택 후 분위기 질문에서 상관없음 선택 시 분야가 초기화되지 않고 유지된다', () => {
+  const messages = [
+    {
+      role: 'assistant' as const,
+      content:
+        '서연님의 지난 활동들을 살펴보니 [노인·장애] 분야에 주로 참여하셨네요. 이번에도 비슷한 분야로 찾아드릴까요?',
+    },
+    { role: 'user' as const, content: '같은 분야로 찾을래요 👍' },
+    {
+      role: 'assistant' as const,
+      content:
+        '서연님이 선호하는 분야에 맞춰 액션을 찾아드릴게요! 😊 이번에는 어떤 분위기의 활동이 더 끌리시나요? 사람들과 도란도란 소통하고 정을 나누는 활동이 좋으세요, 아니면 땀 흘리고 손발을 맞춰 집중하는 활동이 좋으세요?',
+    },
+    { role: 'user' as const, content: '상관없음' },
+  ];
+
+  // 1. 대화 의도 추출 검증
+  const answers = extractAnswersFromDialogue(messages);
+  assert.equal(answers.fieldPreference, 'familiar');
+  assert.deepEqual(answers.selectedCategories, ['노인', '장애']);
+  assert.equal(answers.vibePreference, 'any');
+
+  // 2. 요약 칩 검증: '노인·장애'와 '액션 성격 상관없음'이 들어가고, '분야 상관없음'은 없어야 함
+  const chips = formatSummaryChips(messages);
+  assert.equal(chips.includes('노인·장애'), true);
+  assert.equal(chips.includes('액션 성격 상관없음'), true);
+  assert.equal(chips.includes('분야 상관없음'), false);
+});
+
 
 
 
