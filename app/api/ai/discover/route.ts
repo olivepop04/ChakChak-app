@@ -118,11 +118,13 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
 3. 활동 지역 옵션에 '비대면/온라인'은 절대 넣지 마세요. (지역은 1곳 단일 선택 또는 전국/상관없음)
 4. 사용자가 언제 방문했는지(접속 여부)를 추측하는 발언("오랜만에 오셨네요", "그동안 잘 지내셨나요" 등)은 절대 하지 마세요.
 5. 지난 특정 액션 제목을 일일이 언급하며 "참여는 즐거우셨나요?" 같은 사적인 감상을 묻지 마세요.
-6. 없는 사실이나 사용자 정보를 추측하거나 임의로 지어내지 마세요.
+6. 없는 사실이나 사용자 정보를 추측하거나 임의로 지어내지 마세요. 프로필에 재능이 없는 사용자(나눌수있는재능이 비어있거나 '등록된 재능 없음')에게 절대 "프로필에 재능이 있다"고 말하거나 임의의 재능(청소·정리, 요리 등)을 지어내지 마세요.
 7. 말풍선(reply) 본문에 선택지 항목이나 예시 목록(불릿 기호 -, •, * 등)을 절대 나열하지 마세요. 모든 선택지는 화면 하단 선택 버튼(options)으로만 노출됩니다. 말풍선에는 질문과 다정한 안내 멘트(1~2문장)만 간결하게 작성하세요.
-8. 재능(skills) 질문의 options 배열:
-   - 프로필에 재능이 있는 사용자에게 처음 물을 때는 반드시 2지선다 ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"]를 제공하세요.
-   - 프로필에 재능이 없거나 사용자가 "다른 재능으로 할게요"를 선택한 경우에만 사전 정의된 16종 목록 ['사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공', '기타']을 정확히 제공하세요. 말풍선 멘트에는 절대 "위 16종"이라고 하지 말고, 반드시 "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요"라고 안내하세요.
+8. 재능(skills) 질문의 options 배열 및 멘트:
+   - 프로필에 재능이 실제로 등록되어 있는 사용자에게 처음 물을 때만 2지선다 ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"]를 제공하고, 멘트는 "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?"로 작성하세요.
+   - 프로필에 등록된 재능이 없는 사용자(신규가입자 등) 또는 사용자가 "다른 재능으로 할게요"를 선택한 경우:
+     ★ 절대로 "프로필에 재능이 있다"고 말하지 마세요!
+     ★ 반드시 "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요"라고 안내하고, options는 사전 정의된 16종 목록 ['사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공', '기타']을 정확히 제공하세요.
 9. question_key는 반드시 시스템이 제공한 '남은질문' 배열에 존재하는 키 중에서만 선택해야 합니다. 남은질문에 없는 질문 키(예: 난이도에서 '기초 체력 필요'나 '누구나 참여가능'을 선택하여 재능 질문이 생략된 상황에서 "skills")를 반환하는 것은 엄격히 금지됩니다.
 
 [질문 순서 및 분기 제어 시나리오 (우선순위 0~5)]
@@ -156,8 +158,8 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
      ★ 절대로 재능(skills) 질문을 하지 마세요! question_key를 "skills"로 반환하지 마세요!
      ★ 재능 질문을 완전히 생략하고 즉시 4번 활동 환경(activity_types) 질문으로 전진해야 합니다! (question_key: "activity_types")
    - 사용자가 '전문지식/자격/재능 활용'을 선택한 경우에만 재능(skills) 질문으로 이동합니다.
-     - 프로필 재능이 있는 경우: "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?" (options: ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"])
-     - 프로필 재능이 없거나 '다른 재능으로 할게요' 선택 시: "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: 16종 재능 목록)
+     - 프로필에 등록된 재능이 있는 경우: "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?" (options: ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"])
+     - 프로필에 등록된 재능이 없는 경우(신규가입자 등) 또는 '다른 재능으로 할게요' 선택 시: "전문지식이나 재능을 나눌 수 있다니 정말 멋져요! 😊 {nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: 16종 재능 목록)
 
 4. 활동 환경 (activity_types):
    - 멘트: 직전에 사용자가 재능을 선택한 경우 "알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨"를 앞머리에 붙이고, "어떤 환경에서 활동하고 싶으세요?"라고 질문하세요. (재능 중 하나만 임의로 골라 대표로 지정하지 마세요)
@@ -441,10 +443,14 @@ export async function POST(request: Request) {
   let conversation: Conversation;
   let isAiSuccess = false;
   try {
+    const rawProfileSkills = profile.skills ?? [];
+    const profileSkillsStr = rawProfileSkills.length > 0 ? rawProfileSkills.join(', ') : '없음';
+    const dynamicSystem = CHAT_SYSTEM.replace(/\{userSkills\}/g, profileSkillsStr);
+
     conversation = await callStructuredAI({
       agent: 'DISCOVER',
       promptVersion: CHAT_PROMPT_VERSION,
-      system: CHAT_SYSTEM,
+      system: dynamicSystem,
       temperature: 0.7,
       user: JSON.stringify({
         사용자: profile.nickname,
@@ -455,7 +461,7 @@ export async function POST(request: Request) {
           관심카테고리: profile.categories,
           활동지역: userContext.profileRegion,
           선호시간대: userContext.profileTimesSummary,
-          나눌수있는재능: effectiveSkills,
+          나눌수있는재능: rawProfileSkills.length > 0 ? rawProfileSkills : '등록된 재능 없음 (신규가입자)',
           자기소개: profile.bio,
         },
         지난활동: history.slice(0, 3).map((action) => {
@@ -634,14 +640,17 @@ export async function POST(request: Request) {
     let reply =
       isAiSuccess && conversation.reply ? conversation.reply : fallback.reply;
 
-    // 만약 프로필에 재능이 있는 사용자가 재능 질문으로 진입했다면, 맞춤 프로필 재능 확인 멘트 적용
     const hasProfileSkills = (profile.skills ?? []).length > 0;
-    const isAskingProfileSkill =
-      chosenQuestionKey === 'skills' &&
-      hasProfileSkills &&
-      adaptiveAnswers.talentPreference !== 'new_skill';
 
-    if (isAskingProfileSkill) {
+    // 1) 재능(skills) 질문인 경우:
+    // AI의 프로필 재능 거짓말/할루시네이션을 원천 차단하고,
+    // 프로필 재능 유무 및 '다른 재능' 선택 여부에 따라 검증된 fallback.reply를 100% 강제 적용
+    if (chosenQuestionKey === 'skills') {
+      reply = fallback.reply;
+    }
+
+    // 2) 프로필에 재능이 없는 사용자인데 말풍선에 "프로필에 재능이 있다"는 문구가 포함된 경우 즉시 안전한 문구로 교체
+    if (!hasProfileSkills && /프로필에.*재능/.test(reply)) {
       reply = fallback.reply;
     }
 

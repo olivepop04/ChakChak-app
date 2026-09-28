@@ -724,7 +724,7 @@ export function getQuestionReply(
       ].join('\n');
     }
     return [
-      '맞아요! 재능을 나눌 수 있다는 건 정말 멋진 일이에요. 😊',
+      '전문지식이나 재능을 나눌 수 있다니 정말 멋진 일이에요! 😊',
       `${nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요.`,
     ].join('\n');
   }

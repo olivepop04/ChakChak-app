@@ -923,6 +923,28 @@ test('[재능 선택 멘트 검증] 16종 목록 제공 시 아래 선택지 표
   assert.equal(reply.includes('위 16종'), false);
 });
 
+test('[신규가입자 재능 선택 멘트 검증] 프로필 재능이 없는 사용자가 전문지식/재능 선택 시 절대 프로필을 언급하지 않는다', () => {
+  const reply = getQuestionReply('skills', {
+    nickname: '신규유저',
+    answers: { difficultyPreference: 'expert' },
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+  });
+
+  assert.equal(reply.includes('프로필'), false);
+  assert.equal(reply.includes('신규유저님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요.'), true);
+
+  const options = getQuestionOptions('skills', [], 'A', false, {
+    profileSkills: [],
+    answers: { difficultyPreference: 'expert' },
+  });
+  assert.equal(options.length, 16);
+  assert.equal(options.includes('청소·정리'), true);
+  assert.equal(options.includes('예, 그럴게요 👍'), false);
+});
+
 test('[추천 이유 폴백 검증] fallbackReason이 건조한 나열이 아닌 자연스럽고 따뜻한 문장을 생성한다', () => {
   const mockScored: ScoredAction = {
     action: {
