@@ -47,7 +47,8 @@ export function Header({
   return (
     <header
       className={cn(
-        'flex h-14 items-center gap-2 border-b border-neutral-100 bg-white px-3',
+        // 하단 구분선 없음 (2026-09-28 공용 상단 바 통일)
+        'flex h-14 items-center gap-2 bg-white px-3',
         sticky && 'sticky top-0 z-30',
         className,
       )}
@@ -92,8 +93,9 @@ export function Header({
                올려도 됩니다만, 나중에 h-14 를 건드릴 때 이 값을 기억하세요.
 
         8쪽의 나머지(자간·색 통일, 이중 h1 정리)는 발표 후 소정님 전담입니다.
+        → 자간은 2026-09-28 0em(tracking-normal)으로 통일. 색·이중 h1 은 아직.
       */}
-      <h1 className="flex-1 truncate text-body font-bold tracking-widest text-neutral-700">
+      <h1 className="flex-1 truncate text-body font-bold tracking-normal text-neutral-700">
         {title}
       </h1>
 

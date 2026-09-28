@@ -19,16 +19,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CircleX } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { leaveActionWithReason } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils/cn';
 import { ReasonModal } from '@/components/action/ReasonModal';
 
-// 카드 하단 트리거 버튼은 CREW CHAT 등 다른 버튼과 같은 중립 스타일(하양 바탕 · 회색 글씨).
-// 실제 파괴적 확인은 아래 모달의 빨강 '나가기 진행' 버튼에서 받습니다.
+// 카드 하단 트리거 버튼은 "크루 채팅" 옆 92px 고정폭 · 진한 회색(text-ink) 테두리.
+// 튀지 않게(조장 요청, 2026-09-28) — 실제 파괴적 확인은 아래 모달의 '나가기 진행' 버튼에서 받습니다.
 const secondary =
-  'inline-flex min-h-9 items-center justify-center rounded-full border border-neutral-300 bg-white px-3 py-2 text-label font-semibold text-neutral-700 transition-colors';
+  'inline-flex min-h-11 w-[92px] shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-[#333333] bg-white px-3 text-body font-semibold text-[#333333] transition-colors';
 
 export function LeaveButton({
   actionId,
@@ -79,14 +80,20 @@ export function LeaveButton({
       <ReasonModal
         open={open}
         title="참여를 취소할까요?"
-        description="사유는 크루 게시판에 남으며, 참여를 취소하면 게시판에 들어갈 수 없어요."
-        warning="이 내용은 크루에게 공개되며, 한번 보내면 지울 수 없습니다."
+        icon={CircleX}
+        warning={
+          <>
+            사유는 크루 게시판에 공개되고 <b className="font-bold">지울 수 없어요</b>. 나가면
+            게시판에도 들어갈 수 없어요.
+          </>
+        }
         warningTone="warning"
         reason={{
           label: '참여 취소 사유',
-          placeholder: '크루가 상황을 이해할 수 있도록 사유를 적어주세요.',
+          placeholder: '크루가 이해할 수 있게 5자 이상 적어주세요.',
         }}
-        confirmLabel="나가기 진행"
+        confirmLabel="나가기"
+        confirmVariant="muted"
         busy={busy}
         onClose={closeModal}
         onConfirm={handleLeave}

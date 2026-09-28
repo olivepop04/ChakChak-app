@@ -48,7 +48,7 @@ export default async function WelcomePage({
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <h1 className="flex-1 truncate text-body font-bold tracking-widest text-white">
+        <h1 className="flex-1 truncate text-body font-bold tracking-normal text-white">
           참여 완료
         </h1>
         <span className="w-9" />

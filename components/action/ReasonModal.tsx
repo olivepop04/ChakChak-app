@@ -2,13 +2,17 @@
 
 import { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
+import type { LucideIcon } from 'lucide-react';
+import { TriangleAlert } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 interface ReasonModalProps {
   open: boolean;
   title: string;
-  description?: string;
-  warning?: string;
+  /** 제목 앞 아이콘 (선택) — 내 액션 통일안(2026-09-28)에서 추가 */
+  icon?: LucideIcon;
+  description?: React.ReactNode;
+  warning?: React.ReactNode;
   warningTone?: 'danger' | 'warning';
   reason?: {
     label: string;
@@ -17,8 +21,11 @@ interface ReasonModalProps {
     maxLength?: number;
   };
   confirmLabel: string;
-  /** 확인 버튼 색 — 기본 'default'는 포인트 그린(취소·나가기·로그아웃·조기종료), 'danger'는 되돌릴 수 없는 진짜 삭제만 */
-  confirmVariant?: 'default' | 'danger';
+  /**
+   * 확인 버튼 색 — 'default'는 포인트 그린(로그아웃 등), 'danger'는 되돌릴 수 없는 진짜 삭제,
+   * 'muted'는 text-muted 회색(취소·조기종료·나가기 — 2026-09-28, "튀지 않게" 요청)
+   */
+  confirmVariant?: 'default' | 'danger' | 'muted';
   cancelLabel?: string;
   busy?: boolean;
   onClose: () => void;
@@ -28,13 +35,14 @@ interface ReasonModalProps {
 export function ReasonModal({
   open,
   title,
+  icon: Icon,
   description,
   warning,
   warningTone = 'danger',
   reason,
   confirmLabel,
   confirmVariant = 'default',
-  cancelLabel = '취소',
+  cancelLabel = '닫기',
   busy = false,
   onClose,
   onConfirm,
@@ -91,10 +99,8 @@ export function ReasonModal({
     if (!isBusy) onClose();
   }
 
-  const warningClassName =
-    warningTone === 'warning'
-      ? 'border-amber-200 bg-amber-50 text-amber-800'
-      : 'border-red-100 bg-red-50 text-red-800';
+  // 왼쪽 정렬(사유 입력이 있는 모달) / 가운데 정렬(설명만 있는 모달) — 내 액션 통일안, 2026-09-28
+  const centered = !reason;
 
   return createPortal(
     <div
@@ -109,50 +115,74 @@ export function ReasonModal({
         aria-labelledby={titleId}
         className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5"
       >
-        <h2 id={titleId} className="text-subtitle font-bold text-neutral-900">
-          {title}
+        <h2
+          id={titleId}
+          className={cn(
+            'flex items-center gap-2 text-subtitle font-bold text-[#333333]',
+            centered ? 'justify-center text-center' : 'justify-start text-left',
+          )}
+        >
+          {Icon && <Icon className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden="true" />}
+          <span>{title}</span>
         </h2>
         {description && (
-          <p className="mt-2 text-label leading-relaxed text-neutral-500">{description}</p>
+          <p
+            className={cn(
+              'mt-2 text-label leading-relaxed text-neutral-500',
+              centered && 'text-center',
+            )}
+          >
+            {description}
+          </p>
         )}
         {warning && (
-          <p
-            className={`mt-3 rounded-xl border px-3 py-2 text-label font-semibold leading-relaxed ${warningClassName}`}
+          <div
+            className={cn(
+              'flex items-start gap-2 rounded-xl px-3 py-2.5',
+              description ? 'mt-3' : 'mt-2',
+              warningTone === 'warning'
+                ? 'border border-warning bg-warning-soft'
+                : 'border border-danger bg-danger-soft',
+            )}
           >
-            {warning}
-          </p>
+            <span
+              className={cn(
+                'mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-md',
+                warningTone === 'warning' ? 'bg-warning' : 'bg-danger',
+              )}
+            >
+              <TriangleAlert
+                className={cn('h-3.5 w-3.5', warningTone === 'warning' ? 'text-warning-ink' : 'text-white')}
+                strokeWidth={2.25}
+                aria-hidden="true"
+              />
+            </span>
+            <p
+              className={cn(
+                'text-label font-medium leading-relaxed',
+                warningTone === 'warning' ? 'text-warning-ink' : 'text-danger',
+              )}
+            >
+              {warning}
+            </p>
+          </div>
         )}
 
         {reason && (
-          <>
-            <label className="mt-4 flex flex-col gap-1.5">
-              <span className="text-label font-medium text-neutral-700">{reason.label}</span>
-              <textarea
-                autoFocus
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-                rows={4}
-                maxLength={maxLength}
-                disabled={isBusy}
-                placeholder={reason.placeholder}
-                className="resize-none rounded-xl border border-neutral-300 p-3 text-sm leading-relaxed outline-none focus:border-neutral-900 disabled:bg-neutral-50"
-              />
-            </label>
-            <div className="mt-1 flex items-center justify-between gap-3 text-caption">
-              <span
-                className={
-                  trimmedLength > 0 && trimmedLength < minLength
-                    ? 'text-red-600'
-                    : 'text-neutral-400'
-                }
-              >
-                {minLength}자 이상 입력해주세요.
-              </span>
-              <span className="text-neutral-400">
-                {value.length}/{maxLength}
-              </span>
-            </div>
-          </>
+          <label className="mt-4 flex flex-col gap-1.5">
+            <span className="sr-only">{reason.label}</span>
+            <textarea
+              autoFocus
+              aria-label={reason.label}
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              rows={4}
+              maxLength={maxLength}
+              disabled={isBusy}
+              placeholder={reason.placeholder}
+              className="h-[117px] resize-none rounded-xl border border-hairline p-3 text-body leading-relaxed outline-none focus:border-hairline-focus disabled:bg-neutral-50"
+            />
+          </label>
         )}
 
         <div className="mt-5 flex gap-2">
@@ -170,7 +200,9 @@ export function ReasonModal({
             disabled={isBusy || !canConfirm}
             className={cn(
               'flex min-h-11 flex-1 items-center justify-center rounded-xl py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40',
-              confirmVariant === 'danger' ? 'bg-danger' : 'bg-brand',
+              confirmVariant === 'danger' && 'bg-danger',
+              confirmVariant === 'muted' && 'bg-[#7A7A7A]',
+              confirmVariant === 'default' && 'bg-brand',
             )}
           >
             {isBusy ? '처리 중...' : confirmLabel}

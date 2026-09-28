@@ -6,12 +6,12 @@
  */
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Info, TriangleAlert, Plus, Search, SearchX } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getMyJoinedActions } from '@/lib/queries/participations';
 import { syncHostNotifications } from '@/lib/notifications/lazy';
 import { getMyCreatedActions } from '@/lib/queries/actions';
 import { ActionCard } from '@/components/ui/ActionCard';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { ParticipationBadge } from '@/components/ui/Badge';
 import { Chip } from '@/components/ui/Chip';
 import { Header } from '@/components/layout/Header';
@@ -25,16 +25,62 @@ import { getShortfallActionIds } from '@/lib/queries/stats';
 import { cn } from '@/lib/utils/cn';
 import type { JoinedActionData, ActionCardData } from '@/lib/types/view';
 
+// 버튼 규칙(내 액션 통일안, 2026-09-28) — 높이 44px·모서리 12px·글자 15px 600.
+// 크루 채팅이 있는 줄은 크루 채팅만 넓게(flex-1), 옆 버튼은 줄바꿈 없는 고정폭 92px.
+// 크루 채팅이 없는 줄(삭제하기+계속 작성하기)은 1:1.
 const btn =
-  'inline-flex min-h-9 items-center justify-center rounded-full px-3 py-2 text-label font-semibold';
-const primary = `${btn} bg-neutral-900 text-white`;
-const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
+  'inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl px-3 text-body font-semibold';
+const primary = `${btn} flex-1 bg-brand text-white`;
+const secondary = `${btn} flex-1 border border-hairline bg-white text-neutral-700`;
+const primaryFixed = `${btn} w-[92px] shrink-0 bg-brand text-white`;
+const secondaryFixed = `${btn} w-[92px] shrink-0 border border-hairline bg-white text-neutral-700`;
+
+/**
+ * 빈 목록(호스트한 액션·참여한 액션 자체가 0개) — 카드가 놓일 자리에 점선 카드 한 장.
+ * 하단 탭(+·액션 찾기)과 같은 목적지라 버튼을 따로 두지 않고 카드 전체를 링크로 씁니다.
+ */
+function EmptyActionCard({
+  href,
+  icon,
+  title,
+  description,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="px-6 py-5">
+      <Link
+        href={href}
+        className="flex h-[280px] flex-col items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed border-faint bg-white p-6 text-center"
+      >
+        <span className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
+          {icon}
+        </span>
+        <p className="text-body font-semibold leading-relaxed text-[#333333]">{title}</p>
+        <p className="text-label leading-relaxed text-[#7a7a7a]">{description}</p>
+      </Link>
+    </div>
+  );
+}
+
+/** 필터 결과 없음(목록엔 있지만 고른 필터에 해당하는 게 없음) — 작고 조용하게, 버튼 없음 */
+function EmptyFilterResult({ filterLabel }: { filterLabel: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 px-6 py-10 text-center">
+      <SearchX className="mb-1 h-6 w-6 text-faint" strokeWidth={2} aria-hidden="true" />
+      <p className="text-label font-semibold text-[#7a7a7a]">&apos;{filterLabel}&apos; 액션이 없어요</p>
+    </div>
+  );
+}
 
 /** 참여 액션 상태별 버튼 */
 function JoinedFooter({ item }: { item: JoinedActionData }) {
   if (item.status === 'CANCELLED') {
     return (
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex gap-2">
         <Link href={`/action/${item.id}`} className={secondary}>
           취소 사유 보기
         </Link>
@@ -48,9 +94,9 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
       : false;
 
     return (
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex gap-2">
         <Link href={`/action/${item.id}/chat`} className={secondary}>
-          CREW CHAT
+          크루 채팅
         </Link>
         {!isStarted && item.participationStatus === 'BEFORE_ACTION' && (
           <LeaveButton actionId={item.id} />
@@ -60,7 +106,7 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
   }
 
   // ENDED / COMPLETED (소감 작성 필요 · 참여 완료):
-  // 동일한 '소감 작성 필요' 상태에서 일관되게 CREW CHAT 과 결과 보기 버튼을 모두 제공합니다.
+  // 동일한 '소감 작성 필요' 상태에서 일관되게 크루 채팅 과 결과 보기 버튼을 모두 제공합니다.
   // ENDED 상태에서 결과를 누르면 "아직 결과가 등록되지 않았어요" 안내 화면으로 연결됩니다.
   if (
     item.participationStatus === 'AFTER_ACTION' ||
@@ -68,11 +114,11 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
     item.status === 'COMPLETED'
   ) {
     return (
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex gap-2">
         <Link href={`/action/${item.id}/chat`} className={secondary}>
-          CREW CHAT
+          크루 채팅
         </Link>
-        <Link href={`/action/${item.id}/result`} className={secondary}>
+        <Link href={`/action/${item.id}/result`} className={secondaryFixed}>
           결과 보기
         </Link>
       </div>
@@ -81,9 +127,9 @@ function JoinedFooter({ item }: { item: JoinedActionData }) {
 
   // 위에서 안 걸린 상태 (지금은 없습니다)
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex gap-2">
       <Link href={`/action/${item.id}/chat`} className={secondary}>
-        CREW CHAT
+        크루 채팅
       </Link>
     </div>
   );
@@ -103,33 +149,44 @@ function CreatedFooter({
 
   return (
     <div className="flex flex-col gap-2.5">
-      {/* 1. 모집 마감 ~ 활동 시작 전: 목표 미달 시에만 취소 안내 (F37) */}
+      {/* 1. 모집 마감 ~ 활동 시작 전: 목표 미달 시에만 취소 안내 (F37)
+          괄호 설명("시작 시각 이후에는...")은 취소 확인창으로 옮겼습니다 — 여기는 한 줄만. */}
       {!isStarted && isShortfall && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-caption leading-relaxed text-amber-800">
-          <p className="font-semibold text-amber-900">⚠️ 최소 목표 미달 (모집 마감)</p>
-          <p className="mt-0.5 text-caption text-amber-700">
-            최소 모집 인원·수량을 채우지 못했습니다. 활동 시작 전까지 아래 [취소하기] 버튼으로 액션을 취소하실 수 있습니다.
-          </p>
-          <p className="mt-0.5 text-caption text-amber-600">
-            (시작 시각 이후에는 취소가 불가하며, 별도 조치가 없으면 예정대로 진행됩니다.)
-          </p>
+        <div className="flex gap-2.5 rounded-xl bg-warning-soft p-3">
+          <span className="flex h-6 w-6 flex-none items-center justify-center rounded-lg bg-warning">
+            <TriangleAlert className="h-3.5 w-3.5 text-warning-ink" strokeWidth={2.25} aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-label font-bold leading-relaxed text-warning-ink">
+              최소 목표를 채우지 못했어요
+            </p>
+            <p className="mt-0.5 text-label leading-relaxed text-warning-ink">
+              활동 시작 전까지만 [취소하기]로 취소할 수 있어요.
+            </p>
+          </div>
         </div>
       )}
 
       {/* 2. 활동 시작 ~ 활동 종료 전: 진행 중인 모든 액션에 조기종료 안내 */}
       {item.status === 'ACTIVE' && isStarted && (
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-caption leading-relaxed text-blue-800">
-          <p className="font-semibold text-blue-900">💡 활동 조기종료 안내</p>
-          <p className="mt-0.5 text-caption text-blue-700">
-            활동 종료 시각 전까지 아래 [조기종료] 버튼으로 활동을 일찍 마칠 수 있습니다.
-          </p>
-          <p className="mt-0.5 text-caption text-blue-600">
-            (악천후, 장소 문제, 현저한 불참 등 부득이한 사정이 있거나 여러날 진행예정이었던 액션을 조기 달성한 경우 사용해 주세요.)
-          </p>
+        <div className="flex gap-2.5 rounded-xl bg-info-soft p-3">
+          <span className="flex h-6 w-6 flex-none items-center justify-center rounded-lg bg-info">
+            <Info className="h-3.5 w-3.5 text-white" strokeWidth={2.25} aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-label font-bold leading-relaxed text-info">
+              꼭 필요할 때만 조기종료해 주세요
+            </p>
+            <p className="mt-0.5 text-label leading-relaxed text-neutral-700">
+              악천후·장소 문제·많은 불참 등 <b className="font-bold">부득이한 경우</b>나, 여러 날
+              진행할 액션을 <b className="font-bold">일찍 달성했을 때</b> 쓰는 기능이에요. 종료하면
+              크루에게 알림이 가요.
+            </p>
+          </div>
         </div>
       )}
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex gap-2">
         {item.status === 'DRAFT' && (
           <>
             <Link href={`/action/create?id=${item.id}`} className={primary}>
@@ -142,7 +199,7 @@ function CreatedFooter({
         {item.status === 'ACTIVE' && (
           <>
             <Link href={`/action/${item.id}/chat`} className={secondary}>
-              CREW CHAT
+              크루 채팅
             </Link>
             {isStarted ? (
               <EarlyEndButton actionId={item.id} />
@@ -155,9 +212,9 @@ function CreatedFooter({
         {item.status === 'ENDED' && (
           <>
             <Link href={`/action/${item.id}/chat`} className={secondary}>
-              CREW CHAT
+              크루 채팅
             </Link>
-            <Link href={`/action/${item.id}/result/write`} className={primary}>
+            <Link href={`/action/${item.id}/result/write`} className={primaryFixed}>
               결과 작성
             </Link>
           </>
@@ -166,9 +223,9 @@ function CreatedFooter({
         {item.status === 'COMPLETED' && (
           <>
             <Link href={`/action/${item.id}/chat`} className={secondary}>
-              CREW CHAT
+              크루 채팅
             </Link>
-            <Link href={`/action/${item.id}/result`} className={secondary}>
+            <Link href={`/action/${item.id}/result`} className={secondaryFixed}>
               결과 보기
             </Link>
           </>
@@ -202,16 +259,16 @@ type JoinedFilter =
 const CREATED_FILTERS: { key: CreatedFilter; label: string }[] = [
   { key: 'all', label: '전체' },
   { key: 'active', label: '모집/진행중' },
-  { key: 'ended', label: '결과작성필요' },
+  { key: 'ended', label: '결과 작성 필요' },
   { key: 'completed', label: '완료' },
-  { key: 'draft', label: '작성중' },
+  { key: 'draft', label: '작성 중' },
   { key: 'cancelled', label: '취소됨' },
 ];
 
 const JOINED_FILTERS: { key: JoinedFilter; label: string }[] = [
   { key: 'all', label: '전체' },
-  { key: 'before', label: '참여예정' },
-  { key: 'after', label: '소감작성필요' },
+  { key: 'before', label: '참여 예정' },
+  { key: 'after', label: '소감 작성 필요' },
   { key: 'completed', label: '참여 완료' },
   { key: 'cancelled', label: '취소됨' },
 ];
@@ -376,7 +433,7 @@ export default async function ActivityPage({
       </div>
 
       {/* 상태 필터 탭 */}
-      <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto border-b border-neutral-100 bg-white px-6 py-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto bg-white px-6 py-3 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {isCreated
           ? CREATED_FILTERS.map((f) => (
             <Link
@@ -387,6 +444,7 @@ export default async function ActivityPage({
             >
               <Chip
                 selected={createdFilter === f.key}
+                tone="accent"
                 as="span"
                 className="whitespace-nowrap px-3.5 py-1.5 text-label"
               >
@@ -403,6 +461,7 @@ export default async function ActivityPage({
             >
               <Chip
                 selected={joinedFilter === f.key}
+                tone="accent"
                 as="span"
                 className="whitespace-nowrap px-3.5 py-1.5 text-label"
               >
@@ -415,21 +474,18 @@ export default async function ActivityPage({
       {/* 목록 */}
       {isCreated ? (
         created.length === 0 ? (
-          <EmptyState
-            icon="✏️"
-            title="아직 호스트한 액션이 없어요"
-            description="함께할 사람을 모아보세요."
-            action={{ label: '액션 만들기', href: '/action/create' }}
+          <EmptyActionCard
+            href="/action/create"
+            icon={<Plus className="h-6 w-6 text-[#7a7a7a]" strokeWidth={2.2} aria-hidden="true" />}
+            title="첫 액션을 만들어보세요"
+            description="아직 호스트한 액션이 없어요. 함께할 사람을 모아보세요."
           />
         ) : filteredCreated.length === 0 ? (
-          <EmptyState
-            icon="🔍"
-            title="아직 해당 액션이 없어요"
-
-            action={{ label: '전체 보기', href: '/activity' }}
+          <EmptyFilterResult
+            filterLabel={CREATED_FILTERS.find((f) => f.key === createdFilter)?.label ?? ''}
           />
         ) : (
-          <div className="flex flex-col gap-4 px-6 py-5">
+          <div className="flex flex-col gap-8 px-6 py-5">
             {filteredCreated.map((a) => (
               <ActionCard
                 key={a.id}
@@ -446,21 +502,18 @@ export default async function ActivityPage({
           </div>
         )
       ) : joined.length === 0 ? (
-        <EmptyState
-          icon="🌱"
-          title="아직 참여한 액션이 없어요"
-          description="마음에 드는 액션을 찾아보세요."
-          action={{ label: '액션 찾아보기', href: '/discover' }}
+        <EmptyActionCard
+          href="/discover"
+          icon={<Search className="h-6 w-6 text-[#7a7a7a]" strokeWidth={2.2} aria-hidden="true" />}
+          title="참여할 액션을 찾아보세요"
+          description="아직 참여한 액션이 없어요. 마음에 드는 액션에 함께해 보세요."
         />
       ) : filteredJoined.length === 0 ? (
-        <EmptyState
-          icon="🔍"
-          title="아직 해당 액션이 없어요"
-
-          action={{ label: '전체 보기', href: '/activity?tab=joined' }}
+        <EmptyFilterResult
+          filterLabel={JOINED_FILTERS.find((f) => f.key === joinedFilter)?.label ?? ''}
         />
       ) : (
-        <div className="flex flex-col gap-4 px-6 py-5">
+        <div className="flex flex-col gap-8 px-6 py-5">
           {filteredJoined.map((a) => (
             <div key={a.id} className="relative">
               <ActionCard action={a} footer={<JoinedFooter item={a} />} />

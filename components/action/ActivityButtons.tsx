@@ -7,15 +7,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Eraser, CircleX, CircleCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { deleteDraft, cancelAction, endActionEarly } from '@/lib/mutations';
 import { useToast } from '@/components/ui/Toast';
 import { ReasonModal } from '@/components/action/ReasonModal';
-import { Button } from '@/components/ui/Button';
 
+// 되돌리기 어려운 것(취소하기·조기종료·삭제하기)은 튀지 않게 진한 회색(text-ink) 테두리로 통일 (조장 요청, 2026-09-28).
 const btn =
-  'inline-flex min-h-9 items-center justify-center rounded-full px-3 py-2 text-label font-semibold transition-colors';
-const secondary = `${btn} border border-neutral-300 bg-white text-neutral-700`;
+  'inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl px-3 text-body font-semibold transition-colors border border-[#333333] bg-white text-[#333333]';
+// 크루 채팅 옆 — 고정 92px(줄바꿈 없음)
+const grayFixed = `${btn} w-[92px] shrink-0`;
+// 크루 채팅이 없는 줄(삭제하기+계속 작성하기) — 1:1
+const grayFlex = `${btn} flex-1`;
 
 /**
  * 참여 취소 버튼은 components/action/LeaveButton.tsx 로 옮겼습니다 (개발 B 담당).
@@ -46,14 +50,19 @@ export function DeleteDraftButton({ actionId }: { actionId: string }) {
 
   return (
     <>
-      <Button type="button" variant="danger" size="sm" onClick={() => setOpen(true)} disabled={busy}>
+      <button type="button" className={grayFlex} onClick={() => setOpen(true)} disabled={busy}>
         삭제하기
-      </Button>
+      </button>
       <ReasonModal
         open={open}
         title="작성 중인 액션을 삭제할까요?"
-        description="되돌릴 수 없습니다."
-        confirmLabel="삭제 진행"
+        icon={Eraser}
+        description={
+          <span className="text-danger">
+            지금까지 작성한 내용이 모두 사라지고, <b className="font-bold">다시 되돌릴 수 없어요</b>.
+          </span>
+        }
+        confirmLabel="삭제하기"
         confirmVariant="danger"
         busy={busy}
         onClose={() => setOpen(false)}
@@ -87,15 +96,24 @@ export function CancelActionButton({ actionId }: { actionId: string }) {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={secondary}>
+      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={grayFixed}>
         취소하기
       </button>
       <ReasonModal
         open={open}
         title="액션을 취소할까요?"
+        icon={CircleX}
         description="취소 사유는 참여자에게 그대로 전달됩니다."
-        reason={{ label: '취소 사유' }}
-        confirmLabel="취소 진행"
+        warning={
+          <>
+            <b className="font-bold">시작 시각 이후에는 취소할 수 없고</b>, 취소하지 않으면
+            예정대로 진행돼요.
+          </>
+        }
+        warningTone="warning"
+        reason={{ label: '취소 사유', placeholder: '사유를 5자 이상 적어주세요.' }}
+        confirmLabel="취소하기"
+        confirmVariant="muted"
         busy={busy}
         onClose={() => setOpen(false)}
         onConfirm={handle}
@@ -128,15 +146,24 @@ export function EarlyEndButton({ actionId }: { actionId: string }) {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={secondary}>
+      <button type="button" onClick={() => setOpen(true)} disabled={busy} className={grayFixed}>
         조기종료
       </button>
       <ReasonModal
         open={open}
         title="활동을 조기 종료할까요?"
+        icon={CircleCheck}
         description="조기 종료 사유는 크루들에게 그대로 전달됩니다."
-        reason={{ label: '조기 종료 사유' }}
-        confirmLabel="조기 종료 진행"
+        warning={
+          <>
+            악천후·장소 문제·많은 불참처럼 <b className="font-bold">부득이한 사정</b>이 있거나,
+            액션을 <b className="font-bold">일찍 달성했을 때</b> 써주세요.
+          </>
+        }
+        warningTone="warning"
+        reason={{ label: '조기 종료 사유', placeholder: '사유를 5자 이상 적어주세요.' }}
+        confirmLabel="조기종료하기"
+        confirmVariant="muted"
         busy={busy}
         onClose={() => setOpen(false)}
         onConfirm={handle}
