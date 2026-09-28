@@ -871,6 +871,56 @@ test('[난이도 분기 검증] 누구나 참여가능 선택 시에도 재능 �
   assert.equal(nextReply.includes('누구나 부담 없이 편안하게 참여할 수 있는 액션들로 찾아볼게요! 😊'), true);
 });
 
+test('[카테고리 복수 추출 검증] 장애/환경 관심사 입력 시 두 분야가 모두 추출된다', () => {
+  const answers = extractAdaptiveAnswers(['장애/환경']);
+  assert.equal(answers.selectedCategories?.includes('장애'), true);
+  assert.equal(answers.selectedCategories?.includes('환경'), true);
+
+  const dialogueAnswers = extractAnswersFromDialogue([
+    { role: 'assistant', content: '어떤 분야의 액션에 가장 관심이 가시나요?' },
+    { role: 'user', content: '장애, 환경' },
+  ]);
+  assert.equal(dialogueAnswers.selectedCategories?.includes('장애'), true);
+  assert.equal(dialogueAnswers.selectedCategories?.includes('환경'), true);
+});
+
+test('[프로필 재능 질문 멘트 검증] 프로필 재능이 있는 경우 맞춤 멘트가 출력된다', () => {
+  const reply = getQuestionReply('skills', {
+    nickname: '민호',
+    answers: { difficultyPreference: 'expert' },
+    profileSkills: ['디자인', '사진 촬영'],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '서울특별시 성동구',
+    profileTimesSummary: '주말 오후',
+    hasRegionAndTime: true,
+  });
+
+  assert.equal(
+    reply,
+    '프로필에 [디자인, 사진 촬영] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?',
+  );
+});
+
+test('[재능 선택 멘트 검증] 16종 목록 제공 시 아래 선택지 표현을 사용한다', () => {
+  const reply = getQuestionReply('skills', {
+    nickname: '지수',
+    answers: { difficultyPreference: 'expert', talentPreference: 'new_skill' },
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '서울특별시 성동구',
+    profileTimesSummary: '주말 오후',
+    hasRegionAndTime: true,
+  });
+
+  assert.equal(reply.includes('지수님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요.'), true);
+  assert.equal(reply.includes('위 16종'), false);
+});
+
+
 
 
 

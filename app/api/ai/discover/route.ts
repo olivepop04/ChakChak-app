@@ -119,7 +119,7 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
 5. 지난 특정 액션 제목을 일일이 언급하며 "참여는 즐거우셨나요?" 같은 사적인 감상을 묻지 마세요.
 6. 없는 사실이나 사용자 정보를 추측하거나 임의로 지어내지 마세요.
 7. 말풍선(reply) 본문에 선택지 항목이나 예시 목록(불릿 기호 -, •, * 등)을 절대 나열하지 마세요. 모든 선택지는 화면 하단 선택 버튼(options)으로만 노출됩니다. 말풍선에는 질문과 다정한 안내 멘트(1~2문장)만 간결하게 작성하세요.
-8. 재능(skills) 질문의 options 배열은 반드시 사전 정의된 16종 목록 ['사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공', '기타']을 정확히 제공하세요.
+8. 재능(skills) 질문의 options 배열은 반드시 사전 정의된 16종 목록 ['사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공', '기타']을 정확히 제공하세요. 말풍선 멘트에는 절대 "위 16종"이라고 하지 말고, 반드시 "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요"라고 안내하세요.
 9. question_key는 반드시 시스템이 제공한 '남은질문' 배열에 존재하는 키 중에서만 선택해야 합니다. 남은질문에 없는 질문 키(예: 난이도에서 '기초 체력 필요'나 '누구나 참여가능'을 선택하여 재능 질문이 생략된 상황에서 "skills")를 반환하는 것은 엄격히 금지됩니다.
 
 [질문 순서 및 분기 제어 시나리오 (우선순위 0~5)]
@@ -153,8 +153,8 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
      ★ 절대로 재능(skills) 질문을 하지 마세요! question_key를 "skills"로 반환하지 마세요!
      ★ 재능 질문을 완전히 생략하고 즉시 4번 활동 환경(activity_types) 질문으로 전진해야 합니다! (question_key: "activity_types")
    - 사용자가 '전문지식/자격/재능 활용'을 선택한 경우에만 재능(skills) 질문으로 이동합니다.
-     - 프로필 재능이 있는 경우: "{nickname}님의 프로필에 [{userSkills}] 재능이 등록되어 있어요. 이 재능을 활용하는 액션으로 찾아볼까요?" (options: ["그래요, 이 재능을 살릴래요", "다른 재능으로 찾아볼래요"])
-     - 프로필 재능이 없거나 다른 재능 선택 시: 사전 정의된 16종 재능 목록(15종 + 기타) 제공. (기타 입력 시 부적절한 내용은 재작성 유도)
+     - 프로필 재능이 있는 경우: "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?" (options: ["프로필 재능 그대로 활용 👍", "새로운 재능 이용 🔄"])
+     - 프로필 재능이 없거나 '새로운 재능 이용' 선택 시: "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: 16종 재능 목록)
 
 4. 활동 환경 (activity_types):
    - 멘트: 직전에 사용자가 재능을 선택한 경우 "알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨"를 앞머리에 붙이고, "어떤 환경에서 활동하고 싶으세요?"라고 질문하세요. (재능 중 하나만 임의로 골라 대표로 지정하지 마세요)
@@ -550,7 +550,7 @@ export async function POST(request: Request) {
         : `말씀해 주셔서 감사해요! 😊`;
       return NextResponse.json({
         done: false,
-        reply: `${promptLead}\n이번 액션에서 함께 나누고 싶은 재능을 위 16종 선택지에서 골라주세요! 특정 재능에 상관없이 참여하고 싶으시다면 '기타'를 선택해주시면 됩니다.`,
+        reply: `${promptLead}\n이번 액션에서 ${profile.nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요! 특정 재능에 상관없이 참여하고 싶으시다면 '기타'를 선택해주시면 됩니다.`,
         options: getQuestionOptions('skills', SKILLS, userContext.state, userContext.hasRegionAndTime, {
           hasHistory,
           hasRegionAndTime: userContext.hasRegionAndTime,
@@ -564,10 +564,12 @@ export async function POST(request: Request) {
     }
   }
 
-  const recommendNow = shouldRecommendNow({
-    userTurnCount,
-    enough: conversation.enough,
-  });
+  const recommendNow =
+    shouldRecommendNow({
+      userTurnCount,
+      enough: conversation.enough,
+      remainingKeysCount: remainingQuestionKeys.length,
+    }) || remainingQuestionKeys.length === 0;
 
   if (!recommendNow && chosenQuestionKey) {
     const fallback = fallbackConversation({
@@ -588,6 +590,17 @@ export async function POST(request: Request) {
     let reply =
       isAiSuccess && conversation.reply ? conversation.reply : fallback.reply;
 
+    // 만약 프로필에 재능이 있는 사용자가 재능 질문으로 진입했다면, 맞춤 프로필 재능 확인 멘트 적용
+    const hasProfileSkills = (profile.skills ?? []).length > 0;
+    const isAskingProfileSkill =
+      chosenQuestionKey === 'skills' &&
+      hasProfileSkills &&
+      adaptiveAnswers.talentPreference !== 'new_skill';
+
+    if (isAskingProfileSkill) {
+      reply = fallback.reply;
+    }
+
     // 만약 AI가 이미 답변된 질문 축을 되묻거나, 남은 질문 축과 불일치하는 질문을 냈다면, 다음 남은 질문의 안내로 교체
     const isMismatchedReply =
       isAiSuccess &&
@@ -601,6 +614,9 @@ export async function POST(request: Request) {
     if (isMismatchedReply) {
       reply = fallback.reply;
     }
+
+    // "위 16종 선택지" 등 옛 표현을 "아래 선택지"로 보정
+    reply = reply.replace(/위\s*16종\s*선택지에서\s*골라주세요/g, '아래 선택지에서 골라주세요');
 
     // 말풍선 본문에서 불릿 기호(-, •, * 등)나 번호 목록(1., 1) 등) 옵션 나열 목록 제거 (중복 노출 방지)
     if (/(\n\s*[-•*]\s*|\n\s*\d+[.)]\s*)/.test(reply)) {
@@ -653,9 +669,11 @@ export async function POST(request: Request) {
     fieldReferenceCategories,
   });
 
-  // 사용자가 대화에서 명시적으로 카테고리를 선택한 경우 이를 최우선으로 반영
+  // 사용자가 대화에서 명시적으로 카테고리를 선택한 경우 이를 최우선으로 반영 (복수 카테고리 지원)
   let filterCategories: string[] = [];
-  if (adaptiveAnswers.selectedCategory && adaptiveAnswers.selectedCategory !== '상관없음') {
+  if (adaptiveAnswers.selectedCategories && adaptiveAnswers.selectedCategories.length > 0) {
+    filterCategories = adaptiveAnswers.selectedCategories.filter((c) => c !== '상관없음');
+  } else if (adaptiveAnswers.selectedCategory && adaptiveAnswers.selectedCategory !== '상관없음') {
     filterCategories = [adaptiveAnswers.selectedCategory];
   } else {
     filterCategories = allowedCategories(conversation.categories);
@@ -681,9 +699,10 @@ export async function POST(request: Request) {
   const allCandidates = await getRecommendCandidates(supabase, user.id, {});
   const categoryCandidates =
     filterCategories.length > 0
-      ? allCandidates.filter((action) =>
-          filterCategories.includes(action.category),
-        )
+      ? allCandidates.filter((action) => {
+          const actionCats = [action.category, ...(action.categories ?? [])];
+          return filterCategories.some((c) => (actionCats as string[]).includes(c));
+        })
       : allCandidates;
 
   const hasRegionFilter =
@@ -807,6 +826,7 @@ export async function POST(request: Request) {
   const scoringAnswers: ScoringAnswers = {
     participationMode,
     category: resolvedCategory,
+    categories: filterCategories,
     range: relaxation.length > 0 ? 'any' : null,
     talentPreference:
       adaptiveAnswers.talentPreference === 'new_skill'

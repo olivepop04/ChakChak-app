@@ -330,8 +330,19 @@ export function DiscoverChat({
   }
 
   const userAnswers = messages.filter((message) => message.role === 'user');
-  const answeredCount = userAnswers.length;
   const isDone = items !== null;
+
+  // 오프닝 확인 응답을 제외한 실제 5대 질문 응답 수 계산 (0~5)
+  const hasOpeningAnswer = messages.some(
+    (m, idx) =>
+      m.role === 'user' &&
+      idx > 0 &&
+      /이 조건으로|다른 조건|지역.*선택|전국|이대로|좋아요.*이 조건/.test(m.content),
+  );
+  const coreAnsweredCount = hasOpeningAnswer
+    ? Math.max(0, userAnswers.length - 1)
+    : userAnswers.length;
+  const answeredCount = Math.min(QUESTION_COUNT, isDone ? QUESTION_COUNT : coreAnsweredCount);
 
   return (
     <div className="flex flex-col gap-4 px-6 pb-24 pt-4">

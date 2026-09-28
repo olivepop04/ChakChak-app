@@ -5,6 +5,8 @@ import {
   sameProvince,
   scoreAdaptiveTraits,
 } from '../lib/utils/discover-ranking.ts';
+import { scoreAction, type ScoringProfile } from '../lib/utils/scoring.ts';
+import type { ActionCardData } from '../lib/types/view.ts';
 
 test('재능 활용과 소규모 선호가 모두 맞는 액션이 추가 점수를 받는다', () => {
   const result = scoreAdaptiveTraits({
@@ -174,4 +176,52 @@ test('모임 규모가 actionParticipationModes 문자열 메타데이터로도 
   assert.equal(result.score, 10);
   assert.deepEqual(result.matched, ['10명 이내 소규모']);
 });
+
+test('사용자가 인터뷰에서 장애/환경을 골랐다면 프로필에 동물이 있어도 동물 액션에 관심분야 점수가 들어가지 않는다', () => {
+  const profile: ScoringProfile = {
+    categories: ['동물'], // 가입 시 등록했던 프로필 카테고리
+    skills: [],
+    historyCategories: [],
+    timePrefs: [],
+    availableTimes: [],
+    regions: [],
+    followingIds: [],
+  };
+
+  const animalAction = {
+    id: 'act-animal',
+    title: '유기견 산책',
+    category: '동물',
+    categories: ['동물'],
+    address: '서울특별시 마포구',
+    activityStartAt: null,
+    owner: { id: 'host-1', nickname: '호스트' },
+  } as unknown as ActionCardData;
+
+  const envAction = {
+    id: 'act-env',
+    title: '플로깅',
+    category: '환경',
+    categories: ['환경'],
+    address: '서울특별시 마포구',
+    activityStartAt: null,
+    owner: { id: 'host-2', nickname: '호스트' },
+  } as unknown as ActionCardData;
+
+  // 사용자가 이번 인터뷰에서 '장애, 환경'을 선택함
+  const scoringAnswers = {
+    categories: ['장애', '환경'],
+    category: '장애',
+  };
+
+  const animalScore = scoreAction(animalAction, profile, scoringAnswers);
+  const envScore = scoreAction(envAction, profile, scoringAnswers);
+
+  // 동물 액션은 관심분야 점수 25점을 받지 못해야 함
+  assert.equal(animalScore.matched.some((m) => m.includes('관심 분야')), false);
+  // 환경 액션은 관심분야 점수 25점을 받아야 함
+  assert.equal(envScore.matched.includes('관심 분야(환경)'), true);
+  assert.equal(envScore.score >= 25, true);
+});
+
 

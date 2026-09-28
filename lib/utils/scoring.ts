@@ -11,15 +11,15 @@
  * 거리(km)는 계산하지 않습니다. 액션에 좌표가 없고, 지오코딩을 붙이면
  * MVP 범위를 넘어섭니다. 시·군·구 이름이 겹치는지로만 봅니다 (팀 합의 D13).
  */
-import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
-import { isWeekend } from '@/lib/utils/date';
-import type { TimePref, TimeSlot } from '@/lib/constants';
-import type { ActionCardData } from '@/lib/types/view';
+import { matchesRegion, NATIONWIDE } from '../constants/regions.ts';
+import { isWeekend } from './date.ts';
+import type { TimePref, TimeSlot } from '../constants/index.ts';
+import type { ActionCardData } from '../types/view.ts';
 import {
   sameProvince,
   scoreAdaptiveTraits,
   type AdaptiveScoringAnswers,
-} from '@/lib/utils/discover-ranking';
+} from './discover-ranking.ts';
 
 export interface ScoringProfile {
   categories: string[];
@@ -39,6 +39,7 @@ export interface ScoringAnswers {
   participationMode?: string | null;
   /** 사용자가 고른 관심 분야 */
   category?: string | null;
+  categories?: string[];
   /** 'near' | 'city' | 'any' */
   range?: string | null;
   talentPreference?: AdaptiveScoringAnswers['talentPreference'];
@@ -194,14 +195,16 @@ export function scoreAction(
   const matched: string[] = [];
 
   // 1) 관심 카테고리 (categories) — 25점
-  // 프로필과 이번 답변 둘 다 봅니다.
-  // '전체' 는 "가리지 않는다" 는 뜻이므로 어떤 카테고리와도 맞는 것으로 봅니다.
-  // 이 방어가 없으면 '전체' 를 고른 사람은 8개 중 어느 것과도 안 맞아
-  // 관심 분야 25점이 영구히 0점이 됩니다. 에러가 안 나서 알아채기 어렵습니다.
-  const wanted = new Set(
-    [...profile.categories, answers.category].filter(Boolean) as string[],
-  );
-  const wantsAll = wanted.has('전체') || answers.category === '상관없음';
+  // 이번 인터뷰 대화에서 사용자가 명시적으로 카테고리를 고른 경우(복수 지원), 이를 최우선으로 적용하여
+  // 다른 무관한 분야(예: 동물)가 프로필 기본값 때문에 25점 가산점을 받는 왜곡을 원천 차단합니다.
+  const interviewCats = [
+    ...(answers.categories ?? []),
+    answers.category,
+  ].filter((c): c is string => Boolean(c) && c !== '상관없음');
+
+  const wantedList = interviewCats.length > 0 ? interviewCats : profile.categories;
+  const wanted = new Set(wantedList.filter(Boolean));
+  const wantsAll = wanted.has('전체') || answers.category === '상관없음' || answers.categories?.includes('상관없음');
   const actionCats = Array.from(
     new Set([
       ...(action.categories ?? []),

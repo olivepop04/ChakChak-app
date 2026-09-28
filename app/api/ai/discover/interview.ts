@@ -45,6 +45,7 @@ export interface AdaptiveAnswers {
   difficultyPreference?: 'easy' | 'physical' | 'expert' | 'any' | null;
   fieldPreference?: 'familiar' | 'new' | 'any' | 'selected' | null;
   selectedCategory?: string | null;
+  selectedCategories?: string[];
   travelRange?: 'exact' | 'province' | 'any' | null;
   participationMode?: 'time' | 'goods' | 'direct' | null;
   userKeywords?: string[];
@@ -709,21 +710,21 @@ export function getQuestionReply(
 
   // 3-1: 재능 활용 (skills)
   if (key === 'skills') {
-    const skills = compactList(profileSkills);
+    const skills = profileSkills.length > 0 ? profileSkills.join(', ') : '';
     if (skills && answers.talentPreference !== 'new_skill') {
       return [
-        `${nickname}님의 프로필에 [${skills}] 재능이 등록되어 있어요. 이번에도 이 재능으로 찾아볼까요?`,
+        `프로필에 [${skills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?`,
       ].join('\n');
     }
     if (answers.talentPreference === 'new_skill') {
       return [
         '새로운 재능을 펼치고 싶으시군요! 멋져요 ✨',
-        '어떤 새로운 재능을 나누고 싶으신가요?',
+        `${nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요.`,
       ].join('\n');
     }
     return [
-      '맞아요! 재능을 나눌 수 있다는 건 정말 멋진 일이에요.',
-      '어떤 재능을 활용하고 싶으신가요?',
+      '맞아요! 재능을 나눌 수 있다는 건 정말 멋진 일이에요. 😊',
+      `${nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요.`,
     ].join('\n');
   }
 
@@ -989,19 +990,25 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     [/기타/, '기타'],
   ];
 
+  const matchedCats: string[] = [];
   for (const [regex, cat] of categoryMap) {
     if (regex.test(text)) {
-      answers.selectedCategory = cat;
-      if (!answers.fieldPreference) {
-        answers.fieldPreference = 'selected';
-      }
-      break;
+      matchedCats.push(cat);
+    }
+  }
+
+  if (matchedCats.length > 0) {
+    answers.selectedCategories = matchedCats;
+    answers.selectedCategory = matchedCats[0];
+    if (!answers.fieldPreference) {
+      answers.fieldPreference = 'selected';
     }
   }
 
   if (/분야.*상관|주제.*상관/.test(text)) {
     answers.fieldPreference = 'any';
     answers.selectedCategory = '상관없음';
+    answers.selectedCategories = ['상관없음'];
   }
 
   return answers;
@@ -1123,17 +1130,22 @@ export function extractAnswersFromDialogue(
           answers.fieldPreference = 'familiar';
         }
 
-        if (/동물/.test(a)) answers.selectedCategory = '동물';
-        else if (/환경/.test(a)) answers.selectedCategory = '환경';
-        else if (/지역사회/.test(a)) answers.selectedCategory = '지역사회';
-        else if (/아동|청소년/.test(a)) answers.selectedCategory = '아동·청소년';
-        else if (/노인|어르신/.test(a)) answers.selectedCategory = '노인';
-        else if (/장애|장애인/.test(a)) answers.selectedCategory = '장애';
-        else if (/교육/.test(a)) answers.selectedCategory = '교육';
-        else if (/기타/.test(a)) answers.selectedCategory = '기타';
+        const matchedCats: string[] = [];
+        if (/동물/.test(a)) matchedCats.push('동물');
+        if (/환경/.test(a)) matchedCats.push('환경');
+        if (/지역사회/.test(a)) matchedCats.push('지역사회');
+        if (/아동|청소년/.test(a)) matchedCats.push('아동·청소년');
+        if (/노인|어르신/.test(a)) matchedCats.push('노인');
+        if (/장애|장애인/.test(a)) matchedCats.push('장애');
+        if (/교육/.test(a)) matchedCats.push('교육');
+        if (/기타/.test(a)) matchedCats.push('기타');
 
-        if (answers.selectedCategory && !answers.fieldPreference) {
-          answers.fieldPreference = 'selected';
+        if (matchedCats.length > 0) {
+          answers.selectedCategories = matchedCats;
+          answers.selectedCategory = matchedCats[0];
+          if (!answers.fieldPreference) {
+            answers.fieldPreference = 'selected';
+          }
         }
       }
 
@@ -1283,10 +1295,14 @@ export function getRemainingQuestionKeys({
 export function shouldRecommendNow({
   userTurnCount,
   enough = false,
+  remainingKeysCount,
 }: {
   userTurnCount: number;
   enough?: boolean;
+  remainingKeysCount?: number;
 }): boolean {
+  // 남은 질문 축이 0개이면 모든 질문이 완료되었으므로 즉시 추천 전환
+  if (typeof remainingKeysCount === 'number' && remainingKeysCount === 0) return true;
   // 15번째 답변에 도달하면 무조건 추천
   if (userTurnCount >= 15) return true;
   // 4턴 이후에서 충분한 정보가 확보되었으면 조기 추천
