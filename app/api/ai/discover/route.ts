@@ -667,15 +667,17 @@ export async function POST(request: Request) {
     );
   }
   const relaxation: string[] = [];
+  const RELAXATION_MESSAGE =
+    '원하시는 조건에 딱 맞는 액션이 많지 않아, 조건을 넓혀 가장 가까운 액션으로 추천해 드렸어요.';
 
   if (candidates.length === 0 && hasRegionFilter) {
     candidates = categoryCandidates;
-    relaxation.push('말씀해주신 조건으로는 선택지가 많지 않아서, 지역이나 분야를 조금 넓혀 더 잘 맞는 액션을 찾아봤어요.');
+    relaxation.push(RELAXATION_MESSAGE);
   }
 
   if (candidates.length === 0 && filterCategories.length > 0) {
     candidates = allCandidates;
-    relaxation.push('말씀해주신 조건으로는 선택지가 많지 않아서, 지역이나 분야를 조금 넓혀 더 잘 맞는 액션을 찾아봤어요.');
+    relaxation.push(RELAXATION_MESSAGE);
   }
 
   if (candidates.length === 0) {
@@ -803,42 +805,44 @@ export async function POST(request: Request) {
     3,
   );
 
-  // 조건 완화(Relaxation) 안내 검사: 사용자가 선택한 핵심 조건에 부합하는 액션이 top 3에 없는 경우 안내
-  if (scoringAnswers.targetGroupPreference === 'task') {
-    const hasTask = codeRanked.some((it) => it.matched.includes('과업·집중형 활동'));
-    if (!hasTask) {
-      relaxation.push('선택하신 활동 성격(육체·과업·집중형)에 딱 맞는 액션이 많지 않아, 조건을 넓혀 가장 가까운 액션으로 추천해 드렸어요.');
+  // 조건 완화(Relaxation) 안내 검사: 사용자가 선택한 핵심 조건에 부합하는 액션이 top 3에 없는 경우 종합 안내
+  let isConditionRelaxed = relaxation.length > 0;
+
+  if (!isConditionRelaxed) {
+    if (scoringAnswers.targetGroupPreference === 'task') {
+      const hasTask = codeRanked.some((it) => it.matched.includes('과업·집중형 활동'));
+      if (!hasTask) isConditionRelaxed = true;
+    } else if (scoringAnswers.targetGroupPreference === 'social') {
+      const hasSocial = codeRanked.some((it) => it.matched.includes('교류·소통형 활동'));
+      if (!hasSocial) isConditionRelaxed = true;
     }
-  } else if (scoringAnswers.targetGroupPreference === 'social') {
-    const hasSocial = codeRanked.some((it) => it.matched.includes('교류·소통형 활동'));
-    if (!hasSocial) {
-      relaxation.push('선택하신 활동 성격(교류·교육·소통형)에 딱 맞는 액션이 많지 않아, 조건을 넓혀 가장 가까운 액션으로 추천해 드렸어요.');
+
+    const userRequestedSpecificSkills =
+      scoringAnswers.selectedSkills &&
+      scoringAnswers.selectedSkills.length > 0 &&
+      !scoringAnswers.selectedSkills.includes('기타');
+    if (userRequestedSpecificSkills) {
+      const hasSkillMatch = codeRanked.some((it) =>
+        it.matched.some((m) => m.includes('재능 활용')),
+      );
+      if (!hasSkillMatch) isConditionRelaxed = true;
+    }
+
+    if (scoringAnswers.activityTypePreference === 'outdoor') {
+      const hasOutdoor = codeRanked.some((it) =>
+        it.matched.includes('야외 활동') || it.matched.includes('실내외 병행 활동'),
+      );
+      if (!hasOutdoor) isConditionRelaxed = true;
+    } else if (scoringAnswers.activityTypePreference === 'indoor') {
+      const hasIndoor = codeRanked.some((it) =>
+        it.matched.includes('실내 활동') || it.matched.includes('실내외 병행 활동'),
+      );
+      if (!hasIndoor) isConditionRelaxed = true;
     }
   }
 
-  const userRequestedSpecificSkills =
-    scoringAnswers.selectedSkills &&
-    scoringAnswers.selectedSkills.length > 0 &&
-    !scoringAnswers.selectedSkills.includes('기타');
-  if (userRequestedSpecificSkills) {
-    const hasSkillMatch = codeRanked.some((it) =>
-      it.matched.some((m) => m.includes('재능 활용')),
-    );
-    if (!hasSkillMatch) {
-      relaxation.push('선택하신 재능에 딱 맞는 액션이 많지 않아, 참여 가능한 가장 가까운 액션으로 추천해 드렸어요.');
-    }
-  }
-
-  if (scoringAnswers.activityTypePreference === 'outdoor') {
-    const hasOutdoor = codeRanked.some((it) => it.matched.includes('야외 활동') || it.matched.includes('실내외 병행 활동'));
-    if (!hasOutdoor) {
-      relaxation.push('선택하신 야외 활동 조건에 딱 맞는 액션이 많지 않아, 조건을 넓혀 추천해 드렸어요.');
-    }
-  } else if (scoringAnswers.activityTypePreference === 'indoor') {
-    const hasIndoor = codeRanked.some((it) => it.matched.includes('실내 활동') || it.matched.includes('실내외 병행 활동'));
-    if (!hasIndoor) {
-      relaxation.push('선택하신 실내 활동 조건에 딱 맞는 액션이 많지 않아, 조건을 넓혀 추천해 드렸어요.');
-    }
+  if (isConditionRelaxed) {
+    relaxation.push(RELAXATION_MESSAGE);
   }
 
   const uniqueRelaxation = Array.from(new Set(relaxation));
