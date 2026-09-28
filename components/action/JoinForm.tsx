@@ -59,6 +59,19 @@ export function JoinForm({
     }));
   }
 
+  /**
+   * 스테퍼 가운데 숫자를 직접 칠 때 (8/31 결정 「수량도 직접 타이핑 가능」).
+   * 목표가 큰 물품(연탄 1000장 등)을 +만으로 올리기 어려워서 되살렸다 (2026-09-28).
+   * 숫자만 받고, 지우는 중에는 빈칸(0)을 허용 — 칸을 벗어날 때 1 미만이면 1로 맞춘다.
+   */
+  function typeQuantity(itemId: string, raw: string) {
+    const digits = raw.replace(/\D/g, '').slice(0, 4);
+    setSelection((prev) => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], quantity: digits === '' ? 0 : Number(digits) },
+    }));
+  }
+
   const chosen = items.filter((i) => selection[i.id]?.checked);
 
   async function handleSubmit() {
@@ -75,7 +88,7 @@ export function JoinForm({
     const payload: JoinItemInput[] = chosen.map((i) => ({
       actionItemId: i.id,
       // 사람 항목은 항상 1명입니다
-      quantity: i.type === 'PERSON' ? 1 : selection[i.id].quantity,
+      quantity: i.type === 'PERSON' ? 1 : Math.max(1, selection[i.id].quantity),
     }));
 
     const res = await joinAction(createClient(), actionId, payload);
@@ -223,25 +236,37 @@ export function JoinForm({
               {/* 물품만 수량 입력. 사람은 항상 1명입니다. */}
               {item.type === 'GOODS' && sel?.checked && (
                 <div className="mt-3 flex items-center gap-2 pl-8">
-                  <div className="flex h-8 w-24 items-center justify-between rounded-full border-[1.5px] border-hairline-focus">
+                  {/* 스테퍼 28px(2026-09-28 한 단계 축소: 32→28, 아이콘 16→14) · 가운데 숫자는 직접 입력 가능 */}
+                  <div className="flex h-7 items-center rounded-full border-[1.5px] border-hairline-focus">
                     <button
                       type="button"
                       onClick={() => setQuantity(item.id, sel.quantity - 1)}
-                      className="flex h-8 w-8 flex-none items-center justify-center rounded-full"
+                      className="flex h-7 w-7 flex-none items-center justify-center rounded-full"
                       aria-label="수량 줄이기"
                     >
-                      <Minus className="h-4 w-4 text-hairline-focus" />
+                      <Minus className="h-3.5 w-3.5 text-hairline-focus" />
                     </button>
-                    <span className="w-8 text-center text-label font-semibold text-hairline-focus">
-                      {sel.quantity}
-                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={4}
+                      value={sel.quantity === 0 ? '' : String(sel.quantity)}
+                      onChange={(e) => typeQuantity(item.id, e.target.value)}
+                      onFocus={(e) => e.target.select()}
+                      onBlur={() => {
+                        if (sel.quantity < 1) setQuantity(item.id, 1);
+                      }}
+                      aria-label={`${item.name} 수량`}
+                      className="h-6 w-9 rounded-lg bg-transparent p-0 text-center text-label font-semibold tabular-nums text-hairline-focus outline-none focus:bg-neutral-100"
+                    />
                     <button
                       type="button"
                       onClick={() => setQuantity(item.id, sel.quantity + 1)}
-                      className="flex h-8 w-8 flex-none items-center justify-center rounded-full"
+                      className="flex h-7 w-7 flex-none items-center justify-center rounded-full"
                       aria-label="수량 늘리기"
                     >
-                      <Plus className="h-4 w-4 text-hairline-focus" />
+                      <Plus className="h-3.5 w-3.5 text-hairline-focus" />
                     </button>
                   </div>
                   <span className="text-label text-neutral-600">{item.unit}</span>
@@ -267,7 +292,7 @@ export function JoinForm({
                   <Icon className="h-4 w-4 flex-none text-brand" aria-hidden="true" />
                   {i.type === 'PERSON'
                     ? `${i.name} 1${PERSON_UNIT}`
-                    : `${i.name} ${selection[i.id].quantity}${i.unit}`}
+                    : `${i.name} ${Math.max(1, selection[i.id].quantity)}${i.unit}`}
                 </li>
               );
             })}
