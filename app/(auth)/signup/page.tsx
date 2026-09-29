@@ -20,6 +20,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { AvatarPicker } from '@/components/ui/AvatarPicker';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
@@ -341,7 +342,7 @@ function SignUpForm() {
           <span
             key={s}
             className={`h-1 flex-1 rounded-full ${
-              s <= step ? 'bg-neutral-900' : 'bg-neutral-200'
+              s <= step ? 'bg-brand' : 'bg-neutral-200'
             }`}
           />
         ))}
@@ -350,16 +351,16 @@ function SignUpForm() {
       {/* ── 1단계 ── */}
       {step === 1 && (
         <>
-          <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900">
-            착한 일을 착착,
+          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-[#333333]">
+            착착 쌓이는
             <br />
-            쉽고 즐겁게!
+            착한 일
           </h1>
           <p className="mt-2 text-label text-neutral-500">
             이메일로 간단히 시작할 수 있어요.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3">
+          <div className="mt-8 flex flex-col gap-6">
             <label className="flex flex-col gap-1.5">
               <FieldLabel>이메일</FieldLabel>
               <Input
@@ -372,8 +373,7 @@ function SignUpForm() {
 
             <label className="flex flex-col gap-1.5">
               <FieldLabel>비밀번호</FieldLabel>
-              <Input
-                type="password"
+              <PasswordInput
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -391,7 +391,7 @@ function SignUpForm() {
                 maxLength={LIMITS.BIO_MAX}
                 rows={3}
                 placeholder="어떤 활동에 관심이 있는지, 어떤 변화를 만들고 싶은지 등 자유롭게 적어보세요."
-                className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
+                className="rounded-xl border border-hairline px-4 py-3 text-body leading-relaxed outline-none transition-colors focus:border-hairline-focus"
               />
               <span className="text-right text-caption text-neutral-400">
                 {bio.length}/{LIMITS.BIO_MAX}
@@ -405,7 +405,7 @@ function SignUpForm() {
                     type="checkbox"
                     checked={agreeTerms}
                     onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="h-4 w-4 shrink-0 accent-neutral-900"
+                    className="h-5 w-5 shrink-0 accent-brand"
                   />
                   <span className="shrink-0 font-semibold text-neutral-500">[필수]</span>
                   <span>이용약관에 동의합니다.</span>
@@ -424,7 +424,7 @@ function SignUpForm() {
                     type="checkbox"
                     checked={agreePrivacy}
                     onChange={(e) => setAgreePrivacy(e.target.checked)}
-                    className="h-4 w-4 shrink-0 accent-neutral-900"
+                    className="h-5 w-5 shrink-0 accent-brand"
                   />
                   <span className="shrink-0 font-semibold text-neutral-500">[필수]</span>
                   <span>개인정보 처리방침에 동의합니다.</span>
@@ -445,7 +445,7 @@ function SignUpForm() {
       {/* ── 2단계 ── */}
       {step === 2 && (
         <>
-          <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-[#333333]">
             먼저, 당신을
             <br />
             조금만 알려주세요.
@@ -455,7 +455,7 @@ function SignUpForm() {
             <br />꼭 필요한 정보만 받을게요.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3">
+          <div className="mt-8 flex flex-col gap-6">
             <label className="flex flex-col gap-1.5">
               <FieldLabel>이름</FieldLabel>
               <Input
@@ -494,10 +494,12 @@ function SignUpForm() {
                     key={g}
                     type="button"
                     onClick={() => setGender(g)}
-                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-body font-medium ${
+                    aria-pressed={gender === g}
+                    // 선택 = 연한 초록 바탕 + 초록 테두리·글자 (2026-09-30 인증군 통일안, 칩 tone="soft" 와 같은 규칙)
+                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-body transition-colors ${
                       gender === g
-                        ? 'border-neutral-900 bg-neutral-900 text-white'
-                        : 'border-neutral-300 bg-white text-neutral-600'
+                        ? 'border-brand bg-brand-soft font-semibold text-brand'
+                        : 'border-hairline bg-white font-medium text-neutral-500'
                     }`}
                   >
                     {GENDER_LABEL[g]}
@@ -516,7 +518,7 @@ function SignUpForm() {
       {/* ── 3단계 ── */}
       {step === 3 && (
         <>
-          <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-[#333333]">
             어떻게
             <br />
             활동하고 싶으세요?
@@ -527,20 +529,21 @@ function SignUpForm() {
             나중에 프로필에서 언제든 바꿀 수 있으니 편하게 선택해 보세요.
           </p>
 
-          <div className="mt-8 flex flex-col gap-6">
-            <div className="flex flex-col gap-2.5">
+          <div className="mt-8 flex flex-col gap-8">
+            <div className="flex flex-col gap-3">
               <FieldLabel>
                 관심 카테고리{' '}
                 <span className="font-normal text-neutral-400">(선택)</span>
               </FieldLabel>
               <ChipGroup
+                tone="soft"
                 options={CATEGORY_OPTIONS}
                 selected={categories as (typeof CATEGORY_OPTIONS)[number][]}
                 onToggle={toggleCategory}
               />
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-3">
               <FieldLabel>
                 보통 언제 참여할 수 있나요?{' '}
                 <span className="font-normal text-neutral-400">(선택)</span>
@@ -548,7 +551,7 @@ function SignUpForm() {
               <TimePreferenceEditor value={timePrefs} onChange={setTimePrefs} />
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-3">
               <FieldLabel>
                 나눌 수 있는 재능이 있으신가요?{' '}
                 <span className="font-normal text-neutral-400">(선택)</span>
@@ -556,7 +559,7 @@ function SignUpForm() {
               <TalentPreferenceEditor value={skills} onChange={setSkills} />
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-3">
               <FieldLabel>
                 어느 지역이 편하세요?{' '}
                 <span className="font-normal text-neutral-400">(선택)</span>
@@ -629,7 +632,7 @@ function SignUpForm() {
           이미 계정이 있나요?{' '}
           <Link
             href={withNext('/login', next)}
-            className="font-semibold text-neutral-900 underline"
+            className="font-semibold text-[#333333] underline"
           >
             로그인
           </Link>
