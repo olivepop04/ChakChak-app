@@ -197,7 +197,6 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 
 | 어디 | 무엇 |
 |---|---|
-| `app/api/ai/discover/route.ts` 의 `CHAT_SYSTEM` | 16종을 프롬프트 글로 적었습니다 (화면 선택지는 `SKILLS` 에서 나옵니다) — **조용히 어긋남** |
 | `components/action/DiscoverChat.tsx` | 선택지에 `'사진 촬영'`·`'요리'` 가 있는지로 재능 질문인지 판정합니다 — **조용히 어긋남** |
 | `lib/ai/classify-spec.ts` 지시문의 출력 예시 | 재능 3개를 예로 적었습니다 — `tests/classify-sync.test.ts` 가 허용 목록 안인지 **검사합니다** |
 | `scripts/seed.mjs` 시드 사용자 재능 · `scripts/verify-db.mjs` 검사값 | 사람마다 고른 값으로 적었습니다 — **조용히 어긋남** |
@@ -526,12 +525,12 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 **그 라우트 파일 맨 위의 버전 상수를 반드시 올리세요** (`trends-v1` → `trends-v2`).
 `lib/openai.ts` 는 버전을 인자로 받아 `ai_runs` 에 적기만 합니다 — 거기를 고치는 게 아닙니다.
 
-| 라우트 | 상수 | 지금 값 (2026-09-28) |
+| 라우트 | 상수 | 지금 값 (2026-09-29) |
 |---|---|---|
 | `app/api/ai/review/` | `PROMPT_VERSION` | `review-v7` |
 | `app/api/ai/classify/` — 규칙은 `lib/ai/classify-spec.ts` | `CLASSIFY_PROMPT_VERSION` | `classify-v3` |
-| `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v2` |
-| `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-v3-zero-assumption` · `discover-recommend-v4-anti-hallucination` |
+| `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v3` |
+| `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-chat-v8-chip-zero-assumption` · `discover-recommend-v8-100pt-scoring` |
 
 **번호는 올리기만 하세요.** 이름을 바꾸면서 숫자가 내려가면(`v7` → `v3`) 발표 자료에서 어느 쪽이 나중인지 헷갈립니다.
 **분류 지시문·답 검사·허용 목록은 `lib/ai/classify-spec.ts` 한 곳입니다.** 공개 때 분류(라우트)와
@@ -691,6 +690,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 | 취소·종료 액션의 반응 | 좋아요·저장·공유를 **새로 누르는 것만** 막습니다. **이미 누른 것은 풀 수 있습니다** — 안 그러면 저장해 둔 액션이 끝나는 순간 목록에서 뺄 방법이 없어집니다. 2026-09-10 |
 | 타인 프로필 | 통계 유지 + 참여 목록은 완료된 것만 + 닉네임 주 표기 |
 | Discover 거리 | km 계산 안 함. 시·군·구 단위 매칭까지만 |
+| Discover 추천 기준 · 대화 길이 | **성은님 현재 구현이 기준**입니다 — 코드가 원본(`lib/utils/scoring.ts` · `discover-ranking.ts` · `app/api/ai/discover/`). 9/1 「최대 3번 주고받고 추천」 · 9/3 「최소 범위 · 배점 110」 은 이 결정으로 대체. 2026-09-29 조장 결정 |
 
 ---
 
