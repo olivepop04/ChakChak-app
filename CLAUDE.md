@@ -395,10 +395,10 @@ npm run seed
 
 **AI 분류(`action_ai_metadata`)는 시드가 `scripts/data/action_ai_metadata_all.json` 에서 제목으로 찾아 넣습니다.**
 그 JSON 에 없는 제목(새로 끝에 붙인 액션)은 기본값(`실내 활동` · `누구나 참여가능`)으로 들어가서
-Discover 의 환경·난이도 점수가 틀어집니다. 다시 분류해야 하는데, **지금 `scripts/reclassify_all_actions.mjs` 는 돌리지 마세요.**
+Discover 의 환경·난이도 점수가 틀어집니다. 다시 분류해야 하는데, **민호가 고칠 때까지 `scripts/reclassify_all_actions.mjs` 는 돌리지 마세요.**
 `classify-v2` 가 **아닌** 것만 골라서, 시드 기본값(`classify-v2`)으로 들어간 새 액션은 건너뛰고
 앱에서 분류한 `classify-v3` 액션을 전부 v2 로 덮어씁니다. 서비스 롤 키로 공유 DB 에 바로 쓰고,
-끝나면 JSON 도 DB 전체 내용으로 새로 씁니다. 조장 구역이라 성은님께 요청하세요.
+끝나면 JSON 도 DB 전체 내용으로 새로 씁니다. 2026-09-29부터 민호 담당입니다.
 
 액션 101개에는 화면을 하나씩 확인할 수 있는 상태가 골고루 들어 있습니다.
 
@@ -659,8 +659,8 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 | 담당 | 구역 |
 |---|---|
-| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · `README.md` · `CLAUDE.md`) |
-| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` · **`app/discover/`** · **`app/api/ai/discover/`** · **`lib/utils/scoring.ts`** · **`lib/utils/discover-ranking.ts`** |
+| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · `README.md` · `CLAUDE.md`) |
+| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` · **`app/discover/`** · **`app/api/ai/discover/`** · **`lib/utils/scoring.ts`** · **`lib/utils/discover-ranking.ts`** |
 | 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · **`app/not-found.tsx`** · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` · **`postcss.config.mjs`** |
 | 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · **`components/my/`** · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` |
 | 개발 B | `app/action/create/` · `app/action/[id]/` 하위 (join · welcome · crew · chat · **edit** · result · voice) |
@@ -669,7 +669,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 **액션 찾기(Discover)는 2026-09-29부터 조장 담당입니다.** 9/23 부터 성은님이 개편을 맡았고,
 9/29 지수님이 「제 작업 범위에서 빼겠다」 고 해서 옮겼습니다.
 `lib/constants/regions.ts` 는 가입·프로필 지역 선택(`RegionPicker`)도 같이 써서 **개발 A 에 남깁니다** — Discover 쪽에서 고쳐야 하면 지수님께 말해주세요.
-액션 자동 분류(`app/api/ai/classify/`)는 **민호 담당으로 정했습니다** (9/29). 한꺼번에 다시 분류하는 스크립트(`scripts/reclassify_all_actions.mjs` · `batch_reclassify_active.mjs`)는 조장 담당입니다.
+액션 자동 분류(`app/api/ai/classify/`)는 **민호 담당으로 정했습니다** (9/29). 한꺼번에 다시 분류하는 스크립트(`scripts/reclassify_all_actions.mjs` · `batch_reclassify_active.mjs`)도 **민호가 맡습니다** — 공개 때 분류와 같은 AI 지시문을 따로 들고 있어서 한 사람이 같이 고쳐야 합니다. 시드용 결과 파일(`scripts/data/`)과 `check_seed_meta.mjs` 는 시드와 한 몸이라 조장 그대로입니다.
 
 `components/action/` 은 **파일 단위로 담당**이 있습니다.
 

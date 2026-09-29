@@ -29,7 +29,7 @@ git merge origin/dev        # ← 이 줄을 빼면 안 됩니다
 | 트렌드 대시보드 | `/trends` | `app/trends/page.tsx` · `components/trends/` |
 | 트렌드 AI 해설 | — | `app/api/ai/trends/route.ts` |
 | 집계 | — | `lib/queries/stats.ts` |
-| 시연 데이터 | — | `scripts/seed.mjs` · `scripts/data/` · 재분류 스크립트 3개 |
+| 시연 데이터 | — | `scripts/seed.mjs` · `scripts/data/` · `scripts/check_seed_meta.mjs` |
 | **액션 찾기(Discover)** | `/discover` | `app/discover/` · `app/api/ai/discover/` · `components/action/DiscoverChat.tsx` · `lib/utils/scoring.ts` · `lib/utils/discover-ranking.ts` — **2026-09-29부터** |
 
 ---
@@ -227,12 +227,13 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
 내 활동 화면 · 트렌드 대시보드 · 시연 데이터 · 발표 · 액션 찾기(Discover).
 app/activity/ · app/trends/ · components/trends/ · app/api/ai/trends/
 lib/queries/stats.ts · scripts/seed.mjs · components/action/ActivityButtons.tsx
-scripts/data/ · scripts/reclassify_all_actions.mjs · scripts/batch_reclassify_active.mjs · scripts/check_seed_meta.mjs
+scripts/data/ · scripts/check_seed_meta.mjs
 app/discover/ · app/api/ai/discover/ · components/action/DiscoverChat.tsx
 lib/utils/scoring.ts · lib/utils/discover-ranking.ts   (Discover 는 2026-09-29부터 내 담당)
 
 lib/constants/regions.ts 는 가입·프로필과 같이 쓰는 개발 A 파일이다. 고칠 일이 있으면 개발 A 에게 말한다.
-app/api/ai/classify/ (액션 공개 때 자동 분류)는 민호 담당이다. 한꺼번에 다시 분류하는 scripts/ 쪽만 내 담당이다.
+액션 자동 분류는 민호 담당이다 — app/api/ai/classify/ 와 한꺼번에 다시 분류하는
+scripts/reclassify_all_actions.mjs · scripts/batch_reclassify_active.mjs 둘 다. 고치지 않고, 민호가 고칠 때까지 실행하지 않는다.
 
 화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
 
