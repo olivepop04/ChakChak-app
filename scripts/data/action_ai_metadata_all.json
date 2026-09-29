@@ -1,0 +1,2993 @@
+[
+  {
+    "action_id": "3a869097-9534-5847-a50b-dc9ddf45a7b8",
+    "categories": [
+      "환경",
+      "노인"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "텃밭",
+      "친환경 농법",
+      "배추",
+      "상추",
+      "독거 어르신"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "도시 텃밭 가꾸기"
+    }
+  },
+  {
+    "action_id": "b0a415bf-9fab-5a31-9898-876a060dd379",
+    "categories": [
+      "동물",
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "길고양이",
+      "겨울집",
+      "단열 스티로폼",
+      "보온재"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "길고양이 겨울집 만들기"
+    }
+  },
+  {
+    "action_id": "ed276c67-7f93-5145-bd0d-df0668c1f47d",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "텀블러",
+      "자원순환",
+      "수원",
+      "나눔"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "텀블러 나눔 부스 운영"
+    }
+  },
+  {
+    "action_id": "88df3d49-0cea-5ece-9695-fe6be1308982",
+    "categories": [
+      "동물"
+    ],
+    "activity_types": [
+      "실내외 병행"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "20명 이상 대그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "유기동물",
+      "보호소",
+      "견사 청소",
+      "산책",
+      "사료"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "우리 동네 보호소를 함께 도와요"
+    }
+  },
+  {
+    "action_id": "5a6af4ad-0216-5afc-a678-f235301daaf1",
+    "categories": [
+      "아동·청소년"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "크리스마스",
+      "선물 포장",
+      "학용품",
+      "아동센터"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "지역 아동센터 크리스마스 선물 포장"
+    }
+  },
+  {
+    "action_id": "40f8f81d-efe7-5be2-990f-eac2c4fcbfee",
+    "categories": [
+      "아동·청소년",
+      "환경"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "미술·공예"
+    ],
+    "keywords": [
+      "신생아",
+      "털모자",
+      "친환경",
+      "뜨개질"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "신생아 살리기 털모자 뜨기 캠페인"
+    }
+  },
+  {
+    "action_id": "2b0341b1-29ef-593d-9d78-081ce2a08f1d",
+    "categories": [
+      "동물"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "유기견",
+      "방한 비닐막",
+      "남양주",
+      "견사"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "남양주 유기견 보호소 방한 비닐막 설치"
+    }
+  },
+  {
+    "action_id": "23f29bc7-31b5-5cd5-a024-e67e4f9ad6fd",
+    "categories": [
+      "장애",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "음악·공연",
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "시각장애인",
+      "오디오북",
+      "녹음",
+      "단편문학"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "시각장애인 오디오북 녹음 봉사"
+    }
+  },
+  {
+    "action_id": "95adc633-8267-5398-9b30-3aaa69de481c",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "분리배출",
+      "재활용",
+      "캠페인",
+      "관악구"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "우리 동네 분리배출 캠페인"
+    }
+  },
+  {
+    "action_id": "974c033d-d8d3-563b-8058-224553e070e7",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실내외 병행"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "업사이클링",
+      "플라스틱 병뚜껑",
+      "키링",
+      "환경 메시지"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "폐플라스틱 병뚜껑 업사이클링 키링 제작"
+    }
+  },
+  {
+    "action_id": "2ac2d116-9f36-5abb-9b1e-030a894c6c50",
+    "categories": [
+      "동물"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "보호소",
+      "겨울 준비",
+      "방풍 비닐",
+      "담요"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "보호소 겨울 준비를 함께해요"
+    }
+  },
+  {
+    "action_id": "486b0027-7741-5186-bb92-143c80dc6a9c",
+    "categories": [
+      "장애",
+      "아동·청소년"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "미술·공예"
+    ],
+    "keywords": [
+      "발달장애",
+      "미술 치료",
+      "협동화",
+      "감정 표현"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "발달장애 아동 미술 치료 보조"
+    }
+  },
+  {
+    "action_id": "f655437c-fbfd-4b56-8c3d-536262adbaeb",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "고궁",
+      "청소",
+      "경복궁",
+      "근정전"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "고궁 청소"
+    }
+  },
+  {
+    "action_id": "a4de398b-45fa-4433-864a-b167d971c60a",
+    "categories": [
+      "노인",
+      "지역사회"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "경비원",
+      "아파트",
+      "봉사",
+      "노인"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "우리 아파트 경비원 할아버지 아프실 동안 우리가 대신 일해요"
+    }
+  },
+  {
+    "action_id": "19f2bbda-fff1-4ab8-bb97-7be642ea69bb",
+    "categories": [
+      "환경",
+      "노인"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "경로당",
+      "청소"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "동네 경로당 앞 마당 청소해요"
+    }
+  },
+  {
+    "action_id": "51f85394-626c-5744-be06-b6109f645d6e",
+    "categories": [
+      "노인",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "치매예방",
+      "인지 자극",
+      "퍼즐",
+      "종이접기",
+      "어르신"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "시니어 기억지킴 치매예방 교실"
+    }
+  },
+  {
+    "action_id": "1dac97e6-268c-5c68-8665-f5baa9552f8d",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "북한산",
+      "둘레길",
+      "정비",
+      "숲 가꾸기",
+      "봉사"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "북한산 둘레길 정비 및 숲 가꾸기"
+    }
+  },
+  {
+    "action_id": "96c4eedf-1332-5076-8d52-ce2a3afc0757",
+    "categories": [
+      "동물"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "유기견",
+      "산책",
+      "마포구",
+      "강아지"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "유기견 산책 친구를 찾습니다"
+    }
+  },
+  {
+    "action_id": "aa89edbf-b519-5a46-b2b2-ac4f0ccc9b13",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "한강",
+      "플로깅",
+      "쓰레기 줍기",
+      "분리배출"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "한강 플로깅 함께해요"
+    }
+  },
+  {
+    "action_id": "83010e98-3ca0-58d4-889b-2e9a6887ee67",
+    "categories": [
+      "지역사회",
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "20명 이상 대그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "전통시장",
+      "에코백",
+      "자원 절약",
+      "경동시장"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "전통시장 장바구니 나눔 캠페인"
+    }
+  },
+  {
+    "action_id": "1c5ceb12-e816-5421-8aee-93f39ca5aa13",
+    "categories": [
+      "동물"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "청소·정리"
+    ],
+    "keywords": [
+      "유기묘",
+      "보호소",
+      "청소",
+      "소독"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "용인 유기묘 보호소 대청소 및 소독"
+    }
+  },
+  {
+    "action_id": "760baeb5-2db5-52de-a759-70f575f21ee8",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "안양천",
+      "줍깅",
+      "수질 정화",
+      "플로깅"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "안양천 줍깅 및 수질 정화 활동"
+    }
+  },
+  {
+    "action_id": "52efe619-6d11-5dd8-9ca9-0139f1669227",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "20명 이상 대그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "IT",
+      "디자인",
+      "미디어",
+      "진로 멘토링",
+      "중고생"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "청소년 진로 멘토링 특강"
+    }
+  },
+  {
+    "action_id": "263d760e-f9f0-5103-800d-67c41677abf4",
+    "categories": [
+      "지역사회"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "영도구",
+      "노후 주택",
+      "페인트칠",
+      "봉사"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "영도 노후 주거지 희망 도색 나눔"
+    }
+  },
+  {
+    "action_id": "2ace7025-8684-54ed-a3dd-a3e3e44c7c47",
+    "categories": [
+      "노인"
+    ],
+    "activity_types": [
+      "실내외 병행"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "요리"
+    ],
+    "keywords": [
+      "도시락",
+      "홀몸 어르신",
+      "종로구",
+      "나눔"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "종로 독거 어르신 사랑의 도시락 나눔"
+    }
+  },
+  {
+    "action_id": "84640b46-5315-547b-9871-72bda593fc91",
+    "categories": [
+      "장애"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "장애인",
+      "나들이",
+      "휠체어",
+      "힐링",
+      "꽃향기"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "장애인 복지관 나들이 동행 봉사"
+    }
+  },
+  {
+    "action_id": "b7d63a97-1940-506c-9d4d-2437fb13f668",
+    "categories": [
+      "동물",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "유기묘",
+      "임시보호",
+      "입양센터",
+      "케어법"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "유기묘 임시보호 설명회"
+    }
+  },
+  {
+    "action_id": "dbab8224-9679-56d0-a0bf-e35d25acbdd8",
+    "categories": [
+      "동물",
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "유기견",
+      "방수 작업",
+      "시설 개선",
+      "친환경 도료"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "유기견 보호소 야외 견사 바닥 방수 작업"
+    }
+  },
+  {
+    "action_id": "6b966696-9003-5f11-b6f0-00a544279d99",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "해안가",
+      "정화",
+      "플로깅",
+      "쓰레기 수거"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "해안가 정화 플로깅 캠페인"
+    }
+  },
+  {
+    "action_id": "1ca549b2-9a3f-5f3b-90d5-244ab6de9fca",
+    "categories": [
+      "지역사회"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "벽화",
+      "골목길",
+      "페인트",
+      "방수",
+      "봉사"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "벽화 골목길 보수 및 페인트 칠"
+    }
+  },
+  {
+    "action_id": "5a68fa40-401c-5124-92e8-4922159215c2",
+    "categories": [
+      "아동·청소년",
+      "기타"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "농구",
+      "멘토링",
+      "청소년",
+      "스포츠"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "노량진 청소년 주말 야외 농구 교실"
+    }
+  },
+  {
+    "action_id": "30898742-65cd-5c50-937b-efb27f4ef56e",
+    "categories": [
+      "노인",
+      "기타"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "사진 촬영"
+    ],
+    "keywords": [
+      "여의도",
+      "봄꽃",
+      "산책",
+      "어르신"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "어르신 야외 봄꽃 나들이 동행"
+    }
+  },
+  {
+    "action_id": "53dfd496-8d77-5269-9c69-5683a993d4b5",
+    "categories": [
+      "노인"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "목욕 봉사",
+      "여성 어르신",
+      "로션",
+      "머리 말리기"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "어르신 목욕 봉사 (여성)"
+    }
+  },
+  {
+    "action_id": "ff085b39-b324-5794-be56-384b9d35a559",
+    "categories": [
+      "아동·청소년",
+      "기타"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "청소·정리"
+    ],
+    "keywords": [
+      "도서관",
+      "도서 정리",
+      "환경 개선",
+      "아동센터"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "아동센터 도서 정리"
+    }
+  },
+  {
+    "action_id": "17cb6db3-809b-50a3-a204-05ef8f04bb2e",
+    "categories": [
+      "노인"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "목욕 봉사",
+      "온천수",
+      "어르신",
+      "대전 중구"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "어르신 목욕 봉사 (남성)"
+    }
+  },
+  {
+    "action_id": "a5a49bc9-8974-55c5-8789-718f8e147149",
+    "categories": [
+      "지역사회",
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "20명 이상 대그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "게릴라 가드닝",
+      "정원",
+      "꽃",
+      "주민 쉼터"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "동네 공터를 작은 정원으로"
+    }
+  },
+  {
+    "action_id": "9970ef12-b101-590b-8f7c-5b3b58cd2234",
+    "categories": [
+      "노인",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "교육·멘토링",
+      "영상 촬영·편집"
+    ],
+    "keywords": [
+      "유튜브",
+      "영상 편집",
+      "스마트폰",
+      "은퇴 시니어"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "은퇴 시니어를 위한 유튜브 영상 편집 기초"
+    }
+  },
+  {
+    "action_id": "66fbf369-6674-566b-bb76-96b471af36d3",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "다문화",
+      "한국어",
+      "동화 구연",
+      "어린이"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "다문화 어린이 기초 한국어 동화 구연"
+    }
+  },
+  {
+    "action_id": "64c076c5-30fa-571e-943b-b2c3a25c51f2",
+    "categories": [
+      "지역사회"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "연탄",
+      "난방 취약계층",
+      "정릉",
+      "봉사"
+    ],
+    "difficulty": "기초 체력 필요",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "사랑의 연탄 나눔 봉사"
+    }
+  },
+  {
+    "action_id": "eddfb6a1-fa8e-55a1-8bc6-e66cf5716e06",
+    "categories": [
+      "노인",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "보드게임",
+      "루미큐브",
+      "젠가",
+      "어르신"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "시니어 보드게임 인지발달 교실"
+    }
+  },
+  {
+    "action_id": "94c719e0-082e-5f4b-a3a8-7dde2bf46cf6",
+    "categories": [
+      "지역사회"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "재난 구호",
+      "물류창고",
+      "유통기한",
+      "품목 재분류"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "재난 대비 물품 정리"
+    }
+  },
+  {
+    "action_id": "274b79f4-15a8-55eb-9197-8e06496b198c",
+    "categories": [
+      "아동·청소년",
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "솔방울 보물찾기",
+      "나뭇잎 탁본",
+      "숲 체험",
+      "유치원생"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "양재 매헌 숲 어린이 체험 놀이 보조"
+    }
+  },
+  {
+    "action_id": "584b300c-b9c8-50ba-8483-76d2b83adf93",
+    "categories": [
+      "지역사회"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "가로등",
+      "조도",
+      "부산",
+      "보행 안전"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "골목길 가로등 조도 개선 실태 조사"
+    }
+  },
+  {
+    "action_id": "84757a19-4722-5a92-91ae-5b82cca8522a",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "북한산",
+      "쓰레기 줍기",
+      "플로깅",
+      "생태계 보호"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "주말 북한산 생태 보전 쓰레기 줍기"
+    }
+  },
+  {
+    "action_id": "4911a14a-a74c-5386-a18a-78943bad8dfe",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "기초 학력",
+      "수학",
+      "영어",
+      "초중학생",
+      "드림스타트"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "방과 후 공부방 선생님"
+    }
+  },
+  {
+    "action_id": "c40eadc1-f81f-5e96-ae90-cd16259e4833",
+    "categories": [
+      "노인",
+      "지역사회"
+    ],
+    "activity_types": [
+      "실내외 병행"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "급식",
+      "결식 어르신",
+      "나눔의 집",
+      "영양 식사"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "주말 이틀간의 따뜻한 급식 나눔"
+    }
+  },
+  {
+    "action_id": "19bdb584-f493-5e49-aa43-7801e6a49be1",
+    "categories": [
+      "아동·청소년",
+      "환경"
+    ],
+    "activity_types": [
+      "실내외 병행"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "수리·시공"
+    ],
+    "keywords": [
+      "책장",
+      "목공",
+      "아동 도서",
+      "부산 금정구"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "아이들과 만드는 작은 책장"
+    }
+  },
+  {
+    "action_id": "c0cbdea1-39b9-47b8-b1d1-d810e60deb11",
+    "categories": [
+      "아동·청소년",
+      "지역사회"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "방과후",
+      "맞벌이 부부",
+      "어린이",
+      "고대생"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "안암동 어린이 방과후 교실"
+    }
+  },
+  {
+    "action_id": "0f543656-04ed-5ef3-8f2f-623d6aa2319a",
+    "categories": [
+      "노인"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "종로",
+      "어르신",
+      "배식",
+      "노인복지관"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "종로 어르신 사랑의 배식 봉사"
+    }
+  },
+  {
+    "action_id": "5dfec522-ba48-5785-9885-8f695dbfe9f8",
+    "categories": [
+      "아동·청소년"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "20명 이상 대그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "어린이 도서",
+      "기부",
+      "전래동화",
+      "과학도서",
+      "그림책"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "어린이 도서 기부 캠페인"
+    }
+  },
+  {
+    "action_id": "26a3f72a-5e6b-50c3-92ed-6da17fe2da46",
+    "categories": [
+      "노인",
+      "교육"
+    ],
+    "activity_types": [
+      "실내외 병행"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "말벗",
+      "어르신",
+      "혈압 체크",
+      "건강 안부"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "어르신 말벗 봉사"
+    }
+  },
+  {
+    "action_id": "f821001c-f422-531a-abc0-c25ac9f5c393",
+    "categories": [
+      "지역사회"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "눈 치우기",
+      "제설 봉사",
+      "춘천",
+      "안전 제설"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "우리 동네 눈 치우기"
+    }
+  },
+  {
+    "action_id": "aabac270-f719-50ab-a8cd-b900e31a1382",
+    "categories": [
+      "지역사회",
+      "기타"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "김장",
+      "취약계층",
+      "자원봉사",
+      "도봉구"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "이웃과 함께하는 김장 나눔"
+    }
+  },
+  {
+    "action_id": "084cd2da-18a5-5374-8efa-2277749c6753",
+    "categories": [
+      "노인"
+    ],
+    "activity_types": [
+      "실내외 병행"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "20명 이상 대그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "도시락",
+      "배달",
+      "독거 어르신",
+      "안부 확인"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "홀몸 어르신 도시락 배달"
+    }
+  },
+  {
+    "action_id": "e09c7912-4855-558f-9898-8fba33e24c38",
+    "categories": [
+      "아동·청소년"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "진로 멘토링",
+      "중·고등학생",
+      "직업 선택",
+      "대학 생활"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "청소년 진로 이야기 나눔"
+    }
+  },
+  {
+    "action_id": "fcf9b544-bcc5-5eb8-8023-b6986c5122cb",
+    "categories": [
+      "아동·청소년"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "동화구연",
+      "저소득층",
+      "다문화",
+      "초등학생"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "초등학생 방과후 동화책 읽어주기"
+    }
+  },
+  {
+    "action_id": "89a3ff67-4d9e-5906-9113-df7d0108c9bf",
+    "categories": [
+      "장애",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "컴퓨터·IT",
+      "글쓰기"
+    ],
+    "keywords": [
+      "점자도서관",
+      "시각장애인",
+      "e-book",
+      "점역 도서"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "점자 도서 제작 봉사"
+    }
+  },
+  {
+    "action_id": "54074d68-2eb5-5b72-ad0f-970bfe49eb8e",
+    "categories": [
+      "노인",
+      "환경"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "청소·정리"
+    ],
+    "keywords": [
+      "경로당",
+      "청소",
+      "어르신",
+      "성남시"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "경로당 대청소"
+    }
+  },
+  {
+    "action_id": "b3d05777-9349-5c9b-8643-22169f04946e",
+    "categories": [
+      "장애"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "휠체어",
+      "중증 장애인",
+      "문화센터",
+      "이동 보조"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "휠체어 이동 도우미"
+    }
+  },
+  {
+    "action_id": "838f33a2-7548-5143-a9ea-b43255ba19f6",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "다문화 가정",
+      "한글 교실",
+      "이주 여성",
+      "생활 한국어"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "다문화 가정 한글 교실"
+    }
+  },
+  {
+    "action_id": "2e0226cd-dd6a-5505-b79a-8b9dcaaad379",
+    "categories": [
+      "장애"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "통역·번역"
+    ],
+    "keywords": [
+      "수어",
+      "청각장애인",
+      "연극",
+      "안양시"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "수어 통역 재능기부"
+    }
+  },
+  {
+    "action_id": "08814485-5236-5f4a-ace7-6ebedc62c1ec",
+    "categories": [
+      "노인",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "스마트폰",
+      "카카오톡",
+      "보이스피싱",
+      "어르신"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "어르신 스마트폰 교실"
+    }
+  },
+  {
+    "action_id": "d7416eb2-7ec6-5cea-bd53-0742cdef8150",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "한강",
+      "정화",
+      "캠페인"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "주말 한강 돗자리 정화 캠페인"
+    }
+  },
+  {
+    "action_id": "9d29e825-c925-518f-a9ca-56136490ebe7",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "해양 쓰레기",
+      "비치코밍",
+      "부산",
+      "플라스틱"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "바닷가 쓰레기 줍기"
+    }
+  },
+  {
+    "action_id": "595d0ac2-fe00-5da8-a00c-6b9bbb55f529",
+    "categories": [
+      "지역사회"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "골목길",
+      "벽화",
+      "부산",
+      "희망",
+      "봉사"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "골목길 벽화 그리기"
+    }
+  },
+  {
+    "action_id": "e2cae10b-44e8-59ca-8130-f303fadc7a8d",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "플로깅",
+      "쓰레기 줍기",
+      "성수동",
+      "서울숲"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "동네 플로깅 모집"
+    }
+  },
+  {
+    "action_id": "8906d37f-0fc1-5a1a-bb30-c2cd8eb339b8",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "폐현수막",
+      "장바구니",
+      "업사이클링",
+      "봉사"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "폐현수막으로 장바구니 만들기"
+    }
+  },
+  {
+    "action_id": "6a233188-19b5-5981-9859-935f4a8c40dc",
+    "categories": [
+      "동물"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "요리"
+    ],
+    "keywords": [
+      "유기묘",
+      "수제 간식",
+      "닭가슴살",
+      "보호소"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "유기묘 쉼터 수제 간식 만들기"
+    }
+  },
+  {
+    "action_id": "52fd6e6a-dfaa-519b-9913-2878ad951f39",
+    "categories": [
+      "노인",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "어르신",
+      "컴퓨터",
+      "기초반",
+      "실습",
+      "구로 디지털단지"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "시니어 컴퓨터 교실 보조"
+    }
+  },
+  {
+    "action_id": "03de015e-e0e8-55b9-8f06-23b5c1200797",
+    "categories": [
+      "아동·청소년",
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "교통안전",
+      "옐로카펫",
+      "스쿨존",
+      "반사 스티커"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "어린이 교통안전 옐로카펫 정비"
+    }
+  },
+  {
+    "action_id": "6ee70818-ffe7-5f46-b2a6-1f7b8f662810",
+    "categories": [
+      "기타",
+      "아동·청소년"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "사진 촬영"
+    ],
+    "keywords": [
+      "프로필 사진",
+      "증명사진",
+      "청년",
+      "재능기부"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "무료 프로필 사진 촬영"
+    }
+  },
+  {
+    "action_id": "a6dbbd94-fd8e-5e26-a829-a25f4493334b",
+    "categories": [
+      "지역사회"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "수리·시공"
+    ],
+    "keywords": [
+      "가구 제작",
+      "배달",
+      "다문화 가정",
+      "안산시"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "사랑의 가구 제작 및 배달"
+    }
+  },
+  {
+    "action_id": "5241d512-9319-5114-ace0-082086c55b65",
+    "categories": [
+      "장애",
+      "아동·청소년"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "발달장애",
+      "청소년",
+      "숲길",
+      "자연",
+      "말벗"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "발달장애 청소년 숲길 걷기 동행"
+    }
+  },
+  {
+    "action_id": "cf0f2fd7-f185-5f08-95d8-28063e9cef01",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "하천",
+      "생태계",
+      "교란식물",
+      "가시박",
+      "단풍잎돼지풀"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "하천 생태계 교란식물 제거 활동"
+    }
+  },
+  {
+    "action_id": "83dee3b1-7e80-5d7c-84cf-2a32fba944b3",
+    "categories": [
+      "노인",
+      "기타"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "미술·공예"
+    ],
+    "keywords": [
+      "네일아트",
+      "어르신",
+      "강서구",
+      "손 마사지"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "어르신 말벗 및 네일아트 봉사"
+    }
+  },
+  {
+    "action_id": "08b01461-4a09-599c-9ba8-0c8447264011",
+    "categories": [
+      "노인",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "교육·멘토링",
+      "컴퓨터·IT"
+    ],
+    "keywords": [
+      "스마트폰",
+      "사진 전송",
+      "버스 도착 앱",
+      "어르신"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "어르신을 위한 스마트폰 기초 교실"
+    }
+  },
+  {
+    "action_id": "a27989a2-cbd5-5ee7-9284-6fcbd63f50ac",
+    "categories": [
+      "노인",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "디지털 키오스크",
+      "실습",
+      "어르신",
+      "광주 북구"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "시니어 디지털 키오스크 실습 지도"
+    }
+  },
+  {
+    "action_id": "d207a33e-391b-5c54-854b-73637b98edec",
+    "categories": [
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "외국인 유학생",
+      "한국어",
+      "대화",
+      "대학 문화"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "외국인 유학생 한국어 대화 친구"
+    }
+  },
+  {
+    "action_id": "ea27ded8-3f25-54b9-a409-059c27a633bb",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "청소·정리"
+    ],
+    "keywords": [
+      "빗물받이",
+      "낙엽",
+      "담배꽁초",
+      "청소",
+      "송파구"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "동네 빗물받이 낙엽 및 담배꽁초 청소"
+    }
+  },
+  {
+    "action_id": "3417406c-7c6d-582e-82c8-468652890736",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "코딩",
+      "스크래치",
+      "게임 만들기",
+      "중학생"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "중학생 코딩 멘토링"
+    }
+  },
+  {
+    "action_id": "cb4c198b-7d63-59e5-919c-c2a80a0ecdd8",
+    "categories": [
+      "동물"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "길고양이",
+      "급식소",
+      "사료",
+      "관악구"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "도심 길고양이 급식소 순찰 및 관리"
+    }
+  },
+  {
+    "action_id": "46f07a24-dd43-58cc-8a7f-68558648e552",
+    "categories": [
+      "노인",
+      "환경"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "독거 어르신",
+      "주거환경",
+      "도배",
+      "친환경"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "독거 어르신 주거환경 도배 봉사"
+    }
+  },
+  {
+    "action_id": "80639f2c-20c5-5879-a2e9-0275d9673397",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "원예·식물관리"
+    ],
+    "keywords": [
+      "미세먼지",
+      "회양목",
+      "산철쭉",
+      "녹지 쉼터"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "도심 속 미세먼지 저감 쌈지숲 조성"
+    }
+  },
+  {
+    "action_id": "e6fa3f8b-9966-5634-ac52-cf762b470b61",
+    "categories": [
+      "장애",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "글쓰기"
+    ],
+    "keywords": [
+      "청각장애인",
+      "자막 제작",
+      "유튜브",
+      "미디어센터"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "청각장애인을 위한 자막 제작 재능기부"
+    }
+  },
+  {
+    "action_id": "05d9c387-daba-5831-95c3-9542de63c31e",
+    "categories": [
+      "장애"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "장애인",
+      "볼링",
+      "대전",
+      "스코어 기록"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "장애인 볼링 동아리 활동 보조"
+    }
+  },
+  {
+    "action_id": "4f325537-89f7-57aa-be37-fd9c71f07bc8",
+    "categories": [
+      "동물",
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "모이통",
+      "박새",
+      "참새",
+      "친환경",
+      "성북동"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "도심 야생조류 모이통 설치"
+    }
+  },
+  {
+    "action_id": "d53c76f6-f0fc-5d10-bdd9-92e2c891696c",
+    "categories": [
+      "아동·청소년"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "보육원",
+      "보드게임",
+      "멘토링",
+      "루미큐브",
+      "할리갈리"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "보육원 아이들과 함께하는 보드게임"
+    }
+  },
+  {
+    "action_id": "81f7666c-7e47-5bca-9e60-095bbfc552a3",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "청소년",
+      "연극",
+      "대본 리딩",
+      "발성 연습",
+      "무대 동선"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "주말 이틀간의 청소년 연극 캠프"
+    }
+  },
+  {
+    "action_id": "60194131-3b5d-55cb-9265-4b3dea0ca6cd",
+    "categories": [
+      "지역사회"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "제빵",
+      "단팥빵",
+      "카스텔라",
+      "복지관"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "소외계층을 위한 따뜻한 제빵 나눔"
+    }
+  },
+  {
+    "action_id": "c06e301a-c96b-5987-b42e-1ec7f507acc7",
+    "categories": [
+      "지역사회",
+      "아동·청소년"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "20명 이상 대그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "나눔",
+      "장터",
+      "기부",
+      "결식아동",
+      "생활용품"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "연말 나눔 장터 운영"
+    }
+  },
+  {
+    "action_id": "7311bd0c-5abd-5389-9b55-9bea3de2b06e",
+    "categories": [
+      "아동·청소년",
+      "기타"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "미술·공예"
+    ],
+    "keywords": [
+      "보육원",
+      "생일파티",
+      "풍선 아트",
+      "축하 무대"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "보육원 생일파티 준비"
+    }
+  },
+  {
+    "action_id": "f72942c0-11e5-5833-806c-1da2e98a4608",
+    "categories": [
+      "동물"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "유기견",
+      "목욕",
+      "봉사",
+      "임시보호소"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "보호소 유기견 따뜻한 목욕 봉사"
+    }
+  },
+  {
+    "action_id": "52c0d629-d415-58ea-9c5f-599cd39bc79d",
+    "categories": [
+      "아동·청소년",
+      "기타"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "미술·공예"
+    ],
+    "keywords": [
+      "소아병동",
+      "인형",
+      "바느질",
+      "유기농 면"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "소아병동 인형 만들기"
+    }
+  },
+  {
+    "action_id": "3fc0ce88-031d-5440-af57-a550594fad91",
+    "categories": [
+      "기타"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "헌혈",
+      "캠페인",
+      "리플릿",
+      "광화문"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "헌혈 캠페인 도우미"
+    }
+  },
+  {
+    "action_id": "6b23f84d-a594-5d17-87c7-c214447d454b",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "양천구",
+      "지역아동센터",
+      "수학",
+      "멘토"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "지역 아동센터 방과후 수학 지도"
+    }
+  },
+  {
+    "action_id": "8a12114f-c763-569e-ba9d-0b6a12ca234b",
+    "categories": [
+      "장애"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "시각장애인",
+      "마라톤",
+      "가이드 러너",
+      "올림픽공원"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "시각장애인 마라톤 동반 주자"
+    }
+  },
+  {
+    "action_id": "a8118898-ef37-5c77-96df-f72008bcdeaa",
+    "categories": [
+      "교육",
+      "기타"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [
+      "요리"
+    ],
+    "keywords": [
+      "다문화 가정",
+      "요리 교실",
+      "한국 전통 가정식",
+      "잡채",
+      "불고기"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "다문화 가정 요리 교실 보조"
+    }
+  },
+  {
+    "action_id": "0c50f3bf-ffe0-563c-8075-f0f28c3bbffa",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "금융",
+      "멘토링",
+      "청소년",
+      "용돈 관리"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "청소년 금융 기초 상식 멘토링"
+    }
+  },
+  {
+    "action_id": "3458ebd1-06a7-5b51-a11a-f42255384cc0",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "가로수",
+      "쓰레기 치우기",
+      "꽃모종",
+      "도심 화단"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "우리 동네 가로수 화단 가꾸기"
+    }
+  },
+  {
+    "action_id": "93081615-f280-5c69-b0e5-292ce8e45fad",
+    "categories": [
+      "지역사회",
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "플리마켓",
+      "부스 운영",
+      "친환경",
+      "소상공인",
+      "청년 창작자"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "이틀간 펼쳐지는 동네 플리마켓 지원"
+    }
+  },
+  {
+    "action_id": "57484daf-7f0d-533a-8e1a-e29e6640d5d3",
+    "categories": [
+      "동물"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "유기견",
+      "사료",
+      "견사",
+      "청소",
+      "양평"
+    ],
+    "difficulty": "기초 체력 필요",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "유기견 사료 후원 및 견사 청소"
+    }
+  },
+  {
+    "action_id": "1856d9a8-e945-5312-9ad1-171b86cfcc30",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "홈스쿨링",
+      "학습지",
+      "도서벽지",
+      "다문화 아동"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "학습지 정리 및 발송"
+    }
+  },
+  {
+    "action_id": "f116f85e-a2a7-513d-93dd-49d8c9563627",
+    "categories": [
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10~20명 중그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "중랑천",
+      "EM 흙공",
+      "수질 정화",
+      "악취 제거"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "살곶이 하천 EM 흙공 던지기"
+    }
+  },
+  {
+    "action_id": "80b55814-169f-55dc-a18a-31d1baa24d5e",
+    "categories": [
+      "지역사회",
+      "환경"
+    ],
+    "activity_types": [
+      "실외 활동"
+    ],
+    "target_groups": [
+      "육체·과업·집중형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [],
+    "keywords": [
+      "신촌",
+      "보행 안전",
+      "반사경",
+      "청소"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "신촌 골목길 보행 안전 반사경 닦기"
+    }
+  },
+  {
+    "action_id": "18584e76-4a90-5b1e-b8a2-9fb4f009d75b",
+    "categories": [
+      "아동·청소년",
+      "교육"
+    ],
+    "activity_types": [
+      "실내 활동"
+    ],
+    "target_groups": [
+      "교류·교육·소통형"
+    ],
+    "participation_modes": [
+      "10명 이내 소그룹"
+    ],
+    "skills": [
+      "교육·멘토링"
+    ],
+    "keywords": [
+      "파이썬",
+      "코딩",
+      "멘토링",
+      "청소년"
+    ],
+    "difficulty": "누구나 참여가능",
+    "prompt_version": "classify-v2",
+    "actions": {
+      "title": "꿈나무 청소년 파이썬 코딩 멘토링"
+    }
+  }
+]

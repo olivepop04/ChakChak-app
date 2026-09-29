@@ -17,6 +17,8 @@
  */
 import { createClient } from '@supabase/supabase-js';
 import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const SEED_NAMESPACE = '9f1c0f5e-3a6d-4c8b-9e2a-7d4f1b6c8a03';
 
@@ -46,31 +48,46 @@ const CLEAN_ONLY = process.argv.includes('--clean');
 const SEED_DOMAIN = '@good.seed';
 const PASSWORD = 'good1234!';
 
+const PRECOMPUTED_META = {};
+try {
+  const metaPath = path.resolve('scripts/data/action_ai_metadata_all.json');
+  if (fs.existsSync(metaPath)) {
+    const raw = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+    for (const item of raw) {
+      if (item.actions?.title) {
+        PRECOMPUTED_META[item.actions.title] = item;
+      }
+    }
+  }
+} catch (e) {
+  console.warn('사전 색인 메타데이터 로드 실패:', e.message);
+}
+
 const USERS = [
-  { nick: '올리브', gender: 'FEMALE', bio: '동네에서 할 수 있는 좋은 일을 찾고 있어요.' },
-  { nick: '민준', gender: 'MALE', bio: '주말마다 몸 쓰는 봉사를 좋아합니다.' },
-  { nick: '서연', gender: 'FEMALE', bio: '아이들과 함께하는 활동에 관심이 많아요.' },
-  { nick: '도현', gender: 'MALE', bio: '환경 문제에 관심이 있습니다.' },
-  { nick: '지우', gender: 'MALE', bio: '유기동물 보호소에 자주 갑니다.' },
-  { nick: '하윤', gender: 'FEMALE', bio: '어르신들과 이야기 나누는 걸 좋아해요.' },
-  { nick: '준서', gender: 'MALE', bio: '재능기부로 사진을 찍어드립니다.' },
-  { nick: '수아', gender: 'FEMALE', bio: '작은 일이라도 꾸준히 하려고 해요.' },
-  { nick: '예준', gender: 'MALE', bio: '주말에 뜻깊은 시간을 보내고 싶어요.' },
-  { nick: '다은', gender: 'FEMALE', bio: '따뜻한 온기를 나누는 활동에 함께해요.' },
-  { nick: '시우', gender: 'MALE', bio: '이웃과 함께하는 봉사에 적극 참여합니다.' },
-  { nick: '채원', gender: 'FEMALE', bio: '동물과 자연을 사랑하는 사람입니다.' },
-  { nick: '유준', gender: 'MALE', bio: '작은 나눔이 큰 변화를 만든다고 믿어요.' },
-  { nick: '서아', gender: 'FEMALE', bio: '다양한 사람들과 소통하며 배우고 싶습니다.' },
-  { nick: '은우', gender: 'MALE', bio: '발로 뛰는 현장 봉사를 선호합니다.' },
-  { nick: '윤서', gender: 'FEMALE', bio: '깨끗한 환경을 만드는 일에 동참합니다.' },
-  { nick: '도윤', gender: 'MALE', bio: '지역사회 발전에 기여하고 싶습니다.' },
-  { nick: '소율', gender: 'FEMALE', bio: '아이들의 밝은 미소를 지켜주고 싶어요.' },
-  { nick: '재윤', gender: 'MALE', bio: '어르신들을 공경하고 돕는 일에 앞장섭니다.' },
-  { nick: '지아', gender: 'FEMALE', bio: '함께 만들어가는 따뜻한 세상을 꿈꿔요.' },
-  { nick: '선우', gender: 'MALE', bio: '주변의 작은 도움부터 실천합니다.' },
-  { nick: '하은', gender: 'FEMALE', bio: '의미 있는 나눔을 찾아 참여하고 있어요.' },
-  { nick: '정우', gender: 'MALE', bio: '에너지 넘치는 활동적인 봉사를 좋아해요.' },
-  { nick: '유나', gender: 'FEMALE', bio: '더 나은 내일을 위해 행동하는 크루입니다.' },
+  { nick: '올리브', gender: 'FEMALE', bio: '동네에서 할 수 있는 좋은 일을 찾고 있어요.', categories: ['지역사회', '환경'], skills: ['청소·정리'] },
+  { nick: '민준', gender: 'MALE', bio: '주말마다 몸 쓰는 봉사를 좋아합니다.', categories: ['지역사회', '환경'], skills: ['운전'] },
+  { nick: '서연', gender: 'FEMALE', bio: '아이들과 함께하는 활동에 관심이 많아요.', categories: ['아동·청소년', '교육'], skills: ['교육·멘토링', '미술·공예'] },
+  { nick: '도현', gender: 'MALE', bio: '환경 문제에 관심이 있습니다.', categories: ['환경'], skills: ['원예·식물관리'] },
+  { nick: '지우', gender: 'MALE', bio: '유기동물 보호소에 자주 갑니다.', categories: ['동물'], skills: ['청소·정리'] },
+  { nick: '하윤', gender: 'FEMALE', bio: '어르신들과 이야기 나누는 걸 좋아해요.', categories: ['노인', '지역사회'], skills: ['요리'] },
+  { nick: '준서', gender: 'MALE', bio: '재능기부로 사진을 찍어드립니다.', categories: ['지역사회', '기타'], skills: ['사진 촬영', '영상 촬영·편집'] },
+  { nick: '수아', gender: 'FEMALE', bio: '작은 일이라도 꾸준히 하려고 해요.', categories: ['동물', '환경'], skills: ['청소·정리'] },
+  { nick: '예준', gender: 'MALE', bio: '주말에 뜻깊은 시간을 보내고 싶어요.', categories: ['장애', '지역사회'], skills: ['운전'] },
+  { nick: '다은', gender: 'FEMALE', bio: '따뜻한 온기를 나누는 활동에 함께해요.', categories: ['노인', '지역사회'], skills: ['요리', '교육·멘토링'] },
+  { nick: '시우', gender: 'MALE', bio: '이웃과 함께하는 봉사에 적극 참여합니다.', categories: ['지역사회', '장애'], skills: ['수리·시공'] },
+  { nick: '채원', gender: 'FEMALE', bio: '동물과 자연을 사랑하는 사람입니다.', categories: ['동물', '환경'], skills: ['원예·식물관리'] },
+  { nick: '유준', gender: 'MALE', bio: '작은 나눔이 큰 변화를 만든다고 믿어요.', categories: ['교육', '아동·청소년'], skills: ['컴퓨터·IT', '교육·멘토링'] },
+  { nick: '서아', gender: 'FEMALE', bio: '다양한 사람들과 소통하며 배우고 싶습니다.', categories: ['교육', '장애'], skills: ['통역·번역', '교육·멘토링'] },
+  { nick: '은우', gender: 'MALE', bio: '발로 뛰는 현장 봉사를 선호합니다.', categories: ['환경', '지역사회'], skills: ['운전'] },
+  { nick: '윤서', gender: 'FEMALE', bio: '깨끗한 환경을 만드는 일에 동참합니다.', categories: ['환경'], skills: ['청소·정리', '디자인'] },
+  { nick: '도윤', gender: 'MALE', bio: '지역사회 발전에 기여하고 싶습니다.', categories: ['지역사회'], skills: ['글쓰기', 'SNS 홍보'] },
+  { nick: '소율', gender: 'FEMALE', bio: '아이들의 밝은 미소를 지켜주고 싶어요.', categories: ['아동·청소년', '교육'], skills: ['음악·공연', '미술·공예'] },
+  { nick: '재윤', gender: 'MALE', bio: '어르신들을 공경하고 돕는 일에 앞장섭니다.', categories: ['노인'], skills: ['컴퓨터·IT', '교육·멘토링'] },
+  { nick: '지아', gender: 'FEMALE', bio: '함께 만들어가는 따뜻한 세상을 꿈꿔요.', categories: ['장애', '노인'], skills: ['요리'] },
+  { nick: '선우', gender: 'MALE', bio: '주변의 작은 도움부터 실천합니다.', categories: ['지역사회', '환경'], skills: ['청소·정리'] },
+  { nick: '하은', gender: 'FEMALE', bio: '의미 있는 나눔을 찾아 참여하고 있어요.', categories: ['동물', '아동·청소년'], skills: ['사진 촬영'] },
+  { nick: '정우', gender: 'MALE', bio: '에너지 넘치는 활동적인 봉사를 좋아해요.', categories: ['환경', '지역사회'], skills: ['수리·시공'] },
+  { nick: '유나', gender: 'FEMALE', bio: '더 나은 내일을 위해 행동하는 크루입니다.', categories: ['교육', '환경'], skills: ['디자인', 'SNS 홍보'] },
 ];
 
 const DEMO_USER = {
@@ -1131,15 +1148,16 @@ async function seed() {
       .from('profiles')
       .update({
         bio: u.bio,
-        categories: ['동물', '환경', '지역사회'].slice(0, (i % 3) + 1),
+        categories: u.categories,
+        skills: u.skills,
         available_times: i % 2 === 0 ? ['주말', '오후'] : ['평일', '저녁'],
         time_prefs:
           i % 2 === 0
             ? [{ day: '주말', slots: ['오후'] }]
             : [{ day: '평일', slots: ['저녁'] }],
-        regions: ['서울특별시 성동구', '서울특별시 마포구', '부산광역시 해운대구'].slice(
+        regions: ['서울특별시 성동구', '서울특별시 마포구', '서울특별시 종로구'].slice(
           0,
-          (i % 2) + 1,
+          (i % 3) + 1,
         ),
       })
       .eq('id', data.user.id);
@@ -1175,6 +1193,7 @@ async function seed() {
     .from('profiles')
     .update({
       bio: demoUser.bio,
+      skills: ['교육·멘토링'],
       categories: ['동물', '환경', '지역사회', '아동·청소년', '노인', '장애', '교육', '기타'],
       available_times: ['주말', '오후', '평일', '저녁'],
       time_prefs: [
@@ -1205,7 +1224,17 @@ async function seed() {
     const [title, category, image, address, status, daysAgo, whenDay, items, recruitDaysBefore, meta] =
       row;
 
-    const owner = meta?.owner === 'DEMO' ? demoUser : users[idx % users.length];
+    let owner;
+    if (meta?.owner === 'DEMO') {
+      owner = demoUser;
+    } else {
+      const matchingUsers = users.filter((u) => u.categories.includes(category));
+      if (matchingUsers.length > 0) {
+        owner = matchingUsers[idx % matchingUsers.length];
+      } else {
+        owner = users[idx % users.length];
+      }
+    }
     if (!owner) continue;
 
     if (owner.id === demoUser.id) {
@@ -1327,29 +1356,45 @@ async function seed() {
     }
 
     if (!isDraft) {
-      const hasGoods = createdItems.some((it) => it.type === 'GOODS');
-      const hasPerson = createdItems.some((it) => it.type === 'PERSON');
-      const modes = [];
-      if (hasPerson) modes.push('시간을 내서', '직접 행동으로');
-      if (hasGoods) modes.push('물건으로');
-      if (category === '교육' || category === '아동·청소년') modes.push('내 재능으로');
-
-      await admin.from('action_ai_metadata').upsert(
-        {
-          action_id: action.id,
-          categories: [category],
-          activity_types: [category],
-          target_groups: [category],
-          participation_modes: modes,
-          skills: [],
-          keywords: title.split(' ').slice(0, 3),
-          difficulty: '쉬움',
-          ai_model: 'seed',
-          prompt_version: 'seed-v1',
-          owner_confirmed: true,
-        },
-        { onConflict: 'action_id' },
-      );
+      const pre = PRECOMPUTED_META[title];
+      if (pre) {
+        await admin.from('action_ai_metadata').upsert(
+          {
+            action_id: action.id,
+            categories: pre.categories,
+            activity_types: pre.activity_types,
+            target_groups: pre.target_groups,
+            participation_modes: pre.participation_modes,
+            skills: pre.skills,
+            keywords: pre.keywords,
+            difficulty: pre.difficulty,
+            ai_model: 'gpt-4o-mini',
+            prompt_version: 'classify-v2',
+            owner_confirmed: true,
+          },
+          { onConflict: 'action_id' },
+        );
+      } else {
+        await admin.from('action_ai_metadata').upsert(
+          {
+            action_id: action.id,
+            categories: [category],
+            activity_types: ['실내 활동'],
+            target_groups:
+              category === '교육' || category === '아동·청소년'
+                ? ['교류·교육·소통형']
+                : ['육체·과업·집중형'],
+            participation_modes: ['10명 이내 소그룹'],
+            skills: [],
+            keywords: title.split(' ').slice(0, 3),
+            difficulty: '누구나 참여가능',
+            ai_model: 'seed',
+            prompt_version: 'classify-v2',
+            owner_confirmed: true,
+          },
+          { onConflict: 'action_id' },
+        );
+      }
     }
 
     if (isDraft) continue;
@@ -1462,7 +1507,9 @@ async function seed() {
             (it.gender_requirement === 'ANY' || it.gender_requirement === u.gender),
         );
 
-        const assigned = availableUsers.slice(0, needed);
+        const preferred = availableUsers.filter((u) => u.categories.includes(category));
+        const general = availableUsers.filter((u) => !u.categories.includes(category));
+        const assigned = [...preferred, ...general].slice(0, needed);
         for (let j = 0; j < assigned.length; j++) {
           const joiner = assigned[j];
           participatedUserIds.add(joiner.id);
@@ -1556,8 +1603,13 @@ async function seed() {
     } else if (status !== 'CANCELLED') {
       const joinerCount = Math.min(2 + (idx % 4), users.length - 1);
 
+      const eligibleUsers = users.filter((u) => u.id !== owner.id && u.id !== demoUser.id);
+      const preferred = eligibleUsers.filter((u) => u.categories.includes(category));
+      const general = eligibleUsers.filter((u) => !u.categories.includes(category));
+      const candidates = [...preferred, ...general];
+
       for (let j = 1; j <= joinerCount; j++) {
-        const joiner = users[(idx + j) % users.length];
+        const joiner = candidates[(idx + j - 1) % candidates.length];
         if (!joiner || joiner.id === owner.id || joiner.id === demoUser.id) continue;
 
         const okItems = createdItems.filter(

@@ -109,7 +109,7 @@ npm run dev
 
 터미널에 `Ready in ...` 이 뜨면 브라우저에서 **http://localhost:3000** 을 여세요.
 
-Supabase 값을 아직 안 채웠다면 노란 안내 상자가 보입니다. **정상입니다.** 화면 아래쪽에 모집 표시 예시와 아바타가 보이면 설치가 제대로 된 것입니다.
+홈에 액션 카드가 보이면 설치가 제대로 된 것입니다.
 
 끄고 싶으면 터미널에서 `Ctrl + C`.
 
@@ -401,7 +401,7 @@ Supabase 대시보드 → **SQL Editor**에서 순서대로 실행합니다.
 
 | 순서 | 파일 | 내용 |
 |---|---|---|
-| 1 | `supabase/01_schema.sql` | 테이블 15개 · 뷰 · 트리거 |
+| 1 | `supabase/01_schema.sql` | 테이블 14개 · 뷰 · 트리거 (15번째 `shares` 는 10 에서 생깁니다) |
 | 2 | `supabase/02_rls.sql` | 권한 정책 전체 · 파일 저장소 |
 | 3 | `supabase/03_functions.sql` | 참여·소감·상태 전환 함수 |
 | 4 | `supabase/05_fixes.sql` | 권한 보완 (AI 분류 저장) |
@@ -409,6 +409,15 @@ Supabase 대시보드 → **SQL Editor**에서 순서대로 실행합니다.
 | 6 | `supabase/07_update.sql` | 참여 항목 공개 범위 (크루끼리 사람 항목만) |
 | 7 | `supabase/08_update.sql` | 모집 미달 알림 |
 | 8 | `supabase/09_update.sql` | 나가기의 시간 빈틈 막기 (활동 시작 후 나가기 차단) |
+| 9 | `supabase/10_update.sql` | 재능 · 공유 수 · 공개 뒤 모집 항목 잠금 |
+| 10 | `supabase/11_update.sql` | 화면에서만 막던 것 3건을 서버에서도 막기 |
+| 11 | `supabase/12_update.sql` | 조기 종료 추가(활동 중에만) · 취소는 활동 시작 전까지만 |
+| 12 | `supabase/13_update.sql` | 취소된 액션에 새 반응(좋아요·저장·공유) 막기 |
+| 13 | `supabase/14_update.sql` | 액션 카테고리 여러 개 |
+| 14 | `supabase/15_update.sql` | 조기 종료 사유를 액션 상세에서 읽기 |
+| 15 | `supabase/16_update.sql` | 남에게도 보이는 참여 완료 통계 |
+| 16 | `supabase/17_update.sql` | 계정 삭제가 막히던 것 풀기 (액션을 만든 호스트 계정은 일부러 그대로 막음) |
+| 17 | `supabase/18_update.sql` | 결과 임시저장(사진 0장) · 공개 전 결과는 호스트만 읽기 |
 
 **번호 순서대로 전부 실행하세요.** 하나라도 빠뜨리면 앱이 조용히 깨집니다.
 예를 들어 06 을 안 돌리면 장소명·알림 설정·나가기 사유가 통째로 동작하지 않습니다.
@@ -429,4 +438,4 @@ Supabase 대시보드 → **SQL Editor**에서 순서대로 실행합니다.
 npx supabase gen types typescript --project-id <프로젝트ID> > lib/types/database.ts
 ```
 
-**이후 스키마 변경은 콘솔에서 직접 하지 말고** `supabase/05_....sql`처럼 새 파일로 쌓으세요.
+**이후 스키마 변경은 콘솔에서 직접 하지 말고** `supabase/19_update.sql` 처럼 다음 번호로 새 파일을 쌓으세요.

@@ -1,7 +1,13 @@
 export interface AdaptiveScoringAnswers {
   talentPreference: 'use' | 'any' | null;
-  groupSizePreference: 'small' | 'any' | null;
+  groupSizePreference: 'small' | 'medium' | 'large' | 'any' | null;
   fieldPreference: 'familiar' | 'new' | 'any' | null;
+  targetGroupPreference?: 'social' | 'task' | 'any' | null;
+  difficultyPreference?: 'easy' | 'physical' | 'expert' | 'any' | null;
+  activityTypePreference?: 'indoor' | 'outdoor' | 'both' | 'any' | null;
+  selectedSkill?: string | null;
+  selectedSkills?: string[];
+  userKeywords?: string[];
 }
 
 export function sameProvince(
@@ -21,6 +27,11 @@ export function scoreAdaptiveTraits({
   actionCategory,
   actionSkills,
   actionGroupSize,
+  actionTargetGroups = [],
+  actionDifficulty = null,
+  actionActivityTypes = [],
+  actionKeywords = [],
+  actionParticipationModes = [],
   answers,
 }: {
   profileSkills: string[];
@@ -28,28 +39,78 @@ export function scoreAdaptiveTraits({
   actionCategory: string;
   actionSkills: string[];
   actionGroupSize: number | null;
+  actionTargetGroups?: string[];
+  actionDifficulty?: string | null;
+  actionActivityTypes?: string[];
+  actionKeywords?: string[];
+  actionParticipationModes?: string[];
   answers: AdaptiveScoringAnswers;
 }): { score: number; matched: string[] } {
   let score = 0;
   const matched: string[] = [];
 
+  // 1) 재능 활용 (skills) — 15점 (복수 선택 지원)
   if (answers.talentPreference === 'use') {
-    const sharedSkill = profileSkills.find((skill) => actionSkills.includes(skill));
+    const userSelected =
+      answers.selectedSkills && answers.selectedSkills.length > 0
+        ? answers.selectedSkills.filter((s) => s !== '기타')
+        : answers.selectedSkill && answers.selectedSkill !== '기타'
+          ? [answers.selectedSkill]
+          : [];
+    const candidateSkills = [
+      ...userSelected,
+      ...profileSkills,
+    ];
+    const sharedSkill = candidateSkills.find((skill) => actionSkills.includes(skill));
     if (sharedSkill) {
       score += 15;
       matched.push(`${sharedSkill} 재능 활용`);
+    } else if (userSelected.length > 0) {
+      const keywordHit = userSelected.find((userSkill) =>
+        actionKeywords.some((k) => k.includes(userSkill) || userSkill.includes(k)),
+      );
+      if (keywordHit) {
+        score += 15;
+        matched.push(`${keywordHit} 재능 활용`);
+      }
+    } else if (answers.selectedSkills?.includes('기타') || answers.selectedSkill === '기타') {
+      // 기타 선택 시: 모든 액션에 차별 없이 열어주기 위해 15점 부여
+      score += 15;
+      matched.push('재능 상관없이 참여 가능');
+    }
+  } else if (answers.talentPreference === 'any' || answers.selectedSkill === '기타' || answers.selectedSkills?.includes('기타')) {
+    score += 15;
+    matched.push('재능 상관없이 참여 가능');
+  }
+
+  // 2) 모임 규모 (participation_modes) — 10점
+  if (answers.groupSizePreference) {
+    const isSmall =
+      (actionGroupSize !== null && actionGroupSize <= 10) ||
+      actionParticipationModes.some((m) => m.includes('10명 이내') || m.includes('소그룹') || m.includes('소규모'));
+    const isMedium =
+      (actionGroupSize !== null && actionGroupSize > 10 && actionGroupSize <= 20) ||
+      actionParticipationModes.some((m) => m.includes('10~20') || m.includes('중그룹') || m.includes('중규모'));
+    const isLarge =
+      (actionGroupSize !== null && actionGroupSize > 20) ||
+      actionParticipationModes.some((m) => m.includes('20명 이상') || m.includes('대그룹') || m.includes('대규모'));
+
+    if (answers.groupSizePreference === 'small' && isSmall) {
+      score += 10;
+      matched.push('10명 이내 소규모');
+    } else if (answers.groupSizePreference === 'medium' && isMedium) {
+      score += 10;
+      matched.push('10~20명 중그룹');
+    } else if (answers.groupSizePreference === 'large' && isLarge) {
+      score += 10;
+      matched.push('20명 이상 대그룹');
+    } else if (answers.groupSizePreference === 'any') {
+      score += 7;
+      matched.push('규모 상관없음');
     }
   }
 
-  if (
-    answers.groupSizePreference === 'small' &&
-    actionGroupSize !== null &&
-    actionGroupSize <= 10
-  ) {
-    score += 10;
-    matched.push('10명 이내 소규모');
-  }
-
+  // 3) 분야 선호 가산/감점 (fieldPreference) — ±10점
   if (answers.fieldPreference && answers.fieldPreference !== 'any') {
     const familiar = historyCategories.includes(actionCategory);
     const preferenceMatches =
@@ -60,6 +121,91 @@ export function scoreAdaptiveTraits({
       matched.push(
         answers.fieldPreference === 'familiar' ? '익숙한 분야' : '새로운 분야',
       );
+    }
+  }
+
+  // 4) 활동 성격 (target_groups) — 15점
+  if (answers.targetGroupPreference) {
+    const hasSocial = actionTargetGroups.some((g) =>
+      /교류|교육|소통|말벗|멘토|상담|친구/.test(g),
+    );
+    const hasTask = actionTargetGroups.some((g) =>
+      /과업|육체|집중|노동|땀|청소|플로깅|배달|제작|텃밭|수리/.test(g),
+    );
+
+    if (answers.targetGroupPreference === 'social' && hasSocial) {
+      score += 15;
+      matched.push('교류·소통형 활동');
+    } else if (answers.targetGroupPreference === 'task' && hasTask) {
+      score += 15;
+      matched.push('과업·집중형 활동');
+    } else if (answers.targetGroupPreference === 'any') {
+      score += 10;
+      matched.push('성격 상관없음');
+    }
+  }
+
+  // 5) 참여 난이도 (difficulty) — 15점
+  if (answers.difficultyPreference) {
+    const isEasy =
+      actionDifficulty === '누구나 참여가능' ||
+      actionDifficulty === '누구나' ||
+      actionDifficulty === '쉬움';
+    const isPhysical =
+      actionDifficulty === '기초 체력 필요' ||
+      actionDifficulty === '기초체력' ||
+      actionDifficulty === '보통';
+    const isExpert =
+      actionDifficulty === '전문지식/자격/재능 활용' ||
+      actionDifficulty === '전문지식·자격 필요' ||
+      actionDifficulty === '전문지식' ||
+      actionDifficulty === '어려움';
+
+    if (answers.difficultyPreference === 'easy' && isEasy) {
+      score += 15;
+      matched.push('부담 없는 난이도');
+    } else if (answers.difficultyPreference === 'physical' && isPhysical) {
+      score += 15;
+      matched.push('기초 체력 활동');
+    } else if (answers.difficultyPreference === 'expert' && isExpert) {
+      score += 15;
+      matched.push('전문·재능 활용');
+    } else if (answers.difficultyPreference === 'any') {
+      score += 10;
+      matched.push('난이도 상관없음');
+    }
+  }
+
+  // 6) 활동 환경 (activity_types) — 10점
+  if (answers.activityTypePreference) {
+    const hasIndoor = actionActivityTypes.some((t) => /실내/.test(t));
+    const hasOutdoor = actionActivityTypes.some((t) => /실외|야외/.test(t));
+    const hasBoth = actionActivityTypes.some((t) => /병행/.test(t));
+
+    if (answers.activityTypePreference === 'indoor' && (hasIndoor || hasBoth)) {
+      score += 10;
+      matched.push(hasBoth ? '실내외 병행 활동' : '실내 활동');
+    } else if (answers.activityTypePreference === 'outdoor' && (hasOutdoor || hasBoth)) {
+      score += 10;
+      matched.push(hasBoth ? '실내외 병행 활동' : '야외 활동');
+    } else if (answers.activityTypePreference === 'both' && (hasBoth || hasIndoor || hasOutdoor)) {
+      score += 10;
+      matched.push(hasBoth ? '실내외 병행 활동' : (hasIndoor ? '실내 활동' : '야외 활동'));
+    } else if (answers.activityTypePreference === 'any') {
+      score += 7;
+      matched.push('환경 상관없음');
+    }
+  }
+
+  // 7) 시맨틱 키워드 (keywords) 보너스 — 최대 10점
+  if (answers.userKeywords && answers.userKeywords.length > 0 && actionKeywords.length > 0) {
+    const hits = answers.userKeywords.filter((word) =>
+      actionKeywords.some((k) => k.includes(word) || word.includes(k)),
+    );
+    if (hits.length > 0) {
+      const bonus = Math.min(10, hits.length * 5);
+      score += bonus;
+      matched.push(`관심 키워드(${hits.slice(0, 2).join('·')})`);
     }
   }
 

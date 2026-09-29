@@ -226,13 +226,11 @@ function SignUpForm() {
   // ── 3단계: 계정 생성 ──────────────────────────────────────
   async function handleSignUp() {
     setError('');
-    if (
-      timePrefs.length === 0 ||
-      timePrefs.some((preference) => preference.slots.length === 0)
-    ) {
-      setError('참여 가능한 요일과 시간대를 하나 이상 선택해주세요.');
-      return;
-    }
+    // 3단계는 전부 선택 항목입니다 (2026-09-28 조장님 요청). 어느 칸에도
+    // 「[필수]」 표시가 없는데 시간만 검사해서 막고 있었습니다.
+    // 시간은 「상관없음 / 상관없음」 으로 시작하고, 비워도 updateProfile 이
+    // time_prefs 에 빈 배열을 넣고 available_times 도 빈 배열로 둡니다.
+    // 추천에서는 시간 15점이 안 붙을 뿐 오류가 나지 않습니다.
     // 임시저장에 비밀번호를 담지 않으므로, 단계를 복원해 들어오면 여기서
     // 비밀번호가 비어 있습니다. 막지 않으면 빈 값으로 가입 요청이 나갑니다.
     // 6자 기준은 1단계 검증과 같습니다.
@@ -508,7 +506,10 @@ function SignUpForm() {
 
           <div className="mt-8 flex flex-col gap-6">
             <div className="flex flex-col gap-2.5">
-              <FieldLabel>관심 카테고리</FieldLabel>
+              <FieldLabel>
+                관심 카테고리{' '}
+                <span className="font-normal text-neutral-400">(선택)</span>
+              </FieldLabel>
               <ChipGroup
                 options={CATEGORY_OPTIONS}
                 selected={categories as (typeof CATEGORY_OPTIONS)[number][]}
@@ -517,7 +518,10 @@ function SignUpForm() {
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <FieldLabel>보통 언제 참여할 수 있나요?</FieldLabel>
+              <FieldLabel>
+                보통 언제 참여할 수 있나요?{' '}
+                <span className="font-normal text-neutral-400">(선택)</span>
+              </FieldLabel>
               <TimePreferenceEditor value={timePrefs} onChange={setTimePrefs} />
             </div>
 
@@ -530,7 +534,10 @@ function SignUpForm() {
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <FieldLabel>어느 지역이 편하세요?</FieldLabel>
+              <FieldLabel>
+                어느 지역이 편하세요?{' '}
+                <span className="font-normal text-neutral-400">(선택)</span>
+              </FieldLabel>
               <RegionPicker value={regions} onChange={setRegions} />
             </div>
           </div>

@@ -22,6 +22,13 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { cn } from '@/lib/utils/cn';
 import type { ActionCardData } from '@/lib/types/view';
+import {
+  REGIONS,
+  SIDO_LIST,
+  PROVINCE_WIDE,
+  formatRegion,
+} from '@/lib/constants/regions';
+import { formatSummaryChips } from '@/app/api/ai/discover/interview';
 
 /** 질문 수 — 서버(app/api/ai/discover)가 다섯 답변을 받으면 추천을 돌려준다 */
 const QUESTION_COUNT = 5;
@@ -50,7 +57,9 @@ interface DiscoverResponse {
   options?: string[];
   relaxation?: string[];
   items?: Recommendation[];
+  summaryChips?: string[];
   error?: string;
+  isLastQuestion?: boolean;
 }
 
 export function DiscoverChat({
@@ -61,18 +70,37 @@ export function DiscoverChat({
   authenticated?: boolean;
 }) {
   const started = useRef(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [options, setOptions] = useState<string[]>([]);
+  const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(authenticated);
   const [items, setItems] = useState<Recommendation[] | null>(null);
+  const [summaryChips, setSummaryChips] = useState<string[]>([]);
   const [relaxation, setRelaxation] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [regionModalOpen, setRegionModalOpen] = useState(false);
+  const [selectedSido, setSelectedSido] = useState<string | null>(null);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
+  const [isSubmittingFinal, setIsSubmittingFinal] = useState(false);
+  const [isServerLastQuestion, setIsServerLastQuestion] = useState(false);
+
+  useEffect(() => {
+    setSelectedSkills([]);
+    setSelectedTimes([]);
+  }, [options]);
 
   useEffect(() => {
     if (!authenticated || started.current) return;
     started.current = true;
     void requestNext([]);
   }, [authenticated]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading, items]);
 
   async function requestNext(nextMessages: ChatMessage[]) {
     setLoading(true);
@@ -98,29 +126,130 @@ export function DiscoverChat({
       setMessages(withReply);
       setOptions(data.options ?? []);
       setRelaxation(data.relaxation ?? []);
-      if (data.done) setItems(data.items ?? []);
+      setIsServerLastQuestion(Boolean(data.isLastQuestion));
+      if (data.done) {
+        setItems(data.items ?? []);
+        if (data.summaryChips) setSummaryChips(data.summaryChips);
+      }
     } catch {
       setError('추천을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setLoading(false);
+      setIsSubmittingFinal(false);
     }
   }
 
+  const isCurrentLastQuestion =
+    isServerLastQuestion ||
+    options.some((o) => o.includes('모임') || o.includes('소규모'));
+
   function choose(value: string) {
     if (loading) return;
+    if (isCurrentLastQuestion) {
+      setIsSubmittingFinal(true);
+    }
     const nextMessages: ChatMessage[] = [
       ...messages,
       { role: 'user', content: value },
     ];
     setMessages(nextMessages);
     setOptions([]);
+    setInputText('');
     void requestNext(nextMessages);
   }
 
+  function handleOptionClick(option: string) {
+    if (loading) return;
+    if (option.includes('지역') && option.includes('선택')) {
+      setSelectedSido(null);
+      setRegionModalOpen(true);
+      return;
+    }
+    if (option === '기타' || option.includes('기타')) {
+      choose(option);
+      setTimeout(() => inputRef.current?.focus(), 150);
+      return;
+    }
+    choose(option);
+  }
+
+  const isSkillSelection =
+    options.length >= 15 &&
+    options.includes('사진 촬영') &&
+    options.includes('요리');
+
+  const isTimeSelection =
+    options.length >= 4 &&
+    options.includes('주말 오전') &&
+    options.includes('시간 상관없음');
+
+  function handleSkillToggle(skill: string) {
+    if (loading) return;
+    if (skill === '기타') {
+      if (selectedSkills.includes('기타')) {
+        setSelectedSkills([]);
+      } else {
+        setSelectedSkills(['기타']);
+      }
+      return;
+    }
+
+    const withoutEtc = selectedSkills.filter((s) => s !== '기타');
+    if (withoutEtc.includes(skill)) {
+      setSelectedSkills(withoutEtc.filter((s) => s !== skill));
+    } else {
+      setSelectedSkills([...withoutEtc, skill]);
+    }
+  }
+
+  function handleConfirmSkills() {
+    if (loading || selectedSkills.length === 0) return;
+    choose(selectedSkills.join(', '));
+  }
+
+  function handleTimeToggle(time: string) {
+    if (loading) return;
+    if (time === '시간 상관없음') {
+      if (selectedTimes.includes('시간 상관없음')) {
+        setSelectedTimes([]);
+      } else {
+        setSelectedTimes(['시간 상관없음']);
+      }
+      return;
+    }
+
+    const withoutAny = selectedTimes.filter((t) => t !== '시간 상관없음');
+    if (withoutAny.includes(time)) {
+      setSelectedTimes(withoutAny.filter((t) => t !== time));
+    } else {
+      setSelectedTimes([...withoutAny, time]);
+    }
+  }
+
+  function handleConfirmTimes() {
+    if (loading || selectedTimes.length === 0) return;
+    choose(selectedTimes.join(', '));
+  }
+
+  function handleRegionSelect(region: string) {
+    setRegionModalOpen(false);
+    setSelectedSido(null);
+    choose(`📍 ${region}`);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const text = inputText.trim();
+    if (!text || loading) return;
+    choose(text);
+  }
+
   function restart() {
+    setInputText('');
     setMessages([]);
     setOptions([]);
     setItems(null);
+    setSummaryChips([]);
     setRelaxation([]);
     setError('');
     void requestNext([]);
@@ -136,7 +265,7 @@ export function DiscoverChat({
             AI가 골라드려요
           </h2>
           <p className="mt-1 text-label leading-relaxed text-neutral-500">
-            5가지 질문에 답하면, 추천 이유와 함께 보여드려요.
+            몇 가지 질문에 답하면, 추천 이유와 함께 보여드려요.
           </p>
         </div>
 
@@ -208,15 +337,26 @@ export function DiscoverChat({
   }
 
   const userAnswers = messages.filter((message) => message.role === 'user');
-  const answeredCount = userAnswers.length;
   const isDone = items !== null;
+
+  // 오프닝 확인 응답을 제외한 실제 5대 질문 응답 수 계산 (0~5)
+  const hasOpeningAnswer = messages.some(
+    (m, idx) =>
+      m.role === 'user' &&
+      idx > 0 &&
+      /이 조건으로|다른 조건|지역.*선택|전국|이대로|좋아요.*이 조건/.test(m.content),
+  );
+  const coreAnsweredCount = hasOpeningAnswer
+    ? Math.max(0, userAnswers.length - 1)
+    : userAnswers.length;
+  const answeredCount = Math.min(QUESTION_COUNT, isDone ? QUESTION_COUNT : coreAnsweredCount);
 
   return (
     <div className="flex flex-col gap-4 px-6 pb-24 pt-4">
       {/* 인트로 제목 + 숫자 칩 5개 — 답함=초록 채움 · 지금=초록 테두리 · 남음=회색 (2026-09-27 목업 확정) */}
       <div className="flex flex-col gap-3 border-b border-neutral-100 pb-5">
         <h2 className="font-paperlogy text-body font-medium leading-relaxed text-neutral-900">
-          {nickname}님에게 딱 맞는 액션, 5가지만 물어볼게요
+          {nickname}님에게 맞는 액션을 찾기 위해 몇 가지만 물어볼게요
         </h2>
         <div className="flex items-center gap-1.5">
           {Array.from({ length: QUESTION_COUNT }, (_, i) => i + 1).map((n) => {
@@ -256,32 +396,170 @@ export function DiscoverChat({
           </div>
         ),
       )}
-
-      {!loading && !isDone && options.length > 0 && (
-        <div className="flex flex-wrap justify-end gap-2">
-          {options.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => choose(option)}
-              className="rounded-full border border-neutral-900 px-4 py-2 text-label font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      )}
-
       {loading && (
         <Bubble>
           <span className="inline-flex items-center gap-2">
-            착착 AI가 답변을 살펴보고 있어요
+            {messages.length === 0
+              ? '잠시만요. AI가 대화를 준비하고 있어요 😊'
+              : isSubmittingFinal
+                ? 'AI가 딱 맞는 맞춤 액션을 찾고 있어요 😊'
+                : 'AI가 질문을 준비하고 있어요 😊'}
             <span className="inline-flex gap-0.5">
               <Dot /> <Dot /> <Dot />
             </span>
           </span>
         </Bubble>
       )}
+
+      {!loading && items === null && (
+        <div className="flex flex-col gap-2.5 pt-1">
+          {options.length > 0 && isSkillSelection ? (
+            <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-label font-bold text-neutral-900">
+                  나눌 수 있는 재능을 모두 골라보세요 (복수 선택)
+                </span>
+                <span className="text-caption font-semibold text-brand">
+                  {selectedSkills.length}개 선택됨
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {options.map((option) => {
+                  const isSelected = selectedSkills.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleSkillToggle(option)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all',
+                        isSelected
+                          ? 'border border-brand bg-brand text-white font-semibold shadow-sm'
+                          : 'border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-900 hover:bg-neutral-50',
+                      )}
+                    >
+                      {isSelected && (
+                        <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
+                      )}
+                      <span>{option}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-end pt-1">
+                <button
+                  type="button"
+                  disabled={selectedSkills.length === 0}
+                  onClick={handleConfirmSkills}
+                  className="rounded-full bg-neutral-900 px-5 py-2 text-label font-bold text-white transition-opacity hover:bg-neutral-800 disabled:opacity-30 flex items-center gap-1.5"
+                >
+                  <span>선택 완료</span>
+                  {selectedSkills.length > 0 && (
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold">
+                      {selectedSkills.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : options.length > 0 && isTimeSelection ? (
+            <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-label font-bold text-neutral-900">
+                  참여하기 편한 시간을 모두 골라보세요 (복수 선택)
+                </span>
+                <span className="text-caption font-semibold text-brand">
+                  {selectedTimes.length}개 선택됨
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {options.map((option) => {
+                  const isSelected = selectedTimes.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleTimeToggle(option)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all',
+                        isSelected
+                          ? 'border border-brand bg-brand text-white font-semibold shadow-sm'
+                          : 'border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-900 hover:bg-neutral-50',
+                      )}
+                    >
+                      {isSelected && (
+                        <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
+                      )}
+                      <span>{option}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-end pt-1">
+                <button
+                  type="button"
+                  disabled={selectedTimes.length === 0}
+                  onClick={handleConfirmTimes}
+                  className="rounded-full bg-neutral-900 px-5 py-2 text-label font-bold text-white transition-opacity hover:bg-neutral-800 disabled:opacity-30 flex items-center gap-1.5"
+                >
+                  <span>선택 완료</span>
+                  {selectedTimes.length > 0 && (
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold">
+                      {selectedTimes.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : options.length > 0 ? (
+            <div className="flex flex-wrap justify-end gap-2">
+              {options.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => handleOptionClick(option)}
+                  className="rounded-full border border-neutral-900 px-3.5 py-1.5 text-[13px] font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <form onSubmit={handleSubmit} className="flex items-center gap-2 pt-1">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder={
+                messages.slice(-1)[0]?.content?.includes('어떤 특별한 재능') ||
+                messages.slice(-1)[0]?.content?.includes('직접 적어주세요')
+                  ? '어떤 재능인지 입력해주세요 (예: 바리스타, 마술, 법률 상담 등)'
+                  : '직접 입력하거나 위 선택지를 골라보세요'
+              }
+              disabled={loading}
+              className="flex-1 rounded-full border border-neutral-300 bg-white px-4 py-2.5 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none disabled:bg-neutral-50"
+            />
+            <button
+              type="submit"
+              disabled={loading || !inputText.trim()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-opacity disabled:opacity-30"
+              aria-label="전송"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      )}
+
+      <div ref={chatEndRef} />
 
       {error && (
         <div className="flex flex-col gap-3 rounded-xl bg-red-50 px-4 py-3 text-label text-red-600">
@@ -302,18 +580,18 @@ export function DiscoverChat({
                 <Check className="h-3.5 w-3.5 stroke-[3] text-white" aria-hidden="true" />
               </span>
               <p className="text-body font-bold text-neutral-900">
-                {answeredCount}가지 질문 완료
+                {nickname}님의 선택
               </p>
             </div>
             <div>
               <p className="text-label text-neutral-500">이 조건으로 찾았어요</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {userAnswers.map((answer, index) => (
+                {(summaryChips.length > 0 ? summaryChips : formatSummaryChips(messages)).map((chip, index) => (
                   <span
-                    key={`${answer.content}-${index}`}
+                    key={`${chip}-${index}`}
                     className="inline-flex items-center rounded-full bg-brand-soft px-3 py-1.5 text-label font-semibold text-brand"
                   >
-                    {answer.content}
+                    {chip}
                   </span>
                 ))}
               </div>
@@ -331,7 +609,7 @@ export function DiscoverChat({
                   비슷한 조건까지 찾아봤어요
                 </p>
                 <p className="mt-0.5 text-label leading-relaxed text-warning-ink">
-                  딱 맞는 액션이 많지 않아, 가장 가까운 것부터 보여드려요.
+                  {relaxation[0] || '원하시는 조건에 딱 맞는 액션이 많지 않아, 조건을 넓혀 가장 가까운 액션으로 추천해 드렸어요.'}
                 </p>
               </div>
             </div>
@@ -345,7 +623,7 @@ export function DiscoverChat({
             <EmptyState
               icon="🔍"
               title="지금은 딱 맞는 액션이 없어요."
-              description="직접 액션을 만들어 보면 어떠세요?"
+              description="직접 새로운 액션을 만들어 보면 어떠세요?"
               action={{ label: '직접 액션 만들기', href: '/action/create' }}
             />
           ) : (
@@ -375,6 +653,89 @@ export function DiscoverChat({
             다시 추천받기
           </Button>
         </section>
+      )}
+
+      {/* 활동 지역 선택 바텀시트 모달 */}
+      {regionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center">
+          <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl">
+            <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+              <div className="flex items-center gap-2">
+                {selectedSido && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSido(null)}
+                    className="text-neutral-500 hover:text-neutral-800"
+                    aria-label="뒤로가기"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+                <h3 className="text-[16px] font-semibold text-neutral-900">
+                  {selectedSido ? selectedSido : '활동할 지역 선택'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setRegionModalOpen(false);
+                  setSelectedSido(null);
+                }}
+                className="text-[13px] font-medium text-neutral-500 hover:text-neutral-800"
+              >
+                닫기
+              </button>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto">
+              {!selectedSido ? (
+                <ul className="divide-y divide-neutral-100">
+                  {SIDO_LIST.map((sido) => (
+                    <li key={sido}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSido(sido)}
+                        className="flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] text-neutral-800 hover:bg-neutral-50"
+                      >
+                        <span>{sido}</span>
+                        <span className="text-neutral-300">›</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="divide-y divide-neutral-100">
+                  {[PROVINCE_WIDE, ...(REGIONS[selectedSido] ?? [])].map((g) => {
+                    const isAll = g === PROVINCE_WIDE;
+                    const regionString = formatRegion(selectedSido, g);
+                    return (
+                      <li key={g}>
+                        <button
+                          type="button"
+                          onClick={() => handleRegionSelect(regionString)}
+                          className={`flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] hover:bg-neutral-50 ${
+                            isAll
+                              ? 'bg-neutral-50 font-semibold text-neutral-900'
+                              : 'text-neutral-800'
+                          }`}
+                        >
+                          <span>{isAll ? `${selectedSido} 전체` : g}</span>
+                          {isAll && (
+                            <span className="rounded-md bg-neutral-900 px-2 py-0.5 text-[11px] font-medium text-white">
+                              전체 선택
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

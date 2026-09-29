@@ -32,7 +32,7 @@ const TrendSchema = z.object({
     .default([]),
 });
 
-const SYSTEM = `당신은 사회공헌 활동 데이터를 읽어주는 분석가입니다.
+const SYSTEM = `당신은 선한 영향력 액션 데이터를 읽어주는 분석가입니다.
 아래 집계 숫자만 보고 눈에 띄는 점 3~5개를 골라 JSON 으로 답하세요.
 
 규칙

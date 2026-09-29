@@ -11,15 +11,15 @@
  * 거리(km)는 계산하지 않습니다. 액션에 좌표가 없고, 지오코딩을 붙이면
  * MVP 범위를 넘어섭니다. 시·군·구 이름이 겹치는지로만 봅니다 (팀 합의 D13).
  */
-import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
-import { isWeekend } from '@/lib/utils/date';
-import type { TimePref, TimeSlot } from '@/lib/constants';
-import type { ActionCardData } from '@/lib/types/view';
+import { matchesRegion, NATIONWIDE } from '../constants/regions.ts';
+import { isWeekend } from './date.ts';
+import type { TimePref, TimeSlot } from '../constants/index.ts';
+import type { ActionCardData } from '../types/view.ts';
 import {
   sameProvince,
   scoreAdaptiveTraits,
   type AdaptiveScoringAnswers,
-} from '@/lib/utils/discover-ranking';
+} from './discover-ranking.ts';
 
 export interface ScoringProfile {
   categories: string[];
@@ -39,12 +39,21 @@ export interface ScoringAnswers {
   participationMode?: string | null;
   /** 사용자가 고른 관심 분야 */
   category?: string | null;
+  categories?: string[];
   /** 'near' | 'city' | 'any' */
   range?: string | null;
   talentPreference?: AdaptiveScoringAnswers['talentPreference'];
   groupSizePreference?: AdaptiveScoringAnswers['groupSizePreference'];
   fieldPreference?: AdaptiveScoringAnswers['fieldPreference'];
   travelRange?: 'exact' | 'province' | 'any' | null;
+  targetGroupPreference?: AdaptiveScoringAnswers['targetGroupPreference'];
+  difficultyPreference?: AdaptiveScoringAnswers['difficultyPreference'];
+  activityTypePreference?: AdaptiveScoringAnswers['activityTypePreference'];
+  selectedSkill?: string | null;
+  selectedSkills?: string[];
+  userKeywords?: string[];
+  userTimePreferences?: string[];
+  selectedRegion?: string | null;
 }
 
 export interface ActionScoringMetadata {
@@ -52,6 +61,11 @@ export interface ActionScoringMetadata {
   skills: string[];
   /** 사람 모집 항목의 최대 인원 합계. 최소 모집이면 min_required 합계 */
   groupSize: number | null;
+  targetGroups?: string[];
+  difficulty?: string | null;
+  activityTypes?: string[];
+  keywords?: string[];
+  categories?: string[];
 }
 
 export interface ScoredAction {
@@ -80,9 +94,14 @@ function guessMode(action: ActionCardData): string {
  */
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
+function getKstHours(iso: string): number {
+  const d = new Date(iso);
+  return new Date(d.getTime() + KST_OFFSET_MS).getUTCHours();
+}
+
 function getTimeSlot(iso: string | null): TimeSlot | null {
   if (!iso) return null;
-  const hour = new Date(new Date(iso).getTime() + KST_OFFSET_MS).getUTCHours();
+  const hour = getKstHours(iso);
   if (hour >= 5 && hour < 12) return '오전';
   if (hour >= 12 && hour < 18) return '오후';
   if (hour >= 18 && hour < 22) return '저녁';
@@ -113,6 +132,55 @@ function matchesTimePreference(
   return { matched: true, label };
 }
 
+function matchesFlexibleTime(
+  action: ActionCardData,
+  timePrefs: TimePref[],
+  userTimeSlots: string[] = [],
+  availableTimes: string[] = [],
+): { matched: boolean; label: string } {
+  if (userTimeSlots.includes('시간 상관없음')) {
+    return { matched: true, label: '시간 상관없음' };
+  }
+
+  if (action.activityStartAt && userTimeSlots.length > 0) {
+    const day = isWeekend(action.activityStartAt) ? '주말' : '평일';
+    const hour = getKstHours(action.activityStartAt);
+    let slotLabel = '';
+    if (hour >= 5 && hour < 12) slotLabel = '오전';
+    else if (hour >= 12 && hour < 18) slotLabel = '오후';
+    else if (hour >= 18 && hour < 22) slotLabel = '저녁';
+    else slotLabel = '밤';
+
+    const currentCombination = `${day} ${slotLabel}`;
+    const hits = userTimeSlots.some((slot) => {
+      if (slot === currentCombination) return true;
+      if (slot === '평일 낮' && day === '평일' && (slotLabel === '오전' || slotLabel === '오후')) return true;
+      if (slot === day) return true;
+      return false;
+    });
+
+    if (hits) {
+      return { matched: true, label: `${currentCombination} 활동` };
+    }
+  }
+
+  const timeMatch = matchesTimePreference(action, timePrefs);
+  if (timeMatch.matched) return timeMatch;
+
+  const weekend = isWeekend(action.activityStartAt);
+  const legacyTimeMatch =
+    timePrefs.length === 0 &&
+    ((weekend && availableTimes.includes('주말')) ||
+      (!weekend && availableTimes.includes('평일')) ||
+      availableTimes.includes('시간이 생길 때마다'));
+
+  if (legacyTimeMatch) {
+    return { matched: true, label: weekend ? '주말 활동' : '평일 활동' };
+  }
+
+  return { matched: false, label: '' };
+}
+
 export function scoreAction(
   action: ActionCardData,
   profile: ScoringProfile,
@@ -126,58 +194,60 @@ export function scoreAction(
   let score = 0;
   const matched: string[] = [];
 
-  // 1) 관심 카테고리 — 프로필과 이번 답변 둘 다 봅니다
-  //
-  // '전체' 는 "가리지 않는다" 는 뜻이므로 어떤 카테고리와도 맞는 것으로 봅니다.
-  // 이 방어가 없으면 '전체' 를 고른 사람은 8개 중 어느 것과도 안 맞아
-  // 관심 분야 25점이 영구히 0점이 됩니다. 에러가 안 나서 알아채기 어렵습니다.
-  const wanted = new Set(
-    [...profile.categories, answers.category].filter(Boolean) as string[],
-  );
-  const wantsAll = wanted.has('전체');
-  // 액션이 카테고리를 여러 개 가질 수 있습니다 (14).
-  // 그중 하나라도 관심 분야면 점수를 줍니다. 대표만 보면
-  // 두 번째 카테고리가 내 관심사인 액션이 추천에서 밀립니다.
-  const actionCats = action.categories?.length
-    ? action.categories
-    : [action.category];
+  // 1) 관심 카테고리 (categories) — 25점
+  // 이번 인터뷰 대화에서 사용자가 명시적으로 카테고리를 고른 경우(복수 지원), 이를 최우선으로 적용하여
+  // 다른 무관한 분야(예: 동물)가 프로필 기본값 때문에 25점 가산점을 받는 왜곡을 원천 차단합니다.
+  const interviewCats = [
+    ...(answers.categories ?? []),
+    answers.category,
+  ].filter((c): c is string => Boolean(c) && c !== '상관없음');
+
+  const wantedList = interviewCats.length > 0 ? interviewCats : profile.categories;
+  const wanted = new Set(wantedList.filter(Boolean));
+  const wantsAll = wanted.has('전체') || answers.category === '상관없음' || answers.categories?.includes('상관없음');
+  const actionCats = Array.from(
+    new Set([
+      ...(action.categories ?? []),
+      action.category,
+      ...(metadata.categories ?? []),
+    ]),
+  ).filter(Boolean);
   const hit = actionCats.find((c) => wanted.has(c));
   if (wantsAll || hit) {
     score += 25;
     matched.push(wantsAll ? '관심 분야' : `관심 분야(${hit})`);
   }
 
-  // 2) 활동 가능 지역
+  // 2) 활동 가능 지역 (region) — 10점
+  const targetRegions = answers.selectedRegion ? [answers.selectedRegion] : profile.regions;
   const travelRange = answers.travelRange ?? answers.range;
-  if (travelRange === 'any' || profile.regions.includes(NATIONWIDE)) {
-    score += 12;
+  if (travelRange === 'any' || targetRegions.includes(NATIONWIDE) || !action.address) {
+    score += 5;
     matched.push('지역 상관없음');
-  } else if (matchesRegion(action.address, profile.regions)) {
-    score += 20;
+  } else if (matchesRegion(action.address, targetRegions)) {
+    score += 10;
     matched.push('가까운 지역');
   } else if (
-    travelRange === 'province' &&
-    sameProvince(action.address, profile.regions)
+    (travelRange === 'province' || travelRange === undefined) &&
+    sameProvince(action.address, targetRegions)
   ) {
-    score += 16;
+    score += 7;
     matched.push('같은 시·도');
   }
 
-  // 3) 참여 가능 요일·시간대 — 새 2단계 설정을 우선 사용합니다.
-  // 아직 time_prefs 가 비어 있는 기존 회원만 available_times 로 보완합니다.
-  const timeMatch = matchesTimePreference(action, profile.timePrefs);
-  const weekend = isWeekend(action.activityStartAt);
-  const legacyTimeMatch =
-    profile.timePrefs.length === 0 &&
-    ((weekend && profile.availableTimes.includes('주말')) ||
-      (!weekend && profile.availableTimes.includes('평일')) ||
-      profile.availableTimes.includes('시간이 생길 때마다'));
-  if (timeMatch.matched || legacyTimeMatch) {
-    score += 15;
-    matched.push(timeMatch.label || (weekend ? '주말 활동' : '평일 활동'));
+  // 3) 참여 가능 시간대 (time) — 10점
+  const timeResult = matchesFlexibleTime(
+    action,
+    profile.timePrefs,
+    answers.userTimePreferences ?? [],
+    profile.availableTimes,
+  );
+  if (timeResult.matched) {
+    score += 10;
+    matched.push(timeResult.label);
   }
 
-  // 4) 참여 방식
+  // 4) 참여 방식 (participation_modes)
   const modes =
     metadata.participationModes.length > 0
       ? metadata.participationModes
@@ -193,16 +263,28 @@ export function scoreAction(
     matched.push('팔로우한 사람의 액션');
   }
 
+  // 6) 7대 메타데이터 어댑티브 트레이트 점수 합산 (재능 15, 성격 15, 난이도 15, 환경 10, 모임규모 10, 분야선호 ±10, 키워드 10)
   const adaptive = scoreAdaptiveTraits({
     profileSkills: profile.skills,
     historyCategories: profile.historyCategories,
     actionCategory: action.category,
     actionSkills: metadata.skills,
     actionGroupSize: metadata.groupSize,
+    actionTargetGroups: metadata.targetGroups ?? [],
+    actionDifficulty: metadata.difficulty ?? null,
+    actionActivityTypes: metadata.activityTypes ?? [],
+    actionKeywords: metadata.keywords ?? [],
+    actionParticipationModes: metadata.participationModes ?? [],
     answers: {
       talentPreference: answers.talentPreference ?? null,
       groupSizePreference: answers.groupSizePreference ?? null,
       fieldPreference: answers.fieldPreference ?? null,
+      targetGroupPreference: answers.targetGroupPreference ?? null,
+      difficultyPreference: answers.difficultyPreference ?? null,
+      activityTypePreference: answers.activityTypePreference ?? null,
+      selectedSkill: answers.selectedSkill ?? null,
+      selectedSkills: answers.selectedSkills ?? (answers.selectedSkill ? [answers.selectedSkill] : []),
+      userKeywords: answers.userKeywords ?? [],
     },
   });
   score += adaptive.score;
@@ -233,10 +315,43 @@ export function rankActions(
     .slice(0, take);
 }
 
-/** AI 가 실패했을 때 쓰는 기본 추천 이유 */
+/** AI 가 실패하거나 기본 문구가 필요할 때 쓰는 다정한 맞춤 추천 이유 */
 export function fallbackReason(scored: ScoredAction): string {
-  if (scored.matched.length === 0) {
-    return `${scored.action.category} 분야의 액션이에요.`;
+  const matched = scored.matched;
+  if (!matched || matched.length === 0) {
+    return `${scored.action.category} 분야에서 보람 있게 참여할 수 있는 액션이에요.`;
   }
-  return `${scored.matched.slice(0, 2).join(' · ')} 조건에 맞아요.`;
+
+  const skill = matched.find((m) => m.includes('재능 활용'));
+  const vibe = matched.find((m) => m.includes('교류·소통형') || m.includes('과업·집중형'));
+  const env = matched.find((m) => m.includes('실내') || m.includes('야외'));
+  const category = matched.find((m) => m.includes('분야'));
+  const region = matched.find((m) => m.includes('지역'));
+
+  const skillName = skill ? skill.replace(' 재능 활용', '') : null;
+  const rawCat = category
+    ? category.replace(/관심 분야\(|\)| 익숙한 분야| 새로운 분야/g, '')
+    : scored.action.category;
+  const catName = rawCat || scored.action.category;
+
+  if (skillName && vibe) {
+    return `선택하신 ${catName} 분야에서 ${skillName} 재능을 살릴 수 있는 ${vibe}이에요.`;
+  }
+  if (skillName) {
+    return `선택하신 ${catName} 분야에서 ${skillName} 재능을 나누며 함께할 수 있는 액션이에요.`;
+  }
+  if (vibe && env) {
+    return `선택하신 ${catName} 분야에서 ${env}로 진행되는 따뜻한 ${vibe}이에요.`;
+  }
+  if (vibe) {
+    return `선택하신 ${catName} 분야의 성격에 부합하는 ${vibe}이에요.`;
+  }
+  if (region && env) {
+    return `${region}에서 ${env}로 ${catName} 분야의 나눔에 참여할 수 있는 액션이에요.`;
+  }
+  if (region) {
+    return `참여하기 좋은 ${region}에서 ${catName} 분야의 뜻깊은 활동을 시작할 수 있는 액션이에요.`;
+  }
+
+  return `${matched.slice(0, 3).join(' · ')} 조건에 잘 어울리는 맞춤 액션이에요.`;
 }

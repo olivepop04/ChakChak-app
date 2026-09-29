@@ -188,9 +188,22 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 갈리면 액션과 연결이 안 되기 때문입니다 (`lib/constants/index.ts` 주석).
 
 **재능은 15개 + 「기타」 = 화면에 16종**입니다 (2026-09-28, 조장님 요청으로 9 → 15).
-목록은 **`SKILLS` 한 곳에서만** 정하고, 가입·프로필 수정·AI 분류·Discover 대화가 전부 그걸 가져다 씁니다.
+목록은 **`SKILLS` 에서 정합니다.** 가입·프로필 수정(`TalentPreferenceEditor`)·AI 분류(`classify`)·Discover 선택지(`getQuestionOptions`)가 그걸 가져다 씁니다.
 **「기타」 를 `SKILLS` 에 넣지 마세요** — 화면이 `[...SKILLS, '기타']` 로 칩을 만들어서 두 번 나옵니다.
 새 재능은 **끝에 붙이세요** — 앞의 이름을 바꾸면 이미 저장된 값과 안 맞습니다. `tests/skills-list.test.ts` 가 지킵니다.
+
+**다만 재능 이름을 손으로 적은 곳이 4곳 남아 있습니다** (2026-09-28 확인). 지금 값은 `SKILLS` 와 같지만,
+테스트는 `SKILLS` 만 보므로 **목록을 바꾸면 이 4곳은 조용히 어긋납니다.** 바꿀 때 같이 고치세요.
+
+| 어디 | 무엇 |
+|---|---|
+| `app/api/ai/discover/route.ts` 의 `CHAT_SYSTEM` | 16종을 프롬프트 글로 적었습니다 (화면 선택지는 `SKILLS` 에서 나옵니다) |
+| `components/action/DiscoverChat.tsx` | 선택지에 `'사진 촬영'`·`'요리'` 가 있는지로 재능 질문인지 판정합니다 |
+| `scripts/reclassify_all_actions.mjs` · `batch_reclassify_active.mjs` | 자체 목록과 허용 목록 프롬프트를 따로 들고 있습니다 |
+
+**Discover 는 위 `null` / `[]` 구분을 쓰지 않습니다** (2026-09-09 `452a6d2` 부터).
+`profile.skills ?? []` 로 받아 둘 다 「등록된 재능 없음」 으로 봅니다.
+9/28 개편 뒤로 재능 질문은 난이도에서 「전문지식/자격/재능 활용」 을 고른 대화에서만 나옵니다.
 
 **12. 취소와 조기 종료는 다른 일입니다** — 상태도 카운팅도 다릅니다.
 
@@ -347,8 +360,12 @@ DRAFT · CANCELLED · 그 밖을 각각 나누고, DRAFT 는 「아직 공개 �
 최지수님이 찾았습니다. **서버 컴포넌트에서만 나고 클라이언트 컴포넌트는 브라우저 시간으로
 그려서 정상**이라, 같은 날짜가 화면마다 다르게 보였습니다.
 `lib/utils/scoring.ts` 의 시간대(오전·오후·저녁·밤) 판정도 2026-09-28에 KST 로 고쳐졌습니다 (지수님 PR1).
-배포에서 「주말 오전」 만 되는 사람에게 **시간 점수 15점이 통째로 안 붙고** 있었습니다.
+배포에서 「주말 오전」 만 되는 사람에게 **시간 점수(당시 15점)가 통째로 안 붙고** 있었습니다.
 `tests/date-kst.test.ts` 가 `scoring.ts` 소스에도 `getHours()` 류가 다시 들어오는지 검사합니다.
+
+**하나 남았습니다** — `lib/queries/stats.ts` 의 주 라벨(`weekLabel`)이 `getDay()`·`getDate()`·`getMonth()` 를
+씁니다. 트렌드 화면과 트렌드 API(서버)에서 불려서 배포에서 주 경계가 어긋납니다. 조장 구역이라 성은님께 요청할 일입니다.
+테스트는 아직 `date.ts` 와 `scoring.ts` 만 검사합니다.
 
 > **새 날짜 함수를 넣을 때도 `getHours()` 류를 직접 쓰지 마세요.** `date.ts` 안의
 > `toKst()` 로 옮긴 뒤 `getUTC*` 로 읽습니다. 테스트가 이 규칙을 소스에서 검사합니다.
@@ -374,6 +391,14 @@ npm run seed
 
 계정은 **25개**입니다 — `seed1@good.seed` ~ `seed24@good.seed` 와 `demo@good.seed`. 비밀번호는 모두 `good1234!`.
 2026-09-21에 8명에서 24명으로 늘렸습니다 — 연탄 나눔(15명)처럼 인원이 많은 액션과 성별 제한 항목을 태우려면 8명으로는 모자랐습니다. `demo` 는 관심 카테고리·지역·시간대가 전부 채워져 있어 Discover 추천과 호스트·크루 시나리오를 한 계정으로 보여줄 때 씁니다.
+2026-09-28부터 `demo` 에 **재능(`교육·멘토링`)도 들어 있습니다.** 24명도 관심 분야가 사람마다 다르게 바뀌고, 재능이 새로 붙었습니다(성은님).
+
+**AI 분류(`action_ai_metadata`)는 시드가 `scripts/data/action_ai_metadata_all.json` 에서 제목으로 찾아 넣습니다.**
+그 JSON 에 없는 제목(새로 끝에 붙인 액션)은 기본값(`실내 활동` · `누구나 참여가능`)으로 들어가서
+Discover 의 환경·난이도 점수가 틀어집니다. 다시 분류해야 하는데, **지금 `scripts/reclassify_all_actions.mjs` 는 돌리지 마세요.**
+`classify-v2` 가 **아닌** 것만 골라서, 시드 기본값(`classify-v2`)으로 들어간 새 액션은 건너뛰고
+앱에서 분류한 `classify-v3` 액션을 전부 v2 로 덮어씁니다. 서비스 롤 키로 공유 DB 에 바로 쓰고,
+끝나면 JSON 도 DB 전체 내용으로 새로 씁니다. 조장 구역이라 성은님께 요청하세요.
 
 액션 101개에는 화면을 하나씩 확인할 수 있는 상태가 골고루 들어 있습니다.
 
@@ -462,7 +487,18 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 
 ## AI 프롬프트를 고칠 때
 
-`lib/openai.ts` 의 `promptVersion` 을 **반드시 올리세요** (`trends-v1` → `trends-v2`).
+**그 라우트 파일 맨 위의 버전 상수를 반드시 올리세요** (`trends-v1` → `trends-v2`).
+`lib/openai.ts` 는 버전을 인자로 받아 `ai_runs` 에 적기만 합니다 — 거기를 고치는 게 아닙니다.
+
+| 라우트 | 상수 | 지금 값 (2026-09-28) |
+|---|---|---|
+| `app/api/ai/review/` | `PROMPT_VERSION` | `review-v7` |
+| `app/api/ai/classify/` | `PROMPT_VERSION` | `classify-v3` |
+| `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v2` |
+| `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-v3-zero-assumption` · `discover-recommend-v4-anti-hallucination` |
+
+**번호는 올리기만 하세요.** 이름을 바꾸면서 숫자가 내려가면(`v7` → `v3`) 발표 자료에서 어느 쪽이 나중인지 헷갈립니다.
+`scripts/` 의 재분류 스크립트는 `ai_runs` 에 기록을 남기지 않습니다.
 
 `ai_runs` 테이블에 버전별 성공/실패가 쌓입니다. 발표의 "검증·개선" 항목은 여기서 뽑습니다 — 처음 프롬프트가 틀린 답을 낸 사례와, 고친 뒤 정확해진 사례를 나란히 보여줄 수 있습니다. **초기 버전 로그를 지우지 마세요.**
 
@@ -624,7 +660,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 | 담당 | 구역 |
 |---|---|
 | 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · `README.md` · `CLAUDE.md`) |
-| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · `lib/queries/stats.ts` |
+| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` |
 | 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · **`app/not-found.tsx`** · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` · **`postcss.config.mjs`** |
 | 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · `app/discover/` · **`components/my/`** · `app/api/ai/discover/` · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` · `lib/utils/scoring.ts` · **`lib/utils/discover-ranking.ts`** |
 | 개발 B | `app/action/create/` · `app/action/[id]/` 하위 (join · welcome · crew · chat · **edit** · result · voice) |
@@ -709,15 +745,15 @@ F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `
 | 화면 제목 한글로 통일 | 4명 · 7파일 |
 | 버튼 높이 고정 해제 (글자 200%) | 5명 · 21파일 |
 
-번지는 이유는 **공통 컴포넌트를 거치지 않는 것**입니다. `Button.tsx` 를 쓰는 파일은 **16개**인데
-`<button>` 을 직접 쓴 파일이 **26개**입니다 (2026-09-22 실측 — 세는 기준은
+번지는 이유는 **공통 컴포넌트를 거치지 않는 것**입니다. `Button.tsx` 를 쓰는 파일은 **15개**인데
+`<button>` 을 직접 쓴 파일이 **27개**입니다 (2026-09-28 실측 · 9/22 에는 16 · 26 — 세는 기준은
 `grep -rl "<button" app/ components/` 에서 `Button.tsx` 자신을 뺀 것).
 새 화면을 만들 때는 **`components/ui/` 의 것을 먼저 찾아 쓰세요.** 없으면 만들자고 말해주세요 —
 그 한 번이 다음 통일 작업의 21파일을 1파일로 줄입니다.
 
 **입력칸 공통 컴포넌트가 생겼습니다** — `components/ui/Input.tsx` (2026-09-22, 소정님).
 전에는 이것이 없어서 같은 `min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px]`
-이 16개 파일에 복사돼 있었습니다. 지금 5개 파일이 `Input` 을 쓰고, 손으로 적은 곳이 12개 남았습니다.
+이 16개 파일에 복사돼 있었습니다. 지금 4개 파일이 `Input` 을 씁니다(2026-09-28 — 9/25 에 `SharePanel` 이 빠짐). 손으로 적은 곳은 9/22 기준 12개였습니다.
 **새로 만드는 입력칸은 손으로 짜지 말고 `Input` 을 쓰세요.** 남은 12개는 손대는 화면이
 생길 때 하나씩 옮기면 됩니다 — 그것만으로 다음 타이포·높이 통일 작업이 1파일이 됩니다.
 같은 PR 로 `Chip` 에 `size="sm"` 이, `Button` 에 `href`(링크로 렌더) 가 들어왔고
@@ -742,7 +778,7 @@ F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `
 
 | 언제 | 왜 |
 |---|---|
-| **`components/ui/` · `components/layout/` · `lib/` 을 건드릴 때** — 화면 하나짜리 작업이든 아니든 | 이 세 곳은 쓰는 쪽이 전부 남의 화면입니다. `Header.tsx` 하나가 23개 화면에 걸칩니다 |
+| **`components/ui/` · `components/layout/` · `lib/` 을 건드릴 때** — 화면 하나짜리 작업이든 아니든 | 이 세 곳은 쓰는 쪽이 전부 남의 화면입니다. `Header.tsx` 하나가 22개 화면에 걸칩니다 |
 | **앱 전체에 같은 패턴을 한 번에 쓸어담는 작업** | 위 표(제목 통일 · 버튼 높이)의 그 종류입니다. 나눠 고치면 패턴이 갈립니다 |
 
 실제 사례 — `a39a673`(Foundations 반영)은 **16파일**이었고 그중 **8개가 남의 구역**이었습니다
@@ -752,7 +788,7 @@ F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `
 **위 첫 번째 조건에는 해당**합니다.
 
 **`components/ui/` · `components/layout/` · `lib/` 은 공유 구역입니다.** 고칠 때는 먼저 말해주세요.
-`components/layout/Header.tsx` 는 **23개 화면이 씁니다** — 다섯 담당 전원의 구역에 걸칩니다.
+`components/layout/Header.tsx` 는 **22개 화면이 씁니다** (2026-09-28 — 참여 완료 화면이 빠짐) — 다섯 담당 전원의 구역에 걸칩니다.
 파일은 디자이너 것이지만, 여기를 고치면 남의 화면 상단 바가 전부 바뀝니다.
 (형제 파일 `BottomNav.tsx` 는 `app/layout.tsx` 한 곳에서만 쓰므로 해당 없습니다.)
 예외 — 위 표에 적힌 `lib/` 파일 4개(`stats.ts` · `regions.ts` · `scoring.ts` · `discover-ranking.ts`)는 각 담당이 바로 고쳐도 됩니다.
