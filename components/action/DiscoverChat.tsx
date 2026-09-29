@@ -65,6 +65,40 @@ interface DiscoverResponse {
   isLastQuestion?: boolean;
 }
 
+const DISCOVER_SESSION_KEY = 'chakchak_discover_session_v1';
+/** 10분 만료 — 상세페이지 둘러보고 와도 3개 추천을 보존하며, 10분 후 자동 리셋 (사용자 지정) */
+const SESSION_TTL_MS = 10 * 60 * 1000;
+
+interface DiscoverSessionData {
+  messages: ChatMessage[];
+  options: string[];
+  items: Recommendation[] | null;
+  summaryChips: string[];
+  relaxation: string[];
+  isServerLastQuestion?: boolean;
+  timestamp: number;
+}
+
+function saveSessionToStorage(data: {
+  messages: ChatMessage[];
+  options: string[];
+  items: Recommendation[] | null;
+  summaryChips: string[];
+  relaxation: string[];
+  isServerLastQuestion?: boolean;
+}) {
+  if (typeof window === 'undefined') return;
+  try {
+    const payload: DiscoverSessionData = {
+      ...data,
+      timestamp: Date.now(),
+    };
+    sessionStorage.setItem(DISCOVER_SESSION_KEY, JSON.stringify(payload));
+  } catch {
+    // sessionStorage 용량 초과 또는 접근 불가 무시
+  }
+}
+
 export function DiscoverChat({
   nickname,
   authenticated = true,
@@ -96,6 +130,32 @@ export function DiscoverChat({
   useEffect(() => {
     if (!authenticated || started.current) return;
     started.current = true;
+
+    // 세션 스토리지에서 10분 이내 직전 대화/추천 복원 시도
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem(DISCOVER_SESSION_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as DiscoverSessionData;
+          const isFresh = Date.now() - (parsed.timestamp ?? 0) < SESSION_TTL_MS;
+          if (isFresh && Array.isArray(parsed.messages) && parsed.messages.length > 0) {
+            setMessages(parsed.messages);
+            setOptions(parsed.options ?? []);
+            setItems(parsed.items ?? null);
+            setSummaryChips(parsed.summaryChips ?? []);
+            setRelaxation(parsed.relaxation ?? []);
+            setIsServerLastQuestion(Boolean(parsed.isServerLastQuestion));
+            setLoading(false);
+            return;
+          } else {
+            sessionStorage.removeItem(DISCOVER_SESSION_KEY);
+          }
+        }
+      } catch {
+        sessionStorage.removeItem(DISCOVER_SESSION_KEY);
+      }
+    }
+
     void requestNext([]);
   }, [authenticated]);
 
@@ -124,14 +184,29 @@ export function DiscoverChat({
             { role: 'assistant' as const, content: data.reply },
           ]
         : nextMessages;
+      const nextItems = data.done ? (data.items ?? []) : null;
+      const nextChips = data.summaryChips ?? [];
+      const nextOptions = data.options ?? [];
+      const nextRelaxation = data.relaxation ?? [];
+      const nextIsLast = Boolean(data.isLastQuestion);
+
       setMessages(withReply);
-      setOptions(data.options ?? []);
-      setRelaxation(data.relaxation ?? []);
-      setIsServerLastQuestion(Boolean(data.isLastQuestion));
+      setOptions(nextOptions);
+      setRelaxation(nextRelaxation);
+      setIsServerLastQuestion(nextIsLast);
       if (data.done) {
-        setItems(data.items ?? []);
-        if (data.summaryChips) setSummaryChips(data.summaryChips);
+        setItems(nextItems);
+        if (data.summaryChips) setSummaryChips(nextChips);
       }
+
+      saveSessionToStorage({
+        messages: withReply,
+        options: nextOptions,
+        items: nextItems,
+        summaryChips: nextChips,
+        relaxation: nextRelaxation,
+        isServerLastQuestion: nextIsLast,
+      });
     } catch {
       setError('추천을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
@@ -233,6 +308,13 @@ export function DiscoverChat({
   }
 
   function restart() {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem(DISCOVER_SESSION_KEY);
+      } catch {
+        // sessionStorage 비활성화 환경 무시
+      }
+    }
     setMessages([]);
     setOptions([]);
     setItems(null);
