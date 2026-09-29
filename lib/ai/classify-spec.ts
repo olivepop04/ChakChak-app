@@ -16,7 +16,7 @@
 import { z } from 'zod';
 import { CATEGORIES, SKILLS } from '../constants/index.ts';
 
-export const CLASSIFY_PROMPT_VERSION = 'classify-v3';
+export const CLASSIFY_PROMPT_VERSION = 'classify-v4';
 
 /** 스크립트용. 앱은 lib/openai.ts 의 AI_MODEL · TEMPERATURE.CLASSIFY 를 씁니다 — 테스트가 같은지 봅니다 */
 export const CLASSIFY_MODEL = 'gpt-4o-mini';
@@ -49,6 +49,28 @@ export const ALLOWED_DIFFICULTIES = [
   '전문지식/자격/재능 활용',
 ] as const;
 
+/**
+ * Discover 대화 인터뷰 선택지 칩 표준 목록 — 단일 소스 원칙 (2026-09-29)
+ * app/api/ai/discover/interview.ts 와 분류 색인이 같은 기준을 공유합니다.
+ */
+export const DISCOVER_ACTIVITY_TYPE_OPTIONS = [
+  '실내 활동',
+  '실외 활동',
+  '상관없음',
+] as const;
+export const DISCOVER_TARGET_GROUP_OPTIONS = [
+  ...ALLOWED_TARGET_GROUPS,
+  '상관없음',
+] as const;
+export const DISCOVER_DIFFICULTY_OPTIONS = [
+  ...ALLOWED_DIFFICULTIES,
+  '상관없음',
+] as const;
+export const DISCOVER_PARTICIPATION_MODE_OPTIONS = [
+  ...ALLOWED_PARTICIPATION_MODES,
+  '상관없음',
+] as const;
+
 export const CLASSIFY_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 전문 분석 AI 에이전트입니다.
 호스트가 작성한 액션의 제목, 소개글, 카테고리, 장소, 모집 항목들을 분석하여 Discover 맞춤 추천에 사용할 7가지 핵심 색인 메타데이터를 추출해 JSON 형식으로만 답하세요.
 
@@ -67,8 +89,9 @@ export const CLASSIFY_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액�
    - (※ DB 컬럼명은 target_groups이나, 실제 분류 기준은 모임의 진행 방식과 활동 성격입니다)
    - 허용 목록: 교류·교육·소통형, 육체·과업·집중형
    - 사람 간의 대화, 교육, 가르침, 친목, 정서적 유대가 중심이면 '교류·교육·소통형'을 선택하세요 (예: 말벗, 멘토링, 아이돌봄, 학습/디지털 교육 등).
+     (※ 주의: 가정 방문, 이동, 차 마시기, 안부 묻기, 혈압 체크 등 일상적 돌봄과 대화가 본질인 활동은 육체 노동이 아니므로 절대 '육체·과업·집중형'으로 잘못 분류하지 마세요.)
    - 작업, 땀 흘리기, 육체적 활동, 구체적인 결과물 완성이 중심이면 '육체·과업·집중형'을 선택하세요 (예: 플로깅, 연탄배달, 도시락포장, 시설청소, 이사지원 등).
-   - 둘의 성격이 복합적이라면 복수로 선택하세요.
+   - ★ [복합 성격 의무 다중 태깅]: 대화/정서적 교류와 실질적 육체 작업이 30% 이상 공존하거나(예: 어르신과 산책하며 말벗, 멘토와 텃밭 가꾸기 등), 모집 항목에 소통형(사무보조/안내)과 육체형(청소/설치) 역할이 분리·공존하는 경우, 어느 한쪽만 선택하여 참여 기회를 차단하지 말고 반드시 ['교류·교육·소통형', '육체·과업·집중형'] 2가지 모두를 배열에 복수로 태깅하세요.
 
 4. participation_modes (모임 인원 규모):
    - 허용 목록: 10명 이내 소그룹, 10~20명 중그룹, 20명 이상 대그룹
@@ -78,6 +101,7 @@ export const CLASSIFY_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액�
    - 허용 목록: ${ALLOWED_SKILLS.join(', ')}
    - "잠재적으로 아무 도움이나 될 수 있는 재능"까지 무분별하게 넣지 마세요.
    - 모집 항목에 명시된 필수 역할/재능이거나, 본문 소개글에 명확한 근거가 있어 활동 수행에 실질적으로 도움이 되는 경우만 정밀하게 선택하세요.
+   - 여러 모집 항목(예: 조리담당, 운전담당, 청소담당 등)이 있는 경우 각 항목에서 요구되는 재능을 빠짐없이 태깅하세요.
    - 본문에 뚜렷한 근거가 없거나 누구나 할 수 있는 일반 활동인 경우 빈 배열 []로 두세요.
 
 6. keywords (핵심 검색 키워드):
@@ -89,6 +113,7 @@ export const CLASSIFY_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액�
    - 사전 경험이나 체력 부담 없이 첫 참여자도 바로 할 수 있으면 '누구나 참여가능'.
    - 무거운 짐 나르기, 장시간 걷기 등 신체적 체력 소모가 있으면 '기초 체력 필요'.
    - 자격증, 전문 지식, 숙련된 기술이 필수적이면 '전문지식/자격/재능 활용' 중 단 하나를 선택하세요.
+   - ★ [복합 모집 항목 최저 허들 기준]: 전문 자격/기술을 요하는 파트(예: 조리사, 훈련사)와 일반 참여 파트(예: 청소, 안내 보조)가 공존하는 액션의 경우, 대표 난이도는 진입 장벽이 가장 낮은 일반 파트 기준(최저 허들: '누구나 참여가능' 또는 '기초 체력 필요')으로 부여하세요. 소수 전문 파트 때문에 액션 전체를 '전문지식/자격/재능 활용'으로 분류하면 일반 초보 참여자의 진입이 차단됩니다. (전문 역할은 5번 skills에 오픈하여 재능 보유자 매칭에 활용)
 
 [출력 형식]
 반드시 아래 JSON 스키마를 엄격히 준수하세요:

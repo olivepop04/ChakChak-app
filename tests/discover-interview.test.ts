@@ -104,13 +104,11 @@ test('활동 환경 및 성격, 난이도 질문의 선택지에 온라인/비�
   assert.deepEqual(getQuestionOptions('activity_type'), [
     '실내 활동',
     '실외 활동',
-    '실내외 병행',
     '상관없음',
   ]);
   assert.deepEqual(getQuestionOptions('activity_types'), [
     '실내 활동',
     '실외 활동',
-    '실내외 병행',
     '상관없음',
   ]);
 

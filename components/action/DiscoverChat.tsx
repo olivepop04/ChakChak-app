@@ -21,6 +21,9 @@ import {
 import { ActionCard } from '@/components/ui/ActionCard';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+// 민호님이 구현한 공용 Chip 컴포넌트 재사용 (components/ui/Chip.tsx 원본 훼손 없이 import)
+import { Chip } from '@/components/ui/Chip';
+import { SKILLS } from '@/lib/constants';
 import { cn } from '@/lib/utils/cn';
 import type { ActionCardData } from '@/lib/types/view';
 import {
@@ -63,6 +66,40 @@ interface DiscoverResponse {
   isLastQuestion?: boolean;
 }
 
+const DISCOVER_SESSION_KEY = 'chakchak_discover_session_v1';
+/** 10분 만료 — 상세페이지 둘러보고 와도 3개 추천을 보존하며, 10분 후 자동 리셋 (사용자 지정) */
+const SESSION_TTL_MS = 10 * 60 * 1000;
+
+interface DiscoverSessionData {
+  messages: ChatMessage[];
+  options: string[];
+  items: Recommendation[] | null;
+  summaryChips: string[];
+  relaxation: string[];
+  isServerLastQuestion?: boolean;
+  timestamp: number;
+}
+
+function saveSessionToStorage(data: {
+  messages: ChatMessage[];
+  options: string[];
+  items: Recommendation[] | null;
+  summaryChips: string[];
+  relaxation: string[];
+  isServerLastQuestion?: boolean;
+}) {
+  if (typeof window === 'undefined') return;
+  try {
+    const payload: DiscoverSessionData = {
+      ...data,
+      timestamp: Date.now(),
+    };
+    sessionStorage.setItem(DISCOVER_SESSION_KEY, JSON.stringify(payload));
+  } catch {
+    // sessionStorage 용량 초과 또는 접근 불가 무시
+  }
+}
+
 export function DiscoverChat({
   nickname,
   authenticated = true,
@@ -94,6 +131,32 @@ export function DiscoverChat({
   useEffect(() => {
     if (!authenticated || started.current) return;
     started.current = true;
+
+    // 세션 스토리지에서 10분 이내 직전 대화/추천 복원 시도
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem(DISCOVER_SESSION_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as DiscoverSessionData;
+          const isFresh = Date.now() - (parsed.timestamp ?? 0) < SESSION_TTL_MS;
+          if (isFresh && Array.isArray(parsed.messages) && parsed.messages.length > 0) {
+            setMessages(parsed.messages);
+            setOptions(parsed.options ?? []);
+            setItems(parsed.items ?? null);
+            setSummaryChips(parsed.summaryChips ?? []);
+            setRelaxation(parsed.relaxation ?? []);
+            setIsServerLastQuestion(Boolean(parsed.isServerLastQuestion));
+            setLoading(false);
+            return;
+          } else {
+            sessionStorage.removeItem(DISCOVER_SESSION_KEY);
+          }
+        }
+      } catch {
+        sessionStorage.removeItem(DISCOVER_SESSION_KEY);
+      }
+    }
+
     void requestNext([]);
   }, [authenticated]);
 
@@ -122,14 +185,29 @@ export function DiscoverChat({
             { role: 'assistant' as const, content: data.reply },
           ]
         : nextMessages;
+      const nextItems = data.done ? (data.items ?? []) : null;
+      const nextChips = data.summaryChips ?? [];
+      const nextOptions = data.options ?? [];
+      const nextRelaxation = data.relaxation ?? [];
+      const nextIsLast = Boolean(data.isLastQuestion);
+
       setMessages(withReply);
-      setOptions(data.options ?? []);
-      setRelaxation(data.relaxation ?? []);
-      setIsServerLastQuestion(Boolean(data.isLastQuestion));
+      setOptions(nextOptions);
+      setRelaxation(nextRelaxation);
+      setIsServerLastQuestion(nextIsLast);
       if (data.done) {
-        setItems(data.items ?? []);
-        if (data.summaryChips) setSummaryChips(data.summaryChips);
+        setItems(nextItems);
+        if (data.summaryChips) setSummaryChips(nextChips);
       }
+
+      saveSessionToStorage({
+        messages: withReply,
+        options: nextOptions,
+        items: nextItems,
+        summaryChips: nextChips,
+        relaxation: nextRelaxation,
+        isServerLastQuestion: nextIsLast,
+      });
     } catch {
       setError('추천을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
@@ -167,9 +245,9 @@ export function DiscoverChat({
   }
 
   const isSkillSelection =
-    options.length >= 15 &&
-    options.includes('사진 촬영') &&
-    options.includes('요리');
+    options.length >= 10 &&
+    options.some((opt) => (SKILLS as readonly string[]).includes(opt)) &&
+    options.includes('기타');
 
   const isTimeSelection =
     options.length >= 4 &&
@@ -231,6 +309,13 @@ export function DiscoverChat({
   }
 
   function restart() {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem(DISCOVER_SESSION_KEY);
+      } catch {
+        // sessionStorage 비활성화 환경 무시
+      }
+    }
     setMessages([]);
     setOptions([]);
     setItems(null);
@@ -413,22 +498,18 @@ export function DiscoverChat({
                 {options.map((option) => {
                   const isSelected = selectedSkills.includes(option);
                   return (
-                    <button
+                    <Chip
                       key={option}
-                      type="button"
+                      selected={isSelected}
+                      tone="accent"
                       onClick={() => handleSkillToggle(option)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all',
-                        isSelected
-                          ? 'border border-brand bg-brand text-white font-semibold shadow-sm'
-                          : 'border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-900 hover:bg-neutral-50',
-                      )}
+                      className="gap-1.5 py-1.5 text-[13px]"
                     >
                       {isSelected && (
                         <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
                       )}
                       <span>{option}</span>
-                    </button>
+                    </Chip>
                   );
                 })}
               </div>
@@ -464,22 +545,18 @@ export function DiscoverChat({
                 {options.map((option) => {
                   const isSelected = selectedTimes.includes(option);
                   return (
-                    <button
+                    <Chip
                       key={option}
-                      type="button"
+                      selected={isSelected}
+                      tone="accent"
                       onClick={() => handleTimeToggle(option)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all',
-                        isSelected
-                          ? 'border border-brand bg-brand text-white font-semibold shadow-sm'
-                          : 'border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-900 hover:bg-neutral-50',
-                      )}
+                      className="gap-1.5 py-1.5 text-[13px]"
                     >
                       {isSelected && (
                         <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
                       )}
                       <span>{option}</span>
-                    </button>
+                    </Chip>
                   );
                 })}
               </div>
@@ -503,14 +580,13 @@ export function DiscoverChat({
           ) : options.length > 0 ? (
             <div className="flex flex-wrap justify-end gap-2">
               {options.map((option) => (
-                <button
+                <Chip
                   key={option}
-                  type="button"
                   onClick={() => handleOptionClick(option)}
-                  className="rounded-full border border-neutral-900 px-3.5 py-1.5 text-[13px] font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
+                  className="border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white py-1.5 text-[13px]"
                 >
                   {option}
-                </button>
+                </Chip>
               ))}
             </div>
           ) : null}

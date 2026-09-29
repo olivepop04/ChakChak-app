@@ -54,7 +54,7 @@ import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 import { formatDate, formatTime, isWeekend } from '@/lib/utils/date';
 
 const CHAT_PROMPT_VERSION = 'discover-chat-v8-chip-zero-assumption';
-const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v8-100pt-scoring';
+const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v10-truth-grounding';
 const MAX_USER_TURNS = 15;
 const PARTICIPATION_MODES = [
   '시간을 내서',
@@ -169,7 +169,7 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
 
 4. 활동 환경 (activity_types):
    - 멘트: 직전에 사용자가 재능을 선택한 경우 "알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨"를 앞머리에 붙이고, "어떤 환경에서 활동하고 싶으세요?"라고 질문하세요. (재능 중 하나만 임의로 골라 대표로 지정하지 마세요)
-   - options: ["실내 활동", "실외 활동", "실내외 병행", "상관없음"]
+   - options: ["실내 활동", "실외 활동", "상관없음"]
 
 5. 모임 규모 (participation_modes) 및 추천 전환:
    - 멘트: "함께하는 크루의 규모는 어느 정도가 편하세요?"
@@ -872,13 +872,13 @@ export async function POST(request: Request) {
       .in('action_id', candidateIds),
     supabase
       .from('action_items')
-      .select('action_id, type, min_required, max_allowed, gender_requirement')
+      .select('action_id, type, name, min_required, max_allowed, gender_requirement')
       .in('action_id', candidateIds),
   ]);
 
   const itemsByAction = new Map<
     string,
-    Array<{ type: string; min_required: number; max_allowed: number | null; gender_requirement?: string }>
+    Array<{ type: string; name?: string; min_required: number; max_allowed: number | null; gender_requirement?: string }>
   >();
   for (const item of actionItems ?? []) {
     const items = itemsByAction.get(item.action_id) ?? [];
@@ -1016,6 +1016,11 @@ export async function POST(request: Request) {
 
   const uniqueRelaxation = Array.from(new Set(relaxation));
 
+  const userSelectedSkills =
+    scoringAnswers.selectedSkills && scoringAnswers.selectedSkills.length > 0
+      ? scoringAnswers.selectedSkills.filter((s) => s !== '기타')
+      : (scoringAnswers.selectedSkill && scoringAnswers.selectedSkill !== '기타' ? [scoringAnswers.selectedSkill] : []);
+
   // 2) 선정된 Top 3 후보에 대해 AI가 개인화 맞춤 추천 이유(reason) 서술
   const candidateSummaries = codeRanked.map((item) => {
     const action = item.action;
@@ -1023,6 +1028,24 @@ export async function POST(request: Request) {
     const scheduleStr = action.activityStartAt
       ? `${formatDate(action.activityStartAt)} ${formatTime(action.activityStartAt)} (${isWeekend(action.activityStartAt) ? '주말' : '평일'})`
       : '일정 미정';
+    const rawItems = itemsByAction.get(action.id) ?? [];
+    const recruitmentItems = rawItems
+      .filter((it) => it.name && it.name.trim().length > 0)
+      .map((it) => (it.type === 'PERSON' ? `${it.name}(모집)` : `${it.name}(물품)`));
+
+    const actionSkills = meta?.skills ?? [];
+    const matchedUserSkills = actionSkills.filter((s) => userSelectedSkills.includes(s));
+    const isSocialAction = (meta?.target_groups ?? []).some((g) => /교류|교육|소통/.test(g));
+    const isTaskAction = (meta?.target_groups ?? []).some((g) => /과업|육체|집중/.test(g));
+    const actualVibeDescription =
+      isSocialAction && isTaskAction
+        ? '교류·소통과 육체적 작업이 함께 있는 복합 활동'
+        : isSocialAction
+          ? '사람과의 대화, 상담, 정서적 유대가 중심인 교류·소통형 활동'
+          : isTaskAction
+            ? '작업, 땀 흘리기, 결과물 완성이 중심인 육체·과업·집중형 활동'
+            : '일반 활동';
+
     return {
       actionId: action.id,
       title: action.title,
@@ -1030,10 +1053,13 @@ export async function POST(request: Request) {
       address: action.address,
       activityTypes: meta?.activity_types ?? [],
       targetGroups: meta?.target_groups ?? [],
+      actualVibeDescription,
+      isSocialAction,
+      isTaskAction,
       participationModes: meta?.participation_modes ?? [],
-      skills: meta?.skills ?? [],
-      keywords: meta?.keywords ?? [],
-      difficulty: meta?.difficulty ?? null,
+      matchedUserSkills,
+      actionRequiresSkills: actionSkills,
+      recruitmentItems,
       actualSchedule: scheduleStr,
       matchedReasons: item.matched,
     };
@@ -1050,33 +1076,51 @@ export async function POST(request: Request) {
 영어 'Action'이나 '봉사/봉사활동/수혜자' 단어를 절대 쓰지 말고 한글 '액션'으로 서술하세요.
 
 [필수 작성 규칙 및 사실 검증 원칙 - 절대 위반 금지]
-1. [대화 맥락 및 매칭 이유 구체적 서술]:
-   - 사용자가 이번 대화에서 선택한 관심 분야, 재능(skills: 예: 요리, 디자인, 교육·멘토링 등), 활동 성격(교류·소통형/과업·집중형), 활동 환경(실내/야외)과 이 액션의 특성을 직접 연결하여 설명하세요.
-   - 예: "선택하신 교육 분야에서 교육·멘토링 재능을 발휘하며 어르신들과 따뜻하게 소통할 수 있는 액션이에요."
-2. [조건 완화(대체 추천) 솔직한 안내 및 '상관없음' 규칙]:
-   - 사용자가 특정 조건을 명확히 요구했으나(예: 반드시 야외 활동 희망) 부득이하게 다른 환경(실내)을 추천할 때만 조건 완화를 솔직하게 설명하세요.
-   ★ [매우 중요] 사용자가 활동 환경(실내/실외)이나 모임 규모 등을 '상관없음'으로 선택한 경우에는, 절대로 '실내에서 진행되지만', '야외 활동이지만', '비록 ~이지만' 같은 변명이나 아쉬움의 뉘앙스를 쓰지 마세요! 사용자는 상관없다고 하였으므로 아무런 제약 없이 이 액션의 장점과 선택 분야/재능 위주로 긍정적이고 자연스럽게 설명하세요.
-3. [일정 및 시간대 날조(할루시네이션) 엄격 금지]:
-   - 액션의 실제 일정(actualSchedule: 날짜, 요일, 시간대)과 다른 요일이나 시간대를 절대 지어내지 마세요.
-   - 액션의 실제 일정이 평일인 경우 "주말에 참여할 수 있어...", "주말 오전이나 오후에..."처럼 거짓된 일정을 지어내어 설명하면 절대 안 됩니다.
-   - 일정이 정해져 있다면 actualSchedule에 맞는 요일(예: 10월 5일 월요일)은 정확하게 안내해도 좋습니다. 단, 주말 액션을 평일로, 평일 액션을 주말로 속이지 마세요.
-4. [표현 규칙]:
-   - '익숙한 환경'이라는 부정확한 표현은 절대 사용하지 마세요. (과거 이력을 언급할 때는 '익숙한 분야'라고 표현하세요.)
+
+1. ★★★ [재능 날조 및 사용자 미보유 재능 언급 절대 금지]:
+   - 오직 이 액션의 'matchedUserSkills'에 재능명이 들어있을 때만 "사용자님의 [재능명] 재능을 살려..."라고 작성할 수 있습니다.
+   - ★ [매우 중요] 'matchedUserSkills'가 빈 배열([])인 액션의 경우:
+     사용자가 선택한 재능과 이 액션의 요구 재능이 일치하지 않는 상태입니다. 액션 정보(actionRequiresSkills)에 적힌 다른 재능(예: 미술·공예, 요리, 운전 등)을 사용자가 가지고 있다고 절대 거짓 서술하지 마세요!
+     (위반 금지 예시: 교육·멘토링을 선택한 사용자에게 액션이 네일아트라고 해서 "미술·공예 재능을 활용하여 네일아트를 해보세요"라고 권유하는 것은 심각한 날조입니다.)
+     이 경우 재능에 대한 언급은 일체 하지 말고, 액션의 분야(노인 복지 등), 따뜻한 대화/정서적 교류, 활동의 보람 등 액션 본연의 특성으로만 진솔하게 추천 이유를 작성하세요.
+
+2. ★★★ [활동 성격 왜곡 및 '육체적 재능' 날조 절대 금지]:
+   - '교류·소통형'이나 '육체·과업·집중형'은 활동의 '분위기/진행 방식'이지 '재능'이 아닙니다! "육체적인 재능", "집중적인 재능" 같은 해괴한 표현은 절대 사용하지 마세요.
+   - 말벗, 대화, 상담, 멘토링 같은 소통형 액션을 '육체적인 활동', '몸 쓰는 활동'이라고 사실과 다르게 왜곡하지 마세요. (어르신 댁을 방문해 대화하고 혈압 재는 활동은 육체 활동이 아닌 따뜻한 소통 활동입니다.)
+   - 사용자가 희망한 활동 성격(예: 육체·과업형)과 액션의 실제 성격(actualVibeDescription: 소통형)이 다를 경우(조건 완화 등으로 추천된 경우), 액션을 육체형으로 둔갑시키지 말고 "원하시던 몸 쓰는 활동은 아니지만, 어르신과 차 한잔 나누며 따뜻한 이야기를 전할 수 있는 액션이에요"처럼 정직하게 안내하거나, 액션 본연의 소통 가치를 서술하세요.
+
+3. [세부 모집 항목(recruitmentItems) 역할 타겟팅]:
+   - 액션의 recruitmentItems 중 사용자가 실제로 선택한 재능(matchedUserSkills)이나 역할에 부합하는 세부 파트가 있을 때만 구체적 파트명을 언급하세요.
+
+4. [조건 완화 솔직한 안내 및 '상관없음' 규칙]:
+   - 사용자가 환경이나 규모를 '상관없음'으로 선택한 경우에는, '실내에서 진행되지만', '비록 ~이지만' 같은 변명조 문구를 절대 쓰지 마세요.
+
+5. [일정 날조 엄격 금지]:
+   - actualSchedule에 나와 있는 평일/주말 요일을 절대 반대로 지어내지 마세요.
 
 반드시 JSON 형식으로만 답하세요:
 {"reasons": {"actionId1": "추천 이유 1", "actionId2": "추천 이유 2", ...}}`,
       temperature: 0.3,
       user: JSON.stringify({
-        사용자답변: messages.filter((m) => m.role === 'user'),
         사용자닉네임: profile.nickname,
-        선정된액션목록: candidateSummaries,
         사용자선택조건: {
           관심분야: scoringAnswers.categories ?? [scoringAnswers.category],
-          선택재능: scoringAnswers.selectedSkills,
-          활동성격: scoringAnswers.targetGroupPreference,
-          활동환경: scoringAnswers.activityTypePreference,
-          모임규모: scoringAnswers.groupSizePreference,
+          선택재능: userSelectedSkills.length > 0 ? userSelectedSkills : ['선택하지 않음 / 재능 상관없음'],
+          희망활동성격:
+            scoringAnswers.targetGroupPreference === 'social'
+              ? '교류·교육·소통형'
+              : scoringAnswers.targetGroupPreference === 'task'
+                ? '육체·과업·집중형'
+                : '상관없음',
+          활동환경:
+            scoringAnswers.activityTypePreference === 'indoor'
+              ? '실내'
+              : scoringAnswers.activityTypePreference === 'outdoor'
+                ? '실외'
+                : '상관없음',
+          모임규모: scoringAnswers.groupSizePreference ?? '상관없음',
         },
+        선정된액션목록: candidateSummaries,
       }),
       schema: z.object({
         reasons: z.record(z.string(), z.string()).catch({}).default({}),
@@ -1091,8 +1135,32 @@ export async function POST(request: Request) {
 
   const topItems = codeRanked.map((item) => {
     let reason = reasonsMap[item.action.id]?.trim();
+    const meta = metasById.get(item.action.id);
+    const isSocial = (meta?.target_groups ?? []).some((g) => /교류|교육|소통/.test(g));
+    const isTask = (meta?.target_groups ?? []).some((g) => /과업|육체|집중/.test(g));
+    const matchedSkills = (meta?.skills ?? []).filter((s) => userSelectedSkills.includes(s));
+
     if (reason) {
-      // 사용자가 활동 환경을 '상관없음'으로 선택했거나 환경 제약이 없는 경우, 불필요한 '실내에서 진행되지만' 등의 변명 멘트 제거
+      // 1) '육체적인 재능', '집중적인 재능' 같은 해괴한 합성어 감지 시 fallbackReason으로 대체
+      if (/육체적.*재능|집중적.*재능/.test(reason)) {
+        reason = fallbackReason(item);
+      }
+
+      // 2) 순수 소통형 액션인데 '육체적', '몸 쓰는' 단어가 들어간 거짓말 감지 시 fallbackReason으로 대체
+      if (isSocial && !isTask && /육체|몸\s*쓰는|땀\s*흘리는/.test(reason)) {
+        reason = fallbackReason(item);
+      }
+
+      // 3) 사용자가 선택하지 않은 다른 재능을 사용자가 발휘한다고 날조한 경우 감지 시 fallbackReason으로 대체
+      if (userSelectedSkills.length > 0 && matchedSkills.length === 0) {
+        const unownedSkills = ALL_15_SKILLS.filter((s) => !userSelectedSkills.includes(s) && s !== '기타');
+        const hasUnownedSkillMention = unownedSkills.some((s) => reason.includes(s) && reason.includes('재능'));
+        if (hasUnownedSkillMention || /재능을\s*(활용|발휘|살려)/.test(reason)) {
+          reason = fallbackReason(item);
+        }
+      }
+
+      // 4) 사용자가 활동 환경을 '상관없음'으로 선택했거나 환경 제약이 없는 경우, 불필요한 변명 멘트 제거
       if (scoringAnswers.activityTypePreference === 'any' || !scoringAnswers.activityTypePreference) {
         reason = reason
           .replace(/(실내|야외|실외)에서\s*진행되지만,?\s*/g, '')
@@ -1100,6 +1168,8 @@ export async function POST(request: Request) {
           .replace(/비록\s*(실내|실외|야외)[^,]*지만,?\s*/g, '')
           .trim();
       }
+
+      // 5) 일정 날조 검증
       if (item.action.activityStartAt) {
         const isWk = isWeekend(item.action.activityStartAt);
         // 평일 액션인데 주말을 지어낸 경우
