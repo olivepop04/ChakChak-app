@@ -232,7 +232,7 @@ app/discover/ · app/api/ai/discover/ · components/action/DiscoverChat.tsx
 lib/utils/scoring.ts · lib/utils/discover-ranking.ts   (Discover 는 2026-09-29부터 내 담당)
 
 lib/constants/regions.ts 는 가입·프로필과 같이 쓰는 개발 A 파일이다. 고칠 일이 있으면 개발 A 에게 말한다.
-app/api/ai/classify/ (액션 자동 분류)는 아직 민호 담당이다.
+app/api/ai/classify/ (액션 공개 때 자동 분류)는 민호 담당이다. 한꺼번에 다시 분류하는 scripts/ 쪽만 내 담당이다.
 
 화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
 
