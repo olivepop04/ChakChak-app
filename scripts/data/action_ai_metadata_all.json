@@ -23,7 +23,7 @@
       "독거 어르신"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "도시 텃밭 가꾸기"
     }
@@ -51,7 +51,7 @@
       "보온재"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "길고양이 겨울집 만들기"
     }
@@ -78,7 +78,7 @@
       "나눔"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "텀블러 나눔 부스 운영"
     }
@@ -106,7 +106,7 @@
       "사료"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "우리 동네 보호소를 함께 도와요"
     }
@@ -133,7 +133,7 @@
       "아동센터"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "지역 아동센터 크리스마스 선물 포장"
     }
@@ -163,7 +163,7 @@
       "뜨개질"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "신생아 살리기 털모자 뜨기 캠페인"
     }
@@ -190,7 +190,7 @@
       "견사"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "남양주 유기견 보호소 방한 비닐막 설치"
     }
@@ -221,7 +221,7 @@
       "단편문학"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "시각장애인 오디오북 녹음 봉사"
     }
@@ -248,7 +248,7 @@
       "관악구"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "우리 동네 분리배출 캠페인"
     }
@@ -275,7 +275,7 @@
       "환경 메시지"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "폐플라스틱 병뚜껑 업사이클링 키링 제작"
     }
@@ -302,7 +302,7 @@
       "담요"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "보호소 겨울 준비를 함께해요"
     }
@@ -332,7 +332,7 @@
       "감정 표현"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "발달장애 아동 미술 치료 보조"
     }
@@ -359,7 +359,7 @@
       "근정전"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "고궁 청소"
     }
@@ -387,7 +387,7 @@
       "노인"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "우리 아파트 경비원 할아버지 아프실 동안 우리가 대신 일해요"
     }
@@ -413,7 +413,7 @@
       "청소"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "동네 경로당 앞 마당 청소해요"
     }
@@ -444,7 +444,7 @@
       "어르신"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "시니어 기억지킴 치매예방 교실"
     }
@@ -472,7 +472,7 @@
       "봉사"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "북한산 둘레길 정비 및 숲 가꾸기"
     }
@@ -499,7 +499,7 @@
       "강아지"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "유기견 산책 친구를 찾습니다"
     }
@@ -526,7 +526,7 @@
       "분리배출"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "한강 플로깅 함께해요"
     }
@@ -554,7 +554,7 @@
       "경동시장"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "전통시장 장바구니 나눔 캠페인"
     }
@@ -583,7 +583,7 @@
       "소독"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "용인 유기묘 보호소 대청소 및 소독"
     }
@@ -610,7 +610,7 @@
       "플로깅"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "안양천 줍깅 및 수질 정화 활동"
     }
@@ -641,7 +641,7 @@
       "중고생"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "청소년 진로 멘토링 특강"
     }
@@ -668,7 +668,7 @@
       "봉사"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "영도 노후 주거지 희망 도색 나눔"
     }
@@ -697,7 +697,7 @@
       "나눔"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "종로 독거 어르신 사랑의 도시락 나눔"
     }
@@ -725,7 +725,7 @@
       "꽃향기"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "장애인 복지관 나들이 동행 봉사"
     }
@@ -753,7 +753,7 @@
       "케어법"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "유기묘 임시보호 설명회"
     }
@@ -781,7 +781,7 @@
       "친환경 도료"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "유기견 보호소 야외 견사 바닥 방수 작업"
     }
@@ -808,7 +808,7 @@
       "쓰레기 수거"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "해안가 정화 플로깅 캠페인"
     }
@@ -836,7 +836,7 @@
       "봉사"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "벽화 골목길 보수 및 페인트 칠"
     }
@@ -866,7 +866,7 @@
       "스포츠"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "노량진 청소년 주말 야외 농구 교실"
     }
@@ -896,7 +896,7 @@
       "어르신"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "어르신 야외 봄꽃 나들이 동행"
     }
@@ -923,7 +923,7 @@
       "머리 말리기"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "어르신 목욕 봉사 (여성)"
     }
@@ -953,7 +953,7 @@
       "아동센터"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "아동센터 도서 정리"
     }
@@ -980,7 +980,7 @@
       "대전 중구"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "어르신 목욕 봉사 (남성)"
     }
@@ -1008,7 +1008,7 @@
       "주민 쉼터"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "동네 공터를 작은 정원으로"
     }
@@ -1039,7 +1039,7 @@
       "은퇴 시니어"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "은퇴 시니어를 위한 유튜브 영상 편집 기초"
     }
@@ -1069,7 +1069,7 @@
       "어린이"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "다문화 어린이 기초 한국어 동화 구연"
     }
@@ -1096,7 +1096,7 @@
       "봉사"
     ],
     "difficulty": "기초 체력 필요",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "사랑의 연탄 나눔 봉사"
     }
@@ -1124,7 +1124,7 @@
       "어르신"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "시니어 보드게임 인지발달 교실"
     }
@@ -1151,7 +1151,7 @@
       "품목 재분류"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "재난 대비 물품 정리"
     }
@@ -1179,7 +1179,7 @@
       "유치원생"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "양재 매헌 숲 어린이 체험 놀이 보조"
     }
@@ -1206,7 +1206,7 @@
       "보행 안전"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "골목길 가로등 조도 개선 실태 조사"
     }
@@ -1233,7 +1233,7 @@
       "생태계 보호"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "주말 북한산 생태 보전 쓰레기 줍기"
     }
@@ -1264,7 +1264,7 @@
       "드림스타트"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "방과 후 공부방 선생님"
     }
@@ -1292,7 +1292,7 @@
       "영양 식사"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "주말 이틀간의 따뜻한 급식 나눔"
     }
@@ -1322,7 +1322,7 @@
       "부산 금정구"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "아이들과 만드는 작은 책장"
     }
@@ -1352,7 +1352,7 @@
       "고대생"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "안암동 어린이 방과후 교실"
     }
@@ -1379,7 +1379,7 @@
       "노인복지관"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "종로 어르신 사랑의 배식 봉사"
     }
@@ -1407,7 +1407,7 @@
       "그림책"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "어린이 도서 기부 캠페인"
     }
@@ -1435,7 +1435,7 @@
       "건강 안부"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "어르신 말벗 봉사"
     }
@@ -1462,7 +1462,7 @@
       "안전 제설"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "우리 동네 눈 치우기"
     }
@@ -1490,7 +1490,7 @@
       "도봉구"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "이웃과 함께하는 김장 나눔"
     }
@@ -1517,7 +1517,7 @@
       "안부 확인"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "홀몸 어르신 도시락 배달"
     }
@@ -1546,7 +1546,7 @@
       "대학 생활"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "청소년 진로 이야기 나눔"
     }
@@ -1575,7 +1575,7 @@
       "초등학생"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "초등학생 방과후 동화책 읽어주기"
     }
@@ -1606,7 +1606,7 @@
       "점역 도서"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "점자 도서 제작 봉사"
     }
@@ -1636,7 +1636,7 @@
       "성남시"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "경로당 대청소"
     }
@@ -1663,7 +1663,7 @@
       "이동 보조"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "휠체어 이동 도우미"
     }
@@ -1693,7 +1693,7 @@
       "생활 한국어"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "다문화 가정 한글 교실"
     }
@@ -1722,7 +1722,7 @@
       "안양시"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "수어 통역 재능기부"
     }
@@ -1752,7 +1752,7 @@
       "어르신"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "어르신 스마트폰 교실"
     }
@@ -1778,7 +1778,7 @@
       "캠페인"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "주말 한강 돗자리 정화 캠페인"
     }
@@ -1805,7 +1805,7 @@
       "플라스틱"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "바닷가 쓰레기 줍기"
     }
@@ -1833,7 +1833,7 @@
       "봉사"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "골목길 벽화 그리기"
     }
@@ -1860,7 +1860,7 @@
       "서울숲"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "동네 플로깅 모집"
     }
@@ -1887,7 +1887,7 @@
       "봉사"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "폐현수막으로 장바구니 만들기"
     }
@@ -1916,7 +1916,7 @@
       "보호소"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "유기묘 쉼터 수제 간식 만들기"
     }
@@ -1947,7 +1947,7 @@
       "구로 디지털단지"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "시니어 컴퓨터 교실 보조"
     }
@@ -1975,7 +1975,7 @@
       "반사 스티커"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "어린이 교통안전 옐로카펫 정비"
     }
@@ -2005,7 +2005,7 @@
       "재능기부"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "무료 프로필 사진 촬영"
     }
@@ -2034,7 +2034,7 @@
       "안산시"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "사랑의 가구 제작 및 배달"
     }
@@ -2063,7 +2063,7 @@
       "말벗"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "발달장애 청소년 숲길 걷기 동행"
     }
@@ -2091,7 +2091,7 @@
       "단풍잎돼지풀"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "하천 생태계 교란식물 제거 활동"
     }
@@ -2121,7 +2121,7 @@
       "손 마사지"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "어르신 말벗 및 네일아트 봉사"
     }
@@ -2152,7 +2152,7 @@
       "어르신"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "어르신을 위한 스마트폰 기초 교실"
     }
@@ -2182,7 +2182,7 @@
       "광주 북구"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "시니어 디지털 키오스크 실습 지도"
     }
@@ -2209,7 +2209,7 @@
       "대학 문화"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "외국인 유학생 한국어 대화 친구"
     }
@@ -2239,7 +2239,7 @@
       "송파구"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "동네 빗물받이 낙엽 및 담배꽁초 청소"
     }
@@ -2269,7 +2269,7 @@
       "중학생"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "중학생 코딩 멘토링"
     }
@@ -2296,7 +2296,7 @@
       "관악구"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "도심 길고양이 급식소 순찰 및 관리"
     }
@@ -2324,7 +2324,7 @@
       "친환경"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "독거 어르신 주거환경 도배 봉사"
     }
@@ -2353,7 +2353,7 @@
       "녹지 쉼터"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "도심 속 미세먼지 저감 쌈지숲 조성"
     }
@@ -2383,7 +2383,7 @@
       "미디어센터"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "청각장애인을 위한 자막 제작 재능기부"
     }
@@ -2410,7 +2410,7 @@
       "스코어 기록"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "장애인 볼링 동아리 활동 보조"
     }
@@ -2439,7 +2439,7 @@
       "성북동"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "도심 야생조류 모이통 설치"
     }
@@ -2469,7 +2469,7 @@
       "할리갈리"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "보육원 아이들과 함께하는 보드게임"
     }
@@ -2500,7 +2500,7 @@
       "무대 동선"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "주말 이틀간의 청소년 연극 캠프"
     }
@@ -2527,7 +2527,7 @@
       "복지관"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "소외계층을 위한 따뜻한 제빵 나눔"
     }
@@ -2556,7 +2556,7 @@
       "생활용품"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "연말 나눔 장터 운영"
     }
@@ -2586,7 +2586,7 @@
       "축하 무대"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "보육원 생일파티 준비"
     }
@@ -2613,7 +2613,7 @@
       "임시보호소"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "보호소 유기견 따뜻한 목욕 봉사"
     }
@@ -2643,7 +2643,7 @@
       "유기농 면"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "소아병동 인형 만들기"
     }
@@ -2670,7 +2670,7 @@
       "광화문"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "헌혈 캠페인 도우미"
     }
@@ -2700,7 +2700,7 @@
       "멘토"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "지역 아동센터 방과후 수학 지도"
     }
@@ -2727,7 +2727,7 @@
       "올림픽공원"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "시각장애인 마라톤 동반 주자"
     }
@@ -2758,7 +2758,7 @@
       "불고기"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "다문화 가정 요리 교실 보조"
     }
@@ -2788,7 +2788,7 @@
       "용돈 관리"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "청소년 금융 기초 상식 멘토링"
     }
@@ -2815,7 +2815,7 @@
       "도심 화단"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "우리 동네 가로수 화단 가꾸기"
     }
@@ -2844,7 +2844,7 @@
       "청년 창작자"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "이틀간 펼쳐지는 동네 플리마켓 지원"
     }
@@ -2872,7 +2872,7 @@
       "양평"
     ],
     "difficulty": "기초 체력 필요",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "유기견 사료 후원 및 견사 청소"
     }
@@ -2900,7 +2900,7 @@
       "다문화 아동"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "학습지 정리 및 발송"
     }
@@ -2927,7 +2927,7 @@
       "악취 제거"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "살곶이 하천 EM 흙공 던지기"
     }
@@ -2955,7 +2955,7 @@
       "청소"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "신촌 골목길 보행 안전 반사경 닦기"
     }
@@ -2985,7 +2985,7 @@
       "청소년"
     ],
     "difficulty": "누구나 참여가능",
-    "prompt_version": "classify-v2",
+    "prompt_version": "classify-v3",
     "actions": {
       "title": "꿈나무 청소년 파이썬 코딩 멘토링"
     }

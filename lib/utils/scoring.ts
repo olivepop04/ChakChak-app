@@ -4,9 +4,16 @@
  * ★ 점수는 코드가 계산합니다. AI 는 의도 해석과 추천 이유 설명만 합니다.
  *   AI 에게 순위를 매기게 하면 매번 결과가 달라져서 검증할 수 없습니다.
  *
- * 2026-09-03 회의에서 확정한 V4 최소 범위
- *   관심 분야 25 · 재능 활용 15 · 지역/이동 20 · 시간 15
- *   모임 규모 10 · 참여 방식 10 · 팔로우 5 · 분야 선호 ±10
+ * 2026-09-29 개편 확정 (100점 만점 체계):
+ *   활동 지역 25 (시군구 25 / 시도 18 / 무관 12)
+ *   활동 시간 15 (시간대 일치 15 / 무관 10)
+ *   관심 분야 25 (선택 분야 일치 25)
+ *   모임 규모 10 (소/중/대 일치 10 / 무관 7)
+ *   활동 성격 10 (소통/과업 일치 10 / 무관 7)
+ *   활동 환경 10 (실내/실외/병행 일치 10 / 무관 7)
+ *   난이도 및 재능 5 (전문 난이도 선택 시 해당 재능 일치 5)
+ *   [소셜 보너스] 팔로우 호스트 +5
+ *   (※ 유령 코드인 시맨틱 키워드 10점, 참여 방식 10점 및 왜곡을 유발하는 분야 선호 ±10점은 완전 폐지)
  *
  * 거리(km)는 계산하지 않습니다. 액션에 좌표가 없고, 지오코딩을 붙이면
  * MVP 범위를 넘어섭니다. 시·군·구 이름이 겹치는지로만 봅니다 (팀 합의 D13).
@@ -218,24 +225,24 @@ export function scoreAction(
     matched.push(wantsAll ? '관심 분야' : `관심 분야(${hit})`);
   }
 
-  // 2) 활동 가능 지역 (region) — 10점
+  // 2) 활동 가능 지역 (region) — 25점
   const targetRegions = answers.selectedRegion ? [answers.selectedRegion] : profile.regions;
   const travelRange = answers.travelRange ?? answers.range;
   if (travelRange === 'any' || targetRegions.includes(NATIONWIDE) || !action.address) {
-    score += 5;
+    score += 12;
     matched.push('지역 상관없음');
   } else if (matchesRegion(action.address, targetRegions)) {
-    score += 10;
+    score += 25;
     matched.push('가까운 지역');
   } else if (
     (travelRange === 'province' || travelRange === undefined) &&
     sameProvince(action.address, targetRegions)
   ) {
-    score += 7;
+    score += 18;
     matched.push('같은 시·도');
   }
 
-  // 3) 참여 가능 시간대 (time) — 10점
+  // 3) 참여 가능 시간대 (time) — 15점
   const timeResult = matchesFlexibleTime(
     action,
     profile.timePrefs,
@@ -243,27 +250,18 @@ export function scoreAction(
     profile.availableTimes,
   );
   if (timeResult.matched) {
-    score += 10;
+    const isAny = timeResult.label.includes('상관없음');
+    score += isAny ? 10 : 15;
     matched.push(timeResult.label);
   }
 
-  // 4) 참여 방식 (participation_modes)
-  const modes =
-    metadata.participationModes.length > 0
-      ? metadata.participationModes
-      : [guessMode(action)];
-  if (answers.participationMode && modes.includes(answers.participationMode)) {
-    score += 10;
-    matched.push(answers.participationMode);
-  }
-
-  // 5) 팔로우한 사람이 만든 액션
+  // 4) 팔로우한 사람이 만든 액션 (소셜 보너스) — 5점
   if (profile.followingIds.includes(action.owner.id)) {
     score += 5;
     matched.push('팔로우한 사람의 액션');
   }
 
-  // 6) 7대 메타데이터 어댑티브 트레이트 점수 합산 (재능 15, 성격 15, 난이도 15, 환경 10, 모임규모 10, 분야선호 ±10, 키워드 10)
+  // 5) 어댑티브 트레이트 점수 합산 (모임규모 10, 성격 10, 환경 10, 재능 5 = 35점)
   const adaptive = scoreAdaptiveTraits({
     profileSkills: profile.skills,
     historyCategories: profile.historyCategories,
@@ -278,13 +276,13 @@ export function scoreAction(
     answers: {
       talentPreference: answers.talentPreference ?? null,
       groupSizePreference: answers.groupSizePreference ?? null,
-      fieldPreference: answers.fieldPreference ?? null,
+      fieldPreference: null, // 분야 선호 점수 가감 폐지 (카테고리 후보 필터링으로만 동작)
       targetGroupPreference: answers.targetGroupPreference ?? null,
       difficultyPreference: answers.difficultyPreference ?? null,
       activityTypePreference: answers.activityTypePreference ?? null,
       selectedSkill: answers.selectedSkill ?? null,
       selectedSkills: answers.selectedSkills ?? (answers.selectedSkill ? [answers.selectedSkill] : []),
-      userKeywords: answers.userKeywords ?? [],
+      userKeywords: [],
     },
   });
   score += adaptive.score;
@@ -326,13 +324,22 @@ export function fallbackReason(scored: ScoredAction): string {
   const vibe = matched.find((m) => m.includes('교류·소통형') || m.includes('과업·집중형'));
   const env = matched.find((m) => m.includes('실내') || m.includes('야외'));
   const category = matched.find((m) => m.includes('분야'));
-  const region = matched.find((m) => m.includes('지역'));
+  const region = matched.find((m) => m.includes('지역') || m.includes('시·도'));
 
-  const skillName = skill ? skill.replace(' 재능 활용', '') : null;
+  // 재능명에서 불필요한 접미사 및 중복 정리
+  let skillName = skill ? skill.replace(' 재능 활용', '').trim() : null;
+  if (skillName && skillName.includes('재능')) {
+    skillName = skillName.replace(/재능/g, '').trim();
+  }
+
+  // 분야명에서 '분야' 중복 제거
   const rawCat = category
-    ? category.replace(/관심 분야\(|\)| 익숙한 분야| 새로운 분야/g, '')
-    : scored.action.category;
-  const catName = rawCat || scored.action.category;
+    ? category.replace(/관심 분야\(|\)| 익숙한 분야| 새로운 분야|분야/g, '').trim()
+    : scored.action.category.replace(/분야/g, '').trim();
+  const catName = rawCat || scored.action.category.replace(/분야/g, '').trim();
+
+  // 환경 문구에서 '으로' 조사 매칭
+  const envWithJosa = env ? `${env}으로` : '';
 
   if (skillName && vibe) {
     return `선택하신 ${catName} 분야에서 ${skillName} 재능을 살릴 수 있는 ${vibe}이에요.`;
@@ -341,15 +348,19 @@ export function fallbackReason(scored: ScoredAction): string {
     return `선택하신 ${catName} 분야에서 ${skillName} 재능을 나누며 함께할 수 있는 액션이에요.`;
   }
   if (vibe && env) {
-    return `선택하신 ${catName} 분야에서 ${env}로 진행되는 따뜻한 ${vibe}이에요.`;
+    return `선택하신 ${catName} 분야에서 ${envWithJosa} 진행되는 따뜻한 ${vibe}이에요.`;
   }
   if (vibe) {
     return `선택하신 ${catName} 분야의 성격에 부합하는 ${vibe}이에요.`;
   }
   if (region && env) {
-    return `${region}에서 ${env}로 ${catName} 분야의 나눔에 참여할 수 있는 액션이에요.`;
+    const regionPhrase = region.includes('상관없음') ? '어디서나' : `${region}에서`;
+    return `${regionPhrase} ${envWithJosa} ${catName} 분야의 나눔에 참여할 수 있는 액션이에요.`;
   }
   if (region) {
+    if (region.includes('상관없음')) {
+      return `어디서든 참여하기 좋은 ${catName} 분야의 뜻깊은 활동을 시작할 수 있는 액션이에요.`;
+    }
     return `참여하기 좋은 ${region}에서 ${catName} 분야의 뜻깊은 활동을 시작할 수 있는 액션이에요.`;
   }
 

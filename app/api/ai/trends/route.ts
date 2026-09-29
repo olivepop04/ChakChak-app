@@ -19,7 +19,8 @@ import { ACTION_STATUS_LABEL } from '@/lib/constants';
 
 // v1 -> v2: 필드 이름이 모호해 AI 가 서로 다른 항목을 섞어 없는 비율을 만들어냈다.
 // 이름을 명확히 하고 "새 비율을 계산하지 말라" 는 규칙을 추가했다.
-const PROMPT_VERSION = 'trends-v2';
+// v2 -> v3: '사회공헌 활동' 표현을 서비스 표준 용어인 '선한 영향력 액션'으로 통일.
+const PROMPT_VERSION = 'trends-v3';
 
 const TrendSchema = z.object({
   insights: z

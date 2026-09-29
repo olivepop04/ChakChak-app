@@ -1076,7 +1076,7 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
     answers.selectedSkill = matchedSkills[0];
     answers.selectedSkills = matchedSkills;
     answers.talentPreference = 'use';
-  } else if (/^기타$|기타/.test(textForSkills)) {
+  } else if (/(?:재능|기술).*기타|기타.*(?:재능|기술)/.test(textForSkills)) {
     answers.selectedSkill = '기타';
     answers.selectedSkills = ['기타'];
     answers.talentPreference = 'any';

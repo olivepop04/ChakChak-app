@@ -23,9 +23,8 @@ import type { ActionCardData } from '../lib/types/view.ts';
 
 test('Discover 재능 선택지는 사전 정의된 16개 버튼만 정확히 제공하며 불필요한 버튼은 포함하지 않는다', () => {
   const options = getQuestionOptions('skills', SKILLS);
+  assert.deepEqual(options, [...SKILLS, '기타']);
   assert.equal(options.length, 16);
-  assert.equal(options.includes('사진 촬영'), true);
-  assert.equal(options.includes('기타'), true);
   assert.equal(options.includes('특별한 재능 없이 참여'), false);
   assert.equal(options.includes('상관없음'), false);
 });
@@ -941,8 +940,8 @@ test('[신규가입자 재능 선택 멘트 검증] 프로필 재능이 없는 �
     profileSkills: [],
     answers: { difficultyPreference: 'expert' },
   });
+  assert.deepEqual(options, [...SKILLS, '기타']);
   assert.equal(options.length, 16);
-  assert.equal(options.includes('청소·정리'), true);
   assert.equal(options.includes('예, 그럴게요 👍'), false);
 });
 

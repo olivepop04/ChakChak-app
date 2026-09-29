@@ -53,8 +53,8 @@ import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 import { formatDate, formatTime, isWeekend } from '@/lib/utils/date';
 
-const CHAT_PROMPT_VERSION = 'discover-v3-zero-assumption';
-const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v4-anti-hallucination';
+const CHAT_PROMPT_VERSION = 'discover-chat-v8-chip-zero-assumption';
+const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v8-100pt-scoring';
 const MAX_USER_TURNS = 15;
 const PARTICIPATION_MODES = [
   '시간을 내서',
@@ -125,7 +125,7 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
    - 프로필에 재능이 실제로 등록되어 있는 사용자에게 처음 물을 때만 2지선다 ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"]를 제공하고, 멘트는 "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?"로 작성하세요.
    - 프로필에 등록된 재능이 없는 사용자(신규가입자 등) 또는 사용자가 "다른 재능으로 할게요"를 선택한 경우:
      ★ 절대로 "프로필에 재능이 있다"고 말하지 마세요!
-     ★ 반드시 "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요"라고 안내하고, options는 사전 정의된 16종 목록 ['사진 촬영', '영상 촬영·편집', '디자인', '글쓰기', 'SNS 홍보', '요리', '운전', '교육·멘토링', '통역·번역', '컴퓨터·IT', '원예·식물관리', '청소·정리', '미술·공예', '음악·공연', '수리·시공', '기타']을 정확히 제공하세요.
+     ★ 반드시 "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요"라고 안내하고, options는 사전 정의된 ${SKILLS.length + 1}종 목록 ${JSON.stringify([...SKILLS, '기타'])}을 정확히 제공하세요.
 9. question_key는 반드시 시스템이 제공한 '남은질문' 배열에 존재하는 키 중에서만 선택해야 합니다. 남은질문에 없는 질문 키(예: 난이도에서 '기초 체력 필요'나 '누구나 참여가능'을 선택하여 재능 질문이 생략된 상황에서 "skills")를 반환하는 것은 엄격히 금지됩니다.
 
 [질문 순서 및 분기 제어 시나리오 (우선순위 0~5)]
@@ -165,7 +165,7 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
      ★ 재능 질문을 완전히 생략하고 즉시 4번 활동 환경(activity_types) 질문으로 전진해야 합니다! (question_key: "activity_types")
    - 사용자가 '전문지식/자격/재능 활용'을 선택한 경우에만 재능(skills) 질문으로 이동합니다.
      - 프로필에 등록된 재능이 있는 경우: "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?" (options: ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"])
-     - 프로필에 등록된 재능이 없는 경우(신규가입자 등) 또는 '다른 재능으로 할게요' 선택 시: "전문지식이나 재능을 나눌 수 있다니 정말 멋져요! 😊 {nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: 16종 재능 목록)
+     - 프로필에 등록된 재능이 없는 경우(신규가입자 등) 또는 '다른 재능으로 할게요' 선택 시: "전문지식이나 재능을 나눌 수 있다니 정말 멋져요! 😊 {nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: ${SKILLS.length + 1}종 재능 목록)
 
 4. 활동 환경 (activity_types):
    - 멘트: 직전에 사용자가 재능을 선택한 경우 "알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨"를 앞머리에 붙이고, "어떤 환경에서 활동하고 싶으세요?"라고 질문하세요. (재능 중 하나만 임의로 골라 대표로 지정하지 마세요)
@@ -953,10 +953,7 @@ export async function POST(request: Request) {
         ? 'use'
         : (adaptiveAnswers.talentPreference ?? null),
     groupSizePreference: adaptiveAnswers.groupSizePreference ?? null,
-    fieldPreference:
-      adaptiveAnswers.fieldPreference === 'selected'
-        ? 'new'
-        : (adaptiveAnswers.fieldPreference ?? null),
+    fieldPreference: null,
     travelRange: adaptiveAnswers.travelRange ?? null,
     targetGroupPreference: adaptiveAnswers.vibePreference ?? null,
     difficultyPreference: adaptiveAnswers.difficultyPreference ?? null,

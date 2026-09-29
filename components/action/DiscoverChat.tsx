@@ -71,10 +71,8 @@ export function DiscoverChat({
 }) {
   const started = useRef(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [options, setOptions] = useState<string[]>([]);
-  const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(authenticated);
   const [items, setItems] = useState<Recommendation[] | null>(null);
   const [summaryChips, setSummaryChips] = useState<string[]>([]);
@@ -154,7 +152,6 @@ export function DiscoverChat({
     ];
     setMessages(nextMessages);
     setOptions([]);
-    setInputText('');
     void requestNext(nextMessages);
   }
 
@@ -163,11 +160,6 @@ export function DiscoverChat({
     if (option.includes('지역') && option.includes('선택')) {
       setSelectedSido(null);
       setRegionModalOpen(true);
-      return;
-    }
-    if (option === '기타' || option.includes('기타')) {
-      choose(option);
-      setTimeout(() => inputRef.current?.focus(), 150);
       return;
     }
     choose(option);
@@ -237,15 +229,7 @@ export function DiscoverChat({
     choose(`📍 ${region}`);
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const text = inputText.trim();
-    if (!text || loading) return;
-    choose(text);
-  }
-
   function restart() {
-    setInputText('');
     setMessages([]);
     setOptions([]);
     setItems(null);
@@ -529,33 +513,6 @@ export function DiscoverChat({
               ))}
             </div>
           ) : null}
-
-          <form onSubmit={handleSubmit} className="flex items-center gap-2 pt-1">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder={
-                messages.slice(-1)[0]?.content?.includes('어떤 특별한 재능') ||
-                messages.slice(-1)[0]?.content?.includes('직접 적어주세요')
-                  ? '어떤 재능인지 입력해주세요 (예: 바리스타, 마술, 법률 상담 등)'
-                  : '직접 입력하거나 위 선택지를 골라보세요'
-              }
-              disabled={loading}
-              className="flex-1 rounded-full border border-neutral-300 bg-white px-4 py-2.5 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none disabled:bg-neutral-50"
-            />
-            <button
-              type="submit"
-              disabled={loading || !inputText.trim()}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-opacity disabled:opacity-30"
-              aria-label="전송"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
-          </form>
         </div>
       )}
 

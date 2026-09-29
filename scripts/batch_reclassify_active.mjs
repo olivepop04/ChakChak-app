@@ -13,7 +13,7 @@ if (!supabaseUrl || !serviceKey || !openaiApiKey) {
 const supabase = createClient(supabaseUrl, serviceKey);
 const openai = new OpenAI({ apiKey: openaiApiKey });
 
-const PROMPT_VERSION = 'classify-v2';
+const PROMPT_VERSION = 'classify-v3';
 
 const ALLOWED_CATEGORIES = [
   '동물',
@@ -222,7 +222,7 @@ async function processAction(action, total, index) {
           difficulty: ai.difficulty,
           ai_model: 'gpt-4o-mini',
           prompt_version: PROMPT_VERSION,
-          owner_confirmed: true,
+          owner_confirmed: false,
         },
         { onConflict: 'action_id' },
       );

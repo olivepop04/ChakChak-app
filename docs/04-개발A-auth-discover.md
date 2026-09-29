@@ -298,11 +298,13 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
 
 ## 내 담당
 
-가입·로그인·프로필·Discover 추천.
-app/(auth)/ · app/my/ · app/user/ · app/discover/ · app/api/ai/discover/
-components/my/ · app/api/auth/check-email/
-lib/constants/regions.ts · lib/utils/scoring.ts · lib/utils/discover-ranking.ts
-components/action/DiscoverChat.tsx
+가입·로그인·프로필. (※ 2026-09-29 합의: Discover 추천 영역은 조장 전담으로 공식 이관 완료)
+app/(auth)/ · app/my/ · app/user/ · components/my/ · app/api/auth/check-email/
+lib/constants/regions.ts
+
+> **[2026-09-29 이관 안내]** 아래 파일들은 9/29 팀 모임 합의로 **조장(홍성은) 전담** 구역이 되었습니다:
+> `app/discover/`, `app/api/ai/discover/`, `components/action/DiscoverChat.tsx`, `lib/utils/scoring.ts`, `lib/utils/discover-ranking.ts`
+> 상세 명세는 [docs/DISCOVER-AI-대화추천-시스템-명세서.md](./DISCOVER-AI-대화추천-시스템-명세서.md)를 참조하세요.
 
 components/my/ · app/api/auth/check-email/ · lib/utils/discover-ranking.ts 는
 2026-09-17에 내 담당이 됐다. 표에 없어서 담당이 비어 있던 것들이다.
