@@ -29,12 +29,19 @@ export interface TrendStats {
   byRegion: { region: string; count: number }[];
 }
 
-/** '2026-08-31' → '8/31' 주 시작일 라벨 */
-function weekLabel(d: Date): string {
-  const monday = new Date(d);
-  const day = (monday.getDay() + 6) % 7; // 월요일 시작
-  monday.setDate(monday.getDate() - day);
-  return `${monday.getMonth() + 1}/${monday.getDate()}`;
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+function toKst(d: Date | string): Date {
+  const ms = typeof d === 'string' ? new Date(d).getTime() : d.getTime();
+  return new Date(ms + KST_OFFSET_MS);
+}
+
+/** '2026-08-31' → '8/31' 주 시작일 라벨 (KST 고정) */
+function weekLabel(d: Date | string): string {
+  const kst = toKst(d);
+  const day = (kst.getUTCDay() + 6) % 7; // 월요일 시작 (KST)
+  kst.setUTCDate(kst.getUTCDate() - day);
+  return `${kst.getUTCMonth() + 1}/${kst.getUTCDate()}`;
 }
 
 /** '서울특별시 성동구 왕십리로 100' → '서울 성동구' */
@@ -119,7 +126,7 @@ export async function getTrendStats(supabase: DB): Promise<TrendStats> {
     weekCount.set(weekLabel(d), 0);
   }
   for (const a of rows) {
-    const label = weekLabel(new Date(a.created_at));
+    const label = weekLabel(a.created_at);
     if (weekCount.has(label)) {
       weekCount.set(label, (weekCount.get(label) ?? 0) + 1);
     }

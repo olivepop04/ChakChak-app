@@ -20,6 +20,9 @@ import {
 import { ActionCard } from '@/components/ui/ActionCard';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+// 민호님이 구현한 공용 Chip 컴포넌트 재사용 (components/ui/Chip.tsx 원본 훼손 없이 import)
+import { Chip } from '@/components/ui/Chip';
+import { SKILLS } from '@/lib/constants';
 import { cn } from '@/lib/utils/cn';
 import type { ActionCardData } from '@/lib/types/view';
 import {
@@ -166,9 +169,9 @@ export function DiscoverChat({
   }
 
   const isSkillSelection =
-    options.length >= 15 &&
-    options.includes('사진 촬영') &&
-    options.includes('요리');
+    options.length >= 10 &&
+    options.some((opt) => (SKILLS as readonly string[]).includes(opt)) &&
+    options.includes('기타');
 
   const isTimeSelection =
     options.length >= 4 &&
@@ -412,22 +415,18 @@ export function DiscoverChat({
                 {options.map((option) => {
                   const isSelected = selectedSkills.includes(option);
                   return (
-                    <button
+                    <Chip
                       key={option}
-                      type="button"
+                      selected={isSelected}
+                      tone="accent"
                       onClick={() => handleSkillToggle(option)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all',
-                        isSelected
-                          ? 'border border-brand bg-brand text-white font-semibold shadow-sm'
-                          : 'border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-900 hover:bg-neutral-50',
-                      )}
+                      className="gap-1.5 py-1.5 text-[13px]"
                     >
                       {isSelected && (
                         <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
                       )}
                       <span>{option}</span>
-                    </button>
+                    </Chip>
                   );
                 })}
               </div>
@@ -463,22 +462,18 @@ export function DiscoverChat({
                 {options.map((option) => {
                   const isSelected = selectedTimes.includes(option);
                   return (
-                    <button
+                    <Chip
                       key={option}
-                      type="button"
+                      selected={isSelected}
+                      tone="accent"
                       onClick={() => handleTimeToggle(option)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all',
-                        isSelected
-                          ? 'border border-brand bg-brand text-white font-semibold shadow-sm'
-                          : 'border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-900 hover:bg-neutral-50',
-                      )}
+                      className="gap-1.5 py-1.5 text-[13px]"
                     >
                       {isSelected && (
                         <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
                       )}
                       <span>{option}</span>
-                    </button>
+                    </Chip>
                   );
                 })}
               </div>
@@ -502,14 +497,13 @@ export function DiscoverChat({
           ) : options.length > 0 ? (
             <div className="flex flex-wrap justify-end gap-2">
               {options.map((option) => (
-                <button
+                <Chip
                   key={option}
-                  type="button"
                   onClick={() => handleOptionClick(option)}
-                  className="rounded-full border border-neutral-900 px-3.5 py-1.5 text-[13px] font-medium text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white"
+                  className="border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white py-1.5 text-[13px]"
                 >
                   {option}
-                </button>
+                </Chip>
               ))}
             </div>
           ) : null}
