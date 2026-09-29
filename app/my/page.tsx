@@ -49,7 +49,7 @@ export default async function MyPage() {
 
       {/* 프로필 */}
       <section className="flex items-center gap-4 px-6 py-4">
-        <Avatar name={profile.nickname} size="lg" />
+        <Avatar name={profile.nickname} avatar={profile.avatar} size="lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-subtitle font-bold text-neutral-900">
             @{profile.nickname}

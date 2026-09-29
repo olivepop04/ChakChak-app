@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "verify:db": "node --env-file=.env.local scripts/verify-db.mjs",
     "seed": "node --env-file=.env.local scripts/seed.mjs",
-    "seed:clean": "node --env-file=.env.local scripts/seed.mjs --clean"
+    "seed:clean": "node --env-file=.env.local scripts/seed.mjs --clean",
+    "reclassify": "node --env-file=.env.local --experimental-strip-types --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/reclassify_all_actions.mjs",
+    "reclassify:active": "node --env-file=.env.local --experimental-strip-types --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/batch_reclassify_active.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

@@ -34,7 +34,7 @@ const ACTION_COLUMNS = `
   id, title, description, category, categories, image_urls, thumbnail_index,
   address, place_name, notice, status, cancel_reason, early_end_reason,
   recruit_end_at, activity_start_at, activity_end_at,
-  owner:profiles!actions_owner_id_fkey ( id, nickname, bio )
+  owner:profiles!actions_owner_id_fkey ( id, nickname, avatar, bio )
 `;
 
 interface RawAction {
@@ -55,7 +55,7 @@ interface RawAction {
   recruit_end_at: string | null;
   activity_start_at: string | null;
   activity_end_at: string | null;
-  owner: { id: string; nickname: string; bio: string | null } | null;
+  owner: { id: string; nickname: string; avatar: string | null; bio: string | null } | null;
 }
 
 /** image_urls + thumbnail_index → 대표 이미지 1장 */
@@ -163,8 +163,8 @@ function toCard(
     activityStartAt: raw.activity_start_at,
     recruitEndAt: raw.recruit_end_at,
     owner: raw.owner
-      ? { id: raw.owner.id, nickname: raw.owner.nickname }
-      : { id: '', nickname: '알 수 없음' },
+      ? { id: raw.owner.id, nickname: raw.owner.nickname, avatar: raw.owner.avatar }
+      : { id: '', nickname: '알 수 없음', avatar: null },
     likeCount: c?.like ?? 0,
     shareCount: c?.share ?? 0,
     saveCount: c?.save ?? 0,
@@ -423,7 +423,7 @@ export async function getActionDetail(
     recruitEndAt: raw.recruit_end_at,
     activityStartAt: raw.activity_start_at,
     activityEndAt: raw.activity_end_at,
-    owner: raw.owner ?? { id: '', nickname: '알 수 없음', bio: null },
+    owner: raw.owner ?? { id: '', nickname: '알 수 없음', avatar: null, bio: null },
     items,
     likeCount: c?.like ?? 0,
     saveCount: c?.save ?? 0,

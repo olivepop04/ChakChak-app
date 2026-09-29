@@ -191,9 +191,9 @@ git push -u origin feature/민호-알림화면
 | 처음 시작 (필독) | [docs/사용설명서.md](docs/사용설명서.md) — 설치·실행·테스트 |
 | 모두 (필독) | [docs/00-공통규칙.md](docs/00-공통규칙.md) — 우리가 어떻게 일하나 |
 | 민호 — 통합·인프라·알림 | [docs/01-민호-통합.md](docs/01-민호-통합.md) |
-| 조장 — Activity·트렌드·시드 | [docs/02-조장-activity.md](docs/02-조장-activity.md) |
+| 조장 — Activity·트렌드·시드·Discover | [docs/02-조장-activity.md](docs/02-조장-activity.md) |
 | 디자이너 — UI·Home·Detail | [docs/03-디자인-ui.md](docs/03-디자인-ui.md) |
-| 개발 A — 가입·프로필·Discover | [docs/04-개발A-auth-discover.md](docs/04-개발A-auth-discover.md) |
+| 개발 A — 가입·프로필 | [docs/04-개발A-auth-discover.md](docs/04-개발A-auth-discover.md) |
 | 개발 B — 만들기·참여·게시판·결과 | [docs/05-개발B-join-result.md](docs/05-개발B-join-result.md) |
 | **이번 개편 (전원 필독)** | [docs/06-개편-합의.md](docs/06-개편-합의.md) — 2026-09-01 합의와 작업 순서 |
 | 확정 43건 전체 목록 | [docs/07-확정-43건.md](docs/07-확정-43건.md) — F번호가 뭘 뜻하는지 |
@@ -418,6 +418,8 @@ Supabase 대시보드 → **SQL Editor**에서 순서대로 실행합니다.
 | 15 | `supabase/16_update.sql` | 남에게도 보이는 참여 완료 통계 |
 | 16 | `supabase/17_update.sql` | 계정 삭제가 막히던 것 풀기 (액션을 만든 호스트 계정은 일부러 그대로 막음) |
 | 17 | `supabase/18_update.sql` | 결과 임시저장(사진 0장) · 공개 전 결과는 호스트만 읽기 |
+| 18 | `supabase/19_update.sql` | 취소된 액션은 소개·안내도 못 고치게 |
+| 19 | `supabase/20_update.sql` | 아바타 — 가입 때 8종 중 고르기 · 기존 가입자 배정 · 바꾸기 막기 |
 
 **번호 순서대로 전부 실행하세요.** 하나라도 빠뜨리면 앱이 조용히 깨집니다.
 예를 들어 06 을 안 돌리면 장소명·알림 설정·나가기 사유가 통째로 동작하지 않습니다.
@@ -438,4 +440,4 @@ Supabase 대시보드 → **SQL Editor**에서 순서대로 실행합니다.
 npx supabase gen types typescript --project-id <프로젝트ID> > lib/types/database.ts
 ```
 
-**이후 스키마 변경은 콘솔에서 직접 하지 말고** `supabase/19_update.sql` 처럼 다음 번호로 새 파일을 쌓으세요.
+**이후 스키마 변경은 콘솔에서 직접 하지 말고** `supabase/21_update.sql` 처럼 다음 번호로 새 파일을 쌓으세요.

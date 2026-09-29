@@ -29,7 +29,8 @@ git merge origin/dev        # ← 이 줄을 빼면 안 됩니다
 | 트렌드 대시보드 | `/trends` | `app/trends/page.tsx` · `components/trends/` |
 | 트렌드 AI 해설 | — | `app/api/ai/trends/route.ts` |
 | 집계 | — | `lib/queries/stats.ts` |
-| 시연 데이터 | — | `scripts/seed.mjs` |
+| 시연 데이터 | — | `scripts/seed.mjs` · `scripts/data/` · `scripts/check_seed_meta.mjs` |
+| **액션 찾기(Discover)** | `/discover` | `app/discover/` · `app/api/ai/discover/` · `components/action/DiscoverChat.tsx` · `lib/utils/scoring.ts` · `lib/utils/discover-ranking.ts` — **2026-09-29부터** |
 
 ---
 
@@ -223,9 +224,17 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
 
 ## 내 담당
 
-내 활동 화면 · 트렌드 대시보드 · 시연 데이터 · 발표.
+내 활동 화면 · 트렌드 대시보드 · 시연 데이터 · 발표 · 액션 찾기(Discover).
 app/activity/ · app/trends/ · components/trends/ · app/api/ai/trends/
 lib/queries/stats.ts · scripts/seed.mjs · components/action/ActivityButtons.tsx
+scripts/data/ · scripts/check_seed_meta.mjs
+app/discover/ · app/api/ai/discover/ · components/action/DiscoverChat.tsx
+lib/utils/scoring.ts · lib/utils/discover-ranking.ts   (Discover 는 2026-09-29부터 내 담당)
+
+lib/constants/regions.ts 는 가입·프로필과 같이 쓰는 개발 A 파일이다. 고칠 일이 있으면 개발 A 에게 말한다.
+액션 자동 분류는 민호 담당이다 — app/api/ai/classify/ 와 한꺼번에 다시 분류하는
+scripts/reclassify_all_actions.mjs · scripts/batch_reclassify_active.mjs 둘 다. 고치지 않는다.
+다시 분류가 필요하면 민호에게 말한다 (npm run reclassify 는 미리보기가 기본이라 돌려 봐도 바뀌는 것은 없다).
 
 화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
 
@@ -272,7 +281,8 @@ lib/queries/stats.ts · scripts/seed.mjs · components/action/ActivityButtons.ts
     ActionCard Header BottomNav
 
 11. lib/ 과 components/ui/ 는 다섯 명이 함께 쓰는 공유 구역이다.
-    lib/queries/stats.ts 와 components/trends/ 는 내 담당이라 고쳐도 된다.
+    lib/queries/stats.ts · lib/utils/scoring.ts · lib/utils/discover-ranking.ts 와
+    components/trends/ 는 내 담당이라 고쳐도 된다.
     그 밖의 lib/ 파일은 수정하지 말고 "수정이 필요하다"고 알려준다.
 
 12. 되돌릴 수 없는 동작(나가기·삭제·취소)에는 반드시 확인 창을 넣는다.

@@ -22,7 +22,7 @@ export function CrewVoiceList({
             key={voice.id}
             className="flex gap-2.5 rounded-xl bg-neutral-50 p-4"
           >
-            <Avatar name={voice.author.nickname} size="sm" />
+            <Avatar name={voice.author.nickname} avatar={voice.author.avatar} size="sm" />
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline gap-2">
                 <span className="text-label font-semibold text-neutral-900">

@@ -49,6 +49,7 @@ export function ActionCrewSection({
                 <Avatar
                   key={member.id || idx}
                   name={member.nickname ?? '?'}
+                  avatar={member.avatar}
                   size="sm"
                   className="ring-2 ring-white"
                 />

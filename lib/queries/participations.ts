@@ -53,7 +53,7 @@ export async function getMyJoinedActions(
       .select(
         `id, title, description, category, categories, image_urls, thumbnail_index,
          address, place_name, status, activity_start_at, recruit_end_at,
-         owner:profiles!actions_owner_id_fkey ( id, nickname )`,
+         owner:profiles!actions_owner_id_fkey ( id, nickname, avatar )`,
       )
       .in('id', actionIds),
     supabase
@@ -100,7 +100,7 @@ export async function getMyJoinedActions(
     recruit_end_at: string | null;
     status: string;
     activity_start_at: string | null;
-    owner: { id: string; nickname: string } | null;
+    owner: { id: string; nickname: string; avatar: string | null } | null;
   };
 
   const actionMap = new Map(
@@ -150,7 +150,7 @@ export async function getMyJoinedActions(
         status: a.status as ActionStatus,
         activityStartAt: a.activity_start_at,
         recruitEndAt: a.recruit_end_at,
-        owner: a.owner ?? { id: '', nickname: '알 수 없음' },
+        owner: a.owner ?? { id: '', nickname: '알 수 없음', avatar: null },
         likeCount: c?.like_count ?? 0,
         saveCount: c?.save_count ?? 0,
         crewCount: c?.crew_count ?? 0,
@@ -303,7 +303,7 @@ export async function getUserSummaries(
     await Promise.all([
       supabase
         .from('profiles')
-        .select('id, nickname, bio')
+        .select('id, nickname, avatar, bio')
         .in('id', userIds),
       // 남의 참여는 RLS 때문에 직접 세면 0 이나 일부만 나옵니다 (16).
       getPublicParticipationCounts(supabase, userIds),
@@ -330,6 +330,7 @@ export async function getUserSummaries(
   return (profiles ?? []).map((p) => ({
     id: p.id,
     nickname: p.nickname,
+    avatar: p.avatar,
     bio: p.bio,
     participatedCount: partCount.get(p.id) ?? 0,
     ledCount: ledCount.get(p.id) ?? 0,
@@ -355,7 +356,7 @@ export async function getActionResult(
       .from('crew_voices')
       .select(
         `id, content, created_at,
-         author:profiles!crew_voices_user_id_fkey ( id, nickname )`,
+         author:profiles!crew_voices_user_id_fkey ( id, nickname, avatar )`,
       )
       .eq('action_id', actionId)
       .order('created_at', { ascending: false }),
@@ -367,7 +368,7 @@ export async function getActionResult(
     id: string;
     content: string;
     created_at: string;
-    author: { id: string; nickname: string } | null;
+    author: { id: string; nickname: string; avatar: string | null } | null;
   };
 
   return {
@@ -379,7 +380,7 @@ export async function getActionResult(
       id: v.id,
       content: v.content,
       createdAt: v.created_at,
-      author: v.author ?? { id: '', nickname: '알 수 없음' },
+      author: v.author ?? { id: '', nickname: '알 수 없음', avatar: null },
     })),
   };
 }

@@ -188,18 +188,19 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 갈리면 액션과 연결이 안 되기 때문입니다 (`lib/constants/index.ts` 주석).
 
 **재능은 15개 + 「기타」 = 화면에 16종**입니다 (2026-09-28, 조장님 요청으로 9 → 15).
-목록은 **`SKILLS` 에서 정합니다.** 가입·프로필 수정(`TalentPreferenceEditor`)·AI 분류(`classify`)·Discover 선택지(`getQuestionOptions`)가 그걸 가져다 씁니다.
+목록은 **`SKILLS` 에서 정합니다.** 가입·프로필 수정(`TalentPreferenceEditor`)·AI 분류(`lib/ai/classify-spec.ts`)·Discover 선택지(`getQuestionOptions`)가 그걸 가져다 씁니다.
 **「기타」 를 `SKILLS` 에 넣지 마세요** — 화면이 `[...SKILLS, '기타']` 로 칩을 만들어서 두 번 나옵니다.
 새 재능은 **끝에 붙이세요** — 앞의 이름을 바꾸면 이미 저장된 값과 안 맞습니다. `tests/skills-list.test.ts` 가 지킵니다.
 
-**다만 재능 이름을 손으로 적은 곳이 4곳 남아 있습니다** (2026-09-28 확인). 지금 값은 `SKILLS` 와 같지만,
-테스트는 `SKILLS` 만 보므로 **목록을 바꾸면 이 4곳은 조용히 어긋납니다.** 바꿀 때 같이 고치세요.
+**다만 재능 이름을 손으로 적은 곳이 남아 있습니다** (2026-09-29 확인). 지금 값은 `SKILLS` 와 같습니다.
+목록을 바꾸면 아래 표에서 **「조용히 어긋남」 인 곳은 테스트가 못 잡으니** 같이 고치세요.
 
 | 어디 | 무엇 |
 |---|---|
-| `app/api/ai/discover/route.ts` 의 `CHAT_SYSTEM` | 16종을 프롬프트 글로 적었습니다 (화면 선택지는 `SKILLS` 에서 나옵니다) |
-| `components/action/DiscoverChat.tsx` | 선택지에 `'사진 촬영'`·`'요리'` 가 있는지로 재능 질문인지 판정합니다 |
-| `scripts/reclassify_all_actions.mjs` · `batch_reclassify_active.mjs` | 자체 목록과 허용 목록 프롬프트를 따로 들고 있습니다 |
+| `app/api/ai/discover/route.ts` 의 `CHAT_SYSTEM` | 16종을 프롬프트 글로 적었습니다 (화면 선택지는 `SKILLS` 에서 나옵니다) — **조용히 어긋남** |
+| `components/action/DiscoverChat.tsx` | 선택지에 `'사진 촬영'`·`'요리'` 가 있는지로 재능 질문인지 판정합니다 — **조용히 어긋남** |
+| `lib/ai/classify-spec.ts` 지시문의 출력 예시 | 재능 3개를 예로 적었습니다 — `tests/classify-sync.test.ts` 가 허용 목록 안인지 **검사합니다** |
+| `scripts/seed.mjs` 시드 사용자 재능 · `scripts/verify-db.mjs` 검사값 | 사람마다 고른 값으로 적었습니다 — **조용히 어긋남** |
 
 **Discover 는 위 `null` / `[]` 구분을 쓰지 않습니다** (2026-09-09 `452a6d2` 부터).
 `profile.skills ?? []` 로 받아 둘 다 「등록된 재능 없음」 으로 봅니다.
@@ -212,6 +213,9 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 | 활동 시작 **전** | `cancelAction()` | `CANCELLED` | **안 셉니다** |
 | 활동 **중** | `endActionEarly()` | `ENDED` | **셉니다** |
 | 활동 종료 후 | 둘 다 안 됩니다 | — | 결과를 쓰는 길만 남습니다 |
+
+**취소된 액션은 소개·안내도 고칠 수 없습니다** (2026-09-29, `supabase/19`). 「액션 수정」 버튼도 안 보이고, 수정 화면에 들어오면 상세로 돌려보냅니다.
+종료·완료된 액션은 F41 대로 소개·안내를 고칠 수 있습니다.
 
 "없던 일이 된 것"과 "하긴 했는데 일찍 끝난 것"을 나누기로 했습니다. 조기 종료는 예정 종료와 똑같이 흘러갑니다 — 크루는 `AFTER_ACTION`이 되고, 소감을 쓰면 참여 완료입니다.
 
@@ -370,6 +374,22 @@ DRAFT · CANCELLED · 그 밖을 각각 나누고, DRAFT 는 「아직 공개 �
 > **새 날짜 함수를 넣을 때도 `getHours()` 류를 직접 쓰지 마세요.** `date.ts` 안의
 > `toKst()` 로 옮긴 뒤 `getUTC*` 로 읽습니다. 테스트가 이 규칙을 소스에서 검사합니다.
 
+
+**18. 사람 얼굴을 그릴 때는 고른 아바타를 같이 넘기세요** (2026-09-29).
+
+```tsx
+// ❌ 닉네임만 넘기면 그 사람이 고른 것과 다른 얼굴이 나옵니다
+<Avatar name={user.nickname} />
+
+// ✅ 조회 함수(lib/queries)가 주는 avatar 를 같이
+<Avatar name={user.nickname} avatar={user.avatar} />
+```
+
+가입할 때 8종 중 하나를 고르고(`profiles.avatar`) 바꿀 수 없습니다. 사람 정보를 주는 조회 함수
+(작성자 · 호스트 · 크루 · 팔로워 · 프로필)는 모두 `avatar` 를 같이 줍니다. 새로 조회를 짤 때도
+`nickname` 옆에 `avatar` 를 같이 고르세요. 목록은 `lib/constants` 의 `AVATAR_KEYS` 와 `supabase/20` 두 곳이고
+`tests/avatar.test.ts` 가 같은지 대조하고, **화면의 모든 `<Avatar>` 가 `avatar=` 를 넘기는지도 검사합니다** — 빠뜨리면 테스트가 깨집니다.
+
 ---
 
 ## 자주 쓰는 명령
@@ -395,10 +415,26 @@ npm run seed
 
 **AI 분류(`action_ai_metadata`)는 시드가 `scripts/data/action_ai_metadata_all.json` 에서 제목으로 찾아 넣습니다.**
 그 JSON 에 없는 제목(새로 끝에 붙인 액션)은 기본값(`실내 활동` · `누구나 참여가능`)으로 들어가서
-Discover 의 환경·난이도 점수가 틀어집니다. 다시 분류해야 하는데, **지금 `scripts/reclassify_all_actions.mjs` 는 돌리지 마세요.**
-`classify-v2` 가 **아닌** 것만 골라서, 시드 기본값(`classify-v2`)으로 들어간 새 액션은 건너뛰고
-앱에서 분류한 `classify-v3` 액션을 전부 v2 로 덮어씁니다. 서비스 롤 키로 공유 DB 에 바로 쓰고,
-끝나면 JSON 도 DB 전체 내용으로 새로 씁니다. 조장 구역이라 성은님께 요청하세요.
+Discover 의 환경·난이도 점수가 틀어집니다. 그럴 때는 다시 분류합니다 (민호 담당, 2026-09-29에 고침).
+
+```bash
+npm run reclassify                    # 미리보기 — 무엇을 분류할지 목록만 (AI·DB 쓰기 없음)
+npm run reclassify -- --apply         # 아직 제대로 분류 안 된 것만 분류해서 저장
+npm run reclassify -- --export-seed   # 시드용 JSON 을 새로 씀 — 시드 액션 중 제대로 분류된 것만
+npm run reclassify:active             # 모집 중 액션을 지금 판으로 — 미리보기. 저장은 -- --apply
+```
+
+두 명령은 **대상이 다릅니다.**
+
+| 명령 | 대상 | 이미 분류된 액션 |
+|---|---|---|
+| `reclassify` | 색인 없음 · 시드 기본값 · 공개 때 AI 실패 기본값 | **건너뜁니다** |
+| `reclassify:active` | 모집 중 액션 중 판이 지금 판(`classify-v3`)이 아닌 것 | **덮어씁니다** — 지금은 시드 51개가 `classify-v2` 라 전부 대상. 시연 전 추천이 바뀔 수 있습니다 |
+
+`--export-seed` 는 새 내용이 비었거나 기존 파일보다 10% 넘게 줄면 쓰지 않습니다(`--force` 로만). `seed:clean` 뒤에 돌려 빈 파일이 되는 사고를 막습니다.
+전에는 「`classify-v2` 가 아닌 것」 을 골라서 앱에서 분류한 v3 를 덮어쓰고, 정작 시드 기본값은 건너뛰었습니다.
+서비스 롤 키로 공유 DB 에 바로 쓰니 **먼저 미리보기로 목록을 보세요.** 결과는 `ai_runs` 에도 남습니다.
+한 가지 남은 것 — `scripts/seed.mjs` 는 JSON 의 판 이름을 읽지 않고 늘 `classify-v2` 로 넣습니다(조장 구역).
 
 액션 101개에는 화면을 하나씩 확인할 수 있는 상태가 골고루 들어 있습니다.
 
@@ -493,12 +529,14 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 | 라우트 | 상수 | 지금 값 (2026-09-28) |
 |---|---|---|
 | `app/api/ai/review/` | `PROMPT_VERSION` | `review-v7` |
-| `app/api/ai/classify/` | `PROMPT_VERSION` | `classify-v3` |
+| `app/api/ai/classify/` — 규칙은 `lib/ai/classify-spec.ts` | `CLASSIFY_PROMPT_VERSION` | `classify-v3` |
 | `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v2` |
 | `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-v3-zero-assumption` · `discover-recommend-v4-anti-hallucination` |
 
 **번호는 올리기만 하세요.** 이름을 바꾸면서 숫자가 내려가면(`v7` → `v3`) 발표 자료에서 어느 쪽이 나중인지 헷갈립니다.
-`scripts/` 의 재분류 스크립트는 `ai_runs` 에 기록을 남기지 않습니다.
+**분류 지시문·답 검사·허용 목록은 `lib/ai/classify-spec.ts` 한 곳입니다.** 공개 때 분류(라우트)와
+재분류 스크립트(`scripts/classify-core.mjs`)가 같이 import 합니다 — 거기만 고치고 판을 올리세요.
+`tests/classify-sync.test.ts` 가 두 곳이 자기 지시문을 따로 들기 시작하면 잡습니다. 스크립트 기록도 같은 판 이름으로 `ai_runs` 에 남습니다(사용자 없이).
 
 `ai_runs` 테이블에 버전별 성공/실패가 쌓입니다. 발표의 "검증·개선" 항목은 여기서 뽑습니다 — 처음 프롬프트가 틀린 답을 낸 사례와, 고친 뒤 정확해진 사례를 나란히 보여줄 수 있습니다. **초기 버전 로그를 지우지 마세요.**
 
@@ -610,11 +648,14 @@ router.refresh();
 
 물품도 같은 구조를 씁니다. 보통 MINIMUM입니다.
 
-**화면 표시 규칙 두 개:**
+**화면 표시 규칙 세 개:**
 
 1. **MINIMUM에는 퍼센트를 쓰지 않습니다.** 15/10 = 150%는 사용자에게 의미가 없습니다.
 2. **RANGE의 분모는 끝까지 고정입니다.** `2 / 3~5명` → (3명 도달) → `3 / 3~5명`
    정확히 N명일 때만 `2 / 3명` 처럼 한 숫자로 씁니다.
+3. **MINIMUM 도 「현재 / 목표」 입니다.** `35개 / 30개` — 목표를 넘겨도 분모는 목표 그대로.
+   9/22 소정님 개편으로 화면이 먼저 바뀌었고 2026-09-29 에 유지로 정했습니다.
+   그 전 결정(9/17 「N개 모였어요」)은 어디에도 안 나와서 `quota.ts` 도 맞췄습니다.
 
 > 2026-09-01에 바꿨습니다. 전에는 최소를 넘기면 분모가 `3` → `5` 로 바뀌었는데,
 > **숫자가 갑자기 변해서 헷갈린다**는 지적을 받았습니다.
@@ -633,7 +674,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 | 항목 | 결정 |
 |---|---|
-| 프로필 사진 | **업로드 없음.** 닉네임으로 고르는 픽셀 표정 아바타 10종 (`components/ui/Avatar.tsx`) — 2026-09-28에 이니셜 색상 원에서 바뀜(소정님). 9/29 모임에서 팀 확인 |
+| 프로필 사진 | **업로드 없음.** 가입 2단계에서 **아바타 8종 중 하나를 꼭 고르고, 바꿀 수 없습니다**(서버에서도 막음, `supabase/20`). 이미 가입한 사람은 8종 중 골고루 배정했습니다. 그림은 `public/avatars/avatar_01~08.svg` — 2026-09-29 조장님 요청 · 팀 결정 (그 전: 9/28 닉네임으로 정하는 표정 10종) |
 | 액션 대표 이미지 | 최대 3장 + 대표 지정 |
 | 결과 사진 | **공개할 때** 최소 1장, 최대 5장 (필수). **임시저장은 0장도 됨** — 2026-09-11 |
 | 물품 단위 | 자유 입력. 수량도 직접 타이핑 가능 |
@@ -659,12 +700,17 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 | 담당 | 구역 |
 |---|---|
-| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · `README.md` · `CLAUDE.md`) |
-| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` |
+| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/classify-core.mjs`** · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · `README.md` · `CLAUDE.md`) |
+| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` · **`app/discover/`** · **`app/api/ai/discover/`** · **`lib/utils/scoring.ts`** · **`lib/utils/discover-ranking.ts`** |
 | 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · **`app/not-found.tsx`** · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` · **`postcss.config.mjs`** |
-| 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · `app/discover/` · **`components/my/`** · `app/api/ai/discover/` · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` · `lib/utils/scoring.ts` · **`lib/utils/discover-ranking.ts`** |
+| 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · **`components/my/`** · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` |
 | 개발 B | `app/action/create/` · `app/action/[id]/` 하위 (join · welcome · crew · chat · **edit** · result · voice) |
 | 공유 | `tests/` — **누구나 추가**할 수 있습니다. 남의 담당 로직 테스트를 **고칠** 때는 그 담당에게 말하세요 |
+
+**액션 찾기(Discover)는 2026-09-29부터 조장 담당입니다.** 9/23 부터 성은님이 개편을 맡았고,
+9/29 지수님이 「제 작업 범위에서 빼겠다」 고 해서 옮겼습니다.
+`lib/constants/regions.ts` 는 가입·프로필 지역 선택(`RegionPicker`)도 같이 써서 **개발 A 에 남깁니다** — Discover 쪽에서 고쳐야 하면 지수님께 말해주세요.
+액션 자동 분류(`app/api/ai/classify/`)는 **민호 담당으로 정했습니다** (9/29). 한꺼번에 다시 분류하는 스크립트(`scripts/reclassify_all_actions.mjs` · `batch_reclassify_active.mjs`)도 **민호가 맡습니다** — 공개 때 분류와 같은 AI 지시문을 따로 들고 있어서 한 사람이 같이 고쳐야 합니다. 시드용 결과 파일(`scripts/data/`)과 `check_seed_meta.mjs` 는 시드와 한 몸이라 조장 그대로입니다.
 
 `components/action/` 은 **파일 단위로 담당**이 있습니다.
 
@@ -672,10 +718,10 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 |---|---|
 | ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm · **LeaveButton** · **AddressSearch** · **ActionHostActions** · **ActionTextEditForm** · **AddActionItemsForm** · **CrewVoiceList** · **ReasonModal** · **DateTimePickerModal** | 개발 B |
 | ActivityButtons | 조장 |
-| DiscoverChat | 개발 A |
+| DiscoverChat | **조장** (2026-09-29) |
 | SharePanel | **공유** — 공유 화면(민호)과 `ShareModal`(디자이너)이 같이 씁니다. 고치기 전에 말하기 |
 | ActionGallery · AddressBox · **ActionCrewSection** · **ShareModal** | 디자이너 |
-| QuotaProgress | **공유** — 상세(디자이너)와 참여(개발 B)가 같이 씁니다. 고치기 전에 말하기 |
+| QuotaProgress | 디자이너 — 2026-09-25 부터 **액션 상세에서만** 씁니다(참여 화면은 안 씀). 2026-09-29 에 「공유」 에서 바꿈 |
 
 `AddressSearch` 와 `ActionHostActions` 는 이 표에 없어서 담당이 비어 있었습니다 (2026-09-14에 채웠습니다).
 쓰이는 곳으로 갈랐습니다 — `AddressSearch` 는 `ActionForm` 에서만, `ActionHostActions` 는
@@ -698,7 +744,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 이 둘은 내용도 화면 UI 라 호출하는 쪽과 방향이 같습니다.
 
 > **`ShareModal` 을 디자이너로 두면서 `SharePanel` 이 「공유」가 됐습니다.** 공유 화면(민호)과
-> `ShareModal`(디자이너) 두 곳에서 쓰이기 때문입니다 — `QuotaProgress` 와 똑같은 모양입니다.
+> `ShareModal`(디자이너) 두 곳에서 쓰이기 때문입니다.
 > `ShareModal` 은 모달 제목 17px · 액션 제목 15px 을 들고 있어 **8쪽 타이포 전담 PR 의 대상**입니다.
 > 민호에게 주면 그 PR 이 담당 경계를 넘게 됩니다.
 

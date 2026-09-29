@@ -1,4 +1,7 @@
-# 개발 A — 가입 · 프로필 · Discover 추천
+# 개발 A — 가입 · 프로필
+
+> **2026-09-29부터 Discover(액션 찾기)는 조장(성은님) 담당입니다.** 지수님이 넘기기로 했습니다.
+> 이 문서에 남은 Discover 이야기(③ · F36 · 재능 · Discover 범위)는 **기록으로 둔 것**이고, 지금 담당은 가입·프로필입니다.
 
 > **이 문서 하나만 AI에게 줘도 됩니다.** 필요한 제약이 아래에 다 들어 있습니다.
 > 팀 공통 작업 규칙(브랜치·PR)은 [00-공통규칙.md](./00-공통규칙.md)에 있습니다.
@@ -32,9 +35,9 @@ git merge origin/dev        # ← 이 줄을 빼면 안 됩니다
 | 저장한 액션 | `/my/saved` | `app/my/saved/page.tsx` | 동작함 |
 | 타인 프로필 | `/user/[id]` | `app/user/[id]/page.tsx` | 동작함 |
 | 팔로워·팔로잉 | `/user/[id]/followers` `/following` | 같은 폴더 | 동작함 |
-| **Discover 추천** | `/discover` | `app/discover/page.tsx` + `app/api/ai/discover/route.ts` | 동작함 |
+| Discover 추천 | `/discover` | **2026-09-29부터 조장 담당** | — |
 
-같이 맡는 파일: `lib/constants/regions.ts` (지역 목록) · `lib/utils/scoring.ts` · `lib/utils/discover-ranking.ts` (추천 점수) · `components/action/DiscoverChat.tsx` (Discover 대화 UI)
+같이 맡는 파일: `lib/constants/regions.ts` (지역 목록 — Discover 도 같이 씁니다). 추천 점수(`scoring.ts` · `discover-ranking.ts`)와 `DiscoverChat.tsx` 는 2026-09-29부터 조장 담당입니다.
 
 내 폴더: `components/my/` (`MySavedSection` · `ProfileActionList` · `ProfileActionSection` · `ProfileStats` — 프로필·MY 화면 부품) · `app/api/auth/check-email/` (가입 이메일 중복 확인)
 
@@ -298,17 +301,20 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase · OpenAI gpt-
 
 ## 내 담당
 
-가입·로그인·프로필·Discover 추천.
-app/(auth)/ · app/my/ · app/user/ · app/discover/ · app/api/ai/discover/
+가입·로그인·프로필.
+app/(auth)/ · app/my/ · app/user/
 components/my/ · app/api/auth/check-email/
-lib/constants/regions.ts · lib/utils/scoring.ts · lib/utils/discover-ranking.ts
-components/action/DiscoverChat.tsx
+lib/constants/regions.ts
 
-components/my/ · app/api/auth/check-email/ · lib/utils/discover-ranking.ts 는
+Discover(액션 찾기)는 2026-09-29부터 조장 담당이다. 아래 파일은 고치지 않는다.
+app/discover/ · app/api/ai/discover/ · components/action/DiscoverChat.tsx
+lib/utils/scoring.ts · lib/utils/discover-ranking.ts
+lib/constants/regions.ts 는 Discover 도 같이 쓰니, 고칠 때는 조장에게 먼저 말한다.
+
+components/my/ · app/api/auth/check-email/ 는
 2026-09-17에 내 담당이 됐다. 표에 없어서 담당이 비어 있던 것들이다.
   components/my/          app/my/ 와 app/user/ 에서만 쓰는 프로필·MY 부품 4개
   check-email             가입 이메일 중복 확인 API
-  discover-ranking.ts     추천 순위. lib/ 이지만 내가 바로 고쳐도 되는 예외 파일이다
 
 ⚠️ check-email 은 서비스 롤 키(createAdminClient())를 쓰고 레이트리밋을 돌리며
    「계정 존재 여부를 오류 메시지로 흘리지 않는다」 판단이 들어 있다.
@@ -374,8 +380,8 @@ components/my/ · app/api/auth/check-email/ · lib/utils/discover-ranking.ts 는
    Header BottomNav
 
 11. lib/ 과 components/ui/ 는 다섯 명이 함께 쓰는 공유 구역이다.
-    lib/constants/regions.ts · lib/utils/scoring.ts · lib/utils/discover-ranking.ts 는
-    내 담당이라 고쳐도 된다.
+    lib/constants/regions.ts 는 내 담당이라 고쳐도 된다.
+    (scoring.ts · discover-ranking.ts 는 2026-09-29부터 조장 담당이다)
     그 밖의 lib/ 파일은 수정하지 말고 "수정이 필요하다"고 알려준다.
 
 12. 서버 컴포넌트가 기본이다. 'use client' 는 훅·이벤트가 필요할 때만 쓴다.

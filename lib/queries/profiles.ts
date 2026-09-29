@@ -26,7 +26,7 @@ export async function getProfile(
   const { data: p, error } = await supabase
     .from('profiles')
     .select(
-      'id, name, nickname, gender, bio, skills, categories, available_times, time_prefs, notify_off, regions',
+      'id, name, nickname, avatar, gender, bio, skills, categories, available_times, time_prefs, notify_off, regions',
     )
     .eq('id', userId)
     .maybeSingle();
@@ -53,6 +53,7 @@ export async function getProfile(
     id: p.id,
     name: p.name,
     nickname: p.nickname,
+    avatar: p.avatar,
     gender: p.gender as Gender,
     // null 과 빈 배열을 구분해야 해서 ?? [] 를 쓰지 않습니다
     skills: p.skills,

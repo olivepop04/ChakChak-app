@@ -31,10 +31,10 @@ function no(name, extra = '') {
   fail++; console.log(`  ❌ ${name}${extra ? '  — ' + extra : ''}`);
 }
 
-async function makeUser(email, nickname, gender) {
+async function makeUser(email, nickname, gender, avatar) {
   const { data, error } = await admin.auth.admin.createUser({
     email, password: 'test1234!', email_confirm: true,
-    user_metadata: { name: nickname, nickname, gender },
+    user_metadata: { name: nickname, nickname, gender, ...(avatar ? { avatar } : {}) },
   });
   if (error) throw new Error(`계정 생성 실패(${email}): ${error.message}`);
   created.users.push(data.user.id);
@@ -82,7 +82,7 @@ try {
   // ── 2. 가입 트리거 ────────────────────────────────────────
   console.log('\n[2] 회원가입 시 profiles 행이 자동으로 생기는가  (T1)');
 
-  const uidA = await makeUser(emailA, `owner${stamp}`, 'MALE');
+  const uidA = await makeUser(emailA, `owner${stamp}`, 'MALE', 'avatar_05');
   const uidB = await makeUser(emailB, `female${stamp}`, 'FEMALE');
   const uidC = await makeUser(emailC, `male${stamp}`, 'MALE');
 
@@ -97,6 +97,24 @@ try {
   pb?.gender === 'FEMALE'
     ? ok('성별이 올바르게 저장됨')
     : no('성별 저장 실패', String(pb?.gender));
+
+  // ── 아바타 (20) — 가입 때 고른 값 저장 · 안 고르면 기본값 · 사용자는 못 바꿈 ──
+  const { data: avs } = await admin.from('profiles')
+    .select('id, avatar').in('id', [uidA, uidB]);
+  const avA = avs?.find(p => p.id === uidA)?.avatar;
+  const avB = avs?.find(p => p.id === uidB)?.avatar;
+  // 고른 값(avatar_05)이 우연히 그 계정의 기본값과 같으면 「저장됐다」 를 가릴 수 없습니다 (8번 중 1번꼴)
+  const { data: defA } = await admin.rpc('default_avatar', { p_user_id: uidA });
+  if (avA !== 'avatar_05') {
+    no('고른 아바타가 저장 안 됨 !! — 20_update.sql 을 실행했는가', String(avA));
+  } else if (defA === 'avatar_05') {
+    ok('가입 때 고른 아바타가 저장됨', '이번 계정은 기본값도 avatar_05 라 판정 약함 — 다시 돌리면 가려짐');
+  } else {
+    ok('가입 때 고른 아바타가 저장됨', `기본값 ${defA} 가 아니라 고른 값`);
+  }
+  /^avatar_0[1-8]$/.test(avB ?? '')
+    ? ok('안 고르면 8종 중 하나가 들어감', avB)
+    : no('아바타 기본값이 비었거나 목록 밖 !!', String(avB));
 
   // ── 3. 액션 · 모집 항목 ───────────────────────────────────
   console.log('\n[3] 액션과 모집 항목 3종을 만들 수 있는가');
@@ -146,6 +164,31 @@ try {
   console.log('[3-b] Owner 가 AI 색인을 저장할 수 있는가');
 
   const cA = await asUser(emailA);
+
+  // 지금 값과 다른 값으로 바꿔 봐야 막히는지 알 수 있습니다
+  const { data: curA } = await admin.from('profiles').select('avatar').eq('id', uidA).single();
+  const otherKey = curA?.avatar === 'avatar_01' ? 'avatar_02' : 'avatar_01';
+  const rAv = await cA.from('profiles').update({ avatar: otherKey }).eq('id', uidA);
+  rAv.error?.message.includes('아바타는 가입할 때')
+    ? ok('한 번 고른 아바타는 본인도 못 바꿈', rAv.error.message.slice(0, 24))
+    : no('사용자가 아바타를 바꿀 수 있음 !! — 20_update.sql 을 실행했는가', rAv.error?.message.slice(0, 40) ?? '오류 없음');
+
+  // 관리자(서비스 롤)는 고쳐 줄 수 있어야 합니다 — 잘못 골라 곤란한 경우
+  const rAdm = await admin.from('profiles').update({ avatar: otherKey }).eq('id', uidA);
+  rAdm.error
+    ? no('관리자도 아바타를 못 고침 !!', rAdm.error.message.slice(0, 40))
+    : ok('관리자는 아바타를 고칠 수 있음');
+  await admin.from('profiles').update({ avatar: curA?.avatar }).eq('id', uidA);
+
+  const rBad = await admin.from('profiles').update({ avatar: 'avatar_09' }).eq('id', uidA);
+  rBad.error
+    ? ok('8종 밖 아바타는 관리자도 못 넣음', rBad.error.message.slice(0, 24))
+    : no('8종 밖 아바타가 들어감 !!');
+  if (!rBad.error) await admin.from('profiles').update({ avatar: curA?.avatar }).eq('id', uidA);
+  const rBio = await cA.from('profiles').update({ bio: '아바타 잠금 뒤에도 소개는 고쳐진다' }).eq('id', uidA);
+  rBio.error
+    ? no('아바타 잠금 때문에 다른 칸까지 막힘 !!', rBio.error.message.slice(0, 40))
+    : ok('아바타 말고 다른 칸은 그대로 고칠 수 있음');
   const { error: metaErr } = await cA.from('action_ai_metadata').upsert({
     action_id: act.id,
     categories: ['동물'],
@@ -1020,6 +1063,14 @@ try {
   rSh.error
     ? ok('취소된 액션 공유 거절', rSh.error.message.slice(0, 24))
     : no('취소된 액션이 공유됨 !!');
+
+  // 호스트 본인도 취소된 액션의 소개·안내는 못 고친다 (19)
+  const rTx = await cA.from('actions')
+    .update({ description: '취소 뒤에 고치기', notice: '취소 뒤 안내' })
+    .eq('id', cxAct.id);
+  rTx.error
+    ? ok('취소된 액션 소개·안내 수정 거절', rTx.error.message.slice(0, 24))
+    : no('취소된 액션인데 소개·안내가 고쳐짐 !! — 19_update.sql 을 실행했는가');
 
   // ── ④ 취소 전에 눌러둔 것은 남아 있고, 해제도 된다 ──
   const { data: keptLike } = await cB.from('likes')

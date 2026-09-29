@@ -120,29 +120,29 @@ test('범위형은 상한을 채우면 마감된다', () => {
 // 규칙 ③ 변수 뒤에 조사를 붙이지 않는다 + 화면 문구 고정
 // ─────────────────────────────────────────────────────────────
 
-test('사람 · 최소형 문구', () => {
+test('사람 · 최소형 문구 — 「현재 / 목표」 (2026-09-29)', () => {
   const 미달 = getQuotaState(사람최소, 3);
-  assert.equal(미달.countLabel, '3명 참여');
+  assert.equal(미달.countLabel, '3명 / 5명');
   assert.equal(미달.hint, '목표까지 2명 남았어요');
   assert.equal(미달.isMinMet, false);
 
   const 달성 = getQuotaState(사람최소, 7);
-  assert.equal(달성.countLabel, '7명 참여');
+  assert.equal(달성.countLabel, '7명 / 5명', '목표를 넘겨도 분모는 목표 그대로');
   assert.equal(달성.hint, '최소 인원은 채웠지만 더 많이 참여할수록 좋아요');
   assert.equal(달성.isMinMet, true);
 });
 
-test('물품 · 최소형 문구 — 「N개 모였어요」 (2026-09-17 결정 14)', () => {
+test('물품 · 최소형 문구 — 「현재 / 목표」 (2026-09-29, 9/17 결정 14 「N개 모였어요」 를 대신함)', () => {
   const 미달 = getQuotaState(물품최소, 4);
   assert.equal(
     미달.countLabel,
-    '4포 모였어요',
-    '「4포 모집」 이면 지금 모인 양인지 목표인지 구분되지 않습니다',
+    '4포 / 10포',
+    '분모가 있어야 지금 모인 양인지 목표인지 구분됩니다',
   );
   assert.equal(미달.hint, '목표까지 6포 남았어요');
 
   const 달성 = getQuotaState(물품최소, 12);
-  assert.equal(달성.countLabel, '12포 모였어요');
+  assert.equal(달성.countLabel, '12포 / 10포');
   assert.equal(달성.hint, '최소 수량을 채웠지만 더 많이 모일수록 좋아요');
 });
 

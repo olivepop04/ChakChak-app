@@ -663,6 +663,7 @@ export type Database = {
       profiles: {
         Row: {
           available_times: string[]
+          avatar: string
           bio: string | null
           categories: string[]
           created_at: string
@@ -679,6 +680,7 @@ export type Database = {
         }
         Insert: {
           available_times?: string[]
+          avatar: string
           bio?: string | null
           categories?: string[]
           created_at?: string
@@ -695,6 +697,7 @@ export type Database = {
         }
         Update: {
           available_times?: string[]
+          avatar?: string
           bio?: string | null
           categories?: string[]
           created_at?: string

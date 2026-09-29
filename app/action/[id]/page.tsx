@@ -77,12 +77,12 @@ export default async function ActionDetailPage({
 
   const dday = deadlineDDay(action.recruitEndAt);
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
+  // 취소된 액션은 고칠 수 없다 — 「없던 일」 이라 그 시점 내용이 남아야 한다 (2026-09-29, supabase/19)
   const canEditActionText =
     action.isOwner &&
     (action.status === 'ACTIVE' ||
       action.status === 'ENDED' ||
-      action.status === 'COMPLETED' ||
-      action.status === 'CANCELLED');
+      action.status === 'COMPLETED');
 
   const isPastActivityEnd = action.activityEndAt
     ? new Date() > new Date(action.activityEndAt)
@@ -233,7 +233,7 @@ export default async function ActionDetailPage({
         {/* 만든 사람 */}
         <div className="flex items-center gap-3">
           <Link href={`/user/${action.owner?.id ?? ''}`} className="flex items-center gap-3">
-            <Avatar name={action.owner?.nickname ?? '?'} />
+            <Avatar name={action.owner?.nickname ?? '?'} avatar={action.owner?.avatar} />
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-neutral-900">
                 @{action.owner?.nickname ?? '알 수 없음'}

@@ -35,6 +35,11 @@ export default async function EditActionPage({
     redirect(`/action/create?id=${id}`);
   }
 
+  // 취소된 액션은 고칠 수 없다 — 주소를 직접 쳐서 들어와도 상세로 돌려보낸다 (2026-09-29, supabase/19)
+  if (action.status === 'CANCELLED') {
+    redirect(`/action/${id}`);
+  }
+
   const canAddActionItems = action.status === 'ACTIVE' && !action.recruitClosed;
 
   return (

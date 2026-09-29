@@ -241,6 +241,29 @@ export const SKILLS = [
 
 export type Skill = (typeof SKILLS)[number];
 
+// ─────────────────────────────────────────────────────────────
+// 아바타 8종 (2026-09-29 · 조장님 요청 · 팀 결정)
+//
+//   가입 2단계에서 꼭 하나 고르고, 한 번 고르면 바꿀 수 없습니다(서버에서도 막음).
+//   이미 가입한 사람은 계정마다 골고루 배정했습니다 (supabase/20 의 default_avatar).
+//   그림은 public/avatars/{key}.svg — 소정님이 새 8종으로 바꿔 끼웁니다.
+//
+// ★ supabase/20 의 is_avatar_key 목록과 같아야 합니다 — tests/avatar.test.ts 가 대조합니다.
+//   늘리려면 두 곳을 같이 고치고 새 SQL 파일로 쌓으세요.
+// ─────────────────────────────────────────────────────────────
+export const AVATAR_KEYS = [
+  'avatar_01',
+  'avatar_02',
+  'avatar_03',
+  'avatar_04',
+  'avatar_05',
+  'avatar_06',
+  'avatar_07',
+  'avatar_08',
+] as const;
+
+export type AvatarKey = (typeof AVATAR_KEYS)[number];
+
 /** "나눌 수 있는 재능 없음" 을 골랐을 때 — 빈 배열로 저장합니다 */
 export const SKILL_NONE = '없음';
 /** "아직 잘 모르겠음" — 저장하지 않습니다(NULL 유지). 나중에 다시 물어봅니다 */

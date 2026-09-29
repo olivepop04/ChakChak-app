@@ -50,7 +50,7 @@ export interface ActionCardData {
   activityStartAt: string | null;
   /** 모집 마감 시각. "마감 임박" 표시와 정렬에 씁니다 */
   recruitEndAt: string | null;
-  owner: { id: string; nickname: string };
+  owner: { id: string; nickname: string; avatar: string | null };
   likeCount: number;
   saveCount: number;
   crewCount: number;
@@ -102,7 +102,7 @@ export interface ActionDetailData {
   recruitEndAt: string | null;
   activityStartAt: string | null;
   activityEndAt: string | null;
-  owner: { id: string; nickname: string; bio: string | null };
+  owner: { id: string; nickname: string; avatar: string | null; bio: string | null };
   items: ActionItemWithProgress[];
   likeCount: number;
   saveCount: number;
@@ -131,6 +131,8 @@ export interface JoinedActionData extends ActionCardData {
 export interface UserSummary {
   id: string;
   nickname: string;
+  /** 고른 아바타 (avatar_01 ~ avatar_08). 가입할 때 고르고 바꿀 수 없다 (20) */
+  avatar: string | null;
   bio: string | null;
   /** 소감까지 쓴 참여 수 */
   participatedCount: number;
@@ -205,7 +207,7 @@ export interface ChatPost {
   createdAt: string;
   deletedAt: string | null;
   kind: ChatKind;
-  author: { id: string; nickname: string };
+  author: { id: string; nickname: string; avatar: string | null };
   isMine: boolean;
   replies: ChatReply[];
 }
@@ -216,7 +218,7 @@ export interface ChatReply {
   createdAt: string;
   deletedAt: string | null;
   kind: ChatKind;
-  author: { id: string; nickname: string };
+  author: { id: string; nickname: string; avatar: string | null };
   isMine: boolean;
 }
 
@@ -243,6 +245,6 @@ export interface ActionResultData {
     id: string;
     content: string;
     createdAt: string;
-    author: { id: string; nickname: string };
+    author: { id: string; nickname: string; avatar: string | null };
   }>;
 }

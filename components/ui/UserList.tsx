@@ -25,7 +25,7 @@ export function UserList({
               href={`/user/${u.id}`}
               className="flex items-center gap-3 px-6 py-3 hover:bg-neutral-50"
             >
-              <Avatar name={u.nickname} />
+              <Avatar name={u.nickname} avatar={u.avatar} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-body font-semibold text-neutral-900">
                   @{u.nickname}
@@ -46,7 +46,7 @@ export function UserList({
     <ul className="divide-y divide-neutral-100">
       {users.map((u) => (
         <li key={u.id} className="flex items-center gap-3 px-6 py-3.5">
-          <Avatar name={u.nickname} />
+          <Avatar name={u.nickname} avatar={u.avatar} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-neutral-900">
               @{u.nickname}
