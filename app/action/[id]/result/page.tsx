@@ -13,7 +13,8 @@ import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { CrewVoiceList } from '@/components/action/CrewVoiceList';
-import { describeResult, describeResultRatio } from '@/lib/utils/quota';
+import { ArrowScroller } from '@/components/action/ActionGallery';
+import { describeResult, describeResultRatio, getQuotaState } from '@/lib/utils/quota';
 import { cn } from '@/lib/utils/cn';
 import { formatActivityPeriod } from '@/lib/utils/date';
 
@@ -111,6 +112,11 @@ export default async function ResultPage({
             {result.items.map((item, idx) => {
               const { ratio, isMet } = describeResultRatio(item, item.currentCount);
               const Icon = item.type === 'PERSON' ? UsersRound : Package;
+              const countLabel =
+                item.target_type === 'MINIMUM'
+                  ? `${item.currentCount}${item.unit} / ${item.min_required}${item.unit}`
+                  : getQuotaState(item, item.currentCount).countLabel;
+              const [countNumerator, countDenominator] = countLabel.split(' / ');
               return (
                 <Fragment key={item.id}>
                 {idx > 0 && <div className="h-px bg-neutral-200" />}
@@ -137,14 +143,18 @@ export default async function ResultPage({
                       {item.name}
                     </span>
 
-                    {/* 최종 모집 수만 표시 (목표 수 미표시) */}
+                    {/* 최종 수 / 목표 수 — 액션 상세 「모집 현황」(QuotaProgress)과 같은 표기 (2026-09-29, 검수 의견)
+                        범위 모집 「4 / 4~6명」 · 최소 모집 「50개 / 50개」, 목표 쪽은 회색으로 얇게 */}
                     <span
                       className={cn(
                         'shrink-0 text-body font-bold tabular-nums',
                         isMet ? 'text-brand' : 'text-neutral-900',
                       )}
                     >
-                      {item.currentCount}{item.unit}
+                      {countNumerator}
+                      {countDenominator && (
+                        <span className="font-medium text-neutral-500"> / {countDenominator}</span>
+                      )}
                     </span>
                   </div>
 
@@ -194,8 +204,12 @@ export default async function ResultPage({
               </section>
             )}
 
+            {/* 컴퓨터용 좌우 화살표 — 액션 상세·홈 카드 사진과 같은 부품 (2026-09-29, 조장님 의견) */}
             {result.imageUrls.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <ArrowScroller
+                step="partial"
+                className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
                 {result.imageUrls.map((url) => (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -205,7 +219,7 @@ export default async function ResultPage({
                     className="h-44 w-auto flex-none rounded-xl object-cover"
                   />
                 ))}
-              </div>
+              </ArrowScroller>
             )}
 
             {/* 호스트의 한마디 — 검정 박스 → 연한 그린 강조 박스 (Day14 통일안) */}
