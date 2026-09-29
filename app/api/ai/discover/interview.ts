@@ -36,6 +36,20 @@ export type QuestionKey =
   | 'time_pref'
   | 'participation_mode';
 
+export function normalizeQuestionKey(key: string | null | undefined): QuestionKey | null {
+  if (!key) return null;
+  if (key === 'categories' || key === 'field_preference') return 'categories';
+  if (key === 'target_groups' || key === 'vibe_preference') return 'target_groups';
+  if (key === 'difficulty') return 'difficulty';
+  if (key === 'skills' || key === 'talent_preference') return 'skills';
+  if (key === 'activity_types' || key === 'activity_type') return 'activity_types';
+  if (key === 'participation_modes' || key === 'group_size' || key === 'participation_mode') return 'participation_modes';
+  if (key === 'travel_range') return 'travel_range';
+  if (key === 'time_pref') return 'time_pref';
+  if (key === 'opening') return 'opening';
+  return key as QuestionKey;
+}
+
 export type UserStateCategory = 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
 
 export interface AdaptiveAnswers {
@@ -864,15 +878,15 @@ export function getQuestionReply(
   // 이동 범위 질문 (travel_range)
   if (key === 'travel_range') {
     return [
-      '다른 조건으로 액션을 찾아보는 것도 좋은 선택이에요! 😊',
-      '그럼, 이번에 어느 지역에서 활동하고 싶으세요?',
+      '이번에는 다른 조건으로 액션을 찾아볼게요. 😊',
+      '어느 지역에서 주로 활동하고 싶으세요?',
     ].join('\n');
   }
 
   // 활동 시간대 질문 (time_pref)
   if (key === 'time_pref') {
     return [
-      '보통 언제 참여하기 편하신가요? (복수 선택 가능)',
+      '활동하기 편한 요일이나 시간대가 있으신가요? (복수 선택 가능)',
     ].join('\n');
   }
 

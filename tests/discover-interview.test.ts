@@ -15,6 +15,7 @@ import {
   validateHarmfulSkillInput,
   formatSummaryChips,
   resolveUnifiedCategories,
+  normalizeQuestionKey,
   ALL_15_SKILLS,
 } from '../app/api/ai/discover/interview.ts';
 import { SKILLS } from '../lib/constants/index.ts';
@@ -698,7 +699,7 @@ test('파이팅 등 단순 응원/비재능 입력은 재능으로 저장되지 
 
 test('시간대 복수 선택(주말 오후, 평일 저녁) 시 모든 시간대가 timePreferences 배열로 추출된다', () => {
   const messages = [
-    { role: 'assistant' as const, content: '보통 언제 참여하기 편하신가요? (복수 선택 가능)' },
+    { role: 'assistant' as const, content: '활동하기 편한 요일이나 시간대가 있으신가요? (복수 선택 가능)' },
     { role: 'user' as const, content: '주말 오후, 평일 저녁' },
   ];
   const answers = extractAnswersFromDialogue(messages);
@@ -1084,7 +1085,7 @@ test('[신규가입자 시간 질문 검증] 지역 선택 후 시간이 아직 
     fieldReferenceCategories: [],
     hasHistory: false,
   });
-  assert.match(reply, /보통 언제 참여하기 편하신가요/);
+  assert.match(reply, /활동하기 편한.*시간대/);
 
   const options = getQuestionOptions('time_pref');
   assert.deepEqual(options, ['주말 오전', '주말 오후', '평일 낮', '평일 저녁', '시간 상관없음']);
@@ -1255,6 +1256,56 @@ test('[통합분야 패턴 필터링 규칙 검증] 모든 분야가 1회씩만 
   assert.equal(res.unifiedCategories.length <= 3, true);
   // 프로필과 겹치는 '동물'이 최우선 포함
   assert.equal(res.unifiedCategories.includes('동물'), true);
+});
+
+test('[질문 키 정규화 검증] 동의어 질문 키들이 표준 질문 키로 올바르게 정규화된다', () => {
+  assert.equal(normalizeQuestionKey('field_preference'), 'categories');
+  assert.equal(normalizeQuestionKey('categories'), 'categories');
+  assert.equal(normalizeQuestionKey('vibe_preference'), 'target_groups');
+  assert.equal(normalizeQuestionKey('target_groups'), 'target_groups');
+  assert.equal(normalizeQuestionKey('difficulty'), 'difficulty');
+  assert.equal(normalizeQuestionKey('talent_preference'), 'skills');
+  assert.equal(normalizeQuestionKey('skills'), 'skills');
+  assert.equal(normalizeQuestionKey('activity_type'), 'activity_types');
+  assert.equal(normalizeQuestionKey('activity_types'), 'activity_types');
+  assert.equal(normalizeQuestionKey('group_size'), 'participation_modes');
+  assert.equal(normalizeQuestionKey('participation_modes'), 'participation_modes');
+  assert.equal(normalizeQuestionKey('travel_range'), 'travel_range');
+  assert.equal(normalizeQuestionKey('time_pref'), 'time_pref');
+});
+
+test('[분야 선택 후 자연스러운 질문 전진 검증] 사용자가 분야("장애")를 선택하면 분야 질문이 완료되어 다음 순서인 활동 성격(vibe_preference)으로 즉시 전진한다', () => {
+  const messages = [
+    { role: 'assistant' as const, content: '어떤 분야의 활동에 가장 관심이 가시나요?' },
+    { role: 'user' as const, content: '장애' },
+  ];
+  const userAnswers = messages.filter((m) => m.role === 'user').map((m) => m.content);
+  const answers = {
+    ...extractAdaptiveAnswers(userAnswers),
+    ...extractAnswersFromDialogue(messages),
+  };
+
+  assert.equal(answers.selectedCategory, '장애');
+  assert.deepEqual(answers.selectedCategories, ['장애']);
+
+  const remaining = getRemainingQuestionKeys({
+    answers,
+    userState: 'B',
+    hasRegionAndTime: true,
+    hasHistory: false,
+    profileSkills: [],
+  });
+
+  // 카테고리(field_preference/categories)는 완료되어 남은 질문에 없어야 함
+  assert.equal(remaining.includes('field_preference'), false);
+  assert.equal(remaining.includes('categories'), false);
+
+  // 최우선 순위는 활동 성격 및 분위기(vibe_preference)여야 함
+  assert.equal(normalizeQuestionKey(remaining[0]), 'target_groups');
+
+  // getQuestionOptions 호출 시 활동 성격 옵션(교류·소통형, 육체·과업형, 상관없음)이 제공되어야 함
+  const options = getQuestionOptions(remaining[0], SKILLS);
+  assert.deepEqual(options, ['교류·교육·소통형', '육체·과업·집중형', '상관없음']);
 });
 
 
