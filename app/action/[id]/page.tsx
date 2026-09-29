@@ -160,11 +160,11 @@ export default async function ActionDetailPage({
       <div className="flex flex-col gap-6 px-6 pt-5">
         {/* 조기 종료 사유 */}
         {action.earlyEndReason && (
-          <div className="rounded-xl border border-red-100 bg-red-50 p-4">
-            <p className="text-sm font-semibold text-red-800">
+          <div className="rounded-xl border border-danger bg-danger-soft p-4">
+            <p className="text-sm font-semibold text-[#333333]">
               이 액션은 조기 종료되었어요
             </p>
-            <p className="mt-1 text-sm leading-relaxed text-red-700 break-words whitespace-pre-wrap">
+            <p className="mt-1 text-sm leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
               {action.earlyEndReason}
             </p>
           </div>
@@ -172,11 +172,11 @@ export default async function ActionDetailPage({
 
         {/* 취소 사유 */}
         {action.status === 'CANCELLED' && action.cancelReason && (
-          <div className="rounded-xl border border-red-100 bg-red-50 p-4">
-            <p className="text-sm font-semibold text-red-800">
+          <div className="rounded-xl border border-danger bg-danger-soft p-4">
+            <p className="text-sm font-semibold text-[#333333]">
               이 액션은 취소되었어요
             </p>
-            <p className="mt-1 text-sm leading-relaxed text-red-700 break-words whitespace-pre-wrap">
+            <p className="mt-1 text-sm leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
               {action.cancelReason}
             </p>
           </div>

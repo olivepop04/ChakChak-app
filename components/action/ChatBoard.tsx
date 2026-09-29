@@ -61,7 +61,7 @@ function ChatMessageRow({
             @{author.nickname}
           </span>
           {kind === 'LEFT_NOTICE' && (
-            <span className="shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
+            <span className="shrink-0 rounded bg-[#F0F0F0] px-1.5 py-0.5 text-[10px] font-bold text-neutral-400">
               참여 취소
             </span>
           )}
@@ -89,7 +89,7 @@ function ChatMessageRow({
             <button
               type="button"
               onClick={onDelete}
-              className="ml-auto text-caption text-neutral-400 hover:text-red-500"
+              className="ml-auto text-caption text-neutral-400 hover:text-danger"
             >
               삭제
             </button>

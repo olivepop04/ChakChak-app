@@ -545,7 +545,7 @@ function SignUpForm() {
       )}
 
       {error && (
-        <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-label text-red-600">
+        <p className="mt-4 rounded-xl bg-danger-soft px-3 py-2 text-label text-danger">
           {error}
         </p>
       )}

@@ -69,7 +69,7 @@ export function VoiceForm({
             className="min-h-[190px] rounded-xl border border-hairline p-4 text-body leading-relaxed outline-none placeholder:text-neutral-400 focus:border-brand"
           />
           <div className="flex items-center justify-between">
-            <span className="text-caption text-red-600">
+            <span className="text-caption text-danger">
               {tooShort ? `${LIMITS.CREW_VOICE_MIN}자 이상 적어주세요.` : ''}
             </span>
             <span className="text-caption tabular-nums text-neutral-400">

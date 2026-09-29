@@ -578,7 +578,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             {recruitEnd ? formatSchedule(recruitEnd) : '날짜와 시간을 선택해주세요'}
           </button>
           {dateError?.field === 'recruitEnd' && (
-            <span className="text-label text-red-600" role="alert">
+            <span className="text-label text-danger" role="alert">
               {dateError.message}
             </span>
           )}
@@ -644,7 +644,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
             {activityEnd ? formatSchedule(activityEnd) : '날짜와 시간을 선택해주세요'}
           </button>
           {dateError?.field === 'activityEnd' && (
-            <span className="text-caption text-red-600" role="alert">
+            <span className="text-caption text-danger" role="alert">
               {dateError.message}
             </span>
           )}
@@ -683,7 +683,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
           />
         </label>
         {placeError && (
-          <p id="place-error" className="text-label text-red-600" role="alert">
+          <p id="place-error" className="text-label text-danger" role="alert">
             {placeError}
           </p>
         )}

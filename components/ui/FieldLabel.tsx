@@ -26,7 +26,7 @@ export function FieldLabel({
   return (
     <span className={cn('text-label font-semibold text-neutral-500', className)}>
       {children}
-      {required && <span className="text-red-500"> *</span>}
+      {required && <span className="text-danger"> *</span>}
     </span>
   );
 }

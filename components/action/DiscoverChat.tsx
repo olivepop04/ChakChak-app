@@ -520,7 +520,7 @@ export function DiscoverChat({
       <div ref={chatEndRef} />
 
       {error && (
-        <div className="flex flex-col gap-3 rounded-xl bg-red-50 px-4 py-3 text-label text-red-600">
+        <div className="flex flex-col gap-3 rounded-xl bg-danger-soft px-4 py-3 text-label text-danger">
           <p>{error}</p>
           <Button variant="secondary" size="sm" onClick={restart}>
             다시 시도
