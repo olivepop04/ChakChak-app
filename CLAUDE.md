@@ -660,11 +660,16 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 | 담당 | 구역 |
 |---|---|
 | 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · `README.md` · `CLAUDE.md`) |
-| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` |
+| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` · **`app/discover/`** · **`app/api/ai/discover/`** · **`lib/utils/scoring.ts`** · **`lib/utils/discover-ranking.ts`** |
 | 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · **`app/not-found.tsx`** · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` · **`postcss.config.mjs`** |
-| 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · `app/discover/` · **`components/my/`** · `app/api/ai/discover/` · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` · `lib/utils/scoring.ts` · **`lib/utils/discover-ranking.ts`** |
+| 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · **`components/my/`** · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` |
 | 개발 B | `app/action/create/` · `app/action/[id]/` 하위 (join · welcome · crew · chat · **edit** · result · voice) |
 | 공유 | `tests/` — **누구나 추가**할 수 있습니다. 남의 담당 로직 테스트를 **고칠** 때는 그 담당에게 말하세요 |
+
+**액션 찾기(Discover)는 2026-09-29부터 조장 담당입니다.** 9/23 부터 성은님이 개편을 맡았고,
+9/29 지수님이 「제 작업 범위에서 빼겠다」 고 해서 옮겼습니다.
+`lib/constants/regions.ts` 는 가입·프로필 지역 선택(`RegionPicker`)도 같이 써서 **개발 A 에 남깁니다** — Discover 쪽에서 고쳐야 하면 지수님께 말해주세요.
+액션 자동 분류(`app/api/ai/classify/`)는 아직 정하지 않아 **민호 담당 그대로**입니다.
 
 `components/action/` 은 **파일 단위로 담당**이 있습니다.
 
@@ -672,7 +677,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 |---|---|
 | ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm · **LeaveButton** · **AddressSearch** · **ActionHostActions** · **ActionTextEditForm** · **AddActionItemsForm** · **CrewVoiceList** · **ReasonModal** · **DateTimePickerModal** | 개발 B |
 | ActivityButtons | 조장 |
-| DiscoverChat | 개발 A |
+| DiscoverChat | **조장** (2026-09-29) |
 | SharePanel | **공유** — 공유 화면(민호)과 `ShareModal`(디자이너)이 같이 씁니다. 고치기 전에 말하기 |
 | ActionGallery · AddressBox · **ActionCrewSection** · **ShareModal** | 디자이너 |
 | QuotaProgress | **공유** — 상세(디자이너)와 참여(개발 B)가 같이 씁니다. 고치기 전에 말하기 |
