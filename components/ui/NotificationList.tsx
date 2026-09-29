@@ -14,15 +14,53 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  CalendarClock,
+  PenLine,
+  PartyPopper,
+  MessageSquareText,
+  CircleX,
+  UserPlus,
+  UserMinus,
+  TrendingDown,
+  CircleCheck,
+  type LucideIcon,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { markNotificationRead } from '@/lib/mutations';
 import { NOTIFICATION_TEMPLATE } from '@/lib/queries/notifications';
 import { formatRelative } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
 import type { NotificationData } from '@/lib/types/view';
+import type { NotificationType } from '@/lib/constants';
 
 /** 처음에 보여줄 개수 */
 const INITIAL_COUNT = 15;
+
+/**
+ * 알림 종류별 아이콘.
+ *
+ * 문구·이동 경로는 NOTIFICATION_TEMPLATE(lib/queries/notifications.ts, 민호 담당)에
+ * 그대로 두고, 아이콘만 여기서 이모지 대신 lucide로 그립니다.
+ */
+const NOTIFICATION_ICON: Record<NotificationType, LucideIcon> = {
+  SCHEDULE: CalendarClock,
+  RESULT_REQUEST: PenLine,
+  RESULT_PUBLISHED: PartyPopper,
+  VOICE_REQUEST: MessageSquareText,
+  CANCELLED: CircleX,
+  INVITED: UserPlus,
+  LEFT_CREW: UserMinus,
+  SHORTFALL: TrendingDown,
+  EARLY_END: CircleCheck,
+};
+
+/** 내가 할 일이 남은 알림 — 아이콘 원을 노란 톤으로 구분합니다 */
+const ACTION_NEEDED: Partial<Record<NotificationType, true>> = {
+  RESULT_REQUEST: true,
+  VOICE_REQUEST: true,
+  SHORTFALL: true,
+};
 
 /** 오늘 / 어제 / 그 이전으로 묶는다 */
 function groupOf(iso: string): string {
@@ -76,43 +114,45 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
     <div className="flex flex-col">
       {groups.map((g) => (
         <section key={g.label}>
-          <h2 className="px-6 pb-1.5 pt-4 text-caption font-bold tracking-wider text-neutral-400">
+          <h2 className="px-6 pb-1.5 pt-4 text-caption font-bold text-neutral-500">
             {g.label}
           </h2>
 
-          <ul className="divide-y divide-neutral-100 border-y border-neutral-100">
+          <ul className="divide-y divide-hairline border-y border-hairline">
             {g.items.map((n) => {
               const t = NOTIFICATION_TEMPLATE[n.type];
+              const Icon = NOTIFICATION_ICON[n.type];
+              const needsAction = ACTION_NEEDED[n.type];
               return (
                 <li key={n.id}>
                   <button
                     type="button"
                     onClick={() => handleClick(n)}
-                    className={cn(
-                      'flex w-full items-center gap-2.5 px-6 py-2.5 text-left transition-colors hover:bg-neutral-50',
-                      !n.isRead && 'bg-amber-50/50',
-                    )}
+                    className="flex w-full items-start gap-3 px-6 py-3 text-left transition-colors hover:bg-neutral-50"
                   >
-                    <span className="shrink-0 text-body" aria-hidden="true">
-                      {t.icon}
+                    <span
+                      className={cn(
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+                        needsAction ? 'bg-warning-soft' : 'bg-neutral-100',
+                      )}
+                      aria-hidden="true"
+                    >
+                      <Icon
+                        className={cn(
+                          'h-4 w-4',
+                          needsAction ? 'text-warning-ink' : 'text-neutral-500',
+                        )}
+                      />
                     </span>
 
                     <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5">
-                        <span
-                          className={cn(
-                            'truncate text-label text-neutral-900',
-                            n.isRead ? 'font-medium' : 'font-semibold',
-                          )}
-                        >
-                          {t.title}
-                        </span>
-                        {!n.isRead && (
-                          <span
-                            className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500"
-                            aria-label="읽지 않음"
-                          />
+                      <span
+                        className={cn(
+                          'line-clamp-2 text-label leading-snug text-neutral-900',
+                          n.isRead ? 'font-medium' : 'font-semibold',
                         )}
+                      >
+                        {t.title}
                       </span>
 
                       {n.actionTitle && (
@@ -123,14 +163,22 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
 
                       {/* 나가기 사유처럼 알림마다 다른 문장이 있으면 한 줄 더 */}
                       {n.body && (
-                        <span className="mt-0.5 block truncate text-caption italic text-neutral-400">
+                        <span className="mt-0.5 block truncate text-caption text-neutral-500">
                           &ldquo;{n.body}&rdquo;
                         </span>
                       )}
                     </span>
 
-                    <span className="shrink-0 text-caption tabular-nums text-neutral-400">
-                      {formatRelative(n.createdAt)}
+                    <span className="flex shrink-0 flex-col items-end gap-1.5 pt-0.5">
+                      <span className="text-caption tabular-nums text-neutral-500">
+                        {formatRelative(n.createdAt)}
+                      </span>
+                      {!n.isRead && (
+                        <span
+                          className="h-1.5 w-1.5 shrink-0 rounded-full bg-danger"
+                          aria-label="읽지 않음"
+                        />
+                      )}
                     </span>
                   </button>
                 </li>
@@ -144,7 +192,7 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="mx-6 mt-4 rounded-xl border border-neutral-200 py-2.5 text-label font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+          className="mx-6 mt-4 min-h-11 rounded-xl border border-hairline px-4 text-body font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
         >
           + 지난 알림 {hiddenCount}개 더보기
         </button>

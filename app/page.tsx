@@ -76,9 +76,10 @@ export default async function HomePage({
           >
             <Bell className="h-5 w-5 text-neutral-700" />
             {/* 2026-09-21 홈피드 개편: 숫자 대신 점 — 벨 아이콘은 "있다/없다"만 알면 됨.
-                unread 값 자체(및 getUnreadCount)는 그대로 두고 표시만 바꿈 */}
+                unread 값 자체(및 getUnreadCount)는 그대로 두고 표시만 바꿈.
+                2026-09-28: red-500(팔레트에 없는 색) → 알림 목록 안 읽음 점과 같은 danger 토큰 */}
             {unread > 0 && (
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full border border-white bg-red-500" />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full border border-white bg-danger" />
             )}
           </Link>
         ) : (

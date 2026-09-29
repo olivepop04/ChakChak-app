@@ -188,7 +188,7 @@ export function ActionHostActions({
           warning={`이 내용은 ${mode === 'early_end' ? '크루' : '참여자'}에게 공개되며, 되돌릴 수 없습니다.`}
           reason={{
             label: mode === 'early_end' ? '조기 종료 사유' : '취소 사유',
-            placeholder: '크루들이 상황을 이해할 수 있도록 사유를 적어주세요.',
+            placeholder: '크루들이 상황을 이해할 수 있도록 5자 이상 적어주세요.',
           }}
           confirmLabel={mode === 'early_end' ? '조기 종료 진행' : '취소 진행'}
           cancelLabel="닫기"
