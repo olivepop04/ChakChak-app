@@ -233,7 +233,8 @@ lib/utils/scoring.ts · lib/utils/discover-ranking.ts   (Discover 는 2026-09-29
 
 lib/constants/regions.ts 는 가입·프로필과 같이 쓰는 개발 A 파일이다. 고칠 일이 있으면 개발 A 에게 말한다.
 액션 자동 분류는 민호 담당이다 — app/api/ai/classify/ 와 한꺼번에 다시 분류하는
-scripts/reclassify_all_actions.mjs · scripts/batch_reclassify_active.mjs 둘 다. 고치지 않고, 민호가 고칠 때까지 실행하지 않는다.
+scripts/reclassify_all_actions.mjs · scripts/batch_reclassify_active.mjs 둘 다. 고치지 않는다.
+다시 분류가 필요하면 민호에게 말한다 (npm run reclassify 는 미리보기가 기본이라 돌려 봐도 바뀌는 것은 없다).
 
 화면은 이미 다 동작한다. 나는 써보고 어색한 곳을 고친다.
 
