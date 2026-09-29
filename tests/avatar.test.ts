@@ -7,21 +7,41 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { AVATAR_KEYS } from '../lib/constants/index.ts';
 import { avatarSrc, isAvatarKey } from '../lib/utils/avatar.ts';
 
-test('DB 가 받는 목록과 화면 목록이 같다', () => {
-  const sql = readFileSync(new URL('../supabase/20_update.sql', import.meta.url), 'utf8');
-  const block = sql.match(/FUNCTION is_avatar_key[\s\S]*?ARRAY\[([\s\S]*?)\]/);
-  assert.ok(block, 'supabase/20 에서 is_avatar_key 목록을 못 찾음');
-  const keys = [...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+const root = new URL('../', import.meta.url);
+
+/** supabase/ 의 번호 파일을 순서대로 읽어, 어떤 함수를 **마지막으로** 정의한 파일의 본문을 돌려준다 */
+function lastDefinition(fn: string): string {
+  const files = readdirSync(new URL('supabase/', root))
+    .filter((f) => /^\d+_.*\.sql$/.test(f))
+    .sort();
+  let found = '';
+  for (const f of files) {
+    const sql = readFileSync(new URL(`supabase/${f}`, root), 'utf8');
+    const m = sql.match(new RegExp(`FUNCTION ${fn}\\([\\s\\S]*?\\$\\$([\\s\\S]*?)\\$\\$`));
+    if (m) found = m[1];
+  }
+  assert.ok(found, `supabase/ 에서 ${fn} 를 못 찾음`);
+  return found;
+}
+
+test('DB 가 받는 목록(마지막 정의)과 화면 목록이 같다', () => {
+  const keys = [...lastDefinition('is_avatar_key').matchAll(/'([^']+)'/g)].map((m) => m[1]);
   assert.deepEqual(keys, [...AVATAR_KEYS]);
+});
+
+test('DB 기본값이 목록 길이만큼만 고른다 — 넘치면 가입이 CHECK 에 걸림', () => {
+  const m = lastDefinition('default_avatar').match(/%\s*(\d+)/);
+  assert.ok(m, 'default_avatar 에서 % N 을 못 찾음');
+  assert.equal(Number(m[1]), AVATAR_KEYS.length);
 });
 
 test('8종 그림 파일이 모두 있다', () => {
   for (const key of AVATAR_KEYS) {
-    assert.ok(existsSync(new URL(`../public/avatars/${key}.svg`, import.meta.url)), `${key}.svg 없음`);
+    assert.ok(existsSync(new URL(`public/avatars/${key}.svg`, root)), `${key}.svg 없음`);
   }
 });
 
@@ -36,4 +56,20 @@ test('없거나 목록 밖이면 이름으로 8종 중 하나 — 같은 이름�
     assert.equal(src, avatarSrc(bad, '올리브'));
   }
   assert.equal(isAvatarKey('avatar_09'), false, '옛 10종의 9·10번은 이제 쓰지 않는다');
+});
+
+test('화면의 모든 <Avatar> 가 고른 아바타를 넘긴다 (CLAUDE.md 규칙 18)', () => {
+  const missing: string[] = [];
+  for (const dir of ['app', 'components']) {
+    for (const rel of readdirSync(new URL(`${dir}/`, root), { recursive: true }) as string[]) {
+      if (!/\.tsx$/.test(rel)) continue;
+      const path = `${dir}/${rel.replace(/\\/g, '/')}`;
+      if (path === 'components/ui/Avatar.tsx') continue;
+      const src = readFileSync(new URL(path, root), 'utf8');
+      for (const tag of src.matchAll(/<Avatar\b[\s\S]*?\/>/g)) {
+        if (!/\bavatar=/.test(tag[0])) missing.push(`${path}: ${tag[0].replace(/\s+/g, ' ').slice(0, 60)}`);
+      }
+    }
+  }
+  assert.deepEqual(missing, [], '닉네임만 넘기면 고른 것과 다른 얼굴이 나옵니다 — avatar={…avatar} 를 같이 넘기세요');
 });

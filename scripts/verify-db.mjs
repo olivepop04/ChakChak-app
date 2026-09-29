@@ -103,9 +103,15 @@ try {
     .select('id, avatar').in('id', [uidA, uidB]);
   const avA = avs?.find(p => p.id === uidA)?.avatar;
   const avB = avs?.find(p => p.id === uidB)?.avatar;
-  avA === 'avatar_05'
-    ? ok('가입 때 고른 아바타가 저장됨')
-    : no('고른 아바타가 저장 안 됨 !! — 20_update.sql 을 실행했는가', String(avA));
+  // 고른 값(avatar_05)이 우연히 그 계정의 기본값과 같으면 「저장됐다」 를 가릴 수 없습니다 (8번 중 1번꼴)
+  const { data: defA } = await admin.rpc('default_avatar', { p_user_id: uidA });
+  if (avA !== 'avatar_05') {
+    no('고른 아바타가 저장 안 됨 !! — 20_update.sql 을 실행했는가', String(avA));
+  } else if (defA === 'avatar_05') {
+    ok('가입 때 고른 아바타가 저장됨', '이번 계정은 기본값도 avatar_05 라 판정 약함 — 다시 돌리면 가려짐');
+  } else {
+    ok('가입 때 고른 아바타가 저장됨', `기본값 ${defA} 가 아니라 고른 값`);
+  }
   /^avatar_0[1-8]$/.test(avB ?? '')
     ? ok('안 고르면 8종 중 하나가 들어감', avB)
     : no('아바타 기본값이 비었거나 목록 밖 !!', String(avB));
@@ -159,10 +165,26 @@ try {
 
   const cA = await asUser(emailA);
 
-  const rAv = await cA.from('profiles').update({ avatar: 'avatar_01' }).eq('id', uidA);
-  rAv.error
+  // 지금 값과 다른 값으로 바꿔 봐야 막히는지 알 수 있습니다
+  const { data: curA } = await admin.from('profiles').select('avatar').eq('id', uidA).single();
+  const otherKey = curA?.avatar === 'avatar_01' ? 'avatar_02' : 'avatar_01';
+  const rAv = await cA.from('profiles').update({ avatar: otherKey }).eq('id', uidA);
+  rAv.error?.message.includes('아바타는 가입할 때')
     ? ok('한 번 고른 아바타는 본인도 못 바꿈', rAv.error.message.slice(0, 24))
-    : no('사용자가 아바타를 바꿀 수 있음 !! — 20_update.sql 을 실행했는가');
+    : no('사용자가 아바타를 바꿀 수 있음 !! — 20_update.sql 을 실행했는가', rAv.error?.message.slice(0, 40) ?? '오류 없음');
+
+  // 관리자(서비스 롤)는 고쳐 줄 수 있어야 합니다 — 잘못 골라 곤란한 경우
+  const rAdm = await admin.from('profiles').update({ avatar: otherKey }).eq('id', uidA);
+  rAdm.error
+    ? no('관리자도 아바타를 못 고침 !!', rAdm.error.message.slice(0, 40))
+    : ok('관리자는 아바타를 고칠 수 있음');
+  await admin.from('profiles').update({ avatar: curA?.avatar }).eq('id', uidA);
+
+  const rBad = await admin.from('profiles').update({ avatar: 'avatar_09' }).eq('id', uidA);
+  rBad.error
+    ? ok('8종 밖 아바타는 관리자도 못 넣음', rBad.error.message.slice(0, 24))
+    : no('8종 밖 아바타가 들어감 !!');
+  if (!rBad.error) await admin.from('profiles').update({ avatar: curA?.avatar }).eq('id', uidA);
   const rBio = await cA.from('profiles').update({ bio: '아바타 잠금 뒤에도 소개는 고쳐진다' }).eq('id', uidA);
   rBio.error
     ? no('아바타 잠금 때문에 다른 칸까지 막힘 !!', rBio.error.message.slice(0, 40))

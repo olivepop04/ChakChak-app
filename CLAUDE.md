@@ -388,7 +388,7 @@ DRAFT · CANCELLED · 그 밖을 각각 나누고, DRAFT 는 「아직 공개 �
 가입할 때 8종 중 하나를 고르고(`profiles.avatar`) 바꿀 수 없습니다. 사람 정보를 주는 조회 함수
 (작성자 · 호스트 · 크루 · 팔로워 · 프로필)는 모두 `avatar` 를 같이 줍니다. 새로 조회를 짤 때도
 `nickname` 옆에 `avatar` 를 같이 고르세요. 목록은 `lib/constants` 의 `AVATAR_KEYS` 와 `supabase/20` 두 곳이고
-`tests/avatar.test.ts` 가 같은지 대조합니다.
+`tests/avatar.test.ts` 가 같은지 대조하고, **화면의 모든 `<Avatar>` 가 `avatar=` 를 넘기는지도 검사합니다** — 빠뜨리면 테스트가 깨집니다.
 
 ---
 
