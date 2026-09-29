@@ -2,7 +2,7 @@
  * 가입 (3단계).
  *
  *   1단계  이메일 · 비밀번호 · 자기소개(선택) · 약관 동의 2개
- *   2단계  이름 · 닉네임 · 성별
+ *   2단계  이름 · 닉네임 · 아바타 · 성별
  *   3단계  관심 카테고리 · 참여 가능 시간 · 재능 · 활동 지역 (전부 선택)
  *
  * ★ 계정은 3단계 마지막에 한 번만 만듭니다.
@@ -21,6 +21,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FieldLabel } from '@/components/ui/FieldLabel';
+import { AvatarPicker } from '@/components/ui/AvatarPicker';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
 import { TimePreferenceEditor } from '@/app/my/_components/TimePreferenceEditor';
@@ -33,6 +34,8 @@ import {
 import { isNicknameTaken, updateProfile } from '@/lib/mutations';
 import { getBioValidationError } from '@/lib/utils/profile-validation';
 import { getSignupProfileSaveError } from '@/lib/utils/signup-completion';
+import { getSignupAvatarError } from '@/lib/utils/signup-avatar';
+import { isAvatarKey } from '@/lib/utils/avatar';
 import {
   CATEGORIES,
   GENDER_LABEL,
@@ -65,6 +68,7 @@ function SignUpForm() {
   // 2단계
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
+  const [avatar, setAvatar] = useState<string | null>(null);
   const [gender, setGender] = useState<Gender | ''>('');
 
   // 3단계
@@ -93,6 +97,7 @@ function SignUpForm() {
         if (typeof parsed.agreePrivacy === 'boolean') setAgreePrivacy(parsed.agreePrivacy);
         if (typeof parsed.name === 'string') setName(parsed.name);
         if (typeof parsed.nickname === 'string') setNickname(parsed.nickname);
+        if (isAvatarKey(parsed.avatar)) setAvatar(parsed.avatar);
         if (typeof parsed.gender === 'string') setGender(parsed.gender as Gender | '');
         if (Array.isArray(parsed.categories)) setCategories(parsed.categories);
         if (Array.isArray(parsed.timePrefs)) setTimePrefs(parsed.timePrefs);
@@ -123,6 +128,7 @@ function SignUpForm() {
         agreePrivacy,
         name,
         nickname,
+        avatar,
         gender,
         categories,
         timePrefs,
@@ -142,6 +148,7 @@ function SignUpForm() {
     agreePrivacy,
     name,
     nickname,
+    avatar,
     gender,
     categories,
     timePrefs,
@@ -213,6 +220,8 @@ function SignUpForm() {
       return setError(
         `닉네임은 ${LIMITS.NICKNAME_MIN}~${LIMITS.NICKNAME_MAX}자로 입력해주세요.`,
       );
+    const avatarError = getSignupAvatarError(avatar);
+    if (avatarError) return setError(avatarError);
     if (!gender) return setError('성별을 선택해주세요.');
 
     setBusy(true);
@@ -226,6 +235,12 @@ function SignUpForm() {
   // ── 3단계: 계정 생성 ──────────────────────────────────────
   async function handleSignUp() {
     setError('');
+    const avatarError = getSignupAvatarError(avatar);
+    if (avatarError) {
+      setError(avatarError);
+      setStep(2);
+      return;
+    }
     // 3단계는 전부 선택 항목입니다 (2026-09-28 조장님 요청). 어느 칸에도
     // 「[필수]」 표시가 없는데 시간만 검사해서 막고 있었습니다.
     // 시간은 「상관없음 / 상관없음」 으로 시작하고, 비워도 updateProfile 이
@@ -253,7 +268,7 @@ function SignUpForm() {
         password,
         options: {
           // 이 값들을 DB 트리거가 읽어서 profiles 행을 만듭니다
-          data: { name: name.trim(), nickname: nickname.trim(), gender },
+          data: { name: name.trim(), nickname: nickname.trim(), gender, avatar },
         },
       });
 
@@ -464,6 +479,14 @@ function SignUpForm() {
             </label>
 
             <div className="flex flex-col gap-1.5">
+              <FieldLabel required>프로필 아바타</FieldLabel>
+              <AvatarPicker value={avatar} onChange={setAvatar} />
+              <span className="text-caption text-neutral-400">
+                가입 후에는 바꿀 수 없어요.
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
               <FieldLabel>성별</FieldLabel>
               <div className="flex gap-2">
                 {GENDERS.map((g) => (
@@ -545,7 +568,7 @@ function SignUpForm() {
       )}
 
       {error && (
-        <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-label text-red-600">
+        <p className="mt-4 rounded-xl bg-danger-soft px-3 py-2 text-label text-danger">
           {error}
         </p>
       )}
