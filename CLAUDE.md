@@ -197,7 +197,6 @@ null      아직 안 물어봤음  → AI 가 물어봐도 됨
 
 | 어디 | 무엇 |
 |---|---|
-| `components/action/DiscoverChat.tsx` | 선택지에 `'사진 촬영'`·`'요리'` 가 있는지로 재능 질문인지 판정합니다 — **조용히 어긋남** |
 | `lib/ai/classify-spec.ts` 지시문의 출력 예시 | 재능 3개를 예로 적었습니다 — `tests/classify-sync.test.ts` 가 허용 목록 안인지 **검사합니다** |
 | `scripts/seed.mjs` 시드 사용자 재능 · `scripts/verify-db.mjs` 검사값 | 사람마다 고른 값으로 적었습니다 — **조용히 어긋남** |
 
@@ -366,8 +365,7 @@ DRAFT · CANCELLED · 그 밖을 각각 나누고, DRAFT 는 「아직 공개 �
 배포에서 「주말 오전」 만 되는 사람에게 **시간 점수(당시 15점)가 통째로 안 붙고** 있었습니다.
 `tests/date-kst.test.ts` 가 `scoring.ts` 소스에도 `getHours()` 류가 다시 들어오는지 검사합니다.
 
-**하나 남았습니다** — `lib/queries/stats.ts` 의 주 라벨(`weekLabel`)이 `getDay()`·`getDate()`·`getMonth()` 를
-씁니다. 트렌드 화면과 트렌드 API(서버)에서 불려서 배포에서 주 경계가 어긋납니다. 조장 구역이라 성은님께 요청할 일입니다.
+트렌드의 주 라벨(`lib/queries/stats.ts` 의 `weekLabel`)도 2026-09-29에 `toKst()` 로 고쳐졌습니다 (성은님).
 테스트는 아직 `date.ts` 와 `scoring.ts` 만 검사합니다.
 
 > **새 날짜 함수를 넣을 때도 `getHours()` 류를 직접 쓰지 마세요.** `date.ts` 안의
@@ -428,7 +426,7 @@ npm run reclassify:active             # 모집 중 액션을 지금 판으로 �
 | 명령 | 대상 | 이미 분류된 액션 |
 |---|---|---|
 | `reclassify` | 색인 없음 · 시드 기본값 · 공개 때 AI 실패 기본값 | **건너뜁니다** |
-| `reclassify:active` | 모집 중 액션 중 판이 지금 판(`classify-v3`)이 아닌 것 | **덮어씁니다** — 지금은 시드 51개가 `classify-v2` 라 전부 대상. 시연 전 추천이 바뀔 수 있습니다 |
+| `reclassify:active` | 모집 중 액션 중 판이 지금 판(`classify-v4`)이 아닌 것 | **덮어씁니다** — 지금은 모집 중 전부가 대상(시드는 옛 판 이름표). 시연 전 추천이 바뀔 수 있습니다 |
 
 `--export-seed` 는 새 내용이 비었거나 기존 파일보다 10% 넘게 줄면 쓰지 않습니다(`--force` 로만). `seed:clean` 뒤에 돌려 빈 파일이 되는 사고를 막습니다.
 전에는 「`classify-v2` 가 아닌 것」 을 골라서 앱에서 분류한 v3 를 덮어쓰고, 정작 시드 기본값은 건너뛰었습니다.
@@ -528,7 +526,7 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 | 라우트 | 상수 | 지금 값 (2026-09-29) |
 |---|---|---|
 | `app/api/ai/review/` | `PROMPT_VERSION` | `review-v7` |
-| `app/api/ai/classify/` — 규칙은 `lib/ai/classify-spec.ts` | `CLASSIFY_PROMPT_VERSION` | `classify-v3` |
+| `app/api/ai/classify/` — 규칙은 `lib/ai/classify-spec.ts` | `CLASSIFY_PROMPT_VERSION` | `classify-v4` |
 | `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v3` |
 | `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-chat-v8-chip-zero-assumption` · `discover-recommend-v8-100pt-scoring` |
 
