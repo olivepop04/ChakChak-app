@@ -308,6 +308,8 @@ if (!res.ok) { toast(res.message, 'error'); return; }
 >
 > 대신 **`updateActionText(supabase, actionId, { description, notice })`** 를 쓰세요.
 > 두 칸만 보내므로 안전합니다. 호스트에게만 보여주세요(`action.isOwner`).
+>
+> **취소된 액션은 고칠 수 없습니다** (2026-09-29, `supabase/19`). 수정 화면은 취소된 액션이면 상세로 돌려보냅니다.
 
 **F43 — 참여 완료 화면의 "HOME으로 가기" 버튼 삭제 (10분)**
 파일: `app/action/[id]/welcome/page.tsx`

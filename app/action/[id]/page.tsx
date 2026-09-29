@@ -77,12 +77,12 @@ export default async function ActionDetailPage({
 
   const dday = deadlineDDay(action.recruitEndAt);
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
+  // 취소된 액션은 고칠 수 없다 — 「없던 일」 이라 그 시점 내용이 남아야 한다 (2026-09-29, supabase/19)
   const canEditActionText =
     action.isOwner &&
     (action.status === 'ACTIVE' ||
       action.status === 'ENDED' ||
-      action.status === 'COMPLETED' ||
-      action.status === 'CANCELLED');
+      action.status === 'COMPLETED');
 
   const isPastActivityEnd = action.activityEndAt
     ? new Date() > new Date(action.activityEndAt)

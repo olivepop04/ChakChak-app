@@ -418,6 +418,7 @@ Supabase 대시보드 → **SQL Editor**에서 순서대로 실행합니다.
 | 15 | `supabase/16_update.sql` | 남에게도 보이는 참여 완료 통계 |
 | 16 | `supabase/17_update.sql` | 계정 삭제가 막히던 것 풀기 (액션을 만든 호스트 계정은 일부러 그대로 막음) |
 | 17 | `supabase/18_update.sql` | 결과 임시저장(사진 0장) · 공개 전 결과는 호스트만 읽기 |
+| 18 | `supabase/19_update.sql` | 취소된 액션은 소개·안내도 못 고치게 |
 
 **번호 순서대로 전부 실행하세요.** 하나라도 빠뜨리면 앱이 조용히 깨집니다.
 예를 들어 06 을 안 돌리면 장소명·알림 설정·나가기 사유가 통째로 동작하지 않습니다.
@@ -438,4 +439,4 @@ Supabase 대시보드 → **SQL Editor**에서 순서대로 실행합니다.
 npx supabase gen types typescript --project-id <프로젝트ID> > lib/types/database.ts
 ```
 
-**이후 스키마 변경은 콘솔에서 직접 하지 말고** `supabase/19_update.sql` 처럼 다음 번호로 새 파일을 쌓으세요.
+**이후 스키마 변경은 콘솔에서 직접 하지 말고** `supabase/20_update.sql` 처럼 다음 번호로 새 파일을 쌓으세요.

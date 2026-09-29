@@ -1021,6 +1021,14 @@ try {
     ? ok('취소된 액션 공유 거절', rSh.error.message.slice(0, 24))
     : no('취소된 액션이 공유됨 !!');
 
+  // 호스트 본인도 취소된 액션의 소개·안내는 못 고친다 (19)
+  const rTx = await cA.from('actions')
+    .update({ description: '취소 뒤에 고치기', notice: '취소 뒤 안내' })
+    .eq('id', cxAct.id);
+  rTx.error
+    ? ok('취소된 액션 소개·안내 수정 거절', rTx.error.message.slice(0, 24))
+    : no('취소된 액션인데 소개·안내가 고쳐짐 !! — 19_update.sql 을 실행했는가');
+
   // ── ④ 취소 전에 눌러둔 것은 남아 있고, 해제도 된다 ──
   const { data: keptLike } = await cB.from('likes')
     .select('action_id').eq('action_id', cxAct.id).eq('user_id', uidB).maybeSingle();
