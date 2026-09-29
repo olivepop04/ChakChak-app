@@ -30,6 +30,7 @@ import {
   type ScoringProfile,
   type ActionScoringMetadata,
   type ScoringAnswers,
+  type ScoredAction,
 } from '@/lib/utils/scoring';
 import { sameProvince, totalGroupSize } from '@/lib/utils/discover-ranking';
 import {
@@ -44,6 +45,7 @@ import {
   validateHarmfulSkillInput,
   formatSummaryChips,
   resolveUnifiedCategories,
+  normalizeQuestionKey,
   ALL_15_SKILLS,
   CHEERING_OR_CASUAL_REGEX,
   type QuestionKey,
@@ -53,8 +55,8 @@ import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 import { formatDate, formatTime, isWeekend } from '@/lib/utils/date';
 
-const CHAT_PROMPT_VERSION = 'discover-chat-v8-chip-zero-assumption';
-const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v10-truth-grounding';
+const CHAT_PROMPT_VERSION = 'discover-chat-v10-flow-integrity';
+const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v11-truth-grounding';
 const MAX_USER_TURNS = 15;
 const PARTICIPATION_MODES = [
   '시간을 내서',
@@ -110,7 +112,7 @@ type ChatMessage = z.infer<typeof ChatMessageSchema>;
 type Conversation = z.infer<typeof ConversationSchema>;
 
 const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트 '착착 Discover'입니다.
-모든 사용자는 로그인된 정회원입니다. 사용자의 활동 이력과 프로필 상태에 맞춰 깊이 공감하고, 최적의 액션을 찾기 위해 대화를 이끌어갑니다.
+모든 사용자는 로그인된 정회원입니다. 사용자의 활동 이력과 프로필 상태에 맞춰 최적의 액션을 찾기 위해 대화를 편안하고 자연스럽게 이끌어갑니다.
 반드시 JSON 형식으로만 답하세요.
 
 [핵심 서비스 규칙 (절대 위반 금지)]
@@ -128,6 +130,19 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
      ★ 반드시 "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요"라고 안내하고, options는 사전 정의된 ${SKILLS.length + 1}종 목록 ${JSON.stringify([...SKILLS, '기타'])}을 정확히 제공하세요.
 9. question_key는 반드시 시스템이 제공한 '남은질문' 배열에 존재하는 키 중에서만 선택해야 합니다. 남은질문에 없는 질문 키(예: 난이도에서 '기초 체력 필요'나 '누구나 참여가능'을 선택하여 재능 질문이 생략된 상황에서 "skills")를 반환하는 것은 엄격히 금지됩니다.
 
+[★ 대화 태도 및 맞장구/질문 규칙 (매우 중요 — 손발 오그라드는 칭찬 금지)]
+1. 기계적이고 상투적인 칭찬 절대 금지:
+   - "~하신다니 정말 좋은 선택이에요!", "~을 선택하시다니 정말 멋져요!", "탁월한 선택이에요!" 같은 판에 박힌 칭찬 멘트를 절대 남발하지 마세요.
+   - 지역, 시간대, 활동 환경(실내/실외), 인원 규모 같은 물리적/객관적 조건 선택은 칭찬의 대상이 아닙니다. 담백하게 접수하고 확인하는 브릿지 멘트만 작성하세요.
+     - 좋은 예: "서울특별시 지역으로 찾아볼게요. 📍", "전국 어디서나 참여할 수 있는 액션으로 살펴볼게요. 🌏", "주말 시간대로 체크해둘게요. ⏰", "실내에서 진행되는 활동 위주로 찾아볼게요."
+     - 나쁜 예: "서울특별시에서 활동하신다니 정말 좋은 선택이에요! 😊", "주말 오후라니 정말 멋진 시간대예요!" (손발이 오그라드는 과장된 칭찬 금지)
+2. 주관적 성향/가치관(카테고리, 활동 분위기)에만 자연스러운 공감:
+   - 예: "동물들과 교감하는 시간을 좋아하시는군요! 🐾", "이웃들과 도란도란 소통하는 활동을 선호하시는군요. 😊", "땀 흘리며 성취감을 느끼는 활동에 맞춰볼게요."
+3. 어색한 번역투 접속사 및 접두사 금지:
+   - 질문 문두에 '이제', '자 그럼', '보통' 등을 기계적으로 붙이지 마세요. 한국어 구어체로 매끄럽고 명확하게 질문하세요.
+     - 나쁜 예: "이제 보통 언제 참여하기 편하신가요?"
+     - 좋은 예: "활동하기 편한 요일이나 시간대가 있으신가요? (복수 선택 가능)"
+
 [질문 순서 및 분기 제어 시나리오 (우선순위 0~5)]
 대화는 아래 우선순위에 따라 순서대로 진행합니다. 이미 파악되었거나 스킵 조건에 해당하는 질문은 절대 반복하지 마세요.
 
@@ -137,11 +152,11 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
      - options: ["네, 이 조건으로 찾을게요 👍", "이번엔 다른 조건으로 찾을래요 🔄"]
    - 프로필에 지역이나 시간이 없는 경우 (신규가입자 등):
      - 첫 질문 (지역 확인):
-       - 멘트: "안녕하세요, {nickname}님! 만나서 반가워요. 😊 {nickname}님에게 딱 맞는 액션을 찾아드리기 위해 활동하실 지역과 시간을 먼저 확인하고 싶어요.\n\n먼저, 이번에 어느 지역에서 활동하고 싶으세요?"
+       - 멘트: "안녕하세요, {nickname}님! 만나서 반가워요. 😊 {nickname}님에게 딱 맞는 액션을 찾아드리기 위해 활동하실 지역과 시간을 먼저 확인하고 싶어요.\n\n먼저, 이번에 주로 활동하고 싶은 지역을 알려주세요."
        - options: ["활동할 지역 선택하기 📍", "지역 상관없이 전국 액션 볼래요 🌏"]
      - 지역 선택 후 시간대가 미확인된 경우:
        ★ 반드시 다음 질문으로 선호 시간대(time_pref)를 물어보세요!
-       - 멘트: "보통 언제 참여하기 편하신가요? (복수 선택 가능)"
+       - 멘트: "활동하기 편한 요일이나 시간대가 있으신가요? (복수 선택 가능)"
        - options: ["주말 오전", "주말 오후", "평일 낮", "평일 저녁", "시간 상관없음"]
 
 1. 카테고리 (categories) - 분야 선택:
@@ -150,38 +165,39 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
      - options: ["같은 분야로 찾을래요 👍", "새로운 분야에 도전해볼래요 ✨"]
      - ("새로운 분야" 선택 시: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"])
    - 활동 이력도 없고 프로필 관심 분야도 없는 신규 회원인 경우:
-     - 멘트: "어떤 분야의 액션에 가장 관심이 가시나요?"
+     - 멘트: "어떤 분야의 활동에 가장 관심이 가시나요?"
      - options: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"]
+   - ★★★ [카테고리 선택 완료 후 필수 규칙 - 절대 위반 금지]:
+     사용자가 카테고리 목록에서 특정 분야(예: 장애, 환경, 동물, 노인 등)를 선택했거나 응답한 직후에는:
+     ★ 절대로 "이번에도 이 분야 위주로 찾아드릴까요?"라며 카테고리를 다시 묻지 마세요! (이미 분야 선택이 완료되었습니다)
+     ★ 선택한 분야에 대해 담백한 공감 한마디(예: "장애 이웃과 함께하는 따뜻한 나눔을 찾아볼게요. 🤝")를 한 뒤,
+     ★ 반드시 다음 순서인 2번 활동 성격 및 분위기(target_groups) 질문을 질문해야 합니다! (question_key: "target_groups")
 
 2. 활동 성격 및 분위기 (target_groups):
-   - 멘트: "{nickname}님은 어떤 분위기의 활동이 더 끌리시나요? 사람들과 도란도란 소통하고 정을 나누는 활동이 좋으세요, 아니면 땀 흘리고 손발을 맞춰 집중하는 활동이 좋으세요?"
+   - 멘트: "{nickname}님이 더 선호하는 활동 분위기는 어떤 쪽인가요? 사람들과 도란도란 소통하고 정을 나누는 활동이 좋으세요, 아니면 땀 흘리고 손발을 맞춰 집중하는 활동이 좋으세요?"
    - options: ["교류·교육·소통형", "육체·과업·집중형", "상관없음"]
 
 3. 난이도 (difficulty) & 재능 (skills) [★ 조건부 분기]:
-   - 멘트: "액션에 따라 난이도가 다를 수 있어요. 어떤 스타일을 원하세요?"
+   - 멘트: "액션에 따라 난이도가 다를 수 있어요. 선호하는 참여 스타일이 있으신가요?"
    - options: ["누구나 참여가능", "기초 체력 필요", "전문지식/자격/재능 활용", "상관없음"]
    - [필수 규칙] 사용자가 '누구나 참여가능' 또는 '기초 체력 필요'를 선택한 경우:
      ★ 절대로 재능(skills) 질문을 하지 마세요! question_key를 "skills"로 반환하지 마세요!
      ★ 재능 질문을 완전히 생략하고 즉시 4번 활동 환경(activity_types) 질문으로 전진해야 합니다! (question_key: "activity_types")
    - 사용자가 '전문지식/자격/재능 활용'을 선택한 경우에만 재능(skills) 질문으로 이동합니다.
      - 프로필에 등록된 재능이 있는 경우: "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?" (options: ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"])
-     - 프로필에 등록된 재능이 없는 경우(신규가입자 등) 또는 '다른 재능으로 할게요' 선택 시: "전문지식이나 재능을 나눌 수 있다니 정말 멋져요! 😊 {nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: ${SKILLS.length + 1}종 재능 목록)
+     - 프로필에 등록된 재능이 없는 경우(신규가입자 등) 또는 '다른 재능으로 할게요' 선택 시: "나눌 수 있는 재능을 골라주시면, 맞춤 액션으로 연결해 드릴게요. 😊 {nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: ${SKILLS.length + 1}종 재능 목록)
 
 4. 활동 환경 (activity_types):
-   - 멘트: 직전에 사용자가 재능을 선택한 경우 "알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨"를 앞머리에 붙이고, "어떤 환경에서 활동하고 싶으세요?"라고 질문하세요. (재능 중 하나만 임의로 골라 대표로 지정하지 마세요)
+   - 멘트: 직전에 사용자가 재능을 선택한 경우 "알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨"를 앞머리에 붙이고, "어떤 공간이나 환경에서 활동하기 편하세요?"라고 질문하세요. (재능 중 하나만 임의로 골라 대표로 지정하지 마세요)
    - options: ["실내 활동", "실외 활동", "상관없음"]
 
 5. 모임 규모 (participation_modes) 및 추천 전환:
-   - 멘트: "함께하는 크루의 규모는 어느 정도가 편하세요?"
+   - 멘트: "함께하는 크루 규모는 어느 정도가 편하세요?"
    - options: ["10명 이내 소그룹", "10~20명 중그룹", "20명 이상 대그룹", "상관없음"]
    - 주요 선호 조건이 충분히 파악되었거나 사용자가 추천을 요청하면 "enough": true로 설정하여 추천 단계로 넘기세요.
 
-[대화 태도 및 맞장구 규칙]
-- 직전 답변 내용과 1:1로 일치하는 따뜻하고 풍부한 공감 리액션(1~2문장)을 먼저 건네고, 이어서 다음 순서의 질문을 자연스럽게 하세요.
-- 사용자가 질문형으로 되물으면 친절히 설명한 후 선택을 유도하세요.
-
 [응답 형식 (반드시 JSON)]
-{"reply":"사용자 응답에 대한 맞장구 공감 + 다음 질문 텍스트","question_key":"categories","enough":false,"options":["..."]}`;
+{"reply":"사용자 응답에 대한 담백한 확인/공감 + 다음 질문 텍스트","question_key":"categories","enough":false,"options":["..."]}`;
 
 const RECOMMEND_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트입니다.
 프로젝트의 '콘텐츠 자동 분류·색인 시스템'에 의해 생성된 각 액션의 7대 AI 색인 메타데이터와 사용자의 대화 및 성향을 비교하여 가장 부합하는 최적의 액션 3개를 선정합니다.
@@ -319,6 +335,131 @@ function allowedCategories(values: string[]): Category[] {
   return values.filter((value): value is Category =>
     (CATEGORIES as readonly string[]).includes(value),
   );
+}
+
+function filterRecommendationReason({
+  reason,
+  item,
+  meta,
+  userSelectedSkills = [],
+  scoringAnswers,
+}: {
+  reason: string;
+  item: ScoredAction;
+  meta?: {
+    activity_types?: string[];
+    target_groups?: string[];
+    skills?: string[];
+  } | null;
+  userSelectedSkills?: string[];
+  scoringAnswers: ScoringAnswers;
+}): string {
+  let cleaned = reason.trim();
+  if (!cleaned) return fallbackReason(item);
+
+  const targetGroups = meta?.target_groups ?? [];
+  const isSocial = targetGroups.some((g: string) => /교류|교육|소통/.test(g));
+  const isTask = targetGroups.some((g: string) => /과업|육체|집중/.test(g));
+  const matchedSkills = (meta?.skills ?? []).filter((s: string) => userSelectedSkills.includes(s));
+  const actTypes = meta?.activity_types ?? [];
+  const isIndoorOnly =
+    actTypes.length > 0 &&
+    actTypes.every(
+      (t: string) => t.includes('실내') && !t.includes('실외') && !t.includes('야외') && !t.includes('병행'),
+    );
+  const isOutdoorOnly =
+    actTypes.length > 0 &&
+    actTypes.every(
+      (t: string) =>
+        (t.includes('실외') || t.includes('야외')) &&
+        !t.includes('실내') &&
+        !t.includes('병행'),
+    );
+
+  const userTimes = scoringAnswers.userTimePreferences ?? [];
+  const userWantsWeekendOnly =
+    userTimes.length > 0 &&
+    userTimes.every((t) => t.includes('주말')) &&
+    !userTimes.includes('시간 상관없음');
+  const userWantsWeekdayOnly =
+    userTimes.length > 0 &&
+    userTimes.every((t) => t.includes('평일')) &&
+    !userTimes.includes('시간 상관없음');
+
+  // 1) '육체적인 재능', '집중적인 재능' 같은 해괴한 합성어 감지 시 fallbackReason으로 대체
+  if (/육체적.*재능|집중적.*재능/.test(cleaned)) {
+    return fallbackReason(item);
+  }
+
+  // 2) 순수 소통형 액션인데 '육체적', '몸 쓰는' 단어가 들어간 거짓말 감지 시 fallbackReason으로 대체
+  if (isSocial && !isTask && /육체|몸\s*쓰는|땀\s*흘리는/.test(cleaned)) {
+    return fallbackReason(item);
+  }
+
+  // 3) 액션 환경(실내/실외) 왜곡 및 날조 감지:
+  // - 순수 실내 활동인데 '실외', '야외', '밖에서' 또는 '땀 흘리며'가 들어간 경우
+  if (isIndoorOnly && /실외|야외|밖에서|땀\s*흘리/.test(cleaned)) {
+    return fallbackReason(item);
+  }
+  // - 순수 실외 활동인데 '실내'가 들어간 경우
+  if (isOutdoorOnly && /실내/.test(cleaned)) {
+    return fallbackReason(item);
+  }
+
+  // 4) 사용자가 선택하지 않은 다른 재능을 사용자가 발휘한다고 날조한 경우 감지 시 fallbackReason으로 대체
+  if (userSelectedSkills.length > 0 && matchedSkills.length === 0) {
+    const unownedSkills = ALL_15_SKILLS.filter((s) => !userSelectedSkills.includes(s) && s !== '기타');
+    const hasUnownedSkillMention = unownedSkills.some((s) => cleaned.includes(s) && cleaned.includes('재능'));
+    if (hasUnownedSkillMention || /재능을\s*(활용|발휘|살려)/.test(cleaned)) {
+      return fallbackReason(item);
+    }
+  }
+
+  // 5) 사용자 희망 시간대와 액션 실제 일정 불일치 시 '시간도 잘 맞을 것' 등 억지 칭찬/날조 감지
+  if (item.action.activityStartAt) {
+    const isWk = isWeekend(item.action.activityStartAt);
+    // 사용자는 주말만 원했는데 액션은 평일인 경우
+    if (userWantsWeekendOnly && !isWk) {
+      if (/(평일|시간|오전|오후|저녁).*(잘\s*맞|좋|편하|어울|딱)/.test(cleaned)) {
+        return fallbackReason(item);
+      }
+    }
+    // 사용자는 평일만 원했는데 액션은 주말인 경우
+    if (userWantsWeekdayOnly && isWk) {
+      if (/(주말|시간|오전|오후|저녁).*(잘\s*맞|좋|편하|어울|딱)/.test(cleaned)) {
+        return fallbackReason(item);
+      }
+    }
+  }
+
+  // 6) 사용자가 활동 환경을 '상관없음'으로 선택했거나 환경 제약이 없는 경우, 불필요한 변명 멘트 제거
+  if (scoringAnswers.activityTypePreference === 'any' || !scoringAnswers.activityTypePreference) {
+    cleaned = cleaned
+      .replace(/(실내|야외|실외)에서\s*진행되지만,?\s*/g, '')
+      .replace(/원하시던\s*(실내|실외|야외)[^,]*아니지만,?\s*/g, '')
+      .replace(/비록\s*(실내|실외|야외)[^,]*지만,?\s*/g, '')
+      .trim();
+  }
+
+  // 7) 일정 사실 날조 검증 (기존 로직 유지)
+  if (item.action.activityStartAt) {
+    const isWk = isWeekend(item.action.activityStartAt);
+    // 평일 액션인데 주말을 지어낸 경우
+    if (!isWk && (cleaned.includes('주말') || cleaned.includes('토요일') || cleaned.includes('일요일'))) {
+      return fallbackReason(item);
+    }
+    // 주말 액션인데 평일을 지어낸 경우
+    if (isWk && (cleaned.includes('평일') || /월요일|화요일|수요일|목요일|금요일/.test(cleaned))) {
+      return fallbackReason(item);
+    }
+  } else {
+    // 일정이 미정인 액션인데 특정 요일/주말을 지어낸 경우
+    if (cleaned.includes('주말') || cleaned.includes('평일') || /월요일|화요일|수요일|목요일|금요일|토요일|일요일/.test(cleaned)) {
+      return fallbackReason(item);
+    }
+  }
+
+  return cleaned || fallbackReason(item);
 }
 
 export async function POST(request: Request) {
@@ -559,9 +700,15 @@ export async function POST(request: Request) {
   const lastUserMsg = userAnswers[userAnswers.length - 1] ?? '';
   const isQuestionInquiry = /\?|어떤 거야|뭐야|있나요|없나요|어때요/.test(lastUserMsg);
 
-  // 1. AI가 반환한 question_key가 남은 질문 축에 없으면, 남은 질문 중 첫 번째로 즉시 강제 보정 (사용자의 질문형 되묻기 제외)
-  if (!isQuestionInquiry && remainingQuestionKeys.length > 0 && !remainingQuestionKeys.includes(chosenQuestionKey)) {
-    chosenQuestionKey = remainingQuestionKeys[0];
+  // 1. AI가 순서를 임의로 건너뛰거나(스킵), 이미 답변된 축을 반환하지 못하도록:
+  // 사용자의 질문형 되묻기가 아닌 일반 진행 시에는 항상 남은 질문의 최우선 순위(remainingQuestionKeys[0])로 엄격히 고정
+  if (!isQuestionInquiry && remainingQuestionKeys.length > 0) {
+    const nextExpectedKey = remainingQuestionKeys[0];
+    const normChosen = normalizeQuestionKey(chosenQuestionKey);
+    const normExpected = normalizeQuestionKey(nextExpectedKey);
+    if (normChosen !== normExpected) {
+      chosenQuestionKey = nextExpectedKey;
+    }
   }
 
   // 2. 재능 질문 맥락에서의 입력 검증 (가드레일 & 기타 선택)
@@ -700,14 +847,62 @@ export async function POST(request: Request) {
       }
     }
 
+    // 4) 질문 축(chosenQuestionKey)과 말풍선(reply)의 1:1 일치 정밀 검증:
+    // AI가 말풍선에 엉뚱한 이전 질문(예: 분야 되묻기)이나 다른 축의 질문을 내어 선택지 버튼과 엇박자가 나는 것을 원천 차단!
+    const normKey = normalizeQuestionKey(chosenQuestionKey);
+    let isQuestionMismatch = false;
+
+    // A) target_groups (활동 성격: 교류 vs 과업)
+    if (normKey === 'target_groups') {
+      const isAskingVibe = /분위기|도란도란|소통하고|손발을 맞춰|집중하는|교류|성격|과업|땀/.test(reply);
+      const isAskingOther = /어떤 분야|분야에 가장 관심|위주로 찾아드릴까요|난이도|어떤 스타일을 원하세요|어떤 환경|실내|실외|모임 규모|인원/.test(reply);
+      if (!isAskingVibe || isAskingOther) {
+        isQuestionMismatch = true;
+      }
+    }
+
+    // B) difficulty (참여 난이도)
+    if (normKey === 'difficulty') {
+      const isAskingDifficulty = /난이도|문턱|어떤 스타일|스타일|체력|전문지식|자격|재능 활용|누구나/.test(reply);
+      const isAskingOther = /어떤 분야|분야에 가장 관심|위주로 찾아드릴까요|어떤 환경|실내|실외|모임 규모|인원/.test(reply);
+      if (!isAskingDifficulty || isAskingOther) {
+        isQuestionMismatch = true;
+      }
+    }
+
+    // C) activity_types (활동 환경)
+    if (normKey === 'activity_types') {
+      const isAskingEnv = /환경|공간|실내|실외|야외|바깥|안에서/.test(reply);
+      const isAskingOther = /어떤 분야|위주로 찾아드릴까요|난이도|모임 규모|인원/.test(reply);
+      if (!isAskingEnv || isAskingOther) {
+        isQuestionMismatch = true;
+      }
+    }
+
+    // D) participation_modes (모임 규모)
+    if (normKey === 'participation_modes') {
+      const isAskingSize = /규모|인원|소규모|중규모|대규모|소그룹|중그룹|대그룹|크루/.test(reply);
+      const isAskingOther = /어떤 분야|위주로 찾아드릴까요|난이도|실내|실외/.test(reply);
+      if (!isAskingSize || isAskingOther) {
+        isQuestionMismatch = true;
+      }
+    }
+
+    // E) categories (분야): 이미 특정 분야를 선택/응답한 상태인데 되묻는 경우 차단
+    if (normKey === 'categories') {
+      if (adaptiveAnswers.selectedCategory && adaptiveAnswers.selectedCategory !== '상관없음') {
+        isQuestionMismatch = true;
+      }
+    }
+
     // 만약 AI가 이미 답변된 질문 축을 되묻거나, 남은 질문 축과 불일치하는 질문을 냈다면, 다음 남은 질문의 안내로 교체
     const isMismatchedReply =
       isAiSuccess &&
       !isQuestionInquiry &&
       (
-        (conversation.question_key && !remainingQuestionKeys.includes(conversation.question_key)) ||
-        (chosenQuestionKey !== conversation.question_key) ||
-        (/재능|기술|특기|어떤 재능/.test(reply) && (chosenQuestionKey === 'activity_types' || chosenQuestionKey === 'activity_type')) ||
+        isQuestionMismatch ||
+        (conversation.question_key && normalizeQuestionKey(conversation.question_key) !== normKey) ||
+        (normalizeQuestionKey(chosenQuestionKey) !== normalizeQuestionKey(conversation.question_key)) ||
         (chosenQuestionKey === 'time_pref' && !/시간|언제|주말|평일|오전|오후|저녁|낮/.test(reply))
       );
 
@@ -1046,12 +1241,14 @@ export async function POST(request: Request) {
             ? '작업, 땀 흘리기, 결과물 완성이 중심인 육체·과업·집중형 활동'
             : '일반 활동';
 
+    const actionActivityTypes = meta?.activity_types ?? [];
+
     return {
       actionId: action.id,
       title: action.title,
       category: action.category,
       address: action.address,
-      activityTypes: meta?.activity_types ?? [],
+      activityTypes: actionActivityTypes,
       targetGroups: meta?.target_groups ?? [],
       actualVibeDescription,
       isSocialAction,
@@ -1061,6 +1258,7 @@ export async function POST(request: Request) {
       actionRequiresSkills: actionSkills,
       recruitmentItems,
       actualSchedule: scheduleStr,
+      isWeekendAction: action.activityStartAt ? isWeekend(action.activityStartAt) : null,
       matchedReasons: item.matched,
     };
   });
@@ -1084,19 +1282,28 @@ export async function POST(request: Request) {
      (위반 금지 예시: 교육·멘토링을 선택한 사용자에게 액션이 네일아트라고 해서 "미술·공예 재능을 활용하여 네일아트를 해보세요"라고 권유하는 것은 심각한 날조입니다.)
      이 경우 재능에 대한 언급은 일체 하지 말고, 액션의 분야(노인 복지 등), 따뜻한 대화/정서적 교류, 활동의 보람 등 액션 본연의 특성으로만 진솔하게 추천 이유를 작성하세요.
 
-2. ★★★ [활동 성격 왜곡 및 '육체적 재능' 날조 절대 금지]:
+2. ★★★ [활동 환경(실내/실외) 및 활동 성격 왜곡 절대 금지]:
+   - 액션의 'activityTypes'가 '실내 활동'인 경우:
+     ★ 절대로 "실외에서", "야외에서", "밖에서", "땀 흘리며" 등으로 왜곡하지 마세요! 도서 분류, 물품 정리 등은 실내 활동입니다. 사용자가 실외를 희망했더라도 액션이 실내 활동이면 환경을 실외로 속여서는 안 됩니다.
+   - 액션의 'activityTypes'가 '실외 활동'인 경우:
+     ★ 절대로 "실내에서", "아늑한 실내" 등으로 왜곡하지 마세요!
    - '교류·소통형'이나 '육체·과업·집중형'은 활동의 '분위기/진행 방식'이지 '재능'이 아닙니다! "육체적인 재능", "집중적인 재능" 같은 해괴한 표현은 절대 사용하지 마세요.
-   - 말벗, 대화, 상담, 멘토링 같은 소통형 액션을 '육체적인 활동', '몸 쓰는 활동'이라고 사실과 다르게 왜곡하지 마세요. (어르신 댁을 방문해 대화하고 혈압 재는 활동은 육체 활동이 아닌 따뜻한 소통 활동입니다.)
-   - 사용자가 희망한 활동 성격(예: 육체·과업형)과 액션의 실제 성격(actualVibeDescription: 소통형)이 다를 경우(조건 완화 등으로 추천된 경우), 액션을 육체형으로 둔갑시키지 말고 "원하시던 몸 쓰는 활동은 아니지만, 어르신과 차 한잔 나누며 따뜻한 이야기를 전할 수 있는 액션이에요"처럼 정직하게 안내하거나, 액션 본연의 소통 가치를 서술하세요.
 
-3. [세부 모집 항목(recruitmentItems) 역할 타겟팅]:
+3. ★★★ [희망 시간대 불일치 시 시간대 언급 및 억지 칭찬 절대 금지]:
+   - 사용자가 '주말'을 희망했는데 액션 일정이 '평일'인 경우:
+     ★ "평일이라 시간도 잘 맞을 것 같아요", "평일 오후에 진행되어..." 같은 거짓말이나 억지 칭찬을 절대 하지 마세요! 사용자가 희망하지 않은 요일이면 시간대에 대한 언급 자체를 일체 하지 마세요!
+   - 사용자가 '평일'을 희망했는데 액션 일정이 '주말'인 경우도 마찬가지로 시간대 언급을 일체 하지 마세요!
+   - 액션의 실제 요일(actualSchedule)이 사용자의 '희망시간대'와 정확히 일치할 때만 시간대 장점을 언급할 수 있습니다.
+
+4. ★★★ [조건 완화 시 진솔한 서술 원칙]:
+   - 사용자의 희망 조건(환경, 시간대, 재능 등)과 액션의 실제 정보가 일치하지 않는 경우, 불일치하는 조건을 억지로 사용자에게 맞다고 지어내지 마세요.
+   - 불일치하는 조건(환경, 시간대)은 일체 언급을 피하고, 일치하는 관심 분야나 액션 본연의 사회적 가치, 따뜻한 보람, 구체적 활동 내용만을 정직하게 서술하세요.
+
+5. [세부 모집 항목(recruitmentItems) 역할 타겟팅]:
    - 액션의 recruitmentItems 중 사용자가 실제로 선택한 재능(matchedUserSkills)이나 역할에 부합하는 세부 파트가 있을 때만 구체적 파트명을 언급하세요.
 
-4. [조건 완화 솔직한 안내 및 '상관없음' 규칙]:
-   - 사용자가 환경이나 규모를 '상관없음'으로 선택한 경우에는, '실내에서 진행되지만', '비록 ~이지만' 같은 변명조 문구를 절대 쓰지 마세요.
-
-5. [일정 날조 엄격 금지]:
-   - actualSchedule에 나와 있는 평일/주말 요일을 절대 반대로 지어내지 마세요.
+6. [사용자 '상관없음' 선택 시 변명조 문구 금지]:
+   - 사용자가 환경이나 규모, 시간을 '상관없음'으로 선택한 경우에는, '실내에서 진행되지만', '비록 ~이지만' 같은 변명조 문구를 절대 쓰지 마세요.
 
 반드시 JSON 형식으로만 답하세요:
 {"reasons": {"actionId1": "추천 이유 1", "actionId2": "추천 이유 2", ...}}`,
@@ -1118,6 +1325,10 @@ export async function POST(request: Request) {
               : scoringAnswers.activityTypePreference === 'outdoor'
                 ? '실외'
                 : '상관없음',
+          희망시간대:
+            scoringAnswers.userTimePreferences && scoringAnswers.userTimePreferences.length > 0
+              ? scoringAnswers.userTimePreferences
+              : ['시간 상관없음'],
           모임규모: scoringAnswers.groupSizePreference ?? '상관없음',
         },
         선정된액션목록: candidateSummaries,
@@ -1134,62 +1345,20 @@ export async function POST(request: Request) {
   }
 
   const topItems = codeRanked.map((item) => {
-    let reason = reasonsMap[item.action.id]?.trim();
+    const reason = reasonsMap[item.action.id] ?? '';
     const meta = metasById.get(item.action.id);
-    const isSocial = (meta?.target_groups ?? []).some((g) => /교류|교육|소통/.test(g));
-    const isTask = (meta?.target_groups ?? []).some((g) => /과업|육체|집중/.test(g));
-    const matchedSkills = (meta?.skills ?? []).filter((s) => userSelectedSkills.includes(s));
+    const finalReason = filterRecommendationReason({
+      reason,
+      item,
+      meta,
+      userSelectedSkills,
+      scoringAnswers,
+    });
 
-    if (reason) {
-      // 1) '육체적인 재능', '집중적인 재능' 같은 해괴한 합성어 감지 시 fallbackReason으로 대체
-      if (/육체적.*재능|집중적.*재능/.test(reason)) {
-        reason = fallbackReason(item);
-      }
-
-      // 2) 순수 소통형 액션인데 '육체적', '몸 쓰는' 단어가 들어간 거짓말 감지 시 fallbackReason으로 대체
-      if (isSocial && !isTask && /육체|몸\s*쓰는|땀\s*흘리는/.test(reason)) {
-        reason = fallbackReason(item);
-      }
-
-      // 3) 사용자가 선택하지 않은 다른 재능을 사용자가 발휘한다고 날조한 경우 감지 시 fallbackReason으로 대체
-      if (userSelectedSkills.length > 0 && matchedSkills.length === 0) {
-        const unownedSkills = ALL_15_SKILLS.filter((s) => !userSelectedSkills.includes(s) && s !== '기타');
-        const hasUnownedSkillMention = unownedSkills.some((s) => reason.includes(s) && reason.includes('재능'));
-        if (hasUnownedSkillMention || /재능을\s*(활용|발휘|살려)/.test(reason)) {
-          reason = fallbackReason(item);
-        }
-      }
-
-      // 4) 사용자가 활동 환경을 '상관없음'으로 선택했거나 환경 제약이 없는 경우, 불필요한 변명 멘트 제거
-      if (scoringAnswers.activityTypePreference === 'any' || !scoringAnswers.activityTypePreference) {
-        reason = reason
-          .replace(/(실내|야외|실외)에서\s*진행되지만,?\s*/g, '')
-          .replace(/원하시던\s*(실내|실외|야외)[^,]*아니지만,?\s*/g, '')
-          .replace(/비록\s*(실내|실외|야외)[^,]*지만,?\s*/g, '')
-          .trim();
-      }
-
-      // 5) 일정 날조 검증
-      if (item.action.activityStartAt) {
-        const isWk = isWeekend(item.action.activityStartAt);
-        // 평일 액션인데 주말을 지어낸 경우
-        if (!isWk && (reason.includes('주말') || reason.includes('토요일') || reason.includes('일요일'))) {
-          reason = fallbackReason(item);
-        } else if (isWk && (reason.includes('평일') || /월요일|화요일|수요일|목요일|금요일/.test(reason))) {
-          // 주말 액션인데 평일을 지어낸 경우
-          reason = fallbackReason(item);
-        }
-      } else {
-        // 일정이 미정인 액션인데 특정 요일/주말을 지어낸 경우
-        if (reason.includes('주말') || reason.includes('평일') || /월요일|화요일|수요일|목요일|금요일|토요일|일요일/.test(reason)) {
-          reason = fallbackReason(item);
-        }
-      }
-    }
     return {
       action: item.action,
       score: item.score,
-      reason: reason || fallbackReason(item),
+      reason: finalReason,
     };
   });
 
