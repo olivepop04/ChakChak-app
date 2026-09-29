@@ -51,7 +51,7 @@ export default async function EditActionPage({
           <Pencil className="h-3.5 w-3.5 text-neutral-500" />
           <p className="text-body font-bold text-neutral-500">수정 중인 액션</p>
         </div>
-        <div className="h-px bg-neutral-200" />
+        <div className="h-px bg-neutral-100" />
         <h1 className="mt-3 line-clamp-2 font-paperlogy text-xl font-bold leading-snug text-hairline-focus">
           {action.title}
         </h1>
@@ -91,13 +91,13 @@ export default async function EditActionPage({
                     <h3 className="whitespace-nowrap text-sm font-semibold text-neutral-500">
                       {item.name}
                     </h3>
-                    <span className="h-3 w-px shrink-0 bg-neutral-300" />
+                    <span className="h-3 w-px shrink-0 bg-neutral-200" />
                     <span className="whitespace-nowrap text-caption text-neutral-500">
                       {describeTarget(item)}
                     </span>
                     {item.type === 'PERSON' && (
                       <>
-                        <span className="h-3 w-px shrink-0 bg-neutral-300" />
+                        <span className="h-3 w-px shrink-0 bg-neutral-200" />
                         <span className="whitespace-nowrap text-caption text-neutral-500">
                           {GENDER_REQUIREMENT_LABEL[item.gender_requirement]}
                           {item.conditionName ? ` · ${item.conditionName}` : ''}

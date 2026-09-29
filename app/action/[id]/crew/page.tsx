@@ -10,6 +10,7 @@ import { ChevronRight, MessageSquareQuote, UsersRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getActionCrew, groupCrewByItem } from '@/lib/queries/participations';
 import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
 import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { UserSummary } from '@/lib/types/view';
@@ -180,15 +181,14 @@ export default async function CrewPage({
         </section>
       )}
 
-      {/* 하단 고정 버튼 — 참여 완료 화면과 같은 연한 그린 CTA. 탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
+      {/* 하단 고정 버튼 — 통일안 CTA(공용 Button, 포인트 그린 채움 · 액션 상세 하단 버튼과 같은 모양) (2026-09-29).
+          참여 완료 화면(welcome)의 같은 버튼은 연한 그린 그대로 둡니다 — 문구는 같고 모양만 다른 게 의도입니다.
+          탭 높이는 globals.css 의 --nav-h 변수 (2026-09-18) */}
       <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-app flex-col gap-2 bg-white px-6 py-4">
-        <Link
-          href={`/action/${id}/chat`}
-          className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl border border-brand bg-brand-soft text-body font-semibold text-brand transition-colors active:bg-white"
-        >
+        <Button href={`/action/${id}/chat`} size="lg" fullWidth>
           <MessageSquareQuote className="h-5 w-5 flex-none" aria-hidden="true" />
           <span>함께하는 크루와 이야기하기</span>
-        </Link>
+        </Button>
       </div>
     </main>
   );

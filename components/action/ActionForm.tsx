@@ -439,7 +439,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         />
       </label>
 
-      <div className="h-px bg-neutral-200" />
+      <div className="h-px bg-neutral-100" />
 
       {/* 카테고리 */}
       <div className="flex flex-col gap-2">
@@ -509,7 +509,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         </p>
       </div>
 
-      <div className="h-px bg-neutral-200" />
+      <div className="h-px bg-neutral-100" />
 
       {/* 소개 */}
       <label className="flex flex-col gap-1.5">
@@ -527,7 +527,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         </span>
       </label>
 
-      <div className="h-px bg-neutral-200" />
+      <div className="h-px bg-neutral-100" />
 
       {/* 이미지 — 액션이 저장된 뒤에 열립니다 */}
       <div ref={imageSectionRef} className="flex flex-col gap-2">
@@ -551,7 +551,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         )}
       </div>
 
-      <div className="h-px bg-neutral-200" />
+      <div className="h-px bg-neutral-100" />
 
       {/* 모집 항목 */}
       <div ref={itemsSectionRef} className="flex flex-col gap-2">
@@ -559,7 +559,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         <ItemEditor items={items} onChange={setItems} />
       </div>
 
-      <div className="h-px bg-neutral-200" />
+      <div className="h-px bg-neutral-100" />
 
       {/* 일정 */}
       <div className="flex flex-col gap-3">
@@ -651,7 +651,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         </div>
       </div>
 
-      <div className="h-px bg-neutral-200" />
+      <div className="h-px bg-neutral-100" />
 
       {/* 주소 · 장소명 */}
       <div ref={placeSectionRef} className="flex flex-col gap-3">
@@ -689,7 +689,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
         )}
       </div>
 
-      <div className="h-px bg-neutral-200" />
+      <div className="h-px bg-neutral-100" />
 
       {/* 안내사항 */}
       <label className="flex flex-col gap-1.5">

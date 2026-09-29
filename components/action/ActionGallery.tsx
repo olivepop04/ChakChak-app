@@ -1,6 +1,6 @@
 /**
  * 액션 이미지 갤러리 (최대 3장).
- * 좌우로 스와이프해서 넘기고, 마우스가 있는 기기(컴퓨터)에서는 좌우 화살표로도 넘깁니다 — ArrowScroller.
+ * 좌우로 스와이프하거나 좌우 화살표로 넘깁니다 — ArrowScroller. (2026-09-29: 폰에서도 화살표 보임)
  * 아래 점(현재 위치 표시)은 2026-09-29 에 뺐습니다 — 화살표가 첫·마지막 장에서 숨어서 위치를 대신 알려줍니다.
  */
 'use client';
@@ -15,7 +15,8 @@ import { cn } from '@/lib/utils/cn';
  * 액션 상세 · 홈 카드(ActionGallery) 와 결과 보기 사진 줄이 같은 화살표를 씁니다.
  * 새 파일로 떼지 않고 여기 둔 것은 담당표(CLAUDE.md)에 줄을 늘리지 않기 위해서입니다.
  *
- * - 화살표는 hover 가 되는 기기에서만 보입니다. 폰은 지금처럼 밀어서 넘깁니다.
+ * - 화살표는 컴퓨터·폰 모두에서 보입니다(2026-09-29 — 처음엔 hover 기기만이었는데, 폰에서도
+ *   사진이 여러 장인 걸 알 수 있게 바꿈). 폰은 밀어서 넘기는 것도 그대로 됩니다.
  * - 첫 칸에서는 ←, 마지막 칸에서는 → 를 숨깁니다. 넘칠 게 없으면 둘 다 숨깁니다.
  * - ⚠️ 홈 카드에서는 이 칸 전체가 상세로 가는 Link 안에 있습니다 (CLAUDE.md 규칙 16).
  *   화살표 클릭이 그 Link 로 올라가면 상세로 넘어가 버려서, preventDefault +
@@ -72,9 +73,10 @@ export function ArrowScroller({
   }
 
   // 흰 원 바탕 없이 흰 화살표만 (2026-09-29). 밝은 사진 위에서도 보이게 옅은 그림자만 깝니다.
-  // 누르는 칸은 32px 그대로 — 아이콘만 커졌습니다.
+  // 폰에서도 보이므로 누르는 칸을 44px(터치 권장 크기)로 키우고, 가장자리 여백을 줄여
+  // 화살표 그림 위치는 전과 거의 같게 뒀습니다(32px 칸 + 12px 여백 → 44px 칸 + 4px 여백)
   const arrowClass =
-    'pointer-events-auto absolute top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center text-white opacity-90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-opacity hover:opacity-100 [@media(hover:hover)]:flex';
+    'pointer-events-auto absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-white opacity-90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-opacity hover:opacity-100';
 
   return (
     <div className={cn('relative', wrapperClassName)}>
@@ -92,7 +94,7 @@ export function ArrowScroller({
           aria-label="이전 사진"
           tabIndex={arrowsFocusable ? undefined : -1}
           onClick={move(-1)}
-          className={cn(arrowClass, 'left-3')}
+          className={cn(arrowClass, 'left-1')}
         >
           <ChevronLeft className="h-6 w-6" strokeWidth={2.5} aria-hidden="true" />
         </button>
@@ -103,7 +105,7 @@ export function ArrowScroller({
           aria-label="다음 사진"
           tabIndex={arrowsFocusable ? undefined : -1}
           onClick={move(1)}
-          className={cn(arrowClass, 'right-3')}
+          className={cn(arrowClass, 'right-1')}
         >
           <ChevronRight className="h-6 w-6" strokeWidth={2.5} aria-hidden="true" />
         </button>

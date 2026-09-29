@@ -111,7 +111,7 @@ export function BottomNav() {
   //   화면에 띄워 증상 순간을 캡처)부터 붙이기로 했습니다.
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-app border-t border-neutral-200 bg-white"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-app border-t border-neutral-100 bg-white"
       style={{
         // 민호(성은님 PR, origin/dev 1c26890) — 글자 배율(200~300%)을 켜면 라벨이
         // 커지면서 탭이 부풀어 다른 화면 하단 버튼을 덮는 버그가 있었다. 이 두 줄이

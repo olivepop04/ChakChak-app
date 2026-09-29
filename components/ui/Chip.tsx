@@ -22,6 +22,8 @@ export function Chip({
    * 이 값을 쓰고 있어서 손대지 않음.
    * 'accent' / 'neutral' 은 2026-09-21 홈피드 개편에서 새로 추가한 옵션 —
    * 명시적으로 지정한 곳(app/page.tsx 의 홈 필터)에만 적용되고 다른 화면엔 영향 없음.
+   * 'soft' 는 2026-09-29 프로필군 통일안 — 선택 = 연한 초록 바탕 + 초록 테두리·글자.
+   * 여러 개를 고르는 폼 칩(프로필 수정·가입의 재능·관심 카테고리)에만 씀. 지정한 곳 외 영향 없음.
    */
   tone = 'default',
   /**
@@ -35,7 +37,7 @@ export function Chip({
   children: React.ReactNode;
   className?: string;
   as?: 'button' | 'span';
-  tone?: 'default' | 'accent' | 'neutral';
+  tone?: 'default' | 'accent' | 'neutral' | 'soft';
   size?: 'md' | 'sm';
 }) {
   return (
@@ -58,6 +60,10 @@ export function Chip({
         (selected
           ? 'border-transparent bg-brand text-white'
           : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'),
+        tone === 'soft' &&
+        (selected
+          ? 'border-brand bg-brand-soft font-semibold text-brand'
+          : 'border-hairline bg-white text-neutral-500 hover:bg-neutral-50'),
         // 세그먼트 컨트롤(정렬 필터) — 바깥 컨테이너가 #F5F5F7 배경을 이미 깔고 있어서
         // 선택 안 된 세그먼트는 투명, 선택된 세그먼트만 흰 배경으로 떠 보이게 한다.
         tone === 'neutral' &&
@@ -78,17 +84,20 @@ export function ChipGroup<T extends string>({
   options,
   selected,
   onToggle,
+  tone,
   className,
 }: {
   options: readonly T[];
   selected: readonly T[];
   onToggle: (value: T) => void;
+  /** 선택 모양. 안 주면 Chip 기본값('default', 선택 시 검정) 그대로 — 기존 호출부 영향 없음 */
+  tone?: 'default' | 'accent' | 'soft';
   className?: string;
 }) {
   return (
     <div className={cn('flex flex-wrap gap-2', className)}>
       {options.map((o) => (
-        <Chip key={o} selected={selected.includes(o)} onClick={() => onToggle(o)}>
+        <Chip key={o} selected={selected.includes(o)} tone={tone} onClick={() => onToggle(o)}>
           {o}
         </Chip>
       ))}

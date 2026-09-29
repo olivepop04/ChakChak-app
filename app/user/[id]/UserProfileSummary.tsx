@@ -68,7 +68,7 @@ export function UserProfileSummary({
         {isMe ? (
           <Link
             href="/my/edit"
-            className="shrink-0 rounded-full border border-neutral-300 px-3 py-2 text-label font-semibold text-neutral-700"
+            className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-hairline px-3.5 text-label font-semibold text-neutral-800"
           >
             프로필 수정
           </Link>

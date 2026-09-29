@@ -125,7 +125,7 @@ export function ResultWriteForm({
 
               return (
                 <Fragment key={item.id}>
-                {idx > 0 && <div className="h-px bg-neutral-200" />}
+                {idx > 0 && <div className="h-px bg-neutral-100" />}
                 <div className="flex flex-col gap-2">
                   {/* 상단: 아이콘 + 항목명 + 최종 모집 수 (한 row) */}
                   <div className="flex items-center gap-2">

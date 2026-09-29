@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import type { ActionCardData } from '@/lib/types/view';
@@ -23,21 +24,22 @@ export function ProfileActionSection({
     <section className="mt-6">
       <div className="flex items-center justify-between px-6 pb-1">
         <SectionTitle>
-          {title} <span className="text-neutral-400">{actions.length}</span>
+          {title} <span className="text-neutral-500">{actions.length}</span>
         </SectionTitle>
         <Link
           href={href}
-          className="text-label font-semibold text-neutral-500 hover:text-neutral-900"
+          className="inline-flex items-center gap-0.5 text-label font-semibold text-neutral-500 hover:text-neutral-900"
         >
-          모두 보기 ›
+          모두 보기
+          <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
       </div>
       {description && (
-        <p className="px-6 pb-3 text-caption text-neutral-400">{description}</p>
+        <p className="px-6 pb-3 text-caption text-neutral-500">{description}</p>
       )}
 
       {actions.length === 0 ? (
-        <p className="mx-6 mt-2 rounded-xl bg-neutral-50 px-4 py-6 text-center text-label text-neutral-400">
+        <p className="mx-6 mt-2 rounded-xl bg-neutral-100 px-4 py-6 text-center text-label text-neutral-500">
           {emptyText}
         </p>
       ) : (

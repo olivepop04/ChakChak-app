@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { CircleCheck } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { ProfileActionList } from '@/components/my/ProfileActionList';
@@ -34,14 +35,16 @@ export default async function JoinedActionsPage({
 
       <div className="px-6 py-4">
         <SectionTitle>{actions.length}개</SectionTitle>
-        <p className="mt-0.5 text-caption text-neutral-500">
+        <p className="mt-0.5 text-label text-neutral-500">
           @{profile.nickname}님이 소감까지 작성한 액션
         </p>
       </div>
 
       <ProfileActionList
         actions={actions}
-        emptyText="아직 참여 완료한 액션이 없어요."
+        emptyText="아직 참여 완료한 액션이 없어요"
+        emptyIcon={CircleCheck}
+        emptyDescription="활동이 끝나고 소감까지 작성한 액션만 보여요."
       />
     </main>
   );

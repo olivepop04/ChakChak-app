@@ -562,9 +562,11 @@ export function FollowButton({
       aria-pressed={on}
       className={cn(
         'inline-flex min-h-9 items-center gap-1 rounded-full px-3.5 py-2 text-label font-semibold transition-colors',
+        // 2026-09-29 프로필군 통일안 — 팔로우 = 초록 채움(이 자리의 주 행동) · 팔로잉 = 회색 면.
+        // 액션 상세 작성자 줄의 팔로우 버튼도 같이 바뀝니다
         on
-          ? 'bg-neutral-200 text-neutral-700'
-          : 'border border-neutral-300 bg-white text-neutral-700',
+          ? 'bg-neutral-100 text-neutral-800'
+          : 'bg-brand text-white',
         className,
       )}
     >

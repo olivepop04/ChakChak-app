@@ -17,12 +17,19 @@ import { cn } from '@/lib/utils/cn';
 
 type Tone = 'neutral' | 'live' | 'done' | 'warn' | 'off';
 
+/**
+ * 2026-09-29 — tailwind 기본색(emerald·blue·amber)을 디자인 가이드 기능색으로 전부 교체.
+ * 내 액션 통일안(9/28)에서 정한 톤 규칙 그대로입니다:
+ *   모집 중·참여 예정 = 진행중(info) · 결과/소감 작성 필요 = 주의(warning) ·
+ *   완료·참여 완료 = 완료(brand) · 작성 중·모집 마감 = 중립 · 취소됨 = 중립(한 단계 옅은 글자)
+ * 중립(연한) #F0F0F0 · 중립(진한) #7A7A7A 는 tailwind 토큰이 없어 값으로 적었습니다.
+ */
 const TONE: Record<Tone, string> = {
-  neutral: 'bg-neutral-100 text-neutral-600',
-  live: 'bg-emerald-50 text-emerald-700',
-  done: 'bg-blue-50 text-blue-700',
-  warn: 'bg-amber-50 text-amber-700',
-  off: 'bg-neutral-100 text-neutral-400',
+  neutral: 'bg-[#F0F0F0] text-[#7A7A7A]',
+  live: 'bg-info-soft text-info',
+  done: 'bg-brand-soft text-brand',
+  warn: 'bg-warning-soft text-warning-ink',
+  off: 'bg-[#F0F0F0] text-neutral-400',
 };
 
 export function Badge({

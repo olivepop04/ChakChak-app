@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Lock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -9,6 +10,7 @@ import { SectionTitle } from '@/components/ui/SectionTitle';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { ChipGroup, toggleInArray } from '@/components/ui/Chip';
 import { RegionPicker } from '@/components/ui/RegionPicker';
+import { NOTIFICATION_ICON } from '@/components/ui/NotificationList';
 import { useToast } from '@/components/ui/Toast';
 import { TimePreferenceEditor } from '@/app/my/_components/TimePreferenceEditor';
 import { TalentPreferenceEditor } from '@/app/my/_components/TalentPreferenceEditor';
@@ -45,6 +47,16 @@ interface Initial {
 
 const locked =
   'flex min-h-11 items-center justify-between rounded-xl bg-neutral-100 px-4 py-3 text-body text-neutral-500';
+
+// 🔒 이모지 → lucide Lock (2026-09-29 프로필군 통일안 — 아이콘은 lucide 만)
+function LockedTag() {
+  return (
+    <span className="inline-flex items-center gap-1 text-caption">
+      <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+      수정 불가
+    </span>
+  );
+}
 
 export function ProfileEditForm({
   userId,
@@ -162,7 +174,7 @@ export function ProfileEditForm({
         <FieldLabel>이름</FieldLabel>
         <div className={locked}>
           {initial.name}
-          <span className="text-caption">🔒 수정 불가</span>
+          <LockedTag />
         </div>
       </div>
 
@@ -170,9 +182,9 @@ export function ProfileEditForm({
         <FieldLabel>성별</FieldLabel>
         <div className={locked}>
           {GENDER_LABEL[initial.gender]}
-          <span className="text-caption">🔒 수정 불가</span>
+          <LockedTag />
         </div>
-        <span className="text-caption text-neutral-400">
+        <span className="text-caption text-neutral-500">
           성별 조건이 있는 액션을 안내하는 데 쓰여서 변경할 수 없어요.
         </span>
       </div>
@@ -194,9 +206,9 @@ export function ProfileEditForm({
           maxLength={LIMITS.BIO_MAX}
           rows={3}
           placeholder="어떤 활동에 관심이 있는지, 어떤 변화를 만들고 싶은지 등 자유롭게 적어보세요."
-          className="rounded-xl border border-neutral-300 p-4 text-body leading-relaxed outline-none focus:border-neutral-900"
+          className="rounded-xl border border-hairline px-4 py-3 text-body leading-relaxed outline-none focus:border-hairline-focus"
         />
-        <span className="text-right text-caption text-neutral-400">
+        <span className="text-right text-caption text-neutral-500">
           {bio.length}/{LIMITS.BIO_MAX}
         </span>
       </label>
@@ -208,7 +220,9 @@ export function ProfileEditForm({
 
       <div className="flex flex-col gap-2.5">
         <FieldLabel>관심 카테고리</FieldLabel>
+        {/* 선택 = 연한 초록 (2026-09-29 프로필군 통일안) */}
         <ChipGroup
+          tone="soft"
           options={CATEGORY_OPTIONS}
           selected={categories as (typeof CATEGORY_OPTIONS)[number][]}
           onToggle={toggleCategory}
@@ -233,31 +247,31 @@ export function ProfileEditForm({
           </p>
         </div>
 
-        <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200">
+        <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-hairline">
           {NOTIFICATION_TYPES.map((type) => {
             const enabled = !notifyOff.includes(type);
             const template = NOTIFICATION_TEMPLATE[type];
+            const Icon = NOTIFICATION_ICON[type];
             return (
               <div
                 key={type}
                 className="flex items-center justify-between gap-4 bg-white px-4 py-3.5"
               >
-                <div className="min-w-0">
-                  <p className="text-label font-medium text-neutral-800">
-                    <span className="mr-2" aria-hidden="true">
-                      {template.icon}
-                    </span>
-                    {template.title}
-                  </p>
-                </div>
+                {/* 이모지(template.icon) → 알림 목록과 같은 lucide 아이콘 (2026-09-29).
+                    NOTIFICATION_TEMPLATE(민호 구역)은 안 건드리고 아이콘만 여기서 바꿔 그립니다 */}
+                <p className="flex min-w-0 items-center gap-2.5 text-label font-medium text-neutral-800">
+                  <Icon className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true" />
+                  <span>{template.title}</span>
+                </p>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={enabled}
                   aria-label={`${template.title} 알림 ${enabled ? '끄기' : '켜기'}`}
                   onClick={() => toggleNotification(type)}
+                  // 켬 = 진회색 #333 · 끔 = #CCCCCC (2026-09-29 — 초록이 너무 많아 스위치는 회색 계열로)
                   className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-                    enabled ? 'bg-neutral-900' : 'bg-neutral-300'
+                    enabled ? 'bg-[#333333]' : 'bg-faint'
                   }`}
                 >
                   <span

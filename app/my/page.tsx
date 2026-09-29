@@ -6,7 +6,7 @@
  */
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Bell } from 'lucide-react';
+import { Bell, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/queries/profiles';
 import { getSavedActions } from '@/lib/queries/actions';
@@ -56,14 +56,14 @@ export default async function MyPage() {
           </p>
           <p className="truncate text-label text-neutral-500">{profile.name}</p>
           {profile.bio && (
-            <p className="mt-1 line-clamp-2 text-caption text-neutral-500">
+            <p className="mt-1 line-clamp-2 text-label leading-normal text-neutral-500">
               {profile.bio}
             </p>
           )}
         </div>
         <Link
           href="/my/edit"
-          className="shrink-0 rounded-full border border-neutral-300 px-3 py-2 text-label font-semibold text-neutral-700"
+          className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-hairline px-3.5 text-label font-semibold text-neutral-800"
         >
           프로필 수정
         </Link>
@@ -89,9 +89,10 @@ export default async function MyPage() {
           <SectionTitle className="pb-3">관심 카테고리</SectionTitle>
           <div className="flex flex-wrap gap-1.5">
             {profile.categories.map((c) => (
+              // 관심 카테고리 = 연한 초록 바탕 + 초록 테두리·글자 (2026-09-29 프로필군 통일안)
               <span
                 key={c}
-                className="rounded-full bg-neutral-100 px-3 py-1.5 text-caption font-medium text-neutral-600"
+                className="inline-flex h-7 items-center rounded-full border border-brand bg-brand-soft px-3 text-caption font-semibold text-brand"
               >
                 {c}
               </span>
@@ -103,34 +104,33 @@ export default async function MyPage() {
       {/* 내가 저장한 액션 */}
       <MySavedSection saved={saved} />
 
-      {/* 설정 */}
+      {/* 설정 — 2026-09-29: 구분선 없음(사이·위·아래), 14→15px, › 글자 → ChevronRight.
+          LogoutButton 줄과 같은 모양이라 둘을 같이 고칩니다 (Day 13 보류분) */}
       <section className="mt-8">
-        <div className="divide-y divide-neutral-100 border-y border-neutral-100">
-          <Link
-            href="/my/edit#notification-settings"
-            className="flex items-center justify-between px-6 py-4 text-[14px] text-neutral-700 hover:bg-neutral-50"
-          >
-            알림 설정
-            <span className="text-neutral-300">›</span>
-          </Link>
-          <LogoutButton />
-        </div>
+        <Link
+          href="/my/edit#notification-settings"
+          className="flex min-h-[52px] items-center justify-between px-6 text-body font-medium text-neutral-800 hover:bg-neutral-50"
+        >
+          알림 설정
+          <ChevronRight className="h-[18px] w-[18px] text-faint" aria-hidden="true" />
+        </Link>
+        <LogoutButton />
       </section>
 
       {/* 하단 푸터 */}
       <footer className="mt-8 flex items-center justify-center gap-3 pb-4 text-center">
         <Link
           href="/terms?from=my"
-          className="text-label text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
+          className="text-label text-neutral-500 underline underline-offset-4 hover:text-neutral-700"
         >
           이용약관
         </Link>
-        <span aria-hidden="true" className="text-caption text-neutral-300">
+        <span aria-hidden="true" className="text-caption text-faint">
           ·
         </span>
         <Link
           href="/privacy?from=my"
-          className="text-label text-neutral-400 underline underline-offset-4 hover:text-neutral-600"
+          className="text-label text-neutral-500 underline underline-offset-4 hover:text-neutral-700"
         >
           개인정보 처리방침
         </Link>

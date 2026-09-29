@@ -41,6 +41,22 @@ interface ActionCardProps {
   showStatus?: boolean;
   /** 카드 아래에 덧붙일 내용. Activity 의 CTA 버튼 등 */
   footer?: React.ReactNode;
+  /**
+   * 가로형 전용. true 면 날짜·장소 줄을 뺍니다. 내 액션(Activity) 에서만 씁니다 (2026-09-29).
+   * 기본값 false — MY·저장한 액션·타인 프로필은 나중에 보러 갈 카드라 언제·어디가 필요해서 남깁니다.
+   * (참여 인원은 켜든 끄든 아래 반응 줄 맨 앞에 아이콘+숫자로 들어갑니다)
+   */
+  hideSchedule?: boolean;
+  /**
+   * 가로형 전용. true 면 아래 줄의 작성자(아바타·@닉네임)를 뺍니다.
+   * 내 액션 「호스트한 액션」 탭 — 전부 내가 만든 것이라 보여줄 필요가 없음 (2026-09-29).
+   */
+  hideOwner?: boolean;
+  /**
+   * 가로형 전용. 사진 아래에 놓을 배지를 직접 넘깁니다. 주면 showStatus 의 액션 상태 배지 대신 이걸 씁니다.
+   * 내 액션 「참여한 액션」 탭이 참여 상태(참여 예정·소감 작성 필요 등)를 넣습니다 (2026-09-29).
+   */
+  statusBadge?: React.ReactNode;
   className?: string;
 }
 
@@ -49,6 +65,9 @@ export function ActionCard({
   variant = 'default',
   showStatus = false,
   footer,
+  hideSchedule = false,
+  hideOwner = false,
+  statusBadge,
   className,
 }: ActionCardProps) {
   const isRecruitClosed =
@@ -99,8 +118,12 @@ export function ActionCard({
         </Link>
 
         {/* 2. 본문 컨텐츠 (덮개 링크 클릭 통과를 위해 pointer-events-none) */}
-        <div className="relative z-10 flex flex-row gap-2.5 p-3.5 w-full pointer-events-none">
-          {/* 좌측 썸네일 */}
+        <div className="relative z-10 flex w-full flex-row gap-3 p-4 pointer-events-none">
+          {/* 좌측 썸네일 + 그 아래 상태 배지(가운데 정렬) — 2026-09-29: 배지를 제목 옆에서 사진 아래로 옮김.
+              제목 옆에 있을 때 제목 자리가 좁아져 3줄로 꺾이던 문제가 같이 풀립니다.
+              배지 폭은 글자 길이대로 — Badge 기본 최소 폭(80px, 9/22 결정)은 이 자리에서만 풉니다(!min-w-0).
+              다른 화면 배지는 그대로 80px 입니다. cn 이 겹치는 클래스를 정리하지 않아서 ! 를 붙였습니다 */}
+          <div className="flex w-24 shrink-0 flex-col items-center gap-2">
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
             {action.thumbnailUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -114,6 +137,15 @@ export function ActionCard({
                 이미지 없음
               </div>
             )}
+          </div>
+            {statusBadge ??
+              (showStatus && (
+                <StatusBadge
+                  status={action.status}
+                  recruitClosed={isRecruitClosed}
+                  className="!min-w-0 px-2.5"
+                />
+              ))}
           </div>
 
           {/* 우측 정보 */}
@@ -130,42 +162,25 @@ export function ActionCard({
                 ))}
               </div>
 
-              {/* 상태 뱃지 + 제목 수평(인라인) 배치.
-                  배지가 길어지면(예: "결과 작성 필요") 제목 자리가 모자라 잘리므로,
-                  자리가 부족하면 제목이 다음 줄로 내려가게 하고 최소 폭을 보장한다. */}
-              <div className="flex flex-wrap items-start gap-x-2 gap-y-1 min-w-0">
-                {showStatus && (
-                  <div className="shrink-0">
-                    <StatusBadge
-                      status={action.status}
-                      recruitClosed={isRecruitClosed}
-                    />
-                  </div>
-                )}
-                <h3 className="flex-1 min-w-[6rem] font-paperlogy text-xl font-bold leading-snug text-neutral-900 break-keep">
-                  {action.title}
-                </h3>
-              </div>
+              {/* 가로형 제목 = 페이퍼로지 700 · 17px (2026-09-29 — 디자인 가이드엔 10/1 최종본 때 추가) */}
+              <h3 className="font-paperlogy text-subtitle font-bold leading-snug text-neutral-900 break-keep">
+                {action.title}
+              </h3>
 
               {action.summary && (
                 // 가로형은 소개글을 2줄까지만, 넘치면 말줄임(…). 전체 내용은 액션 상세에서 본다.
                 // (세로형 피드는 말줄임 없이 전체 노출 — 의도적으로 다르다)
-                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-500">
+                <p className="mt-1 line-clamp-2 text-label leading-normal text-neutral-500">
                   {action.summary}
                 </p>
               )}
             </div>
 
             <div className="mt-2 flex flex-col gap-1.5">
-              {/* 참여인원 + 날짜 + 장소 — 세로형 카드와 같은 원칙(사실 정보는 한 줄, 아이콘 통일).
-                  2026-09-21 홈피드 개편에서 가로형에도 같이 반영 */}
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] min-[410px]:text-caption font-bold text-neutral-500">
-                <CrewAnchorButton
-                  count={action.crewCount ?? 0}
-                  suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
-                  className="!min-h-0 !gap-1 !p-0 !text-[10px] min-[410px]:!text-caption !font-bold !text-neutral-500 hover:!bg-transparent hover:!text-neutral-500"
-                  iconClassName="h-3 w-3 shrink-0 text-neutral-400"
-                />
+              {/* 날짜 + 장소 — 참여 인원은 2026-09-29 아래 반응 줄 맨 앞으로 옮김.
+                  글자 10px(375px 대응) → 11px(caption) — 타입 스케일 밖 값 정리 */}
+              {!hideSchedule && (
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption font-semibold text-neutral-500">
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
                   <Calendar className="h-3 w-3 shrink-0 text-neutral-400" aria-hidden="true" />
                   {formatDate(action.activityStartAt)}
@@ -177,29 +192,43 @@ export function ActionCard({
                   </span>
                 )}
               </div>
+              )}
 
-              {/* 아바타 + 좋아요·저장·공유 — 참여인원은 위로 옮겨서 이 셋만 남음. 고배율에서 한 줄에 못 담으면 아래로 내려가게 flex-wrap */}
-              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 w-full min-w-0 pt-2 mt-1.5 border-t border-neutral-100">
+              {/* 아바타 + 참여·좋아요·저장·공유 4종 — 한 줄 고정(2026-09-29).
+                  최소 폭(375px)에서 줄이 바뀌던 것: 카드 오른쪽 칸이 약 185px 뿐이라 핸들+4종(약 195px)이 넘쳤음.
+                  → 반응 4종은 안쪽 여백을 없애고 간격 4px 로 줄여 줄지 않게(shrink-0),
+                    핸들은 남는 폭만 쓰고 길면 말줄임(…)으로 줄어들게 함 */}
+              <div className="mt-1.5 flex w-full min-w-0 flex-nowrap items-center gap-2 border-t border-neutral-100 pt-2">
+                {!hideOwner && (
                 <Link
                   href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
                   onClick={(e) => e.stopPropagation()}
-                  className="pointer-events-auto cursor-pointer flex items-center gap-1 shrink-0 min-w-0 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
+                  className="pointer-events-auto cursor-pointer flex min-w-0 shrink items-center gap-1 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
                 >
                   <Avatar name={action.owner?.nickname ?? '호스트'} avatar={action.owner?.avatar} size="xs" />
-                  <span className="shrink-0 whitespace-nowrap text-caption font-medium text-neutral-600">
+                  <span className="min-w-0 truncate text-caption font-medium text-neutral-600">
                     @{action.owner?.nickname ?? '호스트'}
                   </span>
                 </Link>
+                )}
 
-                {/* 메타 3종: 375px에서는 초슬림 밀착, 넓은 화면(sm)에서는 홈피드 규격으로 확장 */}
-                <div className="flex items-center gap-0.5 min-[410px]:gap-1 sm:gap-1.5 shrink-0 ml-auto pointer-events-auto text-[10px] min-[410px]:text-caption sm:text-xs font-medium text-neutral-500">
+                {/* 반응 4종 — 11px(caption), 넓은 화면(sm)에서는 12px.
+                    참여 인원은 맨 앞에 아이콘+숫자만 (2026-09-29). 이 줄은 덮개 링크 밖(pointer-events-auto)이라
+                    actionId 를 줘서 누르면 상세의 크루 칸으로 갑니다 */}
+                <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5 pointer-events-auto text-caption sm:text-xs font-medium text-neutral-500">
+                  <CrewAnchorButton
+                    count={action.crewCount ?? 0}
+                    actionId={action.id}
+                    className="!p-0 sm:!px-1 sm:!py-0.5 !min-w-0 !text-caption sm:!text-xs !font-medium !text-neutral-500 !gap-0.5 sm:!gap-1 shrink-0 hover:!bg-transparent"
+                    iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
+                  />
                   <LikeButton
                     actionId={action.id}
                     initialLiked={action.likedByMe}
                     initialCount={action.likeCount ?? 0}
                     disabled={likeDisabled}
                     disabledReason={reactionDisabledReason}
-                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-caption sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    className="!p-0 sm:!px-1 sm:!py-0.5 !min-w-0 text-caption sm:text-xs !gap-0.5 sm:!gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <SaveButton
@@ -208,7 +237,7 @@ export function ActionCard({
                     initialCount={action.saveCount ?? 0}
                     disabled={saveDisabled}
                     disabledReason={reactionDisabledReason}
-                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-caption sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    className="!p-0 sm:!px-1 sm:!py-0.5 !min-w-0 text-caption sm:text-xs !gap-0.5 sm:!gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <ShareButton
@@ -217,7 +246,7 @@ export function ActionCard({
                     count={action.shareCount ?? 0}
                     disabled={shareDisabled}
                     disabledReason={reactionDisabledReason}
-                    className="!p-0 !px-0.5 min-[410px]:!px-1 sm:!py-0.5 !min-w-0 text-[10px] min-[410px]:text-caption sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    className="!p-0 sm:!px-1 sm:!py-0.5 !min-w-0 text-caption sm:text-xs !gap-0.5 sm:!gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                 </div>
@@ -298,11 +327,8 @@ export function ActionCard({
           />
           {showStatus && (
             <div className="absolute right-4 top-4 z-10">
-              <StatusBadge
-                status={action.status}
-                recruitClosed={isRecruitClosed}
-                className="bg-white/90"
-              />
+              {/* 배지 색은 Badge 의 기능색 그대로(불투명) — 예전 bg-white/90 덧칠은 뺌 (2026-09-29) */}
+              <StatusBadge status={action.status} recruitClosed={isRecruitClosed} />
             </div>
           )}
         </Link>

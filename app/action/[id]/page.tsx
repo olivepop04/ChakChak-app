@@ -312,7 +312,7 @@ export default async function ActionDetailPage({
             <div className="flex flex-col gap-5 rounded-xl p-4">
               {action.items.flatMap((item, i) => [
                 i > 0 && (
-                  <div key={`divider-${item.id}`} className="h-px bg-neutral-200" />
+                  <div key={`divider-${item.id}`} className="h-px bg-neutral-100" />
                 ),
                 <QuotaProgress
                   key={item.id}
