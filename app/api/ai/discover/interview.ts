@@ -11,6 +11,13 @@
  * 7. 질문 턴 수는 최대 15턴까지 허용하며, 충분한 정보가 모이면 조기 추천으로 유연하게 전환한다.
  */
 
+import {
+  DISCOVER_ACTIVITY_TYPE_OPTIONS,
+  DISCOVER_TARGET_GROUP_OPTIONS,
+  DISCOVER_DIFFICULTY_OPTIONS,
+  DISCOVER_PARTICIPATION_MODE_OPTIONS,
+} from '../../../../lib/ai/classify-spec.ts';
+
 export type QuestionKey =
   | 'opening'
   | 'categories'
@@ -411,7 +418,12 @@ export function analyzeUserContext({
 
 export interface ResolveUnifiedCategoriesParams {
   profileCategories?: readonly string[] | null;
-  pastActions?: readonly { category: string; created_at?: string; activity_start_at?: string }[];
+  pastActions?: readonly {
+    category: string;
+    categories?: readonly string[];
+    created_at?: string;
+    activity_start_at?: string;
+  }[];
   maxCount?: number;
 }
 
@@ -443,11 +455,19 @@ export function resolveUnifiedCategories({
   const validProfileCats = (profileCategories ?? [])
     .filter((c): c is string => Boolean(c) && c !== '전체');
 
-  // 2. 과거 활동 액션의 카테고리 빈도 집계
+  // 2. 과거 활동 액션의 카테고리 빈도 집계 (복수 categories 지원)
   const counts = new Map<string, number>();
   for (const action of pastActions) {
-    if (action.category) {
-      counts.set(action.category, (counts.get(action.category) ?? 0) + 1);
+    const cats =
+      action.categories && action.categories.length > 0
+        ? action.categories
+        : action.category
+          ? [action.category]
+          : [];
+    for (const c of cats) {
+      if (c) {
+        counts.set(c, (counts.get(c) ?? 0) + 1);
+      }
     }
   }
 
@@ -589,40 +609,12 @@ export function getQuestionOptions(
     opening: hasRegionAndTime
       ? ['네, 이 조건으로 찾을게요 👍', '이번엔 다른 조건으로 찾을래요 🔄']
       : ['활동할 지역 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'],
-    target_groups: [
-      '교류·교육·소통형',
-      '육체·과업·집중형',
-      '상관없음',
-    ],
-    vibe_preference: [
-      '교류·교육·소통형',
-      '육체·과업·집중형',
-      '상관없음',
-    ],
-    difficulty: [
-      '누구나 참여가능',
-      '기초 체력 필요',
-      '전문지식/자격/재능 활용',
-      '상관없음',
-    ],
-    activity_types: [
-      '실내 활동',
-      '실외 활동',
-      '실내외 병행',
-      '상관없음',
-    ],
-    activity_type: [
-      '실내 활동',
-      '실외 활동',
-      '실내외 병행',
-      '상관없음',
-    ],
-    participation_modes: [
-      '10명 이내 소그룹',
-      '10~20명 중그룹',
-      '20명 이상 대그룹',
-      '상관없음',
-    ],
+    target_groups: DISCOVER_TARGET_GROUP_OPTIONS,
+    vibe_preference: DISCOVER_TARGET_GROUP_OPTIONS,
+    difficulty: DISCOVER_DIFFICULTY_OPTIONS,
+    activity_types: DISCOVER_ACTIVITY_TYPE_OPTIONS,
+    activity_type: DISCOVER_ACTIVITY_TYPE_OPTIONS,
+    participation_modes: DISCOVER_PARTICIPATION_MODE_OPTIONS,
     group_size: [
       '소규모 모임 (10명 안팎)',
       '중규모 모임 (10-20명)',

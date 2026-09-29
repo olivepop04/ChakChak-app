@@ -136,7 +136,9 @@ test('모집 항목 설명 · AI 에게 보내는 메시지 모양', () => {
 test('이미 AI 가 분류한 액션은 건너뛴다 — 옛 판이어도', () => {
   assert.equal(classificationGap(undefined), '색인 없음');
   assert.equal(classificationGap({ ai_model: 'seed', prompt_version: 'classify-v2' }), '시드 기본값');
+  assert.equal(classificationGap({ ai_model: 'gpt-4o-mini', prompt_version: 'classify-v4-fallback' }), 'AI 실패 기본값');
   assert.equal(classificationGap({ ai_model: 'gpt-4o-mini', prompt_version: 'classify-v3-fallback' }), 'AI 실패 기본값');
+  assert.equal(classificationGap({ ai_model: 'gpt-4o-mini', prompt_version: 'classify-v4' }), null);
   assert.equal(classificationGap({ ai_model: 'gpt-4o-mini', prompt_version: 'classify-v3' }), null);
   assert.equal(classificationGap({ ai_model: 'gpt-4o-mini', prompt_version: 'classify-v2' }), null);
 });
