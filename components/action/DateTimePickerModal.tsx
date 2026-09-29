@@ -203,7 +203,7 @@ export function DateTimePickerModal({
           })}
         </div>
 
-        <div className="mb-4 h-px bg-neutral-200" />
+        <div className="mb-4 h-px bg-neutral-100" />
 
         {/* 시간 선택 */}
         <div className="mb-5 flex flex-col gap-2">

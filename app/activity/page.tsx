@@ -412,7 +412,7 @@ export default async function ActivityPage({
       <Header title="내 액션" back backHref="/" sticky />
 
       {/* 탭: 호스트한 액션 / 참여한 액션 */}
-      <div className="flex border-b border-neutral-200 px-6">
+      <div className="flex border-b border-neutral-100 px-6">
         {[
           { label: '호스트한 액션', href: '/activity', active: isCreated },
           { label: '참여한 액션', href: '/activity?tab=joined', active: !isCreated },
@@ -485,11 +485,16 @@ export default async function ActivityPage({
             filterLabel={CREATED_FILTERS.find((f) => f.key === createdFilter)?.label ?? ''}
           />
         ) : (
-          <div className="flex flex-col gap-8 px-6 py-5">
+          // 2026-09-29: 세로형 → 가로형(MY·프로필 목록과 같은 카드). 안내문·상태별 버튼(footer)은 그대로.
+          // 카드가 테두리 칸이 되면서 세로형 때의 32px 간격은 너무 벌어져 16px 로 줄였습니다.
+          <div className="flex flex-col gap-4 px-6 py-5">
             {filteredCreated.map((a) => (
               <ActionCard
                 key={a.id}
                 action={a}
+                variant="horizontal"
+                hideSchedule
+                hideOwner
                 showStatus
                 footer={
                   <CreatedFooter
@@ -513,22 +518,22 @@ export default async function ActivityPage({
           filterLabel={JOINED_FILTERS.find((f) => f.key === joinedFilter)?.label ?? ''}
         />
       ) : (
-        <div className="flex flex-col gap-8 px-6 py-5">
+        <div className="flex flex-col gap-4 px-6 py-5">
           {filteredJoined.map((a) => (
-            <div key={a.id} className="relative">
-              <ActionCard action={a} footer={<JoinedFooter item={a} />} />
-              {a.status !== 'CANCELLED' && (
-                // 2026-09-21: ActionCard 세로형이 작성자·공유 줄(56px)을 썸네일 위로 옮기면서
-                // 이 뱃지가 이미지 위가 아니라 카드 맨 위(작성자 줄)에 얹히던 회귀 버그 수정.
-                // top-3 → top-[72px](헤더 56px + 이미지 내부 여백 16px)로 이미지 위 자리로 되돌림.
-                <div className="pointer-events-none absolute right-4 top-[72px] z-10">
-                  <ParticipationBadge
-                    status={a.participationStatus}
-                    className="rounded-full border border-neutral-200/60 px-2.5 py-1 text-caption font-bold"
-                  />
-                </div>
-              )}
-            </div>
+            // 2026-09-29: 참여 상태 배지는 가로형 카드의 「사진 아래」 자리(statusBadge)로 — 호스트 탭 상태 배지와 같은 자리.
+            // 취소된 액션은 예전처럼 배지를 안 붙입니다.
+            <ActionCard
+              key={a.id}
+              action={a}
+              variant="horizontal"
+              hideSchedule
+              statusBadge={
+                a.status !== 'CANCELLED' ? (
+                  <ParticipationBadge status={a.participationStatus} className="!min-w-0 px-2.5" />
+                ) : undefined
+              }
+              footer={<JoinedFooter item={a} />}
+            />
           ))}
         </div>
       )}

@@ -78,7 +78,7 @@ export function AddressBox({
         >
           주소 복사
         </button>
-        <span className="h-3.5 w-px shrink-0 bg-neutral-200" aria-hidden="true" />
+        <span className="h-3.5 w-px shrink-0 bg-neutral-100" aria-hidden="true" />
         <a
           href={mapUrl}
           target="_blank"

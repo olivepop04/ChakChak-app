@@ -1,5 +1,6 @@
 'use client';
 
+import { Plus, TriangleAlert } from 'lucide-react';
 import { ChipGroup } from '@/components/ui/Chip';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import {
@@ -75,15 +76,15 @@ export function TimePreferenceEditor({
       {value.map((pref, index) => (
         <div
           key={`${pref.day}-${index}`}
-          className="rounded-xl border border-neutral-200 bg-neutral-50 p-4"
+          className="rounded-xl bg-neutral-100 p-4"
         >
           <div className="flex items-center justify-between gap-3">
-            <FieldLabel>선호시간 {index + 1}</FieldLabel>
+            <FieldLabel className="text-neutral-800">선호시간 {index + 1}</FieldLabel>
             {value.length > 1 && (
               <button
                 type="button"
                 onClick={() => removePreference(index)}
-                className="text-label font-medium text-neutral-400 hover:text-red-500"
+                className="min-h-8 px-1 text-label font-medium text-neutral-500 hover:text-neutral-800"
               >
                 삭제
               </button>
@@ -104,10 +105,11 @@ export function TimePreferenceEditor({
                     disabled={usedByOther}
                     aria-pressed={pref.day === day}
                     onClick={() => changeDay(index, day)}
-                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-label font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+                    // 선택 = 초록 채움 (요일·시간대는 초록 채움, 재능·카테고리·지역은 연한 초록 — 2026-09-29 확정)
+                    className={`flex min-h-11 flex-1 items-center justify-center rounded-xl border py-3 text-label transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
                       pref.day === day
-                        ? 'border-neutral-900 bg-neutral-900 text-white'
-                        : 'border-neutral-300 bg-white text-neutral-600'
+                        ? 'border-brand bg-brand font-semibold text-white'
+                        : 'border-hairline bg-white font-medium text-neutral-500'
                     }`}
                   >
                     {day}
@@ -123,6 +125,7 @@ export function TimePreferenceEditor({
             </span>
             <ChipGroup
               options={TIME_SLOTS}
+              tone="accent"
               selected={pref.slots}
               onToggle={(slot) => toggleSlot(index, slot)}
             />
@@ -131,7 +134,11 @@ export function TimePreferenceEditor({
       ))}
 
       {value.length === 0 && (
-        <p className="rounded-xl bg-amber-50 px-4 py-3 text-caption text-amber-700">
+        // 주의 토큰(warning) — 확인 모달의 노란 칸과 같은 모양 (2026-09-29, amber 기본색 정리)
+        <p className="flex items-center gap-2 rounded-xl border border-warning bg-warning-soft px-3 py-2.5 text-label font-medium text-warning-ink">
+          <span className="flex h-6 w-6 flex-none items-center justify-center rounded-lg bg-warning">
+            <TriangleAlert className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
+          </span>
           선호시간을 한 개 이상 추가해주세요.
         </p>
       )}
@@ -140,15 +147,16 @@ export function TimePreferenceEditor({
         <button
           type="button"
           onClick={addPreference}
-          className="flex min-h-11 items-center justify-center rounded-xl border border-dashed border-neutral-300 py-3 text-label font-semibold text-neutral-600 hover:bg-neutral-50"
+          className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-dashed border-faint py-3 text-body font-semibold text-neutral-800 hover:bg-neutral-50"
         >
-          + 선호시간 추가
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          선호시간 추가
         </button>
       )}
 
       {summary && (
-        <p className="rounded-xl bg-neutral-100 px-4 py-3 text-caption leading-relaxed text-neutral-600">
-          선택한 시간: <b className="font-semibold text-neutral-900">{summary}</b>
+        <p className="rounded-xl bg-brand-soft px-4 py-3 text-label leading-normal text-neutral-800">
+          선택한 시간: <b className="font-bold text-brand">{summary}</b>
         </p>
       )}
     </div>

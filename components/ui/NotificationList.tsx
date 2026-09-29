@@ -43,7 +43,8 @@ const INITIAL_COUNT = 15;
  * 문구·이동 경로는 NOTIFICATION_TEMPLATE(lib/queries/notifications.ts, 민호 담당)에
  * 그대로 두고, 아이콘만 여기서 이모지 대신 lucide로 그립니다.
  */
-const NOTIFICATION_ICON: Record<NotificationType, LucideIcon> = {
+// 프로필 수정 「알림 설정」 줄도 같은 아이콘을 씁니다 (2026-09-29) — 그래서 export
+export const NOTIFICATION_ICON: Record<NotificationType, LucideIcon> = {
   SCHEDULE: CalendarClock,
   RESULT_REQUEST: PenLine,
   RESULT_PUBLISHED: PartyPopper,
@@ -118,7 +119,7 @@ export function NotificationList({ items }: { items: NotificationData[] }) {
             {g.label}
           </h2>
 
-          <ul className="divide-y divide-hairline border-y border-hairline">
+          <ul className="divide-y divide-neutral-100 border-y border-neutral-100">
             {g.items.map((n) => {
               const t = NOTIFICATION_TEMPLATE[n.type];
               const Icon = NOTIFICATION_ICON[n.type];

@@ -18,6 +18,7 @@ import {
   mergeRegionSelection,
   shortRegion,
 } from '@/lib/constants/regions';
+import { ChevronRight, MapPin, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export function RegionPicker({
@@ -51,16 +52,17 @@ export function RegionPicker({
         {value.map((r) => (
           <span
             key={r}
-            className="inline-flex items-center gap-1.5 rounded-full border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-label font-medium text-white"
+            // 고른 지역 = 연한 초록 바탕 + 초록 테두리·글자 (2026-09-29 프로필군 통일안, Chip tone="soft" 와 같은 값)
+            className="inline-flex min-h-9 items-center gap-1 rounded-full border border-brand bg-brand-soft py-1 pl-3.5 pr-2 text-label font-semibold text-brand"
           >
             {shortRegion(r)}
             <button
               type="button"
               onClick={() => remove(r)}
               aria-label={`${shortRegion(r)} 삭제`}
-              className="text-white/70 hover:text-white"
+              className="flex h-6 w-6 items-center justify-center rounded-full text-brand hover:bg-white/60"
             >
-              ×
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </span>
         ))}
@@ -69,33 +71,39 @@ export function RegionPicker({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="rounded-full border border-dashed border-neutral-300 px-3 py-1.5 text-label text-neutral-500"
+            className="inline-flex min-h-9 items-center gap-1 rounded-full border border-dashed border-faint px-3.5 py-1 text-label font-medium text-neutral-800"
           >
-            ＋ 지역 추가
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            지역 추가
           </button>
         )}
       </div>
 
-      <p className="text-caption text-neutral-400">
+      <p className="text-caption text-neutral-500">
         시·도 전체 또는 시·군·구 단위로 최대 {max}곳까지 고를 수 있어요.
         전국을 고르면 모든 지역의 액션을 추천받습니다.
       </p>
 
       {/* 선택 창 */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
-          <div className="max-h-[70vh] w-full max-w-app overflow-y-auto rounded-t-2xl bg-white">
+        // 2026-09-29 통일안: 딤 40→50%(모달과 같게) · 위 모서리 16→12px(모서리 두 값 규칙) ·
+        // 제목 앞 MapPin · 닫기는 아래 버튼 하나만 — 위쪽 「닫기」는 뺐고, 시·군·구 단계의 「‹ 뒤로」만 남김
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
+          <div className="max-h-[70vh] w-full max-w-app overflow-y-auto rounded-t-xl bg-white">
             <div className="sticky top-0 flex items-center justify-between border-b border-neutral-100 bg-white px-6 py-4">
-              <h2 className="text-body font-semibold">
+              <h2 className="flex items-center gap-2 text-subtitle font-bold text-neutral-800">
+                <MapPin className="h-5 w-5 shrink-0" aria-hidden="true" />
                 {sido ? sido : '지역 추가'}
               </h2>
-              <button
-                type="button"
-                onClick={() => (sido ? setSido(null) : setOpen(false))}
-                className="text-label text-neutral-500"
-              >
-                {sido ? '‹ 뒤로' : '닫기'}
-              </button>
+              {sido && (
+                <button
+                  type="button"
+                  onClick={() => setSido(null)}
+                  className="min-h-9 px-1 text-label text-neutral-500"
+                >
+                  ‹ 뒤로
+                </button>
+              )}
             </div>
 
             <ul className="divide-y divide-neutral-100">
@@ -120,7 +128,7 @@ export function RegionPicker({
                         className="flex w-full items-center justify-between px-6 py-3.5 text-left text-body hover:bg-neutral-50"
                       >
                         {s}
-                        <span className="text-neutral-300">›</span>
+                        <ChevronRight className="h-[18px] w-[18px] text-faint" aria-hidden="true" />
                       </button>
                     </li>
                   ))

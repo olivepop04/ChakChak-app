@@ -54,7 +54,7 @@ export function VoiceForm({
           <PencilSparkles className="h-[18px] w-[18px] flex-none text-neutral-500" aria-hidden="true" />
           <p className="text-body font-bold text-neutral-500">함께한 소감을 남겨주세요.</p>
         </div>
-        <div className="h-px bg-neutral-200" />
+        <div className="h-px bg-neutral-100" />
         <h1 className="mt-5 line-clamp-2 font-paperlogy text-body font-bold leading-snug text-neutral-900">
           {actionTitle}
         </h1>

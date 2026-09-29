@@ -97,12 +97,12 @@ export default async function ResultPage({
             {location && (
               <>
                 <span>{location}</span>
-                <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />
+                <span className="mx-2 h-3 w-px flex-none bg-neutral-100" aria-hidden="true" />
               </>
             )}
             <span>{formatActivityPeriod(action.activity_start_at, action.activity_end_at)}</span>
           </div>
-          <div className="mt-4 h-px bg-neutral-200" />
+          <div className="mt-4 h-px bg-neutral-100" />
         </div>
 
         {/* 자동 집계 — 액션 상세 "모집 현황"과 같은 형식(아이콘 원 + 항목 사이 구분선), 박스 테두리 없음 */}
@@ -119,7 +119,7 @@ export default async function ResultPage({
               const [countNumerator, countDenominator] = countLabel.split(' / ');
               return (
                 <Fragment key={item.id}>
-                {idx > 0 && <div className="h-px bg-neutral-200" />}
+                {idx > 0 && <div className="h-px bg-neutral-100" />}
                 <div className="flex flex-col gap-2">
                   {/* 상단: 아이콘 + 항목명 + 최종 모집 수 (한 row) */}
                   <div className="flex items-center gap-2">

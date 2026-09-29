@@ -66,7 +66,7 @@ export default async function ResultWritePage({
           {location && (
             <>
               <span>{location}</span>
-              {period && <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />}
+              {period && <span className="mx-2 h-3 w-px flex-none bg-neutral-100" aria-hidden="true" />}
             </>
           )}
           {period && <span>{period}</span>}

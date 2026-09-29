@@ -60,9 +60,10 @@ export default async function UserProfilePage({
           <SectionTitle className="pb-3">관심 카테고리</SectionTitle>
           <div className="flex flex-wrap gap-1.5">
             {profile.categories.map((c) => (
+              // 관심 카테고리 = 연한 초록 바탕 + 초록 테두리·글자 (2026-09-29, MY 와 같은 모양)
               <span
                 key={c}
-                className="rounded-full bg-neutral-100 px-3 py-1.5 text-caption font-medium text-neutral-600"
+                className="inline-flex h-7 items-center rounded-full border border-brand bg-brand-soft px-3 text-caption font-semibold text-brand"
               >
                 {c}
               </span>
