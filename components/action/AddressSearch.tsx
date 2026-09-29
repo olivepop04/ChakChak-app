@@ -87,7 +87,7 @@ export function AddressSearch({
       </div>
 
       {loadFailed && (
-        <p className="text-caption text-red-600" role="alert">
+        <p className="text-caption text-danger" role="alert">
           주소 검색을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해주세요.
         </p>
       )}

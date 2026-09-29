@@ -58,9 +58,9 @@ export function Header({
           type="button"
           onClick={handleBack}
           aria-label="뒤로 가기"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-[#333333] hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
         >
-          <ChevronLeft className="h-5 w-5 text-neutral-700" />
+          <ChevronLeft className="h-5 w-5 text-[#333333]" />
         </button>
       ) : (
         <span className="w-2" />
@@ -93,9 +93,10 @@ export function Header({
                올려도 됩니다만, 나중에 h-14 를 건드릴 때 이 값을 기억하세요.
 
         8쪽의 나머지(자간·색 통일, 이중 h1 정리)는 발표 후 소정님 전담입니다.
-        → 자간은 2026-09-28 0em(tracking-normal)으로 통일. 색·이중 h1 은 아직.
+        → 자간은 2026-09-28 0em(tracking-normal)으로 통일. 이중 h1 은 아직.
+        → 색은 2026-09-30 #333 으로 통일 (모달 제목과 같은 색, 뒤로 아이콘도 같이).
       */}
-      <h1 className="flex-1 truncate text-body font-bold tracking-normal text-neutral-700">
+      <h1 className="flex-1 truncate text-body font-bold tracking-normal text-[#333333]">
         {title}
       </h1>
 

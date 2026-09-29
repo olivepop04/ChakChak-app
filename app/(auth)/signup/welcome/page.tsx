@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PartyPopper } from 'lucide-react';
 
 import { getSignupWelcomeReturnPath } from '../../auth-navigation';
 
@@ -14,13 +15,19 @@ export default async function SignupWelcomePage({
 
   // 하단 탭을 숨기는 화면이라(BottomNav.tsx) 탭을 피하려던 pb-28 은 필요 없습니다.
   // 글자를 키웠을 때 아래가 답답하지 않을 만큼만 남깁니다.
+  // 위 여백 120px (2026-09-30 소정님) — 32px 에서는 아이콘·제목이 화면 맨 위에 붙고 가운데가 비어 보였습니다.
   return (
-    <main className="flex min-h-dvh flex-col px-6 pb-8 pt-8">
+    <main className="flex min-h-dvh flex-col px-6 pb-8 pt-[120px]">
       <div className="flex flex-col items-center text-center">
-        <span className="text-5xl" aria-hidden="true">
-          🎉
+        {/* 2026-09-30 인증군 통일안 — 🎉 이모지 → lucide(연한 초록 원), 제목 = 제목1(페이퍼로지 800 #333).
+            버튼 순서·역할은 그대로 (소정님 확정) */}
+        <span
+          aria-hidden="true"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-soft"
+        >
+          <PartyPopper className="h-8 w-8 text-brand" />
         </span>
-        <h1 className="mt-6 text-2xl font-bold tracking-tight text-neutral-900">
+        <h1 className="mt-5 font-paperlogy text-2xl font-extrabold text-[#333333]">
           환영합니다!
         </h1>
         <p className="mt-3 text-subtitle font-semibold text-neutral-800">
@@ -37,14 +44,14 @@ export default async function SignupWelcomePage({
         {returnPath ? (
           <Link
             href={returnPath}
-            className="flex min-h-13 w-full items-center justify-center rounded-xl border border-neutral-900 bg-white px-6 py-3 text-body font-semibold text-neutral-900 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+            className="flex min-h-13 w-full items-center justify-center rounded-xl border border-neutral-300 bg-white px-6 py-3 text-body font-semibold text-neutral-800 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
           >
             방금 보던 액션으로
           </Link>
         ) : null}
         <Link
           href="/action/create"
-          className="flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 px-6 py-3 text-body font-semibold text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+          className="flex min-h-13 w-full items-center justify-center rounded-xl bg-brand px-6 py-3 text-body font-semibold text-white transition-colors hover:bg-brand/90 active:bg-brand/80"
         >
           액션 만들기
         </Link>

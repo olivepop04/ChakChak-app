@@ -24,24 +24,23 @@ import {
 import type { TrendStats } from '@/lib/queries/stats';
 import { ACTION_STATUS_LABEL } from '@/lib/constants';
 
-/** 카테고리 구분용 색. 서로 구분되면서 앱 톤을 벗어나지 않게 골랐습니다. */
-const PALETTE = [
-  '#334155',
-  '#0f766e',
-  '#b45309',
-  '#7c3aed',
-  '#be123c',
-  '#0369a1',
-  '#4d7c0f',
-  '#a16207',
-];
+/**
+ * 그래프 색 (2026-09-29 트렌드 통일안 A안).
+ * 예전엔 막대마다 다른 8색이었는데, 「1등만 포인트 그린 · 나머지는 연회색」으로 바꿨습니다 —
+ * 무엇이 가장 많은지가 한눈에 보이고, 앱 전체 색 규칙(강조색은 초록 하나)과 맞습니다.
+ * Recharts 는 CSS 클래스 대신 색 값을 받아서 디자인 가이드 토큰 값을 그대로 적었습니다.
+ */
+const BRAND = '#00A56E'; // point-green
+const FAINT = '#CCCCCC'; // text-faint — 1등이 아닌 막대
+const HAIRLINE = '#E0E0E0'; // 축 선
 
-const axisStyle = { fontSize: 11, fill: '#737373' };
+const axisStyle = { fontSize: 11, fill: '#7A7A7A' }; // text-muted
+const axisLine = { stroke: HAIRLINE };
 
 const tooltipStyle = {
   contentStyle: {
-    borderRadius: 10,
-    border: '1px solid #e5e5e5',
+    borderRadius: 12,
+    border: `1px solid ${HAIRLINE}`,
     fontSize: 12,
     padding: '6px 10px',
   },
@@ -58,7 +57,7 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-xl border border-neutral-200 p-4">
+    <section className="flex flex-col gap-3 rounded-xl border border-hairline p-4">
       <div>
         <h3 className="text-body font-bold text-neutral-900">{title}</h3>
         {hint && <p className="mt-0.5 text-caption text-neutral-500">{hint}</p>}
@@ -82,7 +81,7 @@ export function SummaryTiles({ stats }: { stats: TrendStats }) {
       {tiles.map((t) => (
         <div
           key={t.label}
-          className="flex flex-col gap-0.5 rounded-xl bg-neutral-50 px-4 py-3.5"
+          className="flex flex-col gap-0.5 rounded-xl bg-neutral-100 px-4 py-3.5"
         >
           <span className="text-2xl font-bold tabular-nums text-neutral-900">
             {t.value}
@@ -97,6 +96,7 @@ export function SummaryTiles({ stats }: { stats: TrendStats }) {
 /** 카테고리별 액션 수 */
 export function CategoryChart({ stats }: { stats: TrendStats }) {
   if (stats.byCategory.length === 0) return null;
+  const max = Math.max(...stats.byCategory.map((c) => c.count));
 
   return (
     <Card title="어떤 분야의 액션이 많을까요" hint="공개된 액션 기준">
@@ -105,12 +105,12 @@ export function CategoryChart({ stats }: { stats: TrendStats }) {
           data={stats.byCategory}
           margin={{ top: 4, right: 4, bottom: 0, left: -24 }}
         >
-          <XAxis dataKey="category" tick={axisStyle} interval={0} angle={0} />
-          <YAxis tick={axisStyle} allowDecimals={false} />
+          <XAxis dataKey="category" tick={axisStyle} interval={0} angle={0} axisLine={axisLine} tickLine={false} />
+          <YAxis tick={axisStyle} allowDecimals={false} axisLine={axisLine} tickLine={false} />
           <Tooltip {...tooltipStyle} formatter={(v) => [`${v}개`, '액션']} />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-            {stats.byCategory.map((_, i) => (
-              <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+            {stats.byCategory.map((c, i) => (
+              <Cell key={i} fill={c.count === max ? BRAND : FAINT} />
             ))}
           </Bar>
         </BarChart>
@@ -121,6 +121,8 @@ export function CategoryChart({ stats }: { stats: TrendStats }) {
 
 /** 주간 추이 */
 export function WeeklyChart({ stats }: { stats: TrendStats }) {
+  const max = Math.max(0, ...stats.byWeek.map((w) => w.count));
+
   return (
     <Card title="주마다 얼마나 생겨났나요" hint="최근 8주 동안 만들어진 액션 수">
       <ResponsiveContainer width="100%" height={180}>
@@ -128,16 +130,32 @@ export function WeeklyChart({ stats }: { stats: TrendStats }) {
           data={stats.byWeek}
           margin={{ top: 4, right: 8, bottom: 0, left: -24 }}
         >
-          <XAxis dataKey="week" tick={axisStyle} />
-          <YAxis tick={axisStyle} allowDecimals={false} />
+          <XAxis dataKey="week" tick={axisStyle} axisLine={axisLine} tickLine={false} />
+          <YAxis tick={axisStyle} allowDecimals={false} axisLine={axisLine} tickLine={false} />
           <Tooltip {...tooltipStyle} formatter={(v) => [`${v}개`, '액션']} />
           <Line
-            type="monotone"
+            // 꺾은선 — 점과 점을 직선으로 잇습니다(2026-09-29, 목업과 같게). monotone 은 곡선이라 주별 변화가 뭉개져 보였음
+            type="linear"
             dataKey="count"
-            stroke="#171717"
+            stroke={BRAND}
             strokeWidth={2}
-            dot={{ r: 3, fill: '#171717' }}
-            activeDot={{ r: 5 }}
+            // 가장 많은 주만 큰 점(흰 테두리) — 막대그래프의 「1등만 초록」과 같은 강조
+            dot={(props: { cx?: number; cy?: number; index?: number; payload?: { count: number } }) => {
+              const { cx, cy, index, payload } = props;
+              const top = max > 0 && payload?.count === max;
+              return (
+                <circle
+                  key={`dot-${index}`}
+                  cx={cx}
+                  cy={cy}
+                  r={top ? 5.5 : 3}
+                  fill={BRAND}
+                  stroke={top ? '#FFFFFF' : 'none'}
+                  strokeWidth={top ? 2 : 0}
+                />
+              );
+            }}
+            activeDot={{ r: 5, fill: BRAND }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -148,6 +166,7 @@ export function WeeklyChart({ stats }: { stats: TrendStats }) {
 /** 지역별 분포 */
 export function RegionChart({ stats }: { stats: TrendStats }) {
   if (stats.byRegion.length === 0) return null;
+  const max = Math.max(...stats.byRegion.map((r) => r.count));
 
   return (
     <Card title="어디에서 많이 열리나요" hint="액션이 많은 지역 순">
@@ -167,7 +186,11 @@ export function RegionChart({ stats }: { stats: TrendStats }) {
             tickLine={false}
           />
           <Tooltip {...tooltipStyle} formatter={(v) => [`${v}개`, '액션']} />
-          <Bar dataKey="count" fill="#334155" radius={[0, 4, 4, 0]} barSize={14} />
+          <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={14}>
+            {stats.byRegion.map((r, i) => (
+              <Cell key={i} fill={r.count === max ? BRAND : FAINT} />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </Card>
@@ -179,11 +202,13 @@ export function StatusBar({ stats }: { stats: TrendStats }) {
   const total = stats.byStatus.reduce((s, x) => s + x.count, 0);
   if (total === 0) return null;
 
+  // 기능색 토큰 — 상태 배지(Badge.tsx)와 같은 규칙 (2026-09-29):
+  // 모집 중 = 진행중(info) · 결과 작성 필요 = 주의(warning) · 완료 = 완료(brand) · 취소됨 = 연회색(faint)
   const TONE: Record<string, string> = {
-    ACTIVE: 'bg-emerald-500',
-    ENDED: 'bg-amber-500',
-    COMPLETED: 'bg-blue-500',
-    CANCELLED: 'bg-neutral-300',
+    ACTIVE: 'bg-info',
+    ENDED: 'bg-warning',
+    COMPLETED: 'bg-brand',
+    CANCELLED: 'bg-faint',
   };
 
   return (
@@ -201,7 +226,7 @@ export function StatusBar({ stats }: { stats: TrendStats }) {
         {stats.byStatus.map((s) => (
           <li key={s.status} className="flex items-center gap-1.5">
             <span className={`h-2 w-2 rounded-full ${TONE[s.status]}`} />
-            <span className="text-caption text-neutral-600">
+            <span className="text-caption text-neutral-500">
               {ACTION_STATUS_LABEL[s.status]}{' '}
               <b className="font-semibold tabular-nums text-neutral-900">
                 {s.count}

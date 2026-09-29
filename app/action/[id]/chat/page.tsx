@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getChatPosts, canWriteChat } from '@/lib/queries/chat';
 import { ChatBoard } from '@/components/action/ChatBoard';
 import { Header } from '@/components/layout/Header';
+import { Lock } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { type ActionStatus } from '@/lib/constants';
 
@@ -49,7 +50,7 @@ export default async function ChatPage({
       <main>
         <Header title="크루 채팅" back backHref={`/action/${id}`} />
         <EmptyState
-          icon="🔒"
+          icon={Lock}
           title="참여한 사람만 볼 수 있어요"
           description="이 액션에 참여하면 크루들과 이야기할 수 있어요."
           action={{ label: '액션 보러 가기', href: `/action/${id}` }}

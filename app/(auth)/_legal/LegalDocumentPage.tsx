@@ -2,7 +2,9 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { ArrowUp } from 'lucide-react';
+import { Header } from '@/components/layout/Header';
 import type { LegalDocument } from './legal-documents';
 
 type LegalDocumentPageProps = {
@@ -13,8 +15,10 @@ type LegalDocumentPageProps = {
   };
 };
 
+// 2026-09-30 Day19 인증군 통일안 — 따로 그리던 헤더(글자 「‹」 + 아래 선)를 공용 상단 바로 교체.
+// 「어디서 왔나(from)」 에 따라 돌아갈 곳을 고르는 로직은 그대로 두고 fallbackHref 로만 넘깁니다.
+// (Header 도 history 가 있으면 router.back(), 없으면 fallbackHref 로 갑니다 — 전과 같은 동작)
 function LegalHeader({ title }: { title: LegalDocument['headerTitle'] }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get('from');
 
@@ -25,28 +29,7 @@ function LegalHeader({ title }: { title: LegalDocument['headerTitle'] }) {
     fallbackHref = '/my';
   }
 
-  function handleBack(e: React.MouseEvent<HTMLAnchorElement>) {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      e.preventDefault();
-      router.back();
-    }
-  }
-
-  return (
-    <header className="sticky top-0 z-20 flex h-14 items-center border-b border-neutral-100 bg-white/95 px-4 backdrop-blur">
-      <Link
-        href={fallbackHref}
-        onClick={handleBack}
-        aria-label="이전 페이지로 돌아가기"
-        className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-neutral-700 hover:bg-neutral-100"
-      >
-        ‹
-      </Link>
-      <p className="ml-2 text-body font-semibold text-neutral-900">
-        {title}
-      </p>
-    </header>
-  );
+  return <Header title={title} back fallbackHref={fallbackHref} sticky />;
 }
 
 function OtherDocumentLink({
@@ -96,20 +79,7 @@ export function LegalDocumentPage({
   return (
     <main className="min-h-dvh bg-white pb-8">
       <Suspense
-        fallback={
-          <header className="sticky top-0 z-20 flex h-14 items-center border-b border-neutral-100 bg-white/95 px-4 backdrop-blur">
-            <Link
-              href="/my"
-              aria-label="이전 페이지로 돌아가기"
-              className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-neutral-700 hover:bg-neutral-100"
-            >
-              ‹
-            </Link>
-            <p className="ml-2 text-body font-semibold text-neutral-900">
-              {document.headerTitle}
-            </p>
-          </header>
-        }
+        fallback={<Header title={document.headerTitle} back fallbackHref="/my" sticky />}
       >
         <LegalHeader title={document.headerTitle} />
       </Suspense>
@@ -119,7 +89,7 @@ export function LegalDocumentPage({
           <p className="text-caption font-semibold tracking-wide text-neutral-400">
             CHAKCHAK POLICY
           </p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-neutral-900">
+          <h1 className="mt-2 font-paperlogy text-2xl font-extrabold text-[#333333]">
             {document.title}
           </h1>
           <span className="mt-3 inline-flex rounded-full bg-neutral-100 px-3 py-1.5 text-caption font-medium text-neutral-600">
@@ -135,7 +105,7 @@ export function LegalDocumentPage({
               <section key={section.title} aria-labelledby={sectionId}>
                 <h2
                   id={sectionId}
-                  className="text-subtitle font-bold leading-relaxed text-neutral-900"
+                  className="text-subtitle font-bold leading-relaxed text-[#333333]"
                 >
                   {section.title}
                 </h2>
@@ -187,9 +157,10 @@ export function LegalDocumentPage({
           type="button"
           onClick={scrollToTop}
           aria-label="맨 위로 이동"
-          className="fixed bottom-6 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-lg font-bold text-neutral-700 transition-all active:scale-95 hover:bg-neutral-50"
+          // 글자 「↑」 → lucide ArrowUp · 누르는 칸 44px (2026-09-30)
+          className="fixed bottom-6 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-hairline bg-white text-[#333333] transition-all active:scale-95 hover:bg-neutral-50"
         >
-          ↑
+          <ArrowUp className="h-5 w-5" aria-hidden="true" />
         </button>
       )}
     </main>

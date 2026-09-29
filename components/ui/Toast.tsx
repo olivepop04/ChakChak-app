@@ -15,7 +15,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useState } from 'react';
-import { cn } from '@/lib/utils/cn';
+import { CircleAlert, CircleCheck, type LucideIcon } from 'lucide-react';
 
 type ToastTone = 'default' | 'error' | 'success';
 
@@ -33,10 +33,15 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
-const TONE: Record<ToastTone, string> = {
-  default: 'bg-neutral-900 text-white',
-  error: 'bg-red-600 text-white',
-  success: 'bg-brand text-white',
+/**
+ * 2026-09-30 오버레이 통일안 — 판은 셋 다 #333, 종류는 앞 아이콘 색으로만 구분.
+ * 에러 판을 danger(#EA764B)로 칠하면 흰 글자 대비가 2.9:1 이라 못 읽습니다.
+ * (전에는 에러가 토큰에 없는 red-600 이었습니다.)
+ */
+const TONE_ICON: Record<ToastTone, { icon: LucideIcon; className: string } | null> = {
+  default: null,
+  success: { icon: CircleCheck, className: 'text-brand' },
+  error: { icon: CircleAlert, className: 'text-danger' },
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -61,18 +66,25 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         role="status"
         aria-live="polite"
       >
-        {items.map((t) => (
-          <div
-            key={t.id}
-            className={cn(
-              'pointer-events-auto w-full rounded-xl px-4 py-3 text-label font-medium text-center',
-              'animate-[toast-in_180ms_ease-out]',
-              TONE[t.tone],
-            )}
-          >
-            {t.message}
-          </div>
-        ))}
+        {items.map((t) => {
+          const tone = TONE_ICON[t.tone];
+          const Icon = tone?.icon;
+          return (
+            <div
+              key={t.id}
+              className="pointer-events-auto flex w-full animate-[toast-in_180ms_ease-out] items-center justify-center gap-2 rounded-xl bg-[#333333] px-4 py-3 text-center text-label font-medium text-white"
+            >
+              {tone && Icon && (
+                <Icon
+                  className={`h-4 w-4 shrink-0 ${tone.className}`}
+                  strokeWidth={2.5}
+                  aria-hidden="true"
+                />
+              )}
+              <span>{t.message}</span>
+            </div>
+          );
+        })}
       </div>
     </ToastContext.Provider>
   );

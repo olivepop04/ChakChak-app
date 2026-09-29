@@ -11,6 +11,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { VoiceForm } from '@/components/action/VoiceForm';
 import { Header } from '@/components/layout/Header';
+import { Hourglass, Lock } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 export default async function VoicePage({
@@ -54,7 +55,7 @@ export default async function VoicePage({
       <main>
         <Header title="소감 남기기" back backHref={`/action/${id}`} />
         <EmptyState
-          icon="🔒"
+          icon={Lock}
           title="참여한 사람만 소감을 남길 수 있어요"
           action={{ label: '액션 보러 가기', href: `/action/${id}` }}
         />
@@ -71,7 +72,7 @@ export default async function VoicePage({
       <main>
         <Header title="소감 남기기" back backHref={`/action/${id}`} />
         <EmptyState
-          icon="⏳"
+          icon={Hourglass}
           title="활동이 끝난 뒤에 남길 수 있어요"
           description="활동 후 호스트가 결과를 공개하면 소감 작성이 열려요."
           action={{ label: '액션 보러 가기', href: `/action/${id}` }}
@@ -86,7 +87,7 @@ export default async function VoicePage({
       <main>
         <Header title="소감 남기기" back backHref={`/action/${id}`} />
         <EmptyState
-          icon="⏳"
+          icon={Hourglass}
           title="결과가 공개된 뒤에 소감을 남길 수 있어요"
           description="호스트가 결과를 공개하면 소감 작성이 열려요."
           action={{ label: '액션 보러 가기', href: `/action/${id}` }}

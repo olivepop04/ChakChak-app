@@ -147,29 +147,31 @@ function DisabledNoticeModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="reaction-disabled-title"
-        className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-5"
+        // 2026-09-30 오버레이 통일안 — 설명만 있는 모달이라 가운데 정렬, 회색 원 48 + 아이콘.
+        // 「못 해요」 알림이라 초록 대신 회색 테두리 「확인」 (ReasonModal 닫기 버튼과 같은 모양)
+        className="flex max-h-[90vh] w-full max-w-sm flex-col items-center overflow-y-auto rounded-xl bg-white p-5 text-center"
         onClick={(event) => event.stopPropagation()}
       >
         <span
           aria-hidden="true"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100"
         >
           <Ban className="h-6 w-6 text-neutral-500" />
         </span>
         <h2
           id="reaction-disabled-title"
-          className="mt-4 text-subtitle font-bold text-neutral-900"
+          className="mt-3 text-subtitle font-bold text-[#333333]"
         >
           {title}
         </h2>
-        <p className="mt-2 text-label leading-relaxed text-neutral-600">
+        <p className="mt-2 text-label leading-relaxed text-neutral-500">
           {body}
         </p>
         <button
           type="button"
           onClick={onClose}
           autoFocus
-          className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-body font-semibold text-white"
+          className="mt-5 flex min-h-11 w-full items-center justify-center rounded-xl border border-neutral-300 bg-white py-3 text-sm font-semibold text-neutral-700"
         >
           확인
         </button>
@@ -297,39 +299,42 @@ export function LikeButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby="like-login-title"
-              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-5"
+              // 2026-09-30 오버레이 통일안 — 가운데 정렬 · 회색 원 48 · 버튼 두 개 한 줄(ReasonModal 과 같은 모양)
+              className="flex max-h-[90vh] w-full max-w-sm flex-col items-center overflow-y-auto rounded-xl bg-white p-5 text-center"
               onClick={(event) => event.stopPropagation()}
             >
               <span
                 aria-hidden="true"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-xl"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100"
               >
                 <Heart className="h-6 w-6 fill-red-500 text-red-500" />
               </span>
               <h2
                 id="like-login-title"
-                className="mt-4 text-subtitle font-bold text-neutral-900"
+                className="mt-3 text-subtitle font-bold text-[#333333]"
               >
                 로그인하고 관심을 표현해보세요
               </h2>
-              <p className="mt-2 text-label leading-relaxed text-neutral-600">
+              <p className="mt-2 text-label leading-relaxed text-neutral-500">
                 로그인하고 나에게 맞는 액션을 찾아보세요. 마음에 든
                 액션에는 좋아요도 남길 수 있어요.
               </p>
-              <Link
-                href={`/login?next=${encodeURIComponent(pathname)}`}
-                autoFocus
-                className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-body font-semibold text-white"
-              >
-                로그인하고 계속하기
-              </Link>
-              <button
-                type="button"
-                onClick={() => setLoginPromptOpen(false)}
-                className="mt-2 min-h-11 w-full rounded-xl py-3 text-label font-semibold text-neutral-500 hover:bg-neutral-50"
-              >
-                다음에 할게요
-              </button>
+              <div className="mt-5 flex w-full gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLoginPromptOpen(false)}
+                  className="flex min-h-11 flex-1 items-center justify-center rounded-xl border border-neutral-300 bg-white py-3 text-sm font-semibold text-neutral-700"
+                >
+                  다음에 할게요
+                </button>
+                <Link
+                  href={`/login?next=${encodeURIComponent(pathname)}`}
+                  autoFocus
+                  className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-brand py-3 text-sm font-semibold text-white"
+                >
+                  로그인하기
+                </Link>
+              </div>
             </div>
           </div>,
           document.body,
@@ -468,40 +473,42 @@ export function SaveButton({
               role="dialog"
               aria-modal="true"
               aria-labelledby="save-login-title"
-              className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-5"
+              // 2026-09-30 오버레이 통일안 — 좋아요 로그인 모달과 같은 모양
+              className="flex max-h-[90vh] w-full max-w-sm flex-col items-center overflow-y-auto rounded-xl bg-white p-5 text-center"
               onClick={(event) => event.stopPropagation()}
             >
               <span
                 aria-hidden="true"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-50 text-xl"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100"
               >
                 <Star className="h-6 w-6 fill-amber-500 text-amber-500" />
               </span>
               <h2
                 id="save-login-title"
-                className="mt-4 text-subtitle font-bold text-neutral-900"
+                className="mt-3 text-subtitle font-bold text-[#333333]"
               >
                 로그인하고 액션을 저장해보세요
               </h2>
-              <p className="mt-2 text-label leading-relaxed text-neutral-600">
+              <p className="mt-2 text-label leading-relaxed text-neutral-500">
                 로그인하고 나에게 맞는 액션을 찾아보세요. 마음에 든 액션은
                 내 프로필에 모아둘 수 있어요.
               </p>
-
-              <Link
-                href={`/login?next=${encodeURIComponent(pathname)}`}
-                autoFocus
-                className="mt-5 flex min-h-13 w-full items-center justify-center rounded-xl bg-neutral-900 py-3 text-body font-semibold text-white"
-              >
-                로그인하고 계속하기
-              </Link>
-              <button
-                type="button"
-                onClick={() => setLoginPromptOpen(false)}
-                className="mt-2 min-h-11 w-full rounded-xl py-3 text-label font-semibold text-neutral-500 hover:bg-neutral-50"
-              >
-                다음에 할게요
-              </button>
+              <div className="mt-5 flex w-full gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLoginPromptOpen(false)}
+                  className="flex min-h-11 flex-1 items-center justify-center rounded-xl border border-neutral-300 bg-white py-3 text-sm font-semibold text-neutral-700"
+                >
+                  다음에 할게요
+                </button>
+                <Link
+                  href={`/login?next=${encodeURIComponent(pathname)}`}
+                  autoFocus
+                  className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-brand py-3 text-sm font-semibold text-white"
+                >
+                  로그인하기
+                </Link>
+              </div>
             </div>
           </div>,
           document.body,

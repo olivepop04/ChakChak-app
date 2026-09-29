@@ -133,7 +133,7 @@ export function ActionHostActions({
                 <button
                   type="button"
                   onClick={() => openModal('early_end')}
-                  className="flex w-full items-center px-4 py-2.5 text-left text-label font-medium text-red-600 hover:bg-red-50"
+                  className="flex w-full items-center px-4 py-2.5 text-left text-label font-medium text-neutral-700 hover:bg-neutral-50"
                 >
                   조기 종료
                 </button>
@@ -153,13 +153,16 @@ export function ActionHostActions({
       ) : (
         <div className={cn('inline-flex items-center gap-1.5', className)}>
           {canEarlyEnd && (
-            <button
+            // 나가기·취소 계열은 빨강 금지(CLAUDE.md 결정 사항) — 옆 「액션 취소」 와 같은 회색 노멀 버튼 (2026-09-30)
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => openModal('early_end')}
-              className="inline-flex self-start rounded-full border border-red-200 bg-red-50 px-3 py-2 text-label font-semibold text-red-600 transition-colors hover:bg-red-100"
+              className="self-start"
             >
               조기 종료
-            </button>
+            </Button>
           )}
           {canCancel && (
             <Button
