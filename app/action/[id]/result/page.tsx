@@ -8,7 +8,7 @@ import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getActionResult } from '@/lib/queries/participations';
-import { UsersRound, Package, MessageSquareQuote } from 'lucide-react';
+import { UsersRound, Package, MessageSquareQuote, FileText } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
@@ -74,7 +74,7 @@ export default async function ResultPage({
       <main>
         <Header title="액션 결과" back backHref={`/action/${id}`} />
         <EmptyState
-          icon="📝"
+          icon={FileText}
           title="아직 결과가 등록되지 않았어요"
           description="호스트가 결과를 정리해서 올리면 이곳에서 확인할 수 있어요."
           action={{ label: '액션 보러 가기', href: `/action/${id}` }}

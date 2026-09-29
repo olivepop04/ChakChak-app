@@ -13,7 +13,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, MessageCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { postChatMessage, deleteChatMessage } from '@/lib/mutations';
 import { Avatar } from '@/components/ui/Avatar';
@@ -170,7 +170,7 @@ export function ChatBoard({
     <div className="pb-44">
       {posts.length === 0 ? (
         <EmptyState
-          icon="💬"
+          icon={MessageCircle}
           title="아직 올라온 글이 없어요"
           description="첫 글을 남겨 이야기를 시작해보세요."
         />

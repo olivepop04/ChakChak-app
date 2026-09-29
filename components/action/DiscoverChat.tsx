@@ -14,6 +14,7 @@ import {
   Lock,
   MapPin,
   MessageCircleQuestion,
+  SearchX,
   Sparkle,
   Sparkles,
 } from 'lucide-react';
@@ -578,10 +579,10 @@ export function DiscoverChat({
 
           {items.length === 0 ? (
             <EmptyState
-              icon="🔍"
+              icon={SearchX}
               title="지금은 딱 맞는 액션이 없어요."
               description="직접 새로운 액션을 만들어 보면 어떠세요?"
-              action={{ label: '직접 액션 만들기', href: '/action/create' }}
+              action={{ label: '직접 액션 만들기', href: '/action/create', variant: 'primary' }}
             />
           ) : (
             <div className="flex flex-col gap-6">

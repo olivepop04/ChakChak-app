@@ -798,10 +798,11 @@ function ReviewModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-modal-title"
-        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-4"
+        // 안쪽 20px · 제목 #333 — 모달 공통 규격 (2026-09-30 오버레이 통일안)
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="review-modal-title" className="text-subtitle font-bold text-neutral-900">
+          <h2 id="review-modal-title" className="text-subtitle font-bold text-[#333333]">
             AI 검수 결과
           </h2>
           <button

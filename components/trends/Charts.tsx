@@ -134,7 +134,8 @@ export function WeeklyChart({ stats }: { stats: TrendStats }) {
           <YAxis tick={axisStyle} allowDecimals={false} axisLine={axisLine} tickLine={false} />
           <Tooltip {...tooltipStyle} formatter={(v) => [`${v}개`, '액션']} />
           <Line
-            type="monotone"
+            // 꺾은선 — 점과 점을 직선으로 잇습니다(2026-09-29, 목업과 같게). monotone 은 곡선이라 주별 변화가 뭉개져 보였음
+            type="linear"
             dataKey="count"
             stroke={BRAND}
             strokeWidth={2}
