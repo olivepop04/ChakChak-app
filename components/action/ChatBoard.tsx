@@ -42,7 +42,7 @@ function ChatMessageRow({
   onReply,
   onDelete,
 }: {
-  author: { nickname: string };
+  author: { nickname: string; avatar?: string | null };
   content: string;
   createdAt: string;
   deletedAt: string | null;
@@ -54,7 +54,7 @@ function ChatMessageRow({
 }) {
   return (
     <div className={cn('flex gap-2.5 py-4', indent && 'ml-[42px]')}>
-      <Avatar name={author.nickname} size="sm" />
+      <Avatar name={author.nickname} avatar={author.avatar} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="text-label font-semibold text-neutral-900">

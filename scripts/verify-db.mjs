@@ -31,10 +31,10 @@ function no(name, extra = '') {
   fail++; console.log(`  ❌ ${name}${extra ? '  — ' + extra : ''}`);
 }
 
-async function makeUser(email, nickname, gender) {
+async function makeUser(email, nickname, gender, avatar) {
   const { data, error } = await admin.auth.admin.createUser({
     email, password: 'test1234!', email_confirm: true,
-    user_metadata: { name: nickname, nickname, gender },
+    user_metadata: { name: nickname, nickname, gender, ...(avatar ? { avatar } : {}) },
   });
   if (error) throw new Error(`계정 생성 실패(${email}): ${error.message}`);
   created.users.push(data.user.id);
@@ -82,7 +82,7 @@ try {
   // ── 2. 가입 트리거 ────────────────────────────────────────
   console.log('\n[2] 회원가입 시 profiles 행이 자동으로 생기는가  (T1)');
 
-  const uidA = await makeUser(emailA, `owner${stamp}`, 'MALE');
+  const uidA = await makeUser(emailA, `owner${stamp}`, 'MALE', 'avatar_05');
   const uidB = await makeUser(emailB, `female${stamp}`, 'FEMALE');
   const uidC = await makeUser(emailC, `male${stamp}`, 'MALE');
 
@@ -97,6 +97,18 @@ try {
   pb?.gender === 'FEMALE'
     ? ok('성별이 올바르게 저장됨')
     : no('성별 저장 실패', String(pb?.gender));
+
+  // ── 아바타 (20) — 가입 때 고른 값 저장 · 안 고르면 기본값 · 사용자는 못 바꿈 ──
+  const { data: avs } = await admin.from('profiles')
+    .select('id, avatar').in('id', [uidA, uidB]);
+  const avA = avs?.find(p => p.id === uidA)?.avatar;
+  const avB = avs?.find(p => p.id === uidB)?.avatar;
+  avA === 'avatar_05'
+    ? ok('가입 때 고른 아바타가 저장됨')
+    : no('고른 아바타가 저장 안 됨 !! — 20_update.sql 을 실행했는가', String(avA));
+  /^avatar_0[1-8]$/.test(avB ?? '')
+    ? ok('안 고르면 8종 중 하나가 들어감', avB)
+    : no('아바타 기본값이 비었거나 목록 밖 !!', String(avB));
 
   // ── 3. 액션 · 모집 항목 ───────────────────────────────────
   console.log('\n[3] 액션과 모집 항목 3종을 만들 수 있는가');
@@ -146,6 +158,15 @@ try {
   console.log('[3-b] Owner 가 AI 색인을 저장할 수 있는가');
 
   const cA = await asUser(emailA);
+
+  const rAv = await cA.from('profiles').update({ avatar: 'avatar_01' }).eq('id', uidA);
+  rAv.error
+    ? ok('한 번 고른 아바타는 본인도 못 바꿈', rAv.error.message.slice(0, 24))
+    : no('사용자가 아바타를 바꿀 수 있음 !! — 20_update.sql 을 실행했는가');
+  const rBio = await cA.from('profiles').update({ bio: '아바타 잠금 뒤에도 소개는 고쳐진다' }).eq('id', uidA);
+  rBio.error
+    ? no('아바타 잠금 때문에 다른 칸까지 막힘 !!', rBio.error.message.slice(0, 40))
+    : ok('아바타 말고 다른 칸은 그대로 고칠 수 있음');
   const { error: metaErr } = await cA.from('action_ai_metadata').upsert({
     action_id: act.id,
     categories: ['동물'],

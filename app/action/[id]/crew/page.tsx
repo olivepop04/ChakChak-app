@@ -33,7 +33,7 @@ function CrewRow({ person, isOwner }: { person: UserSummary; isOwner?: boolean }
         href={`/user/${person.id}`}
         className="flex items-center gap-3 px-6 py-3 transition-colors hover:bg-neutral-50"
       >
-        <Avatar name={person.nickname} />
+        <Avatar name={person.nickname} avatar={person.avatar} />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1 text-body font-semibold text-neutral-900">
             <span className="truncate">@{person.nickname}</span>
@@ -163,7 +163,7 @@ export default async function CrewPage({
                   <ul className="mt-3 flex flex-col gap-2.5 border-t border-white pt-3">
                     {group.members.map(({ person }) => (
                       <li key={person.id} className="flex items-center gap-2.5">
-                        <Avatar name={person.nickname} size="sm" />
+                        <Avatar name={person.nickname} avatar={person.avatar} size="sm" />
                         <Link
                           href={`/user/${person.id}`}
                           className="min-w-0 flex-1 truncate text-label font-semibold text-neutral-800"

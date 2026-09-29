@@ -57,7 +57,7 @@ export default async function JoinPage({
           {action.title}
         </h1>
         <div className="flex items-center gap-2">
-          <Avatar name={action.owner.nickname} size="sm" />
+          <Avatar name={action.owner.nickname} avatar={action.owner.avatar} size="sm" />
           <span className="text-label text-neutral-600">
             @{action.owner.nickname}
           </span>

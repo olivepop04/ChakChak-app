@@ -166,7 +166,7 @@ export function SharePanel({
                   key={u.id}
                   className={cn('flex items-center gap-3 py-3', isModal ? 'px-5' : 'px-6')}
                 >
-                  <Avatar name={u.nickname} />
+                  <Avatar name={u.nickname} avatar={u.avatar} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-body font-semibold text-neutral-900">
                       @{u.nickname}

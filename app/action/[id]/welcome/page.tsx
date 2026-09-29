@@ -82,7 +82,7 @@ export default async function WelcomePage({
                 className="relative -ml-3 first:ml-0"
                 style={{ zIndex: i + 1 }}
               >
-                <Avatar name={p.nickname} className="border-[3px] border-white" />
+                <Avatar name={p.nickname} avatar={p.avatar} className="border-[3px] border-white" />
               </span>
             ))}
             {rest > 0 && (

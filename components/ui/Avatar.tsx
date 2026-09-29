@@ -9,21 +9,14 @@
  * 2026-09-27: 이니셜 + 10색 → 회색 픽셀 표정 이미지 10종(public/avatars/)으로 교체.
  *   타입페이스 표정 모티프(Day6 결정)를 아바타에 적용한 최종안.
  *   배경 원(#E0E0E0)이 이미지 안에 들어 있어서 여기서는 배경색을 주지 않는다.
+ *
+ * 2026-09-29: 가입할 때 8종 중 하나를 **고르게** 바뀌었다 (조장님 요청 · 팀 결정, supabase/20).
+ *   고른 값(profiles.avatar)을 avatar 로 넘기면 그 그림을 그린다. 한 번 고르면 바꿀 수 없다.
+ *   avatar 가 없을 때만(프로필을 못 읽은 「알 수 없음」 등) 이름으로 8종 중 하나를 고른다.
+ *   그림 경로는 lib/utils/avatar.ts 한 곳에서 정한다.
  */
 import { cn } from '@/lib/utils/cn';
-
-const AVATARS = [
-  '/avatars/avatar_01.svg',
-  '/avatars/avatar_02.svg',
-  '/avatars/avatar_03.svg',
-  '/avatars/avatar_04.svg',
-  '/avatars/avatar_05.svg',
-  '/avatars/avatar_06.svg',
-  '/avatars/avatar_07.svg',
-  '/avatars/avatar_08.svg',
-  '/avatars/avatar_09.svg',
-  '/avatars/avatar_10.svg',
-] as const;
+import { avatarSrc } from '@/lib/utils/avatar';
 
 const SIZES = {
   xs: 'h-5 w-5',
@@ -33,23 +26,16 @@ const SIZES = {
   xl: 'h-24 w-24',
 } as const;
 
-/** 같은 닉네임이면 항상 같은 표정이 나오도록 */
-function hashIndex(seed: string): number {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) {
-    h = (h * 31 + seed.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h) % AVATARS.length;
-}
-
 interface AvatarProps {
-  /** 표시 기준이 되는 이름. 보통 닉네임을 넘긴다. */
+  /** 표시 기준이 되는 이름. 보통 닉네임을 넘긴다. avatar 가 없을 때만 그림을 고르는 데 쓴다 */
   name: string;
+  /** 고른 아바타 (profiles.avatar, 예: 'avatar_03'). 조회 함수가 같이 실어 준다 */
+  avatar?: string | null;
   size?: keyof typeof SIZES;
   className?: string;
 }
 
-export function Avatar({ name, size = 'md', className }: AvatarProps) {
+export function Avatar({ name, avatar, size = 'md', className }: AvatarProps) {
   return (
     <span
       className={cn(
@@ -61,7 +47,7 @@ export function Avatar({ name, size = 'md', className }: AvatarProps) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={AVATARS[hashIndex(name)]}
+        src={avatarSrc(avatar, name)}
         alt=""
         draggable={false}
         className="h-full w-full"

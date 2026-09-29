@@ -233,7 +233,7 @@ export default async function ActionDetailPage({
         {/* 만든 사람 */}
         <div className="flex items-center gap-3">
           <Link href={`/user/${action.owner?.id ?? ''}`} className="flex items-center gap-3">
-            <Avatar name={action.owner?.nickname ?? '?'} />
+            <Avatar name={action.owner?.nickname ?? '?'} avatar={action.owner?.avatar} />
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-neutral-900">
                 @{action.owner?.nickname ?? '알 수 없음'}

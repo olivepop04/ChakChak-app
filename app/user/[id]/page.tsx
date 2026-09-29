@@ -45,6 +45,7 @@ export default async function UserProfilePage({
       <UserProfileSummary
         id={profile.id}
         nickname={profile.nickname}
+        avatar={profile.avatar}
         bio={profile.bio}
         isMe={profile.isMe}
         canFollow={Boolean(user)}

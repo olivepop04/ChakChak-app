@@ -185,7 +185,7 @@ export function ActionCard({
                   onClick={(e) => e.stopPropagation()}
                   className="pointer-events-auto cursor-pointer flex items-center gap-1 shrink-0 min-w-0 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
                 >
-                  <Avatar name={action.owner?.nickname ?? '호스트'} size="xs" />
+                  <Avatar name={action.owner?.nickname ?? '호스트'} avatar={action.owner?.avatar} size="xs" />
                   <span className="shrink-0 whitespace-nowrap text-caption font-medium text-neutral-600">
                     @{action.owner?.nickname ?? '호스트'}
                   </span>
@@ -261,7 +261,7 @@ export function ActionCard({
             onClick={(e) => e.stopPropagation()}
             className="pointer-events-auto flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-sm font-semibold text-neutral-900 hover:underline active:opacity-70 transition-opacity"
           >
-            <Avatar name={action.owner?.nickname ?? '호스트'} size="sm" />
+            <Avatar name={action.owner?.nickname ?? '호스트'} avatar={action.owner?.avatar} size="sm" />
             <span className="min-w-0 truncate text-sm font-semibold text-neutral-900">
               @{action.owner?.nickname ?? '호스트'}
             </span>

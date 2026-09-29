@@ -13,6 +13,8 @@ import {
 interface UserProfileSummaryProps {
   id: string;
   nickname: string;
+  /** 고른 아바타 (profiles.avatar) */
+  avatar: string | null;
   bio: string | null;
   isMe: boolean;
   canFollow: boolean;
@@ -26,6 +28,7 @@ interface UserProfileSummaryProps {
 export function UserProfileSummary({
   id,
   nickname,
+  avatar,
   bio,
   isMe,
   canFollow,
@@ -51,7 +54,7 @@ export function UserProfileSummary({
   return (
     <>
       <section className="flex items-center gap-4 px-6 py-5">
-        <Avatar name={nickname} size="lg" />
+        <Avatar name={nickname} avatar={avatar} size="lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-subtitle font-bold text-neutral-900">
             @{nickname}

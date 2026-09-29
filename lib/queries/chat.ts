@@ -18,7 +18,7 @@ interface RawMessage {
   deleted_at: string | null;
   created_at: string;
   kind: string | null;
-  author: { id: string; nickname: string } | null;
+  author: { id: string; nickname: string; avatar: string | null } | null;
 }
 
 /** 원글을 오래된 순으로, 각 원글 아래 댓글을 오래된 순으로 묶어서 반환 */
@@ -31,7 +31,7 @@ export async function getChatPosts(
     .from('chat_messages')
     .select(
       `id, parent_id, content, deleted_at, created_at, kind,
-       author:profiles!chat_messages_user_id_fkey ( id, nickname )`,
+       author:profiles!chat_messages_user_id_fkey ( id, nickname, avatar )`,
     )
     .eq('action_id', actionId)
     .order('created_at', { ascending: true });
@@ -49,7 +49,7 @@ export async function getChatPosts(
       createdAt: r.created_at,
       deletedAt: r.deleted_at,
       kind: (r.kind ?? 'NORMAL') as ChatKind,
-      author: r.author ?? { id: '', nickname: '알 수 없음' },
+      author: r.author ?? { id: '', nickname: '알 수 없음', avatar: null },
       isMine: !!viewerId && r.author?.id === viewerId,
     };
 
