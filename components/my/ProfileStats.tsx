@@ -23,14 +23,15 @@ function Stat({ value, label, href }: ProfileStatItem) {
 
 /**
  * 2026-09-29 프로필군 통일안 — 바깥 테두리를 없애고 항목 사이에 세로 구분선.
- * 구분선 높이는 숫자 위부터 라벨 아래까지(44px), 색은 앱 공통 구분선(neutral-100).
+ * 구분선 높이는 숫자 위부터 라벨 아래까지(44px). 색은 세로 구분선 예외로 한 단계 진한 neutral-200
+ * (가로 구분선은 앱 공통 neutral-100 — 세로선은 짧아서 그 색이면 안 보임, 2026-09-29)
  */
 export function ProfileStats({ stats }: { stats: ProfileStatItem[] }) {
   return (
     <section className="mx-6 flex items-center">
       {stats.map((stat, i) => (
         <Fragment key={stat.label}>
-          {i > 0 && <span aria-hidden="true" className="h-11 w-px shrink-0 bg-neutral-100" />}
+          {i > 0 && <span aria-hidden="true" className="h-11 w-px shrink-0 bg-neutral-200" />}
           <Stat {...stat} />
         </Fragment>
       ))}

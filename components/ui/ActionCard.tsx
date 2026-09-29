@@ -194,16 +194,19 @@ export function ActionCard({
               </div>
               )}
 
-              {/* 아바타 + 참여·좋아요·저장·공유 4종. 고배율에서 한 줄에 못 담으면 아래로 내려가게 flex-wrap */}
-              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 w-full min-w-0 pt-2 mt-1.5 border-t border-neutral-100">
+              {/* 아바타 + 참여·좋아요·저장·공유 4종 — 한 줄 고정(2026-09-29).
+                  최소 폭(375px)에서 줄이 바뀌던 것: 카드 오른쪽 칸이 약 185px 뿐이라 핸들+4종(약 195px)이 넘쳤음.
+                  → 반응 4종은 안쪽 여백을 없애고 간격 4px 로 줄여 줄지 않게(shrink-0),
+                    핸들은 남는 폭만 쓰고 길면 말줄임(…)으로 줄어들게 함 */}
+              <div className="mt-1.5 flex w-full min-w-0 flex-nowrap items-center gap-2 border-t border-neutral-100 pt-2">
                 {!hideOwner && (
                 <Link
                   href={action.owner?.id ? `/user/${action.owner.id}` : '#'}
                   onClick={(e) => e.stopPropagation()}
-                  className="pointer-events-auto cursor-pointer flex items-center gap-1 shrink-0 min-w-0 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
+                  className="pointer-events-auto cursor-pointer flex min-w-0 shrink items-center gap-1 text-xs text-neutral-600 hover:underline active:opacity-70 transition-opacity"
                 >
                   <Avatar name={action.owner?.nickname ?? '호스트'} size="xs" />
-                  <span className="shrink-0 whitespace-nowrap text-caption font-medium text-neutral-600">
+                  <span className="min-w-0 truncate text-caption font-medium text-neutral-600">
                     @{action.owner?.nickname ?? '호스트'}
                   </span>
                 </Link>
@@ -212,11 +215,11 @@ export function ActionCard({
                 {/* 반응 4종 — 11px(caption), 넓은 화면(sm)에서는 12px.
                     참여 인원은 맨 앞에 아이콘+숫자만 (2026-09-29). 이 줄은 덮개 링크 밖(pointer-events-auto)이라
                     actionId 를 줘서 누르면 상세의 크루 칸으로 갑니다 */}
-                <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto pointer-events-auto text-caption sm:text-xs font-medium text-neutral-500">
+                <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5 pointer-events-auto text-caption sm:text-xs font-medium text-neutral-500">
                   <CrewAnchorButton
                     count={action.crewCount ?? 0}
                     actionId={action.id}
-                    className="!p-0 !px-0.5 sm:!px-1 sm:!py-0.5 !min-w-0 !text-caption sm:!text-xs !font-medium !text-neutral-500 gap-0.5 sm:gap-1 shrink-0 hover:!bg-transparent"
+                    className="!p-0 sm:!px-1 sm:!py-0.5 !min-w-0 !text-caption sm:!text-xs !font-medium !text-neutral-500 !gap-0.5 sm:!gap-1 shrink-0 hover:!bg-transparent"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <LikeButton
@@ -225,7 +228,7 @@ export function ActionCard({
                     initialCount={action.likeCount ?? 0}
                     disabled={likeDisabled}
                     disabledReason={reactionDisabledReason}
-                    className="!p-0 !px-0.5 sm:!px-1 sm:!py-0.5 !min-w-0 text-caption sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    className="!p-0 sm:!px-1 sm:!py-0.5 !min-w-0 text-caption sm:text-xs !gap-0.5 sm:!gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <SaveButton
@@ -234,7 +237,7 @@ export function ActionCard({
                     initialCount={action.saveCount ?? 0}
                     disabled={saveDisabled}
                     disabledReason={reactionDisabledReason}
-                    className="!p-0 !px-0.5 sm:!px-1 sm:!py-0.5 !min-w-0 text-caption sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    className="!p-0 sm:!px-1 sm:!py-0.5 !min-w-0 text-caption sm:text-xs !gap-0.5 sm:!gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                   <ShareButton
@@ -243,7 +246,7 @@ export function ActionCard({
                     count={action.shareCount ?? 0}
                     disabled={shareDisabled}
                     disabledReason={reactionDisabledReason}
-                    className="!p-0 !px-0.5 sm:!px-1 sm:!py-0.5 !min-w-0 text-caption sm:text-xs gap-0.5 sm:gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
+                    className="!p-0 sm:!px-1 sm:!py-0.5 !min-w-0 text-caption sm:text-xs !gap-0.5 sm:!gap-1 shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 sm:[&_svg]:w-4 sm:[&_svg]:h-4"
                     iconClassName="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
                   />
                 </div>
@@ -324,11 +327,8 @@ export function ActionCard({
           />
           {showStatus && (
             <div className="absolute right-4 top-4 z-10">
-              <StatusBadge
-                status={action.status}
-                recruitClosed={isRecruitClosed}
-                className="bg-white/90"
-              />
+              {/* 배지 색은 Badge 의 기능색 그대로(불투명) — 예전 bg-white/90 덧칠은 뺌 (2026-09-29) */}
+              <StatusBadge status={action.status} recruitClosed={isRecruitClosed} />
             </div>
           )}
         </Link>

@@ -86,13 +86,13 @@ export default async function EditActionPage({
                     <h3 className="whitespace-nowrap text-sm font-semibold text-neutral-500">
                       {item.name}
                     </h3>
-                    <span className="h-3 w-px shrink-0 bg-neutral-100" />
+                    <span className="h-3 w-px shrink-0 bg-neutral-200" />
                     <span className="whitespace-nowrap text-caption text-neutral-500">
                       {describeTarget(item)}
                     </span>
                     {item.type === 'PERSON' && (
                       <>
-                        <span className="h-3 w-px shrink-0 bg-neutral-100" />
+                        <span className="h-3 w-px shrink-0 bg-neutral-200" />
                         <span className="whitespace-nowrap text-caption text-neutral-500">
                           {GENDER_REQUIREMENT_LABEL[item.gender_requirement]}
                           {item.conditionName ? ` · ${item.conditionName}` : ''}

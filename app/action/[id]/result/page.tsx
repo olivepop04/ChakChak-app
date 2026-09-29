@@ -97,7 +97,7 @@ export default async function ResultPage({
             {location && (
               <>
                 <span>{location}</span>
-                <span className="mx-2 h-3 w-px flex-none bg-neutral-100" aria-hidden="true" />
+                <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />
               </>
             )}
             <span>{formatActivityPeriod(action.activity_start_at, action.activity_end_at)}</span>

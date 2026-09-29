@@ -261,7 +261,7 @@ export default async function ActionDetailPage({
             suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
             className="px-1 py-0.5 text-xs gap-1"
           />
-          <span className="mx-2 h-3.5 w-px flex-none bg-neutral-100" aria-hidden="true" />
+          <span className="mx-2 h-3.5 w-px flex-none bg-neutral-200" aria-hidden="true" />
           <LikeButton
             actionId={action.id}
             initialLiked={action.likedByMe}
