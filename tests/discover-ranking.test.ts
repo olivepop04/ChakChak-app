@@ -179,6 +179,34 @@ test('모임 규모가 actionParticipationModes 문자열 메타데이터로도 
   assert.deepEqual(result.matched, ['10명 이내 소규모']);
 });
 
+test('[버그 수정 2026-09-30] 실제 모집 인원(actionGroupSize)이 있으면 분류 라벨(actionParticipationModes)이 오래되어 어긋나 있어도 실제 인원만 믿는다', () => {
+  // 실제 사례: 모집 항목은 3~6명(소그룹)인데, 액션 등록 당시 AI 분류 라벨은 "10~20명
+  // 중그룹"으로 남아있던 액션이 있었다. 예전 로직은 둘을 OR로 묶어서 두 규모 모두에
+  // 매칭됐고, 그 결과 추천 이유가 "10~20명 중그룹으로 진행되어"라고 잘못 설명했다.
+  const conflicting = {
+    profileSkills: [],
+    historyCategories: [],
+    actionCategory: '지역사회',
+    actionSkills: [],
+    actionGroupSize: 6, // 실제 모집 인원 = 소그룹
+    actionParticipationModes: ['10~20명 중그룹'], // 낡은/틀린 분류 라벨 = 중그룹
+  };
+
+  const asSmall = scoreAdaptiveTraits({
+    ...conflicting,
+    answers: { talentPreference: null, groupSizePreference: 'small', fieldPreference: null },
+  });
+  assert.equal(asSmall.score, 10, '실제 인원(6명) 기준으로 소규모 선호와 매칭되어야 한다');
+  assert.deepEqual(asSmall.matched, ['10명 이내 소규모']);
+
+  const asMedium = scoreAdaptiveTraits({
+    ...conflicting,
+    answers: { talentPreference: null, groupSizePreference: 'medium', fieldPreference: null },
+  });
+  assert.equal(asMedium.score, 0, '낡은 분류 라벨만 보고 중규모로 잘못 매칭되면 안 된다');
+  assert.deepEqual(asMedium.matched, []);
+});
+
 test('사용자가 인터뷰에서 장애/환경을 골랐다면 프로필에 동물이 있어도 동물 액션에 관심분야 점수가 들어가지 않는다', () => {
   const profile: ScoringProfile = {
     categories: ['동물'], // 가입 시 등록했던 프로필 카테고리
