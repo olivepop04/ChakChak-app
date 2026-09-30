@@ -36,7 +36,7 @@ export function AvatarPicker({
             onClick={() => onChange(key)}
             className={cn(
               // 원 크기는 칸 폭에 맞추되 72px 까지만 — 375px 에서도 한 줄에 4개(누르는 칸 44px 이상)
-              'flex aspect-square w-full max-w-[72px] items-center justify-center justify-self-center rounded-full border-2 p-1 transition-colors',
+              'flex aspect-square w-full max-w-[64px] items-center justify-center justify-self-center rounded-full border-2 p-1 transition-colors',
               'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
               selected ? 'border-brand' : 'border-transparent hover:border-hairline',
             )}
