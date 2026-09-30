@@ -79,16 +79,27 @@ export function scoreAdaptiveTraits({
   }
 
   // 2) 모임 규모 (participation_modes / group_size) — 10점 (정규 반영)
+  //
+  // actionGroupSize(모집 항목의 실제 min/max에서 바로 계산됨, 항상 최신·정확함)가 있으면
+  // 그것만 믿는다. actionParticipationModes(액션 등록 시 AI가 분류해 둔 라벨)는 항목이
+  // 나중에 수정돼도 재분류 전까지 안 바뀌는 값이라 실제 인원수와 어긋날 수 있다 — 그걸
+  // OR로 같이 믿으면, 예를 들어 실제로는 3~6명(소그룹)인 액션이 분류 라벨만 "10~20명
+  // 중그룹"으로 남아있어서 중그룹으로도 매칭되는 일이 생겼다 (2026-09-30, 팀 테스트 피드백:
+  // 실제 모집은 3~6명인데 추천 이유가 "10~20명 중그룹으로 진행되어"라고 설명한 사례).
+  // actionGroupSize가 없을 때(예: 물품만 모집하는 액션)만 분류 라벨로 대신한다.
   if (answers.groupSizePreference) {
     const isSmall =
-      (actionGroupSize !== null && actionGroupSize <= 10) ||
-      actionParticipationModes.some((m) => m.includes('10명 이내') || m.includes('소그룹') || m.includes('소규모'));
+      actionGroupSize !== null
+        ? actionGroupSize <= 10
+        : actionParticipationModes.some((m) => m.includes('10명 이내') || m.includes('소그룹') || m.includes('소규모'));
     const isMedium =
-      (actionGroupSize !== null && actionGroupSize > 10 && actionGroupSize <= 20) ||
-      actionParticipationModes.some((m) => m.includes('10~20') || m.includes('중그룹') || m.includes('중규모'));
+      actionGroupSize !== null
+        ? actionGroupSize > 10 && actionGroupSize <= 20
+        : actionParticipationModes.some((m) => m.includes('10~20') || m.includes('중그룹') || m.includes('중규모'));
     const isLarge =
-      (actionGroupSize !== null && actionGroupSize > 20) ||
-      actionParticipationModes.some((m) => m.includes('20명 이상') || m.includes('대그룹') || m.includes('대규모'));
+      actionGroupSize !== null
+        ? actionGroupSize > 20
+        : actionParticipationModes.some((m) => m.includes('20명 이상') || m.includes('대그룹') || m.includes('대규모'));
 
     if (answers.groupSizePreference === 'small' && isSmall) {
       score += 10;

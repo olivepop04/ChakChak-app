@@ -83,7 +83,11 @@ export interface UserContextSummary {
   pastActivitySummary?: string;
   profileRegion?: string;
   profileTimesSummary?: string;
-  hasRegionAndTime: boolean;
+  /** 지역·시간을 따로 둔다 — 둘 중 하나만 프로필에 있는 경우를 "둘 다 없음"과 다르게 다뤄야 한다
+   * (2026-09-30, 팀 테스트 피드백: 시간은 프로필에 있는데 지역이 없으면, 시간까지 처음부터
+   * 다시 물어보고 있었다. 하나의 hasRegionAndTime 로는 이 둘을 구분할 수 없었다). */
+  hasRegion: boolean;
+  hasTime: boolean;
 }
 
 export interface QuestionCopyContext {
@@ -98,7 +102,8 @@ export interface QuestionCopyContext {
   pastActivitySummary?: string;
   profileRegion?: string;
   profileTimesSummary?: string;
-  hasRegionAndTime?: boolean;
+  hasRegion?: boolean;
+  hasTime?: boolean;
   profileCategories?: readonly string[];
 }
 
@@ -408,7 +413,6 @@ export function analyzeUserContext({
 
   const profileRegion = hasRegions && profile.regions ? profile.regions[0] : undefined;
   const profileTimesSummary = hasTimes ? formatTimePrefsSummary(profile.timePrefs, profile.availableTimes) : undefined;
-  const hasRegionAndTime = Boolean(hasRegions && hasTimes);
 
   // 아직 모르는 정보 축 도출
   const missingAxes: QuestionKey[] = [];
@@ -426,7 +430,8 @@ export function analyzeUserContext({
     pastActivitySummary,
     profileRegion,
     profileTimesSummary,
-    hasRegionAndTime,
+    hasRegion: hasRegions,
+    hasTime: hasTimes,
   };
 }
 
@@ -538,7 +543,8 @@ export function resolveUnifiedCategories({
 
 export interface QuestionOptionContext {
   hasHistory?: boolean;
-  hasRegionAndTime?: boolean;
+  hasRegion?: boolean;
+  hasTime?: boolean;
   answers?: AdaptiveAnswers;
   profileSkills?: readonly string[];
   profileCategories?: readonly string[];
@@ -551,13 +557,21 @@ export function getQuestionOptions(
   key: QuestionKey,
   skills: readonly string[] = [],
   userState?: UserStateCategory,
-  hasRegionAndTime = true,
+  hasRegion = true,
+  hasTime = true,
   context?: QuestionOptionContext,
 ): string[] {
-  // 0순위: 오프닝
+  // 0순위: 오프닝 — 지역·시간 중 프로필에 이미 있는 축만 확인하고, 모르는 축은 새로 묻는다
+  // (둘 다 있음 / 지역만 있음 / 시간만 있음 / 둘 다 없음, 2026-09-30)
   if (key === 'opening') {
-    if (hasRegionAndTime) {
+    if (hasRegion && hasTime) {
       return ['네, 이 조건으로 찾을게요 👍', '이번엔 다른 조건으로 찾을래요 🔄'];
+    }
+    if (hasRegion && !hasTime) {
+      return ['네, 이 지역으로 찾을게요 👍', '이번엔 다른 지역으로 찾을래요 🔄'];
+    }
+    if (!hasRegion && hasTime) {
+      return ['네, 이 시간대로 찾을게요 👍', '이번엔 다른 시간대로 찾을래요 🔄'];
     }
     return ['활동할 지역 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'];
   }
@@ -620,7 +634,8 @@ export function getQuestionOptions(
   }
 
   const options: Record<string, readonly string[]> = {
-    opening: hasRegionAndTime
+    // opening 은 위에서 이미 return 하므로 여기까지 오지 않는다 — key 목록의 완결성을 위해 남겨둔다.
+    opening: hasRegion && hasTime
       ? ['네, 이 조건으로 찾을게요 👍', '이번엔 다른 조건으로 찾을래요 🔄']
       : ['활동할 지역 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'],
     target_groups: DISCOVER_TARGET_GROUP_OPTIONS,
@@ -679,13 +694,17 @@ export function getQuestionReply(
     pastActivitySummary,
     profileRegion = '등록된 지역',
     profileTimesSummary = '등록된 시간대',
-    hasRegionAndTime = true,
+    hasRegion = true,
+    hasTime = true,
     profileCategories = [],
   } = context;
 
-  // 0순위: 오프닝 및 지역/시간 상시 확인
+  // 0순위: 오프닝 — 지역·시간 중 프로필에 이미 있는 축만 확인하고, 모르는 축은 새로 묻는다.
+  // 하나만 있는 경우를 "둘 다 없음"과 똑같이 취급해 이미 아는 것까지 다시 물으면 안 된다
+  // (2026-09-30, 팀 테스트 피드백: 시간은 프로필에 등록돼 있는데 지역이 없으니, 시간까지
+  // 처음부터 다시 물어보고 있었다).
   if (key === 'opening') {
-    if (hasRegionAndTime) {
+    if (hasRegion && hasTime) {
       return [
         `안녕하세요, ${nickname}님! 😊`,
         `${nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 기본 조건을 확인해 봤어요.`,
@@ -694,6 +713,28 @@ export function getQuestionReply(
         `⏰ 선호 시간 : ${profileTimesSummary}`,
         '',
         '이 조건 그대로 액션을 찾아드릴까요?',
+      ].join('\n');
+    }
+
+    if (hasRegion && !hasTime) {
+      return [
+        `안녕하세요, ${nickname}님! 😊`,
+        `${nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 활동 지역을 확인해 봤어요.`,
+        '',
+        `📍 활동 지역 : ${profileRegion}`,
+        '',
+        '이 지역 그대로 액션을 찾아드릴까요?',
+      ].join('\n');
+    }
+
+    if (!hasRegion && hasTime) {
+      return [
+        `안녕하세요, ${nickname}님! 😊`,
+        `${nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 선호 시간대를 확인해 봤어요.`,
+        '',
+        `⏰ 선호 시간 : ${profileTimesSummary}`,
+        '',
+        '이 시간대 그대로 액션을 찾아드릴까요?',
       ].join('\n');
     }
 
@@ -1021,20 +1062,28 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
   }
 
   // 활동 환경 (activity_types)
+  // 주의: '환경.*상관' 가지는 넣지 않는다 — "환경"은 카테고리 이름이기도 해서, 카테고리로
+  // "환경"을 고르고 (몇 턴 뒤) 아무 축에서나 "상관없음"을 고르면 전체 텍스트 안에서
+  // "환경"...(멀리 떨어진 다른 답)..."상관없음" 이 이어져 매치되어, 실제로는 묻지도 않은
+  // 활동 환경(activity_types) 질문이 이미 답한 것으로 처리되어 스킵되는 버그가 있었다
+  // (2026-09-30 확인, 실제 버튼 답 중 이 가지와 정확히 일치하는 것은 원래 없었다 —
+  // 진짜 "상관없음" 답은 extractAnswersFromDialogue 가 질문 맥락을 보고 이미 처리한다).
   if (/실내외 병행|병행/.test(text)) {
     answers.activityType = 'both';
   } else if (/실내|날씨 안 타|비 안 맞|안에서|실내 활동/.test(text)) {
     answers.activityType = 'indoor';
   } else if (/실외|야외|바깥|공원|밖에서|야외 활동/.test(text)) {
     answers.activityType = 'outdoor';
-  } else if (/환경.*상관|실내외.*상관|어디든 상관/.test(text)) {
-    answers.activityType = 'any';
   }
 
   // 활동 성격 (target_groups)
-  if (/교류|대화|교육|소통|말벗|멘토링|가르침|아이돌봄|교류·교육·소통형/.test(text)) {
+  // 주의: '교육'·'멘토링'·'청소'는 여기 넣지 않는다 — 카테고리 "교육"·"아동·청소년"과
+  // 재능 "교육·멘토링"·"청소·정리"에도 그대로 들어있는 말이라, 카테고리나 재능만 골라도
+  // 활동 성격 질문이 답한 것으로 처리되어 통째로 스킵되는 버그가 있었다 (2026-09-30 확인).
+  // 실제 버튼값(교류·교육·소통형 / 육체·과업·집중형)은 아래 완전일치 문구로만 잡는다.
+  if (/교류|대화|소통|말벗|가르침|아이돌봄|교류·교육·소통형/.test(text)) {
     answers.vibePreference = 'social';
-  } else if (/과업|몸 쓰|땀|집중|청소|플로깅|배달|일만|결과물|육체·과업·집중형/.test(text)) {
+  } else if (/과업|몸 쓰|땀|집중|플로깅|배달|일만|결과물|육체·과업·집중형/.test(text)) {
     answers.vibePreference = 'task';
   } else if (/스타일.*상관|성격.*상관|분위기.*상관/.test(text)) {
     answers.vibePreference = 'any';
@@ -1231,7 +1280,13 @@ export function extractAnswersFromDialogue(
       }
 
       // 3. 환경 질문에 대한 답변 (4순위)
-      if (/환경|실내|실외|야외|어떤 환경/.test(q)) {
+      // 주의: 바로 '환경'만으로 판정하지 않는다 — '환경'은 카테고리 이름이기도 해서,
+      // AI가 생성하는 공감 한 줄이 "환경 분야에 관심이 있으시군요!"처럼 카테고리를
+      // 되짚어주면, 그 직후 어떤 질문(성격·난이도 등)에 "상관없음"으로 답해도
+      // 활동 환경 질문을 이미 물은 것으로 착각해 그 질문이 스킵되는 버그가 있었다
+      // (2026-09-30 확인). 실제 활동 환경 질문 문구는 항상 "어떤 환경에서"를 포함하므로
+      // 그 완전한 구절로만 잡는다.
+      if (/어떤 환경|실내|실외|야외/.test(q)) {
         if (/상관없/.test(a)) answers.activityType = 'any';
         else if (/실내외 병행|병행/.test(a)) answers.activityType = 'both';
         else if (/실내/.test(a)) answers.activityType = 'indoor';
@@ -1351,34 +1406,48 @@ export function getRemainingQuestionKeys({
   skillsAnswered = false,
   answers,
   userState = 'F',
-  hasRegionAndTime = true,
+  hasRegion = true,
+  hasTime = true,
   hasHistory = false,
   profileSkills = [],
 }: {
   skillsAnswered?: boolean;
   answers: AdaptiveAnswers;
   userState?: UserStateCategory;
-  hasRegionAndTime?: boolean;
+  hasRegion?: boolean;
+  hasTime?: boolean;
   hasHistory?: boolean;
   profileSkills?: readonly string[];
 }): QuestionKey[] {
   const remaining: QuestionKey[] = [];
 
-  // 0순위: 다른 조건 변경이 요청되었거나 기본 지역/시간이 없는 경우
+  // 0순위: 다른 조건 변경이 요청되었거나 기본 지역/시간이 없는 경우.
+  // 지역·시간을 각각 따로 본다 — 하나만 프로필에 있어도 그건 다시 묻지 않는다
+  // (2026-09-30, 팀 테스트 피드백: 합쳐진 hasRegionAndTime 하나로는 "시간은 있는데
+  // 지역만 없는" 경우를 "둘 다 없음"과 구분하지 못해, 이미 아는 시간까지 다시 물었다).
   const needsRegion =
-    (answers.openingDecision === 'change' || !hasRegionAndTime) &&
+    (answers.openingDecision === 'change' || !hasRegion) &&
     !answers.travelRange &&
     !answers.selectedRegion;
-  if (needsRegion) {
-    remaining.push('travel_range');
-  }
 
   const needsTime =
-    (answers.openingDecision === 'change' || !hasRegionAndTime) &&
+    (answers.openingDecision === 'change' || !hasTime) &&
     !answers.timePreference &&
     (!answers.timePreferences || answers.timePreferences.length === 0);
-  if (needsTime) {
+
+  // 순서: 오프닝이 실제로 "이 지역/시간 그대로 할까요?" 라고 확인받은 축이 있다면, 그 축을
+  // 거절했을 때는 그 축부터 다시 묻는다. 둘 다 있던 경우(지역→시간 순으로 둘 다 확인받음)와
+  // 지역만 있던 경우(지역을 거절했으니 지역이 먼저)는 원래도 지역→시간 순이라 그대로 둔다.
+  // 시간만 있던 경우(!hasRegion && hasTime)만 예외 — 오프닝이 시간만 확인했었으므로 그걸
+  // 거절했으면 시간부터 다시 물어야 한다. 그대로 두면 "다른 시간대로 찾을래요"를 눌렀는데
+  // 지역부터 물어서 시간 선택지가 나오지 않은 채 넘어가 버린다 (2026-09-30, 팀 테스트 피드백).
+  const timeOnlyWasRejected = !hasRegion && hasTime && needsTime;
+  if (timeOnlyWasRejected) {
     remaining.push('time_pref');
+    if (needsRegion) remaining.push('travel_range');
+  } else {
+    if (needsRegion) remaining.push('travel_range');
+    if (needsTime) remaining.push('time_pref');
   }
 
   // 1순위: 관심 분야 (categories / field_preference)
