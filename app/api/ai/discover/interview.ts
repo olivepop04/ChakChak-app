@@ -1032,9 +1032,13 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
   }
 
   // 활동 성격 (target_groups)
-  if (/교류|대화|교육|소통|말벗|멘토링|가르침|아이돌봄|교류·교육·소통형/.test(text)) {
+  // 주의: '교육'·'멘토링'·'청소'는 여기 넣지 않는다 — 카테고리 "교육"·"아동·청소년"과
+  // 재능 "교육·멘토링"·"청소·정리"에도 그대로 들어있는 말이라, 카테고리나 재능만 골라도
+  // 활동 성격 질문이 답한 것으로 처리되어 통째로 스킵되는 버그가 있었다 (2026-09-30 확인).
+  // 실제 버튼값(교류·교육·소통형 / 육체·과업·집중형)은 아래 완전일치 문구로만 잡는다.
+  if (/교류|대화|소통|말벗|가르침|아이돌봄|교류·교육·소통형/.test(text)) {
     answers.vibePreference = 'social';
-  } else if (/과업|몸 쓰|땀|집중|청소|플로깅|배달|일만|결과물|육체·과업·집중형/.test(text)) {
+  } else if (/과업|몸 쓰|땀|집중|플로깅|배달|일만|결과물|육체·과업·집중형/.test(text)) {
     answers.vibePreference = 'task';
   } else if (/스타일.*상관|성격.*상관|분위기.*상관/.test(text)) {
     answers.vibePreference = 'any';

@@ -554,6 +554,33 @@ test('[피드백 1] 활동 이력이 있는 사용자는 같은 분야 vs 새로
   assert.equal(remainingCat[0], 'vibe_preference');
 });
 
+test('[버그 수정 2026-09-30] 카테고리 "교육"·"아동·청소년"이나 재능 "교육·멘토링"·"청소·정리"를 골라도 활동 성격(vibe_preference) 질문이 스킵되지 않는다', () => {
+  // "교육"·"청소"·"멘토링"이 활동 성격(교류형/과업형) 판정 키워드와 부분일치해서,
+  // 카테고리·재능만 골라도 vibe_preference 가 답한 것으로 잘못 처리되어
+  // 다음 질문(활동 성격)이 통째로 스킵되던 버그.
+  for (const answerText of ['교육', '아동·청소년', '교육·멘토링', '청소·정리']) {
+    const answers = extractAdaptiveAnswers([answerText]);
+    assert.equal(
+      answers.vibePreference,
+      undefined,
+      `"${answerText}" 만으로 vibePreference 가 정해지면 안 된다`,
+    );
+
+    const remaining = getRemainingQuestionKeys({ answers, hasHistory: false });
+    assert.equal(
+      remaining.includes('vibe_preference'),
+      true,
+      `"${answerText}" 뒤에도 활동 성격 질문이 남아있어야 한다`,
+    );
+  }
+
+  // 실제 버튼값(완전일치 문구)은 여전히 정상적으로 인식된다
+  const social = extractAdaptiveAnswers(['교류·교육·소통형']);
+  assert.equal(social.vibePreference, 'social');
+  const task = extractAdaptiveAnswers(['육체·과업·집중형']);
+  assert.equal(task.vibePreference, 'task');
+});
+
 test('[피드백 2] 오프닝에서 다른 조건으로 찾을래요 선택 시 지역 ➔ 시간 순으로 질문 키와 선택지가 일치한다', () => {
   const answersChange = extractAdaptiveAnswers(['이번엔 다른 조건으로 찾을래요 🔄']);
   assert.equal(answersChange.openingDecision, 'change');
