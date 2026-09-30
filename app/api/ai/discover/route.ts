@@ -52,9 +52,10 @@ import {
 import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 import { formatDate, formatTime, isWeekend } from '@/lib/utils/date';
+import type { ActionCardData } from '@/lib/types/view';
 
 const CHAT_PROMPT_VERSION = 'discover-chat-v11-axis-locked';
-const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v11-truth-grounding';
+const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v12-positive-sandwich';
 const MAX_USER_TURNS = 15;
 const PARTICIPATION_MODES = [
   '시간을 내서',
@@ -207,6 +208,7 @@ function filterRecommendationReason({
   meta,
   userSelectedSkills = [],
   scoringAnswers,
+  mismatchNotes = [],
 }: {
   reason: string;
   item: ScoredAction;
@@ -217,6 +219,8 @@ function filterRecommendationReason({
   } | null;
   userSelectedSkills?: string[];
   scoringAnswers: ScoringAnswers;
+  /** buildMismatchNotes()가 미리 골라준, 정직하게 언급해도 되는 불일치 사실 (없으면 날조 검증을 그대로 적용) */
+  mismatchNotes?: string[];
 }): string {
   let cleaned = reason.trim();
   if (!cleaned) return fallbackReason(item);
@@ -260,14 +264,18 @@ function filterRecommendationReason({
     return fallbackReason(item);
   }
 
-  // 3) 액션 환경(실내/실외) 왜곡 및 날조 감지:
-  // - 순수 실내 활동인데 '실외', '야외', '밖에서' 또는 '땀 흘리며'가 들어간 경우
-  if (isIndoorOnly && /실외|야외|밖에서|땀\s*흘리/.test(cleaned)) {
-    return fallbackReason(item);
-  }
-  // - 순수 실외 활동인데 '실내'가 들어간 경우
-  if (isOutdoorOnly && /실내/.test(cleaned)) {
-    return fallbackReason(item);
+  // 3) 액션 환경(실내/실외) 왜곡 및 날조 감지 — 단, mismatchNotes에 이미 담긴 정직한 환경
+  // 불일치 언급은 예외로 허용한다 (7번과 같은 이유, 2026-09-30).
+  const hasEnvironmentMismatchNote = mismatchNotes.some((n) => n.includes('활동과는 달라요'));
+  if (!hasEnvironmentMismatchNote) {
+    // - 순수 실내 활동인데 '실외', '야외', '밖에서' 또는 '땀 흘리며'가 들어간 경우
+    if (isIndoorOnly && /실외|야외|밖에서|땀\s*흘리/.test(cleaned)) {
+      return fallbackReason(item);
+    }
+    // - 순수 실외 활동인데 '실내'가 들어간 경우
+    if (isOutdoorOnly && /실내/.test(cleaned)) {
+      return fallbackReason(item);
+    }
   }
 
   // 4) 사용자가 선택하지 않은 다른 재능을 사용자가 발휘한다고 날조한 경우 감지 시 fallbackReason으로 대체
@@ -305,25 +313,121 @@ function filterRecommendationReason({
       .trim();
   }
 
-  // 7) 일정 사실 날조 검증 (기존 로직 유지)
-  if (item.action.activityStartAt) {
-    const isWk = isWeekend(item.action.activityStartAt);
-    // 평일 액션인데 주말을 지어낸 경우
-    if (!isWk && (cleaned.includes('주말') || cleaned.includes('토요일') || cleaned.includes('일요일'))) {
-      return fallbackReason(item);
-    }
-    // 주말 액션인데 평일을 지어낸 경우
-    if (isWk && (cleaned.includes('평일') || /월요일|화요일|수요일|목요일|금요일/.test(cleaned))) {
-      return fallbackReason(item);
-    }
-  } else {
-    // 일정이 미정인 액션인데 특정 요일/주말을 지어낸 경우
-    if (cleaned.includes('주말') || cleaned.includes('평일') || /월요일|화요일|수요일|목요일|금요일|토요일|일요일/.test(cleaned)) {
-      return fallbackReason(item);
+  // 7) 일정 사실 날조 검증 — 단, mismatchNotes에 이미 담긴 정직한 시간대 불일치 언급은 예외로 허용한다.
+  // (2026-09-30: 오프너-불일치-클로징 구조를 도입하면서, buildMismatchNotes()가 미리 승인한
+  // "평일에 진행되어 희망하신 주말과는 다르지만" 같은 정직한 문장까지 이 검사가 날조로 오판해서
+  // 통째로 fallbackReason으로 갈아치우는 문제가 있었다. 거짓 긍정 포장은 5)번이 이미 따로 막는다.)
+  const hasTimeMismatchNote = mismatchNotes.some((n) => n.includes('시간대'));
+  if (!hasTimeMismatchNote) {
+    if (item.action.activityStartAt) {
+      const isWk = isWeekend(item.action.activityStartAt);
+      // 평일 액션인데 주말을 지어낸 경우
+      if (!isWk && (cleaned.includes('주말') || cleaned.includes('토요일') || cleaned.includes('일요일'))) {
+        return fallbackReason(item);
+      }
+      // 주말 액션인데 평일을 지어낸 경우
+      if (isWk && (cleaned.includes('평일') || /월요일|화요일|수요일|목요일|금요일/.test(cleaned))) {
+        return fallbackReason(item);
+      }
+    } else {
+      // 일정이 미정인 액션인데 특정 요일/주말을 지어낸 경우
+      if (cleaned.includes('주말') || cleaned.includes('평일') || /월요일|화요일|수요일|목요일|금요일|토요일|일요일/.test(cleaned)) {
+        return fallbackReason(item);
+      }
     }
   }
 
+  // 8) 추천 이유는 반드시 긍정적으로 끝나야 한다 — 불일치를 정직하게 한 번 언급하는 것은
+  // 괜찮지만, 마지막 문장이 그 불일치로 끝나면 안 된다. AI가 클로징 지시를 안 지켰을 때의
+  // 안전장치로, 억지로 문장을 이어붙이지 않고 통째로 fallbackReason으로 교체한다.
+  // (2026-09-30, 팀 피드백: "~와는 맞지 않아요"로 끝나는 추천 이유가 불쾌감을 줄 수 있다)
+  const sentences = cleaned.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const lastSentence = sentences[sentences.length - 1] ?? '';
+  if (/맞지\s*않|와는?\s*달라|다른\s*점이|아쉽|어려울\s*수|부족할\s*수/.test(lastSentence)) {
+    return fallbackReason(item);
+  }
+
   return cleaned || fallbackReason(item);
+}
+
+/**
+ * item.matched(코드가 계산한 사실)에서 "왜 이 액션이 이 사람과 잘 맞는지"를
+ * 우선순위 순(관심 분야 → 활동 성격 → 재능 → 모임 규모)으로 최대 4개 뽑는다.
+ * '상관없음'류(사용자가 선호가 없던 축)는 애초에 이 라벨들과 문자열이 달라 자동으로 빠진다.
+ */
+function buildPositiveHighlights(matched: string[]): string[] {
+  const highlights: string[] = [];
+
+  const category = matched.find((m) => m.startsWith('관심 분야('));
+  if (category) highlights.push(category);
+
+  const vibe = matched.find((m) => m === '교류·소통형 활동' || m === '과업·집중형 활동');
+  if (vibe) highlights.push(vibe);
+
+  const skill = matched.find((m) => m.endsWith(' 재능 활용'));
+  if (skill) highlights.push(skill);
+
+  const groupSize = matched.find(
+    (m) => m === '10명 이내 소규모' || m === '10~20명 중그룹' || m === '20명 이상 대그룹',
+  );
+  if (groupSize) highlights.push(groupSize);
+
+  return highlights;
+}
+
+/**
+ * 사용자가 실제로 뚜렷한 선호를 밝혔는데(상관없음이 아님) 이 액션이 거기 맞지 않는 축을
+ * 정직하게 담을 사실 0~2개. 여기 없는 불일치는 AI가 새로 지어내면 안 된다 (프롬프트에서 강제).
+ */
+function buildMismatchNotes({
+  action,
+  meta,
+  scoringAnswers,
+}: {
+  action: ActionCardData;
+  meta?: { activity_types?: string[] } | null;
+  scoringAnswers: ScoringAnswers;
+}): string[] {
+  const notes: string[] = [];
+
+  const userTimes = scoringAnswers.userTimePreferences ?? [];
+  const userWantsWeekendOnly =
+    userTimes.length > 0 &&
+    userTimes.every((t) => t.includes('주말')) &&
+    !userTimes.includes('시간 상관없음');
+  const userWantsWeekdayOnly =
+    userTimes.length > 0 &&
+    userTimes.every((t) => t.includes('평일')) &&
+    !userTimes.includes('시간 상관없음');
+
+  if (action.activityStartAt) {
+    const isWk = isWeekend(action.activityStartAt);
+    if (userWantsWeekendOnly && !isWk) {
+      notes.push('평일에 진행되어 희망하신 주말 시간대와는 달라요');
+    }
+    if (userWantsWeekdayOnly && isWk) {
+      notes.push('주말에 진행되어 희망하신 평일 시간대와는 달라요');
+    }
+  }
+
+  const actTypes = meta?.activity_types ?? [];
+  const isIndoorOnly =
+    actTypes.length > 0 &&
+    actTypes.every(
+      (t) => t.includes('실내') && !t.includes('실외') && !t.includes('야외') && !t.includes('병행'),
+    );
+  const isOutdoorOnly =
+    actTypes.length > 0 &&
+    actTypes.every((t) => (t.includes('실외') || t.includes('야외')) && !t.includes('실내') && !t.includes('병행'));
+
+  if (scoringAnswers.activityTypePreference === 'outdoor' && isIndoorOnly) {
+    notes.push('실내에서 진행되어 희망하신 야외 활동과는 달라요');
+  }
+  if (scoringAnswers.activityTypePreference === 'indoor' && isOutdoorOnly) {
+    notes.push('실외에서 진행되어 희망하신 실내 활동과는 달라요');
+  }
+
+  return notes.slice(0, 2);
 }
 
 export async function POST(request: Request) {
@@ -924,6 +1028,8 @@ export async function POST(request: Request) {
       actualSchedule: scheduleStr,
       isWeekendAction: action.activityStartAt ? isWeekend(action.activityStartAt) : null,
       matchedReasons: item.matched,
+      positiveHighlights: buildPositiveHighlights(item.matched),
+      mismatchNotes: buildMismatchNotes({ action, meta, scoringAnswers }),
     };
   });
 
@@ -934,40 +1040,42 @@ export async function POST(request: Request) {
       agent: 'DISCOVER',
       promptVersion: RECOMMEND_PROMPT_VERSION,
       system: `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트입니다.
-선정된 각 액션에 대해 사용자의 성향과 대화 내용을 바탕으로 왜 이 액션이 사용자에게 꼭 맞는지 1~2문장의 다정하고 구체적인 추천 이유(reason)를 작성하세요.
+선정된 각 액션에 대해, 왜 이 액션이 이 사람에게 의미있는지 2~3문장의 다정한 추천 이유(reason)를 작성하세요.
 영어 'Action'이나 '봉사/봉사활동/수혜자' 단어를 절대 쓰지 말고 한글 '액션'으로 서술하세요.
+'사용자님'이라는 표현은 절대 쓰지 마세요 — 반드시 '사용자닉네임' 값에 '님'을 붙여 이름으로 부르세요 (예: "민호님이 관심있어 하는...").
 
-[필수 작성 규칙 및 사실 검증 원칙 - 절대 위반 금지]
+[추천 이유 구조 — 반드시 이 순서를 지키세요]
+1. 오프너(1~2문장, 항상 긍정): 각 액션의 'positiveHighlights' 배열은 이미 우선순위(관심 분야 → 활동 성격 → 재능 → 모임 규모)
+   순으로 정렬되어 있습니다. 앞에서부터 2~3개를 골라 왜 이 액션이 이 사람과 잘 맞는지 구체적으로 서술하세요.
+   이 배열에 없는 사실은 절대 지어내지 마세요.
+2. 불일치(0~1문장): 'mismatchNotes' 배열이 비어있지 않다면, "다만"/"하지만"으로 자연스럽게 이어서 배열의 내용을
+   그대로(과장하거나 새로 지어내지 말고) 딱 한 번만 정직하게 언급하세요. 배열이 비어있으면 이 문장은 통째로 생략하세요.
+3. 클로징(반드시 긍정, 1문장): 'positiveHighlights' 중 오프너에서 아직 안 쓴 항목이 있으면 그것으로, 없으면 오프너에서
+   쓴 것 중 하나를 다른 표현으로 반복해서 "~라 골라봤어요!" 처럼 다시 긍정적인 인상으로 마무리하세요.
+   ★★★ 절대로 2번(불일치) 문장을 추천 이유의 마지막 문장으로 두지 마세요. 항상 긍정 문장으로 끝나야 합니다.
+
+[예시] positiveHighlights: ["관심 분야(아동·청소년)", "교류·소통형 활동"], mismatchNotes: ["평일에 진행되어 희망하신 주말 시간대와는 달라요"]
+→ "민호님이 관심있어 하는 아동·청소년 분야이면서 사람들과 도란도란 소통할 수 있는 액션이에요. 다만 평일에 진행되어 희망하신 주말 시간대와는 조금 다르지만, 아이들과 이야기 나누는 걸 좋아하신다면 분명 잘 맞으실 거예요!"
+
+[필수 사실 검증 원칙 - 절대 위반 금지]
 
 1. ★★★ [재능 날조 및 사용자 미보유 재능 언급 절대 금지]:
-   - 오직 이 액션의 'matchedUserSkills'에 재능명이 들어있을 때만 "사용자님의 [재능명] 재능을 살려..."라고 작성할 수 있습니다.
-   - ★ [매우 중요] 'matchedUserSkills'가 빈 배열([])인 액션의 경우:
-     사용자가 선택한 재능과 이 액션의 요구 재능이 일치하지 않는 상태입니다. 액션 정보(actionRequiresSkills)에 적힌 다른 재능(예: 미술·공예, 요리, 운전 등)을 사용자가 가지고 있다고 절대 거짓 서술하지 마세요!
-     (위반 금지 예시: 교육·멘토링을 선택한 사용자에게 액션이 네일아트라고 해서 "미술·공예 재능을 활용하여 네일아트를 해보세요"라고 권유하는 것은 심각한 날조입니다.)
-     이 경우 재능에 대한 언급은 일체 하지 말고, 액션의 분야(노인 복지 등), 따뜻한 대화/정서적 교류, 활동의 보람 등 액션 본연의 특성으로만 진솔하게 추천 이유를 작성하세요.
+   - 오직 'matchedUserSkills'에 재능명이 들어있을 때만("positiveHighlights'에도 그 재능이 포함되어 있을 것입니다) 재능을 언급할 수 있습니다.
+   - 'matchedUserSkills'가 빈 배열([])이면 재능 이야기는 일체 하지 마세요. 액션 정보(actionRequiresSkills)에 적힌 다른 재능을
+     사용자가 가지고 있다고 절대 거짓 서술하지 마세요.
+     (위반 금지 예시: 교육·멘토링을 선택한 사용자에게 액션이 네일아트라고 해서 "미술·공예 재능을 활용하여..."라고 쓰는 것은 심각한 날조입니다.)
 
 2. ★★★ [활동 환경(실내/실외) 및 활동 성격 왜곡 절대 금지]:
-   - 액션의 'activityTypes'가 '실내 활동'인 경우:
-     ★ 절대로 "실외에서", "야외에서", "밖에서", "땀 흘리며" 등으로 왜곡하지 마세요! 도서 분류, 물품 정리 등은 실내 활동입니다. 사용자가 실외를 희망했더라도 액션이 실내 활동이면 환경을 실외로 속여서는 안 됩니다.
-   - 액션의 'activityTypes'가 '실외 활동'인 경우:
-     ★ 절대로 "실내에서", "아늑한 실내" 등으로 왜곡하지 마세요!
-   - '교류·소통형'이나 '육체·과업·집중형'은 활동의 '분위기/진행 방식'이지 '재능'이 아닙니다! "육체적인 재능", "집중적인 재능" 같은 해괴한 표현은 절대 사용하지 마세요.
+   - 액션의 'activityTypes'가 '실내 활동'인데 "실외에서", "야외에서", "땀 흘리며" 등으로 왜곡하지 마세요.
+   - 액션의 'activityTypes'가 '실외 활동'인데 "실내에서", "아늑한 실내" 등으로 왜곡하지 마세요.
+   - '교류·소통형'이나 '육체·과업·집중형'은 활동의 '분위기'이지 '재능'이 아닙니다. "육체적인 재능" 같은 표현 금지.
 
-3. ★★★ [희망 시간대 불일치 시 시간대 언급 및 억지 칭찬 절대 금지]:
-   - 사용자가 '주말'을 희망했는데 액션 일정이 '평일'인 경우:
-     ★ "평일이라 시간도 잘 맞을 것 같아요", "평일 오후에 진행되어..." 같은 거짓말이나 억지 칭찬을 절대 하지 마세요! 사용자가 희망하지 않은 요일이면 시간대에 대한 언급 자체를 일체 하지 마세요!
-   - 사용자가 '평일'을 희망했는데 액션 일정이 '주말'인 경우도 마찬가지로 시간대 언급을 일체 하지 마세요!
-   - 액션의 실제 요일(actualSchedule)이 사용자의 '희망시간대'와 정확히 일치할 때만 시간대 장점을 언급할 수 있습니다.
+3. ★★★ [불일치는 오직 'mismatchNotes'에 있는 것만]:
+   - 'mismatchNotes'에 없는 불일치를 새로 지어내지 마세요.
+   - 반대로 실제 불일치를 "시간도 잘 맞을 것 같아요"처럼 거짓으로 좋다고 포장하지도 마세요.
 
-4. ★★★ [조건 완화 시 진솔한 서술 원칙]:
-   - 사용자의 희망 조건(환경, 시간대, 재능 등)과 액션의 실제 정보가 일치하지 않는 경우, 불일치하는 조건을 억지로 사용자에게 맞다고 지어내지 마세요.
-   - 불일치하는 조건(환경, 시간대)은 일체 언급을 피하고, 일치하는 관심 분야나 액션 본연의 사회적 가치, 따뜻한 보람, 구체적 활동 내용만을 정직하게 서술하세요.
-
-5. [세부 모집 항목(recruitmentItems) 역할 타겟팅]:
-   - 액션의 recruitmentItems 중 사용자가 실제로 선택한 재능(matchedUserSkills)이나 역할에 부합하는 세부 파트가 있을 때만 구체적 파트명을 언급하세요.
-
-6. [사용자 '상관없음' 선택 시 변명조 문구 금지]:
-   - 사용자가 환경이나 규모, 시간을 '상관없음'으로 선택한 경우에는, '실내에서 진행되지만', '비록 ~이지만' 같은 변명조 문구를 절대 쓰지 마세요.
+4. [세부 모집 항목(recruitmentItems) 역할 타겟팅]:
+   - recruitmentItems 중 사용자가 실제로 선택한 재능(matchedUserSkills)이나 역할에 부합하는 세부 파트가 있을 때만 구체적 파트명을 언급하세요.
 
 반드시 JSON 형식으로만 답하세요:
 {"reasons": {"actionId1": "추천 이유 1", "actionId2": "추천 이유 2", ...}}`,
@@ -1017,6 +1125,7 @@ export async function POST(request: Request) {
       meta,
       userSelectedSkills,
       scoringAnswers,
+      mismatchNotes: buildMismatchNotes({ action: item.action, meta, scoringAnswers }),
     });
 
     return {
