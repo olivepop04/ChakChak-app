@@ -13,7 +13,9 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { Lock } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
 import { getLoginNotice } from '@/lib/utils/auth-notice';
@@ -55,18 +57,26 @@ function LoginForm() {
     router.refresh();
   }
 
+  // 2026-09-30 Day19 인증군 통일안 — 글자 「착착」 → 메인 로고(CHAK CHAK · 두 얼굴) 폭 144px 가운데,
+  // 위 여백 72px · 로고 묶음 아래 48px(소정님 목업에서 직접 조정한 값) · 태그라인은 홈과 같은 문구(조장 승인)
   return (
-    <main className="flex min-h-dvh flex-col px-6 pb-8 pt-8">
-      <div className="mb-8">
-        <p className="text-2xl font-bold tracking-tight text-neutral-900">착착</p>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-500">
-          착한 일을 착착,
-          <br />
-          쉽고 즐겁게!
+    <main className="flex min-h-dvh flex-col px-6 pb-8 pt-[72px]">
+      <div className="mb-12 flex flex-col items-center text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/chakchak-logo.svg"
+          alt="착착"
+          width={144}
+          height={71}
+          className="h-auto w-36"
+        />
+        <p className="mt-4 text-body leading-relaxed text-neutral-500">
+          착착 쌓이는 착한 일
         </p>
 
         {notice && (
-          <p className="mt-5 rounded-xl bg-neutral-100 px-4 py-3 text-label leading-relaxed text-neutral-700">
+          <p className="mt-5 flex w-full items-center gap-2 rounded-xl bg-neutral-100 px-4 py-3 text-left text-label leading-relaxed text-neutral-700">
+            <Lock className="h-4 w-4 flex-none text-neutral-500" aria-hidden="true" />
             {notice}
           </p>
         )}
@@ -86,8 +96,7 @@ function LoginForm() {
 
         <label className="flex flex-col gap-1.5">
           <FieldLabel>비밀번호</FieldLabel>
-          <Input
-            type="password"
+          <PasswordInput
             required
             autoComplete="current-password"
             value={password}
@@ -110,7 +119,7 @@ function LoginForm() {
         아직 계정이 없나요?{' '}
         <Link
           href={withNext('/signup', next)}
-          className="font-semibold text-neutral-900 underline"
+          className="font-semibold text-[#333333] underline"
         >
           가입하기
         </Link>

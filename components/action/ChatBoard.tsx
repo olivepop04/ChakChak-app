@@ -13,7 +13,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, MessageCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { postChatMessage, deleteChatMessage } from '@/lib/mutations';
 import { Avatar } from '@/components/ui/Avatar';
@@ -61,7 +61,7 @@ function ChatMessageRow({
             @{author.nickname}
           </span>
           {kind === 'LEFT_NOTICE' && (
-            <span className="shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
+            <span className="shrink-0 rounded bg-[#F0F0F0] px-1.5 py-0.5 text-[10px] font-bold text-neutral-400">
               참여 취소
             </span>
           )}
@@ -89,7 +89,7 @@ function ChatMessageRow({
             <button
               type="button"
               onClick={onDelete}
-              className="ml-auto text-caption text-neutral-400 hover:text-red-500"
+              className="ml-auto text-caption text-neutral-400 hover:text-danger"
             >
               삭제
             </button>
@@ -170,7 +170,7 @@ export function ChatBoard({
     <div className="pb-44">
       {posts.length === 0 ? (
         <EmptyState
-          icon="💬"
+          icon={MessageCircle}
           title="아직 올라온 글이 없어요"
           description="첫 글을 남겨 이야기를 시작해보세요."
         />

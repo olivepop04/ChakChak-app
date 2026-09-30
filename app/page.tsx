@@ -5,7 +5,7 @@
  * user!.id 처럼 강제로 단언하지 마세요. 비회원이 열면 터집니다.
  */
 import Link from 'next/link';
-import { Bell } from 'lucide-react';
+import { Bell, Sprout } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getActionFeed } from '@/lib/queries/actions';
 import { getUnreadCount } from '@/lib/queries/notifications';
@@ -128,12 +128,12 @@ export default async function HomePage({
       {/* 피드 */}
       {actions.length === 0 ? (
         <EmptyState
-          icon="🌱"
+          icon={Sprout}
           title={
             selected ? `${selected} 액션이 아직 없어요` : '아직 해당 액션이 없어요'
           }
           description="첫 번째 액션을 만들어 함께할 사람을 모아보세요."
-          action={{ label: '액션 만들기', href: '/action/create' }}
+          action={{ label: '액션 만들기', href: '/action/create', variant: 'primary' }}
         />
       ) : (
         <div className="flex flex-col gap-4 px-6">

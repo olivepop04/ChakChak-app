@@ -228,7 +228,7 @@ export function JoinForm({
               </label>
 
               {!genderOk && (
-                <p className="mt-2 pl-8 text-label font-medium text-red-600">
+                <p className="mt-2 pl-8 text-label font-medium text-danger">
                   성별 조건이 맞지 않아 참여할 수 없어요.
                 </p>
               )}
@@ -301,7 +301,7 @@ export function JoinForm({
       )}
 
       {error && (
-        <p className="rounded-xl bg-red-50 px-3 py-2.5 text-label text-red-600">
+        <p className="rounded-xl bg-danger-soft px-3 py-2.5 text-label text-danger">
           {error}
         </p>
       )}

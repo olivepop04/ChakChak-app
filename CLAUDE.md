@@ -528,7 +528,7 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 | `app/api/ai/review/` | `PROMPT_VERSION` | `review-v7` |
 | `app/api/ai/classify/` — 규칙은 `lib/ai/classify-spec.ts` | `CLASSIFY_PROMPT_VERSION` | `classify-v4` |
 | `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v3` |
-| `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-chat-v8-chip-zero-assumption` · `discover-recommend-v8-100pt-scoring` |
+| `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-chat-v10-flow-integrity` · `discover-recommend-v11-truth-grounding` |
 
 **번호는 올리기만 하세요.** 이름을 바꾸면서 숫자가 내려가면(`v7` → `v3`) 발표 자료에서 어느 쪽이 나중인지 헷갈립니다.
 **분류 지시문·답 검사·허용 목록은 `lib/ai/classify-spec.ts` 한 곳입니다.** 공개 때 분류(라우트)와
@@ -700,7 +700,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 |---|---|
 | 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/classify-core.mjs`** · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · `README.md` · `CLAUDE.md`) |
 | 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` · **`app/discover/`** · **`app/api/ai/discover/`** · **`lib/utils/scoring.ts`** · **`lib/utils/discover-ranking.ts`** |
-| 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · **`app/not-found.tsx`** · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` · **`postcss.config.mjs`** |
+| 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · **`app/not-found.tsx`** · **`app/error.tsx`** · **`app/global-error.tsx`** · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` · **`postcss.config.mjs`** |
 | 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · **`components/my/`** · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` |
 | 개발 B | `app/action/create/` · `app/action/[id]/` 하위 (join · welcome · crew · chat · **edit** · result · voice) |
 | 공유 | `tests/` — **누구나 추가**할 수 있습니다. 남의 담당 로직 테스트를 **고칠** 때는 그 담당에게 말하세요 |
@@ -797,7 +797,7 @@ F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `
 
 **입력칸 공통 컴포넌트가 생겼습니다** — `components/ui/Input.tsx` (2026-09-22, 소정님).
 전에는 이것이 없어서 같은 `min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px]`
-이 16개 파일에 복사돼 있었습니다. 지금 4개 파일이 `Input` 을 씁니다(2026-09-28 — 9/25 에 `SharePanel` 이 빠짐). 손으로 적은 곳은 9/22 기준 12개였습니다.
+이 16개 파일에 복사돼 있었습니다. 지금 5개 파일이 `Input` 을 씁니다(2026-09-29 — 비밀번호 칸 `PasswordInput` 이 `Input` 위에 만들어져 하나 늘었습니다). 손으로 적은 곳은 9/22 기준 12개였습니다.
 **새로 만드는 입력칸은 손으로 짜지 말고 `Input` 을 쓰세요.** 남은 12개는 손대는 화면이
 생길 때 하나씩 옮기면 됩니다 — 그것만으로 다음 타이포·높이 통일 작업이 1파일이 됩니다.
 같은 PR 로 `Chip` 에 `size="sm"` 이, `Button` 에 `href`(링크로 렌더) 가 들어왔고
@@ -822,7 +822,7 @@ F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `
 
 | 언제 | 왜 |
 |---|---|
-| **`components/ui/` · `components/layout/` · `lib/` 을 건드릴 때** — 화면 하나짜리 작업이든 아니든 | 이 세 곳은 쓰는 쪽이 전부 남의 화면입니다. `Header.tsx` 하나가 22개 화면에 걸칩니다 |
+| **`components/ui/` · `components/layout/` · `lib/` 을 건드릴 때** — 화면 하나짜리 작업이든 아니든 | 이 세 곳은 쓰는 쪽이 전부 남의 화면입니다. `Header.tsx` 하나가 23개 화면에 걸칩니다 |
 | **앱 전체에 같은 패턴을 한 번에 쓸어담는 작업** | 위 표(제목 통일 · 버튼 높이)의 그 종류입니다. 나눠 고치면 패턴이 갈립니다 |
 
 실제 사례 — `a39a673`(Foundations 반영)은 **16파일**이었고 그중 **8개가 남의 구역**이었습니다
@@ -832,7 +832,7 @@ F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `
 **위 첫 번째 조건에는 해당**합니다.
 
 **`components/ui/` · `components/layout/` · `lib/` 은 공유 구역입니다.** 고칠 때는 먼저 말해주세요.
-`components/layout/Header.tsx` 는 **22개 화면이 씁니다** (2026-09-28 — 참여 완료 화면이 빠짐) — 다섯 담당 전원의 구역에 걸칩니다.
+`components/layout/Header.tsx` 는 **23개 화면이 씁니다** (2026-09-29 — 약관·개인정보 화면이 공용 상단 바로 바뀜. 9/28 에는 22) — 다섯 담당 전원의 구역에 걸칩니다.
 파일은 디자이너 것이지만, 여기를 고치면 남의 화면 상단 바가 전부 바뀝니다.
 (형제 파일 `BottomNav.tsx` 는 `app/layout.tsx` 한 곳에서만 쓰므로 해당 없습니다.)
 예외 — 위 표에 적힌 `lib/` 파일 4개(`stats.ts` · `regions.ts` · `scoring.ts` · `discover-ranking.ts`)는 각 담당이 바로 고쳐도 됩니다.

@@ -6,7 +6,7 @@
  */
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { ChevronRight, MessageSquareQuote, UsersRound } from 'lucide-react';
+import { ChevronRight, Lock, MessageSquareQuote, UsersRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getActionCrew, groupCrewByItem } from '@/lib/queries/participations';
 import { Avatar } from '@/components/ui/Avatar';
@@ -88,7 +88,7 @@ export default async function CrewPage({
       <main>
         <Header title="함께하는 크루" back backHref={`/action/${id}`} />
         <EmptyState
-          icon="🔒"
+          icon={Lock}
           title="참여한 사람만 볼 수 있어요"
           description="이 액션에 참여하면 함께하는 크루를 볼 수 있어요."
           action={{ label: '액션 보러 가기', href: `/action/${id}` }}
@@ -126,7 +126,7 @@ export default async function CrewPage({
         </ul>
         {crew.length === 0 && (
           <EmptyState
-            icon="👋"
+            icon={UsersRound}
             title="아직 함께하는 크루가 없어요"
             description="가장 먼저 참여한 사람이 되어보세요."
           />
