@@ -484,7 +484,8 @@ export function DiscoverChat({
       {!loading && items === null && (
         <div className="flex flex-col gap-2.5 pt-1">
           {options.length > 0 && isSkillSelection ? (
-            <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-50/80 p-4">
+            // 복수 선택 판 — 화면 폭 100% 회색 판 → 내 답변 말풍선처럼 오른쪽·내용 폭(최대 80%)·연한 초록 (2026-09-30, 시간 판도 같음)
+            <div className="ml-auto flex w-fit max-w-[80%] flex-col gap-3 rounded-xl rounded-br-sm bg-brand-soft p-4">
               <div className="flex items-center justify-between">
                 <span className="text-label font-bold text-neutral-900">
                   나눌 수 있는 재능을 모두 골라보세요 (복수 선택)
@@ -531,7 +532,7 @@ export function DiscoverChat({
               </div>
             </div>
           ) : options.length > 0 && isTimeSelection ? (
-            <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-50/80 p-4">
+            <div className="ml-auto flex w-fit max-w-[80%] flex-col gap-3 rounded-xl rounded-br-sm bg-brand-soft p-4">
               <div className="flex items-center justify-between">
                 <span className="text-label font-bold text-neutral-900">
                   참여하기 편한 시간을 모두 골라보세요 (복수 선택)
@@ -578,7 +579,8 @@ export function DiscoverChat({
               </div>
             </div>
           ) : options.length > 0 ? (
-            <div className="flex flex-wrap justify-end gap-2">
+            // 하나만 고르는 질문(지역·관심 분야 등)도 복수 선택 판과 같은 초록 말풍선 판 안에 (2026-09-30)
+            <div className="ml-auto flex w-fit max-w-[80%] flex-wrap justify-end gap-2 rounded-xl rounded-br-sm bg-brand-soft p-4">
               {options.map((option) => (
                 <Chip
                   key={option}
