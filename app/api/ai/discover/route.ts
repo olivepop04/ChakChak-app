@@ -45,17 +45,15 @@ import {
   validateHarmfulSkillInput,
   formatSummaryChips,
   resolveUnifiedCategories,
-  normalizeQuestionKey,
   ALL_15_SKILLS,
   CHEERING_OR_CASUAL_REGEX,
   type QuestionKey,
-  type UserStateCategory,
 } from '@/app/api/ai/discover/interview';
 import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
 import { formatDate, formatTime, isWeekend } from '@/lib/utils/date';
 
-const CHAT_PROMPT_VERSION = 'discover-chat-v10-flow-integrity';
+const CHAT_PROMPT_VERSION = 'discover-chat-v11-axis-locked';
 const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v11-truth-grounding';
 const MAX_USER_TURNS = 15;
 const PARTICIPATION_MODES = [
@@ -74,33 +72,13 @@ const ChatRequestSchema = z.object({
   messages: z.array(ChatMessageSchema).max(MAX_USER_TURNS * 2).default([]),
 });
 
-const ConversationSchema = z.object({
-  reply: z.string().trim().min(1).max(1000),
-  question_key: z
-    .enum([
-      'opening',
-      'categories',
-      'target_groups',
-      'difficulty',
-      'skills',
-      'activity_types',
-      'participation_modes',
-      'talent_preference',
-      'activity_type',
-      'vibe_preference',
-      'group_size',
-      'field_preference',
-      'travel_range',
-      'time_pref',
-      'participation_mode',
-    ])
-    .nullable()
-    .catch(null)
-    .default(null),
-  enough: z.boolean().catch(false).default(false),
-  options: z.array(z.string().trim().min(1).max(50)).max(25).catch([]).default([]),
-  categories: z.array(z.string()).catch([]).default([]),
-  participation_mode: z.enum(PARTICIPATION_MODES).nullable().catch(null).default(null),
+/**
+ * 다음 질문 축은 getRemainingQuestionKeys() 가 이미 결정한다 (interview.ts, 수정하지 않음).
+ * AI 에게는 축 선택도 질문 문구도 맡기지 않는다 — 직전 답변에 대한 짧은 공감 한 줄만 받는다.
+ * 질문 본문·선택지는 항상 getQuestionReply()/getQuestionOptions() 템플릿을 쓴다.
+ */
+const AcknowledgmentSchema = z.object({
+  acknowledgment: z.string().trim().max(200).catch('').default(''),
 });
 
 const RecommendationSchema = z.object({
@@ -109,95 +87,31 @@ const RecommendationSchema = z.object({
 });
 
 type ChatMessage = z.infer<typeof ChatMessageSchema>;
-type Conversation = z.infer<typeof ConversationSchema>;
 
 const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트 '착착 Discover'입니다.
-모든 사용자는 로그인된 정회원입니다. 사용자의 활동 이력과 프로필 상태에 맞춰 최적의 액션을 찾기 위해 대화를 편안하고 자연스럽게 이끌어갑니다.
+모든 사용자는 로그인된 정회원입니다.
 반드시 JSON 형식으로만 답하세요.
 
-[핵심 서비스 규칙 (절대 위반 금지)]
-1. 영어 'Action'을 절대 쓰지 말고 반드시 한글 '액션'으로 표기하세요.
-2. '봉사', '봉사활동', '봉사자', '수혜자' 단어를 일체 사용하지 마세요. (나눔, 함께하기, 활동, 크루 등으로 순화)
-3. 활동 지역 옵션에 '비대면/온라인'은 절대 넣지 마세요. (지역은 1곳 단일 선택 또는 전국/상관없음)
-4. 사용자가 언제 방문했는지(접속 여부)를 추측하는 발언("오랜만에 오셨네요", "그동안 잘 지내셨나요" 등)은 절대 하지 마세요.
-5. 지난 특정 액션 제목을 일일이 언급하며 "참여는 즐거우셨나요?" 같은 사적인 감상을 묻지 마세요.
-6. 없는 사실이나 사용자 정보를 추측하거나 임의로 지어내지 마세요. 프로필에 재능이 없는 사용자(나눌수있는재능이 비어있거나 '등록된 재능 없음')에게 절대 "프로필에 재능이 있다"고 말하거나 임의의 재능(청소·정리, 요리 등)을 지어내지 마세요.
-7. 말풍선(reply) 본문에 선택지 항목이나 예시 목록(불릿 기호 -, •, * 등)을 절대 나열하지 마세요. 모든 선택지는 화면 하단 선택 버튼(options)으로만 노출됩니다. 말풍선에는 질문과 다정한 안내 멘트(1~2문장)만 간결하게 작성하세요.
-8. 재능(skills) 질문의 options 배열 및 멘트:
-   - 프로필에 재능이 실제로 등록되어 있는 사용자에게 처음 물을 때만 2지선다 ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"]를 제공하고, 멘트는 "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?"로 작성하세요.
-   - 프로필에 등록된 재능이 없는 사용자(신규가입자 등) 또는 사용자가 "다른 재능으로 할게요"를 선택한 경우:
-     ★ 절대로 "프로필에 재능이 있다"고 말하지 마세요!
-     ★ 반드시 "{nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요"라고 안내하고, options는 사전 정의된 ${SKILLS.length + 1}종 목록 ${JSON.stringify([...SKILLS, '기타'])}을 정확히 제공하세요.
-9. question_key는 반드시 시스템이 제공한 '남은질문' 배열에 존재하는 키 중에서만 선택해야 합니다. 남은질문에 없는 질문 키(예: 난이도에서 '기초 체력 필요'나 '누구나 참여가능'을 선택하여 재능 질문이 생략된 상황에서 "skills")를 반환하는 것은 엄격히 금지됩니다.
+[당신이 할 일 — 딱 하나]
+다음 질문은 시스템이 이미 정해서 화면에 별도로 보여줍니다. 당신은 사용자의 직전 답변에 대한
+짧은 공감·확인 한 줄(acknowledgment)만 씁니다. 질문을 새로 하지 마세요. 선택지를 언급하거나
+나열하지 마세요. 굳이 덧붙일 말이 없으면 빈 문자열("")을 반환해도 됩니다.
 
-[★ 대화 태도 및 맞장구/질문 규칙 (매우 중요 — 손발 오그라드는 칭찬 금지)]
-1. 기계적이고 상투적인 칭찬 절대 금지:
-   - "~하신다니 정말 좋은 선택이에요!", "~을 선택하시다니 정말 멋져요!", "탁월한 선택이에요!" 같은 판에 박힌 칭찬 멘트를 절대 남발하지 마세요.
-   - 지역, 시간대, 활동 환경(실내/실외), 인원 규모 같은 물리적/객관적 조건 선택은 칭찬의 대상이 아닙니다. 담백하게 접수하고 확인하는 브릿지 멘트만 작성하세요.
-     - 좋은 예: "서울특별시 지역으로 찾아볼게요. 📍", "전국 어디서나 참여할 수 있는 액션으로 살펴볼게요. 🌏", "주말 시간대로 체크해둘게요. ⏰", "실내에서 진행되는 활동 위주로 찾아볼게요."
-     - 나쁜 예: "서울특별시에서 활동하신다니 정말 좋은 선택이에요! 😊", "주말 오후라니 정말 멋진 시간대예요!" (손발이 오그라드는 과장된 칭찬 금지)
-2. 주관적 성향/가치관(카테고리, 활동 분위기)에만 자연스러운 공감:
-   - 예: "동물들과 교감하는 시간을 좋아하시는군요! 🐾", "이웃들과 도란도란 소통하는 활동을 선호하시는군요. 😊", "땀 흘리며 성취감을 느끼는 활동에 맞춰볼게요."
-3. 어색한 번역투 접속사 및 접두사 금지:
-   - 질문 문두에 '이제', '자 그럼', '보통' 등을 기계적으로 붙이지 마세요. 한국어 구어체로 매끄럽고 명확하게 질문하세요.
-     - 나쁜 예: "이제 보통 언제 참여하기 편하신가요?"
-     - 좋은 예: "활동하기 편한 요일이나 시간대가 있으신가요? (복수 선택 가능)"
-
-[질문 순서 및 분기 제어 시나리오 (우선순위 0~5)]
-대화는 아래 우선순위에 따라 순서대로 진행합니다. 이미 파악되었거나 스킵 조건에 해당하는 질문은 절대 반복하지 마세요.
-
-0. 오프닝 및 지역/시간 상시 확인 (모든 유저 공통):
-   - 프로필에 지역과 시간이 등록되어 있는 경우:
-     - 멘트: "안녕하세요, {nickname}님! 😊 {nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 기본 조건을 확인해 봤어요.\n\n📍 활동 지역 : {profileRegion}\n⏰ 선호 시간 : {profileTimesSummary}\n\n이 조건 그대로 액션을 찾아드릴까요?"
-     - options: ["네, 이 조건으로 찾을게요 👍", "이번엔 다른 조건으로 찾을래요 🔄"]
-   - 프로필에 지역이나 시간이 없는 경우 (신규가입자 등):
-     - 첫 질문 (지역 확인):
-       - 멘트: "안녕하세요, {nickname}님! 만나서 반가워요. 😊 {nickname}님에게 딱 맞는 액션을 찾아드리기 위해 활동하실 지역과 시간을 먼저 확인하고 싶어요.\n\n먼저, 이번에 주로 활동하고 싶은 지역을 알려주세요."
-       - options: ["활동할 지역 선택하기 📍", "지역 상관없이 전국 액션 볼래요 🌏"]
-     - 지역 선택 후 시간대가 미확인된 경우:
-       ★ 반드시 다음 질문으로 선호 시간대(time_pref)를 물어보세요!
-       - 멘트: "활동하기 편한 요일이나 시간대가 있으신가요? (복수 선택 가능)"
-       - options: ["주말 오전", "주말 오후", "평일 낮", "평일 저녁", "시간 상관없음"]
-
-1. 카테고리 (categories) - 분야 선택:
-   - 프로필 관심 분야나 과거 활동 이력이 있는 경우 ({unifiedCategories}):
-     - 멘트: "{nickname}님의 프로필 관심분야와 지난 활동들을 살펴보니 [{unifiedCategories}] 분야에 주로 관심과 경험이 있으시네요. 이번에도 이 분야 위주로 찾아드릴까요?" (프로필만 있는 경우 "프로필 관심 분야인 [{profileCategories}]", 활동 이력만 있는 경우 "지난 활동들을 살펴보니 [{historyCategories}]")
-     - options: ["같은 분야로 찾을래요 👍", "새로운 분야에 도전해볼래요 ✨"]
-     - ("새로운 분야" 선택 시: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"])
-   - 활동 이력도 없고 프로필 관심 분야도 없는 신규 회원인 경우:
-     - 멘트: "어떤 분야의 활동에 가장 관심이 가시나요?"
-     - options: ["동물", "환경", "지역사회", "아동·청소년", "노인", "장애", "교육", "기타", "상관없음"]
-   - ★★★ [카테고리 선택 완료 후 필수 규칙 - 절대 위반 금지]:
-     사용자가 카테고리 목록에서 특정 분야(예: 장애, 환경, 동물, 노인 등)를 선택했거나 응답한 직후에는:
-     ★ 절대로 "이번에도 이 분야 위주로 찾아드릴까요?"라며 카테고리를 다시 묻지 마세요! (이미 분야 선택이 완료되었습니다)
-     ★ 선택한 분야에 대해 담백한 공감 한마디(예: "장애 이웃과 함께하는 따뜻한 나눔을 찾아볼게요. 🤝")를 한 뒤,
-     ★ 반드시 다음 순서인 2번 활동 성격 및 분위기(target_groups) 질문을 질문해야 합니다! (question_key: "target_groups")
-
-2. 활동 성격 및 분위기 (target_groups):
-   - 멘트: "{nickname}님이 더 선호하는 활동 분위기는 어떤 쪽인가요? 사람들과 도란도란 소통하고 정을 나누는 활동이 좋으세요, 아니면 땀 흘리고 손발을 맞춰 집중하는 활동이 좋으세요?"
-   - options: ["교류·교육·소통형", "육체·과업·집중형", "상관없음"]
-
-3. 난이도 (difficulty) & 재능 (skills) [★ 조건부 분기]:
-   - 멘트: "액션에 따라 난이도가 다를 수 있어요. 선호하는 참여 스타일이 있으신가요?"
-   - options: ["누구나 참여가능", "기초 체력 필요", "전문지식/자격/재능 활용", "상관없음"]
-   - [필수 규칙] 사용자가 '누구나 참여가능' 또는 '기초 체력 필요'를 선택한 경우:
-     ★ 절대로 재능(skills) 질문을 하지 마세요! question_key를 "skills"로 반환하지 마세요!
-     ★ 재능 질문을 완전히 생략하고 즉시 4번 활동 환경(activity_types) 질문으로 전진해야 합니다! (question_key: "activity_types")
-   - 사용자가 '전문지식/자격/재능 활용'을 선택한 경우에만 재능(skills) 질문으로 이동합니다.
-     - 프로필에 등록된 재능이 있는 경우: "프로필에 [{userSkills}] 재능이 있다고 알려주셨는데, 이 재능을 살릴 수 있는 액션을 찾아볼까요?" (options: ["예, 그럴게요 👍", "아니요, 다른 재능으로 할게요 🔄"])
-     - 프로필에 등록된 재능이 없는 경우(신규가입자 등) 또는 '다른 재능으로 할게요' 선택 시: "나눌 수 있는 재능을 골라주시면, 맞춤 액션으로 연결해 드릴게요. 😊 {nickname}님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요." (options: ${SKILLS.length + 1}종 재능 목록)
-
-4. 활동 환경 (activity_types):
-   - 멘트: 직전에 사용자가 재능을 선택한 경우 "알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨"를 앞머리에 붙이고, "어떤 공간이나 환경에서 활동하기 편하세요?"라고 질문하세요. (재능 중 하나만 임의로 골라 대표로 지정하지 마세요)
-   - options: ["실내 활동", "실외 활동", "상관없음"]
-
-5. 모임 규모 (participation_modes) 및 추천 전환:
-   - 멘트: "함께하는 크루 규모는 어느 정도가 편하세요?"
-   - options: ["10명 이내 소그룹", "10~20명 중그룹", "20명 이상 대그룹", "상관없음"]
-   - 주요 선호 조건이 충분히 파악되었거나 사용자가 추천을 요청하면 "enough": true로 설정하여 추천 단계로 넘기세요.
+[절대 규칙]
+1. 영어 'Action'을 쓰지 말고 반드시 한글 '액션'으로 표기하세요.
+2. '봉사', '봉사활동', '봉사자', '수혜자' 단어를 쓰지 마세요. (나눔, 함께하기, 활동, 크루 등으로 순화)
+3. 없는 사실이나 사용자 정보를 추측하거나 지어내지 마세요 (재능, 최근 방문 여부, 과거 활동에 대한
+   사적인 감상 등). 프로필에 재능이 없는 사용자에게 "재능이 있다"고 말하지 마세요.
+4. 지역·시간대·실내외·인원 규모 같은 물리적/객관적 조건 선택에는 "정말 좋은 선택이에요!" 같은
+   상투적 칭찬을 하지 말고, 담백하게 접수하는 한 줄만 쓰세요.
+     - 좋은 예: "서울특별시 지역으로 찾아볼게요. 📍", "주말 시간대로 체크해둘게요. ⏰"
+     - 나쁜 예: "서울특별시에서 활동하신다니 정말 좋은 선택이에요! 😊"
+5. 분야·활동 분위기 같은 주관적 성향에는 자연스러운 공감을 짧게 담아도 됩니다.
+     - 예: "동물들과 교감하는 시간을 좋아하시는군요! 🐾"
+6. '이제', '자 그럼', '보통' 같은 번역투 접두사를 쓰지 마세요.
 
 [응답 형식 (반드시 JSON)]
-{"reply":"사용자 응답에 대한 담백한 확인/공감 + 다음 질문 텍스트","question_key":"categories","enough":false,"options":["..."]}`;
+{"acknowledgment":"직전 답변에 대한 담백한 확인/공감 한 줄, 또는 빈 문자열"}`;
 
 const RECOMMEND_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 전문 AI 에이전트입니다.
 프로젝트의 '콘텐츠 자동 분류·색인 시스템'에 의해 생성된 각 액션의 7대 AI 색인 메타데이터와 사용자의 대화 및 성향을 비교하여 가장 부합하는 최적의 액션 3개를 선정합니다.
@@ -232,33 +146,22 @@ function extractSkillsAnswer(messages: ChatMessage[]): string[] | null {
   return selected.length > 0 ? [...selected] : null;
 }
 
-function fallbackConversation({
+/**
+ * 대화에서 명시적으로 뽑히지 않은 관심 분야·참여 방식을 자유 텍스트에서 보조로 추정한다.
+ * adaptiveAnswers(interview.ts)가 못 잡은 경우에만 쓰이는 마지막 보조 수단이다.
+ */
+function deriveConditionsFromText({
   messages,
-  nickname,
-  answers,
-  profileSkills,
-  selectedSkills,
   fieldReferenceCategories,
-  hasHistory,
   profileCategories,
-  questionKey,
-  userState,
-  knownFacts,
-  pastActivitySummary,
 }: {
   messages: ChatMessage[];
-  nickname: string;
-  answers: ReturnType<typeof extractAdaptiveAnswers>;
-  profileSkills: readonly string[];
-  selectedSkills: readonly string[];
   fieldReferenceCategories: Category[];
-  hasHistory: boolean;
   profileCategories: string[];
-  questionKey: QuestionKey | null;
-  userState?: UserStateCategory;
-  knownFacts?: string[];
-  pastActivitySummary?: string;
-}): Conversation {
+}): {
+  categories: string[];
+  participationMode: (typeof PARTICIPATION_MODES)[number] | null;
+} {
   const userText = messages
     .filter((message) => message.role === 'user')
     .map((message) => message.content)
@@ -289,46 +192,7 @@ function fallbackConversation({
     participationMode = '내 재능으로';
   }
 
-  if (questionKey) {
-    return {
-      reply: getQuestionReply(questionKey, {
-        nickname,
-        answers,
-        profileSkills,
-        selectedSkills,
-        fieldReferenceCategories,
-        hasHistory,
-        userState,
-        knownFacts,
-        pastActivitySummary,
-        profileCategories: profileCategories ?? [],
-      }),
-      question_key: questionKey,
-      enough: false,
-      options: getQuestionOptions(questionKey, SKILLS, userState, true, {
-        hasHistory,
-        answers,
-        profileSkills,
-        profileCategories: profileCategories ?? [],
-      }),
-      categories,
-      participation_mode: participationMode,
-    };
-  }
-
-  return {
-    reply: getRecommendationReply({
-      nickname,
-      answers,
-      selectedSkills,
-      fieldReferenceCategories,
-    }),
-    question_key: null,
-    enough: true,
-    options: [],
-    categories,
-    participation_mode: participationMode,
-  };
+  return { categories, participationMode };
 }
 
 function allowedCategories(values: string[]): Category[] {
@@ -508,18 +372,13 @@ export async function POST(request: Request) {
   const allPastActions = [...participatedHistory, ...validCreatedActions];
 
   // {통합분야} 도출: 프로필 관심분야와 과거 활동 빈도 패턴 분석
-  const {
-    unifiedCategories,
-    primaryHistoryCategories,
-    hasHistory,
-  } = resolveUnifiedCategories({
+  const { unifiedCategories, hasHistory } = resolveUnifiedCategories({
     profileCategories: profile.categories,
     pastActions: allPastActions,
     maxCount: 3,
   });
 
   const fieldReferenceCategories = allowedCategories(unifiedCategories);
-  const historyCategories = primaryHistoryCategories;
   const history = allPastActions;
 
   const historyActionIds = history.map((action) => action.id);
@@ -604,139 +463,32 @@ export async function POST(request: Request) {
     });
   }
 
-  let conversation: Conversation;
-  let isAiSuccess = false;
-  try {
-    const rawProfileSkills = profile.skills ?? [];
-    const profileSkillsStr = rawProfileSkills.length > 0 ? rawProfileSkills.join(', ') : '없음';
-    const rawProfileCats = (profile.categories ?? []).filter((c) => c !== '전체');
-    const profileCatsStr = rawProfileCats.length > 0 ? rawProfileCats.join(', ') : '없음';
-    const historyCatsStr = historyCategories.length > 0 ? historyCategories.join(', ') : '없음';
-    const unifiedCatsStr = unifiedCategories.length > 0 ? unifiedCategories.join(', ') : '없음';
-    const dynamicSystem = CHAT_SYSTEM
-      .replace(/\{userSkills\}/g, profileSkillsStr)
-      .replace(/\{profileCategories\}/g, profileCatsStr)
-      .replace(/\{historyCategories\}/g, historyCatsStr)
-      .replace(/\{unifiedCategories\}/g, unifiedCatsStr);
-
-    conversation = await callStructuredAI({
-      agent: 'DISCOVER',
-      promptVersion: CHAT_PROMPT_VERSION,
-      system: dynamicSystem,
-      temperature: 0.7,
-      user: JSON.stringify({
-        사용자: profile.nickname,
-        사용자상태: userContext.state,
-        상태설명: userContext.stateLabel,
-        이미알고있는사실: userContext.knownFacts,
-        프로필: {
-          관심카테고리: profile.categories,
-          활동지역: userContext.profileRegion,
-          선호시간대: userContext.profileTimesSummary,
-          나눌수있는재능: rawProfileSkills.length > 0 ? rawProfileSkills : '등록된 재능 없음 (신규가입자)',
-          자기소개: profile.bio,
-        },
-        지난활동: history.slice(0, 3).map((action) => {
-          const meta = pastMetaMap.get(action.id);
-          return {
-            제목: action.title,
-            카테고리: action.category,
-            활동환경: meta?.activity_types?.[0] ?? null,
-            모임성격: meta?.target_groups?.[0] ?? null,
-            인원규모: meta?.participation_modes?.[0] ?? null,
-            활용재능: meta?.skills ?? [],
-          };
-        }),
-        사용자답변수: userTurnCount,
-        남은질문: remainingQuestionKeys,
-        대화: messages,
-      }),
-      schema: ConversationSchema,
-      userId: user.id,
-    });
-    isAiSuccess = true;
-  } catch {
-    conversation = fallbackConversation({
-      messages,
-      nickname: profile.nickname,
-      answers: adaptiveAnswers,
-      profileSkills: profile.skills ?? [],
-      selectedSkills,
-      fieldReferenceCategories,
-      hasHistory,
-      profileCategories: profile.categories,
-      questionKey: fallbackQuestionKey,
-      userState: userContext.state,
-      knownFacts: userContext.knownFacts,
-      pastActivitySummary: userContext.pastActivitySummary,
-    });
-  }
-
-  let chosenQuestionKey: QuestionKey = fallbackQuestionKey ?? 'categories';
-
-  if (isAiSuccess && conversation.question_key) {
-    chosenQuestionKey = conversation.question_key;
-  } else if (isAiSuccess && conversation.reply) {
-    const replyText = conversation.reply;
-    if (/모임 규모|인원|소규모|중규모|대규모|크루의 규모/.test(replyText)) {
-      chosenQuestionKey = 'participation_modes';
-    } else if (/난이도|문턱|어떤 스타일을 원하세요|체력/.test(replyText)) {
-      chosenQuestionKey = 'difficulty';
-    } else if (/환경|실내|실외|야외|어떤 환경/.test(replyText)) {
-      chosenQuestionKey = 'activity_types';
-    } else if (/분위기|스타일|성격|교류|소통|과업|집중/.test(replyText)) {
-      chosenQuestionKey = 'target_groups';
-    } else if (/분야|카테고리|관심사|비슷한 분야|새로운 분야/.test(replyText)) {
-      chosenQuestionKey = 'categories';
-    } else if (/장소|지역|이동 범위|거리|집 근처/.test(replyText)) {
-      chosenQuestionKey = 'travel_range';
-    } else if (/시간|주말|평일|오전|오후|저녁|낮/.test(replyText)) {
-      chosenQuestionKey = 'time_pref';
-    } else if (/재능|기술|특기|어떤 재능/.test(replyText)) {
-      chosenQuestionKey = 'skills';
-    }
-  }
-
   const lastUserMsg = userAnswers[userAnswers.length - 1] ?? '';
-  const isQuestionInquiry = /\?|어떤 거야|뭐야|있나요|없나요|어때요/.test(lastUserMsg);
-
-  // 1. AI가 순서를 임의로 건너뛰거나(스킵), 이미 답변된 축을 반환하지 못하도록:
-  // 사용자의 질문형 되묻기가 아닌 일반 진행 시에는 항상 남은 질문의 최우선 순위(remainingQuestionKeys[0])로 엄격히 고정
-  if (!isQuestionInquiry && remainingQuestionKeys.length > 0) {
-    const nextExpectedKey = remainingQuestionKeys[0];
-    const normChosen = normalizeQuestionKey(chosenQuestionKey);
-    const normExpected = normalizeQuestionKey(nextExpectedKey);
-    if (normChosen !== normExpected) {
-      chosenQuestionKey = nextExpectedKey;
-    }
-  }
-
-  // 2. 재능 질문 맥락에서의 입력 검증 (가드레일 & 기타 선택)
-  // 재능 질문 맥락은 '직전 어시스턴트 질문이 실제로 재능에 대한 질문'이었고, '이번 턴에서 재능 질문 단계가 유효할 때'만 해당함
   const assistantMessages = messages.filter((m) => m.role === 'assistant');
   const lastAssistantMsg = assistantMessages[assistantMessages.length - 1]?.content ?? '';
 
-  // 직전 어시스턴트 질문이 다른 축(환경, 모임 규모, 성격, 난이도 등)을 묻는 질문이었는지 판별
-  const isOtherQuestionAsked =
-    /어떤 환경|실내.*실외|실외.*실내|날씨.*걱정|실내 활동|야외 활동|모임 규모|인원 규모|소규모|대규모|소그룹|중그룹|대그룹|어떤 분위기|도란도란|소통하고|땀 흘리|과업|난이도|어떤 스타일을 원하세요|어느 지역|선호 시간/.test(lastAssistantMsg);
-
-  // 이번 턴 이전의 답변들만 분석하여, 이미 재능 질문이 완료되었는지 확인
+  // 직전 턴에 실제로 어떤 축을 물었는지 결정론적으로 재계산한다 (AI 생성 텍스트를 정규식으로
+  // 스니핑하지 않는다 — 질문은 항상 getRemainingQuestionKeys() 가 고른 축에서 나오기 때문에
+  // 같은 함수를 "직전 답변 반영 전" 상태에 대해 한 번 더 돌리면 직전 질문 축이 그대로 나온다).
   const priorUserAnswers = userAnswers.slice(0, -1);
-  const priorAdaptive = extractAdaptiveAnswers(priorUserAnswers);
+  const priorMessages = messages.slice(0, -1);
+  const priorAdaptive = {
+    ...extractAdaptiveAnswers(priorUserAnswers),
+    ...extractAnswersFromDialogue(priorMessages),
+  };
   const skillAlreadyDecided =
     Boolean(priorAdaptive.selectedSkills && priorAdaptive.selectedSkills.length > 0) ||
     priorAdaptive.selectedSkill === 'profile' ||
     priorAdaptive.talentPreference === 'any';
-
-  const lastAssistantAskedSkill =
-    !isOtherQuestionAsked &&
-    !skillAlreadyDecided &&
-    /어떤 재능|새로운 재능|활용할 수 있는 재능|나눌 수 있는 재능|프로필에.*재능이 있다고 알려주셨는데|재능을 살릴 수 있는 액션을 찾아볼까요|아래 선택지에서 골라주세요/.test(lastAssistantMsg);
-
-  const isSkillContext =
-    lastAssistantAskedSkill &&
-    !skillAlreadyDecided &&
-    (adaptiveAnswers.difficultyPreference === 'expert' || remainingQuestionKeys.includes('skills'));
+  const previousAxis =
+    getRemainingQuestionKeys({
+      answers: priorAdaptive,
+      userState: userContext.state,
+      hasRegionAndTime: userContext.hasRegionAndTime,
+      hasHistory,
+      profileSkills: profile.skills ?? [],
+    })[0] ?? null;
+  const isSkillContext = previousAxis === 'skills' && !skillAlreadyDecided;
 
   if (isSkillContext && lastUserMsg) {
     const harmfulCheck = validateHarmfulSkillInput(lastUserMsg);
@@ -792,134 +544,56 @@ export async function POST(request: Request) {
     }
   }
 
-  const recommendNow =
-    shouldRecommendNow({
-      userTurnCount,
-      enough: conversation.enough,
-      remainingKeysCount: remainingQuestionKeys.length,
-    }) || remainingQuestionKeys.length === 0;
+  const recommendNow = shouldRecommendNow({
+    userTurnCount,
+    enough: false,
+    remainingKeysCount: remainingQuestionKeys.length,
+  });
 
-  if (!recommendNow && chosenQuestionKey) {
-    const fallback = fallbackConversation({
-      messages,
+  if (!recommendNow) {
+    const nextAxis: QuestionKey = fallbackQuestionKey ?? 'categories';
+
+    // AI의 역할은 딱 하나 — 직전 답변에 대한 짧은 공감 한 줄. 질문 축과 질문 본문·선택지는
+    // getRemainingQuestionKeys()/getQuestionReply()/getQuestionOptions() (interview.ts, 무변경)가
+    // 이미 결정하므로, AI 응답과 코드 기대값이 어긋날 여지 자체가 없다.
+    let acknowledgment = '';
+    try {
+      const ackResult = await callStructuredAI({
+        agent: 'DISCOVER',
+        promptVersion: CHAT_PROMPT_VERSION,
+        system: CHAT_SYSTEM,
+        temperature: 0.5,
+        user: JSON.stringify({
+          사용자: profile.nickname,
+          직전질문: lastAssistantMsg,
+          사용자의답변: lastUserMsg,
+        }),
+        schema: AcknowledgmentSchema,
+        userId: user.id,
+      });
+      acknowledgment = ackResult.acknowledgment
+        .split(/\n\s*[-•*]\s*|\n\s*\d+[.)]\s*/)[0]
+        .trim();
+    } catch {
+      acknowledgment = '';
+    }
+
+    const templateReply = getQuestionReply(nextAxis, {
       nickname: profile.nickname,
       answers: adaptiveAnswers,
       profileSkills: profile.skills ?? [],
       selectedSkills,
       fieldReferenceCategories,
       hasHistory,
-      profileCategories: profile.categories,
-      questionKey: chosenQuestionKey,
       userState: userContext.state,
       knownFacts: userContext.knownFacts,
       pastActivitySummary: userContext.pastActivitySummary,
+      profileCategories: profile.categories ?? [],
     });
-
-    let reply =
-      isAiSuccess && conversation.reply ? conversation.reply : fallback.reply;
-
-    const hasProfileSkills = (profile.skills ?? []).length > 0;
-    const rawProfileCatsForReply = (profile.categories ?? []).filter((c) => c !== '전체');
-
-    // 1) 재능(skills) 질문인 경우:
-    // AI의 프로필 재능 거짓말/할루시네이션을 원천 차단하고,
-    // 프로필 재능 유무 및 '다른 재능' 선택 여부에 따라 검증된 fallback.reply를 100% 강제 적용
-    if (chosenQuestionKey === 'skills') {
-      reply = fallback.reply;
-    }
-
-    // 2) 프로필에 재능이 없는 사용자인데 말풍선에 "프로필에 재능이 있다"는 문구가 포함된 경우 즉시 안전한 문구로 교체
-    if (!hasProfileSkills && /프로필에.*재능/.test(reply)) {
-      reply = fallback.reply;
-    }
-
-    // 3) 카테고리(categories/field_preference) 질문인 경우:
-    // AI가 지난 활동 카테고리나 프로필 관심분야를 누락하고 엉뚱한 질문을 하는 것을 방지하고,
-    // 옵션([같은 분야로 찾을래요], [새로운 분야에 도전해볼래요] 등)과 100% 일치하는 맞춤 멘트 강제 적용!
-    if (
-      (chosenQuestionKey === 'categories' || chosenQuestionKey === 'field_preference') &&
-      adaptiveAnswers.fieldPreference !== 'new'
-    ) {
-      if (hasHistory) {
-        reply = fallback.reply;
-      } else if (rawProfileCatsForReply.length > 0) {
-        reply = fallback.reply;
-      }
-    }
-
-    // 4) 질문 축(chosenQuestionKey)과 말풍선(reply)의 1:1 일치 정밀 검증:
-    // AI가 말풍선에 엉뚱한 이전 질문(예: 분야 되묻기)이나 다른 축의 질문을 내어 선택지 버튼과 엇박자가 나는 것을 원천 차단!
-    const normKey = normalizeQuestionKey(chosenQuestionKey);
-    let isQuestionMismatch = false;
-
-    // A) target_groups (활동 성격: 교류 vs 과업)
-    if (normKey === 'target_groups') {
-      const isAskingVibe = /분위기|도란도란|소통하고|손발을 맞춰|집중하는|교류|성격|과업|땀/.test(reply);
-      const isAskingOther = /어떤 분야|분야에 가장 관심|위주로 찾아드릴까요|난이도|어떤 스타일을 원하세요|어떤 환경|실내|실외|모임 규모|인원/.test(reply);
-      if (!isAskingVibe || isAskingOther) {
-        isQuestionMismatch = true;
-      }
-    }
-
-    // B) difficulty (참여 난이도)
-    if (normKey === 'difficulty') {
-      const isAskingDifficulty = /난이도|문턱|어떤 스타일|스타일|체력|전문지식|자격|재능 활용|누구나/.test(reply);
-      const isAskingOther = /어떤 분야|분야에 가장 관심|위주로 찾아드릴까요|어떤 환경|실내|실외|모임 규모|인원/.test(reply);
-      if (!isAskingDifficulty || isAskingOther) {
-        isQuestionMismatch = true;
-      }
-    }
-
-    // C) activity_types (활동 환경)
-    if (normKey === 'activity_types') {
-      const isAskingEnv = /환경|공간|실내|실외|야외|바깥|안에서/.test(reply);
-      const isAskingOther = /어떤 분야|위주로 찾아드릴까요|난이도|모임 규모|인원/.test(reply);
-      if (!isAskingEnv || isAskingOther) {
-        isQuestionMismatch = true;
-      }
-    }
-
-    // D) participation_modes (모임 규모)
-    if (normKey === 'participation_modes') {
-      const isAskingSize = /규모|인원|소규모|중규모|대규모|소그룹|중그룹|대그룹|크루/.test(reply);
-      const isAskingOther = /어떤 분야|위주로 찾아드릴까요|난이도|실내|실외/.test(reply);
-      if (!isAskingSize || isAskingOther) {
-        isQuestionMismatch = true;
-      }
-    }
-
-    // E) categories (분야): 이미 특정 분야를 선택/응답한 상태인데 되묻는 경우 차단
-    if (normKey === 'categories') {
-      if (adaptiveAnswers.selectedCategory && adaptiveAnswers.selectedCategory !== '상관없음') {
-        isQuestionMismatch = true;
-      }
-    }
-
-    // 만약 AI가 이미 답변된 질문 축을 되묻거나, 남은 질문 축과 불일치하는 질문을 냈다면, 다음 남은 질문의 안내로 교체
-    const isMismatchedReply =
-      isAiSuccess &&
-      !isQuestionInquiry &&
-      (
-        isQuestionMismatch ||
-        (conversation.question_key && normalizeQuestionKey(conversation.question_key) !== normKey) ||
-        (normalizeQuestionKey(chosenQuestionKey) !== normalizeQuestionKey(conversation.question_key)) ||
-        (chosenQuestionKey === 'time_pref' && !/시간|언제|주말|평일|오전|오후|저녁|낮/.test(reply))
-      );
-
-    if (isMismatchedReply) {
-      reply = fallback.reply;
-    }
-
-    // "위 16종 선택지" 등 옛 표현을 "아래 선택지"로 보정
-    reply = reply.replace(/위\s*16종\s*선택지에서\s*골라주세요/g, '아래 선택지에서 골라주세요');
-
-    // 말풍선 본문에서 불릿 기호(-, •, * 등)나 번호 목록(1., 1) 등) 옵션 나열 목록 제거 (중복 노출 방지)
-    if (/(\n\s*[-•*]\s*|\n\s*\d+[.)]\s*)/.test(reply)) {
-      reply = reply.split(/\n\s*[-•*]\s*|\n\s*\d+[.)]\s*/)[0].trim();
-    }
+    const reply = acknowledgment ? `${acknowledgment}\n${templateReply}` : templateReply;
 
     const options = getQuestionOptions(
-      chosenQuestionKey,
+      nextAxis,
       SKILLS,
       userContext.state,
       userContext.hasRegionAndTime,
@@ -937,7 +611,7 @@ export async function POST(request: Request) {
       done: false,
       reply,
       options,
-      questionKey: chosenQuestionKey,
+      questionKey: nextAxis,
       answeredCount: userTurnCount,
       maxQuestions: MAX_USER_TURNS,
       isLastQuestion,
@@ -984,6 +658,13 @@ export async function POST(request: Request) {
     }
   }
 
+  // adaptiveAnswers(interview.ts)가 못 잡은 경우에만 쓰는 텍스트 휴리스틱 보조 수단
+  const conditionsFromText = deriveConditionsFromText({
+    messages,
+    fieldReferenceCategories,
+    profileCategories: profile.categories ?? [],
+  });
+
   // 사용자가 대화에서 명시적으로 카테고리를 선택한 경우 이를 최우선으로 반영 (복수 카테고리 지원)
   let filterCategories: string[] = [];
   if (adaptiveAnswers.selectedCategories && adaptiveAnswers.selectedCategories.length > 0) {
@@ -991,24 +672,7 @@ export async function POST(request: Request) {
   } else if (adaptiveAnswers.selectedCategory && adaptiveAnswers.selectedCategory !== '상관없음') {
     filterCategories = [adaptiveAnswers.selectedCategory];
   } else {
-    filterCategories = allowedCategories(conversation.categories);
-    if (filterCategories.length === 0) {
-      const fallback = fallbackConversation({
-        messages,
-        nickname: profile.nickname,
-        answers: adaptiveAnswers,
-        profileSkills: profile.skills ?? [],
-        selectedSkills,
-        fieldReferenceCategories,
-        hasHistory,
-        profileCategories: profile.categories,
-        questionKey: null,
-        userState: userContext.state,
-        knownFacts: userContext.knownFacts,
-        pastActivitySummary: userContext.pastActivitySummary,
-      });
-      filterCategories = allowedCategories(fallback.categories);
-    }
+    filterCategories = allowedCategories(conditionsFromText.categories);
   }
 
   const allCandidates = await getRecommendCandidates(supabase, user.id, {});
@@ -1125,7 +789,7 @@ export async function POST(request: Request) {
     };
   }
 
-  const participationMode = conversation.participation_mode ?? null;
+  const participationMode = conditionsFromText.participationMode;
   const resolvedSkills =
     adaptiveAnswers.selectedSkills && adaptiveAnswers.selectedSkills.length > 0
       ? adaptiveAnswers.selectedSkills
