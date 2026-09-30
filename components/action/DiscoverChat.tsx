@@ -583,7 +583,7 @@ export function DiscoverChat({
                 <Chip
                   key={option}
                   onClick={() => handleOptionClick(option)}
-                  className="border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white py-1.5 text-[13px]"
+                  className="py-1.5 text-label"
                 >
                   {option}
                 </Chip>
