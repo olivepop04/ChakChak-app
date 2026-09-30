@@ -523,12 +523,12 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 **그 라우트 파일 맨 위의 버전 상수를 반드시 올리세요** (`trends-v1` → `trends-v2`).
 `lib/openai.ts` 는 버전을 인자로 받아 `ai_runs` 에 적기만 합니다 — 거기를 고치는 게 아닙니다.
 
-| 라우트 | 상수 | 지금 값 (2026-09-29) |
+| 라우트 | 상수 | 지금 값 (2026-09-30) |
 |---|---|---|
 | `app/api/ai/review/` | `PROMPT_VERSION` | `review-v7` |
 | `app/api/ai/classify/` — 규칙은 `lib/ai/classify-spec.ts` | `CLASSIFY_PROMPT_VERSION` | `classify-v4` |
 | `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v3` |
-| `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-chat-v10-flow-integrity` · `discover-recommend-v11-truth-grounding` |
+| `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-chat-v12-no-double-ack` · `discover-recommend-v14-category-guard` |
 
 **번호는 올리기만 하세요.** 이름을 바꾸면서 숫자가 내려가면(`v7` → `v3`) 발표 자료에서 어느 쪽이 나중인지 헷갈립니다.
 **분류 지시문·답 검사·허용 목록은 `lib/ai/classify-spec.ts` 한 곳입니다.** 공개 때 분류(라우트)와
@@ -797,7 +797,7 @@ F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `
 
 **입력칸 공통 컴포넌트가 생겼습니다** — `components/ui/Input.tsx` (2026-09-22, 소정님).
 전에는 이것이 없어서 같은 `min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px]`
-이 16개 파일에 복사돼 있었습니다. 지금 5개 파일이 `Input` 을 씁니다(2026-09-29 — 비밀번호 칸 `PasswordInput` 이 `Input` 위에 만들어져 하나 늘었습니다). 손으로 적은 곳은 9/22 기준 12개였습니다.
+이 16개 파일에 복사돼 있었습니다. 지금 6개 파일이 `Input` 을 씁니다(2026-09-30 — 모집 항목 입력칸 `ItemEditor` 가 옮겨 와 하나 늘었습니다). 손으로 적은 곳은 9/22 기준 12개였습니다.
 **새로 만드는 입력칸은 손으로 짜지 말고 `Input` 을 쓰세요.** 남은 12개는 손대는 화면이
 생길 때 하나씩 옮기면 됩니다 — 그것만으로 다음 타이포·높이 통일 작업이 1파일이 됩니다.
 같은 PR 로 `Chip` 에 `size="sm"` 이, `Button` 에 `href`(링크로 렌더) 가 들어왔고
