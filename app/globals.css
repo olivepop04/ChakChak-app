@@ -113,6 +113,10 @@ body {
 html {
   -webkit-text-size-adjust: auto;
   text-size-adjust: auto;
+  /* 웹(발표 화면)에서 스크롤바가 생겼다 없어졌다 하면 가운데 480px 앱이 7~8px 씩 흔들린다.
+     긴 화면·짧은 화면·모달(스크롤 잠금) 사이를 오갈 때마다 생기던 것 — 스크롤바 자리를 항상 비워 둔다.
+     폰은 스크롤바가 자리를 차지하지 않아 영향 없음 (2026-09-30) */
+  scrollbar-gutter: stable;
 }
 
 /* The app is a mobile web app; the shell caps the width and centers it. */

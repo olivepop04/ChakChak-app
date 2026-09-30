@@ -475,7 +475,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
               >
                 {isSelected && (
                   <span
-                    className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${
+                    className={`flex h-4 w-4 items-center justify-center rounded-full text-caption font-bold ${
                       isPrimary ? 'bg-brand text-white' : 'bg-hairline-focus text-white'
                     }`}
                   >

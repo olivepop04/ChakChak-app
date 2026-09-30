@@ -55,15 +55,15 @@ export function Chip({
         tone === 'default' &&
         (selected
           ? 'border-neutral-900 bg-neutral-900 text-white'
-          : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'),
+          : 'border-neutral-300 bg-white text-neutral-600'),
         tone === 'accent' &&
         (selected
           ? 'border-transparent bg-brand text-white'
-          : 'border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'),
+          : 'border-neutral-300 bg-white text-neutral-600'),
         tone === 'soft' &&
         (selected
           ? 'border-brand bg-brand-soft font-semibold text-brand'
-          : 'border-hairline bg-white text-neutral-500 hover:bg-neutral-50'),
+          : 'border-hairline bg-white text-neutral-500'),
         // 세그먼트 컨트롤(정렬 필터) — 바깥 컨테이너가 #F5F5F7 배경을 이미 깔고 있어서
         // 선택 안 된 세그먼트는 투명, 선택된 세그먼트만 흰 배경으로 떠 보이게 한다.
         tone === 'neutral' &&
@@ -71,7 +71,7 @@ export function Chip({
         tone === 'neutral' &&
         (selected
           ? 'bg-white font-bold text-brand'
-          : 'bg-transparent font-medium text-neutral-500 hover:text-neutral-700'),
+          : 'bg-transparent font-medium text-neutral-500'),
         className,
       )}
     >

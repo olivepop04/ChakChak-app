@@ -61,7 +61,7 @@ function ChatMessageRow({
             @{author.nickname}
           </span>
           {kind === 'LEFT_NOTICE' && (
-            <span className="shrink-0 rounded bg-[#F0F0F0] px-1.5 py-0.5 text-[10px] font-bold text-neutral-400">
+            <span className="shrink-0 rounded-lg bg-[#F0F0F0] px-1.5 py-0.5 text-caption font-bold text-neutral-400">
               참여 취소
             </span>
           )}

@@ -55,7 +55,7 @@ const emptyGoods = (): ActionItemInput => ({
 });
 
 const quantityInput =
-  'h-8 w-10 appearance-none rounded-lg border border-neutral-300 text-center text-sm outline-none focus:border-neutral-900 [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none';
+  'h-8 w-10 appearance-none rounded-lg border border-hairline text-center text-sm outline-none focus:border-hairline-focus [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none';
 
 function DeferredNumberInput({
   value,
