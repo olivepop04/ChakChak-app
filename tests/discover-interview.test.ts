@@ -445,13 +445,14 @@ test('0순위 오프닝은 프로필 등록 여부에 따라 케이스 A/B 멘�
     hasHistory: false,
     profileRegion: '서울특별시 강남구',
     profileTimesSummary: '주말 오후, 평일 저녁',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
   assert.equal(replyA.includes('활동 지역 : 서울특별시 강남구'), true);
   assert.equal(replyA.includes('선호 시간 : 주말 오후, 평일 저녁'), true);
   assert.equal(replyA.includes('이 조건 그대로 액션을 찾아드릴까요?'), true);
 
-  const optionsA = getQuestionOptions('opening', [], 'A', true);
+  const optionsA = getQuestionOptions('opening', [], 'A', true, true);
   assert.deepEqual(optionsA, [
     '네, 이 조건으로 찾을게요 👍',
     '이번엔 다른 조건으로 찾을래요 🔄',
@@ -465,15 +466,82 @@ test('0순위 오프닝은 프로필 등록 여부에 따라 케이스 A/B 멘�
     selectedSkills: [],
     fieldReferenceCategories: [],
     hasHistory: false,
-    hasRegionAndTime: false,
+    hasRegion: false,
+    hasTime: false,
   });
   assert.equal(replyB.includes('활동하실 지역과 시간을 먼저 확인하고 싶어요'), true);
 
-  const optionsB = getQuestionOptions('opening', [], 'A', false);
+  const optionsB = getQuestionOptions('opening', [], 'A', false, false);
   assert.deepEqual(optionsB, [
     '활동할 지역 선택하기 📍',
     '지역 상관없이 전국 액션 볼래요 🌏',
   ]);
+});
+
+test('[버그 수정 2026-09-30] 오프닝은 지역·시간 중 하나만 프로필에 있어도 그것만 확인하고, 모르는 축만 새로 묻는다', () => {
+  // 팀 테스트 피드백: 시간은 프로필에 등록해뒀는데 지역이 없으니, hasRegionAndTime 하나로는
+  // "둘 다 없음"과 구분이 안 돼서 이미 아는 시간까지 처음부터 다시 물어보고 있었다.
+
+  // 케이스 C: 지역은 없고 시간만 프로필에 있는 경우 — 시간을 확인하고, 지역만 새로 묻는다
+  const replyC = getQuestionReply('opening', {
+    nickname: '리고',
+    answers: {},
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileTimesSummary: '평일 언제든',
+    hasRegion: false,
+    hasTime: true,
+  });
+  assert.equal(replyC.includes('선호 시간대'), true);
+  assert.equal(replyC.includes('평일 언제든'), true);
+  assert.equal(replyC.includes('활동 지역'), false, '지역은 모르는 축이라 언급하면 안 된다');
+
+  const optionsC = getQuestionOptions('opening', [], 'A', false, true);
+  assert.deepEqual(optionsC, [
+    '네, 이 시간대로 찾을게요 👍',
+    '이번엔 다른 시간대로 찾을래요 🔄',
+  ]);
+
+  // 시간을 확인(confirm)하면 시간 질문은 남은 질문에서 빠지고, 지역만 남는다
+  const remainingAfterTimeConfirm = getRemainingQuestionKeys({
+    answers: { openingDecision: 'confirm' },
+    hasRegion: false,
+    hasTime: true,
+  });
+  assert.equal(remainingAfterTimeConfirm.includes('time_pref'), false);
+  assert.equal(remainingAfterTimeConfirm.includes('travel_range'), true);
+
+  // 케이스 D: 시간은 없고 지역만 프로필에 있는 경우 — 지역을 확인하고, 시간만 새로 묻는다
+  const replyD = getQuestionReply('opening', {
+    nickname: '리고',
+    answers: {},
+    profileSkills: [],
+    selectedSkills: [],
+    fieldReferenceCategories: [],
+    hasHistory: false,
+    profileRegion: '충청남도 전체',
+    hasRegion: true,
+    hasTime: false,
+  });
+  assert.equal(replyD.includes('활동 지역'), true);
+  assert.equal(replyD.includes('충청남도 전체'), true);
+  assert.equal(replyD.includes('선호 시간'), false, '시간은 모르는 축이라 언급하면 안 된다');
+
+  const optionsD = getQuestionOptions('opening', [], 'A', true, false);
+  assert.deepEqual(optionsD, [
+    '네, 이 지역으로 찾을게요 👍',
+    '이번엔 다른 지역으로 찾을래요 🔄',
+  ]);
+
+  const remainingAfterRegionConfirm = getRemainingQuestionKeys({
+    answers: { openingDecision: 'confirm' },
+    hasRegion: true,
+    hasTime: false,
+  });
+  assert.equal(remainingAfterRegionConfirm.includes('travel_range'), false);
+  assert.equal(remainingAfterRegionConfirm.includes('time_pref'), true);
 });
 
 test('난이도에서 누구나 참여가능을 선택하면 재능 질문을 완전히 스킵하고 환경 질문으로 전진한다', () => {
@@ -519,7 +587,7 @@ test('5단계 순차 질문 퍼널 순서(분야 ➔ 성격 ➔ 난이도 ➔ �
 
 test('[피드백 1] 활동 이력이 있는 사용자는 같은 분야 vs 새로운 분야 2지선다를 제공하고 무한 루프 없이 전진한다', () => {
   // 1. 이력 있는 유저에게는 2지선다 선택지 제공
-  const options = getQuestionOptions('field_preference', [], 'C', true, {
+  const options = getQuestionOptions('field_preference', [], 'C', true, true, {
     hasHistory: true,
   });
   assert.deepEqual(options, [
@@ -537,7 +605,7 @@ test('[피드백 1] 활동 이력이 있는 사용자는 같은 분야 vs 새로
   assert.equal(remainingFamiliar[0], 'vibe_preference');
 
   // 3. '새로운 분야에 도전해볼래요' 선택 시 7대 카테고리 노출
-  const optionsNew = getQuestionOptions('field_preference', [], 'C', true, {
+  const optionsNew = getQuestionOptions('field_preference', [], 'C', true, true, {
     hasHistory: true,
     answers: { fieldPreference: 'new' },
   });
@@ -616,7 +684,8 @@ test('[피드백 2] 오프닝에서 다른 조건으로 찾을래요 선택 시 
   // 남은 질문 키의 최우선순위가 travel_range(지역), 그 다음이 time_pref(시간)이어야 함
   const remaining = getRemainingQuestionKeys({
     answers: answersChange,
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
   assert.equal(remaining[0], 'travel_range');
   assert.equal(remaining[1], 'time_pref');
@@ -645,7 +714,7 @@ test('[피드백 3] 난이도에서 전문지식/자격/재능 활용 선택 시
 
   // 1. 프로필에 재능이 있는 경우: '예, 그럴게요' vs '아니요, 다른 재능으로 할게요' 2지선다 노출
   const profileSkills = ['디자인', '사진 촬영'];
-  const talentOptions = getQuestionOptions('skills', [], 'B', true, {
+  const talentOptions = getQuestionOptions('skills', [], 'B', true, true, {
     profileSkills,
     answers: answersExpert,
   });
@@ -673,7 +742,7 @@ test('[피드백 3] 난이도에서 전문지식/자격/재능 활용 선택 시
   assert.equal(remainingAfterProfile[0], 'activity_type');
 
   // 3. '새로운 재능 이용' 선택 시 15종 재능 목록 노출
-  const newTalentOptions = getQuestionOptions('skills', [], 'B', true, {
+  const newTalentOptions = getQuestionOptions('skills', [], 'B', true, true, {
     profileSkills,
     answers: { ...answersExpert, talentPreference: 'new_skill' },
   });
@@ -736,7 +805,8 @@ test('오프닝 멘트에 (집 근처) 문구가 포함되지 않는다', () => 
     hasHistory: false,
     profileRegion: '서울특별시 성동구',
     profileTimesSummary: '주말 오후, 평일 저녁',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
   assert.equal(reply.includes('(집 근처)'), false);
   assert.equal(reply.includes('📍 활동 지역 : 서울특별시 성동구'), true);
@@ -781,7 +851,8 @@ test('재능 질문에서 기타 선택 시 talentPreference가 any로 처리되
     hasHistory: false,
     profileRegion: '서울특별시 성동구',
     profileTimesSummary: '주말 오후',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
   assert.equal(
     nextReply.includes('재능과 상관없이 누구나 편하게 나눔을 시작할 수 있는 액션들을 찾아볼게요! ✨'),
@@ -816,7 +887,8 @@ test('재능 복수 선택 시 알려주신 재능을 살릴 수 있는 액션�
     hasHistory: false,
     profileRegion: '서울특별시 마포구',
     profileTimesSummary: '주말 오후',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
   assert.equal(
     nextReply.includes('알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨'),
@@ -843,7 +915,8 @@ test('재능 단일 선택 시에도 알려주신 재능을 살릴 수 있는 �
     hasHistory: false,
     profileRegion: '서울특별시 마포구',
     profileTimesSummary: '주말 오후',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
   assert.equal(
     nextReply.includes('알려주신 재능을 살릴 수 있는 액션으로 함께 찾아볼게요! ✨'),
@@ -889,7 +962,8 @@ test('[난이도 분기 버그 수정 검증] 기초 체력 필요 선택 시 �
     hasHistory: false,
     profileRegion: '서울특별시 성동구',
     profileTimesSummary: '주말 오후',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
 
   assert.equal(nextReply.includes('땀 흘리며 함께할 수 있는 활기차고 보람찬 액션들로 찾아볼게요! 💪'), true);
@@ -922,7 +996,8 @@ test('[난이도 분기 검증] 누구나 참여가능 선택 시에도 재능 �
     hasHistory: false,
     profileRegion: '서울특별시 성동구',
     profileTimesSummary: '주말 오후',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
 
   assert.equal(nextReply.includes('누구나 부담 없이 편안하게 참여할 수 있는 액션들로 찾아볼게요! 😊'), true);
@@ -951,7 +1026,8 @@ test('[프로필 재능 질문 멘트 검증] 프로필 재능이 있는 경우 
     hasHistory: false,
     profileRegion: '서울특별시 성동구',
     profileTimesSummary: '주말 오후',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
 
   assert.equal(
@@ -970,7 +1046,8 @@ test('[재능 선택 멘트 검증] 16종 목록 제공 시 아래 선택지 표
     hasHistory: false,
     profileRegion: '서울특별시 성동구',
     profileTimesSummary: '주말 오후',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
   });
 
   assert.equal(reply.includes('지수님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요.'), true);
@@ -990,7 +1067,7 @@ test('[신규가입자 재능 선택 멘트 검증] 프로필 재능이 없는 �
   assert.equal(reply.includes('프로필'), false);
   assert.equal(reply.includes('신규유저님이 활용할 수 있는 재능을 아래 선택지에서 골라주세요.'), true);
 
-  const options = getQuestionOptions('skills', [], 'A', false, {
+  const options = getQuestionOptions('skills', [], 'A', false, false, {
     profileSkills: [],
     answers: { difficultyPreference: 'expert' },
   });
@@ -1126,7 +1203,8 @@ test('[신규가입자 시간 질문 검증] 지역 선택 후 시간이 아직 
   const remaining = getRemainingQuestionKeys({
     answers,
     userState: 'B',
-    hasRegionAndTime: false,
+    hasRegion: false,
+    hasTime: false,
     hasHistory: false,
   });
   assert.equal(remaining[0], 'time_pref');
@@ -1162,7 +1240,7 @@ test('[프로필 관심분야 확인 검증] 프로필에 관심분야가 있는
   assert.match(reply, /리네님의 프로필 관심 분야인 \[동물, 아동·청소년\] 위주로 찾아드릴까요\?/);
 
   // 2. 질문 옵션 검증
-  const options = getQuestionOptions('categories', [], 'B', true, {
+  const options = getQuestionOptions('categories', [], 'B', true, true, {
     hasHistory: false,
     profileCategories,
     answers: {},
@@ -1346,7 +1424,8 @@ test('[분야 선택 후 자연스러운 질문 전진 검증] 사용자가 분�
   const remaining = getRemainingQuestionKeys({
     answers,
     userState: 'B',
-    hasRegionAndTime: true,
+    hasRegion: true,
+    hasTime: true,
     hasHistory: false,
     profileSkills: [],
   });

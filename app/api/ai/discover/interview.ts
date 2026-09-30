@@ -83,7 +83,11 @@ export interface UserContextSummary {
   pastActivitySummary?: string;
   profileRegion?: string;
   profileTimesSummary?: string;
-  hasRegionAndTime: boolean;
+  /** 지역·시간을 따로 둔다 — 둘 중 하나만 프로필에 있는 경우를 "둘 다 없음"과 다르게 다뤄야 한다
+   * (2026-09-30, 팀 테스트 피드백: 시간은 프로필에 있는데 지역이 없으면, 시간까지 처음부터
+   * 다시 물어보고 있었다. 하나의 hasRegionAndTime 로는 이 둘을 구분할 수 없었다). */
+  hasRegion: boolean;
+  hasTime: boolean;
 }
 
 export interface QuestionCopyContext {
@@ -98,7 +102,8 @@ export interface QuestionCopyContext {
   pastActivitySummary?: string;
   profileRegion?: string;
   profileTimesSummary?: string;
-  hasRegionAndTime?: boolean;
+  hasRegion?: boolean;
+  hasTime?: boolean;
   profileCategories?: readonly string[];
 }
 
@@ -408,7 +413,6 @@ export function analyzeUserContext({
 
   const profileRegion = hasRegions && profile.regions ? profile.regions[0] : undefined;
   const profileTimesSummary = hasTimes ? formatTimePrefsSummary(profile.timePrefs, profile.availableTimes) : undefined;
-  const hasRegionAndTime = Boolean(hasRegions && hasTimes);
 
   // 아직 모르는 정보 축 도출
   const missingAxes: QuestionKey[] = [];
@@ -426,7 +430,8 @@ export function analyzeUserContext({
     pastActivitySummary,
     profileRegion,
     profileTimesSummary,
-    hasRegionAndTime,
+    hasRegion: hasRegions,
+    hasTime: hasTimes,
   };
 }
 
@@ -538,7 +543,8 @@ export function resolveUnifiedCategories({
 
 export interface QuestionOptionContext {
   hasHistory?: boolean;
-  hasRegionAndTime?: boolean;
+  hasRegion?: boolean;
+  hasTime?: boolean;
   answers?: AdaptiveAnswers;
   profileSkills?: readonly string[];
   profileCategories?: readonly string[];
@@ -551,13 +557,21 @@ export function getQuestionOptions(
   key: QuestionKey,
   skills: readonly string[] = [],
   userState?: UserStateCategory,
-  hasRegionAndTime = true,
+  hasRegion = true,
+  hasTime = true,
   context?: QuestionOptionContext,
 ): string[] {
-  // 0순위: 오프닝
+  // 0순위: 오프닝 — 지역·시간 중 프로필에 이미 있는 축만 확인하고, 모르는 축은 새로 묻는다
+  // (둘 다 있음 / 지역만 있음 / 시간만 있음 / 둘 다 없음, 2026-09-30)
   if (key === 'opening') {
-    if (hasRegionAndTime) {
+    if (hasRegion && hasTime) {
       return ['네, 이 조건으로 찾을게요 👍', '이번엔 다른 조건으로 찾을래요 🔄'];
+    }
+    if (hasRegion && !hasTime) {
+      return ['네, 이 지역으로 찾을게요 👍', '이번엔 다른 지역으로 찾을래요 🔄'];
+    }
+    if (!hasRegion && hasTime) {
+      return ['네, 이 시간대로 찾을게요 👍', '이번엔 다른 시간대로 찾을래요 🔄'];
     }
     return ['활동할 지역 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'];
   }
@@ -620,7 +634,8 @@ export function getQuestionOptions(
   }
 
   const options: Record<string, readonly string[]> = {
-    opening: hasRegionAndTime
+    // opening 은 위에서 이미 return 하므로 여기까지 오지 않는다 — key 목록의 완결성을 위해 남겨둔다.
+    opening: hasRegion && hasTime
       ? ['네, 이 조건으로 찾을게요 👍', '이번엔 다른 조건으로 찾을래요 🔄']
       : ['활동할 지역 선택하기 📍', '지역 상관없이 전국 액션 볼래요 🌏'],
     target_groups: DISCOVER_TARGET_GROUP_OPTIONS,
@@ -679,13 +694,17 @@ export function getQuestionReply(
     pastActivitySummary,
     profileRegion = '등록된 지역',
     profileTimesSummary = '등록된 시간대',
-    hasRegionAndTime = true,
+    hasRegion = true,
+    hasTime = true,
     profileCategories = [],
   } = context;
 
-  // 0순위: 오프닝 및 지역/시간 상시 확인
+  // 0순위: 오프닝 — 지역·시간 중 프로필에 이미 있는 축만 확인하고, 모르는 축은 새로 묻는다.
+  // 하나만 있는 경우를 "둘 다 없음"과 똑같이 취급해 이미 아는 것까지 다시 물으면 안 된다
+  // (2026-09-30, 팀 테스트 피드백: 시간은 프로필에 등록돼 있는데 지역이 없으니, 시간까지
+  // 처음부터 다시 물어보고 있었다).
   if (key === 'opening') {
-    if (hasRegionAndTime) {
+    if (hasRegion && hasTime) {
       return [
         `안녕하세요, ${nickname}님! 😊`,
         `${nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 기본 조건을 확인해 봤어요.`,
@@ -694,6 +713,28 @@ export function getQuestionReply(
         `⏰ 선호 시간 : ${profileTimesSummary}`,
         '',
         '이 조건 그대로 액션을 찾아드릴까요?',
+      ].join('\n');
+    }
+
+    if (hasRegion && !hasTime) {
+      return [
+        `안녕하세요, ${nickname}님! 😊`,
+        `${nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 활동 지역을 확인해 봤어요.`,
+        '',
+        `📍 활동 지역 : ${profileRegion}`,
+        '',
+        '이 지역 그대로 액션을 찾아드릴까요?',
+      ].join('\n');
+    }
+
+    if (!hasRegion && hasTime) {
+      return [
+        `안녕하세요, ${nickname}님! 😊`,
+        `${nickname}님에게 딱 맞는 액션을 찾기 위해 프로필에 등록된 선호 시간대를 확인해 봤어요.`,
+        '',
+        `⏰ 선호 시간 : ${profileTimesSummary}`,
+        '',
+        '이 시간대 그대로 액션을 찾아드릴까요?',
       ].join('\n');
     }
 
@@ -1365,22 +1406,27 @@ export function getRemainingQuestionKeys({
   skillsAnswered = false,
   answers,
   userState = 'F',
-  hasRegionAndTime = true,
+  hasRegion = true,
+  hasTime = true,
   hasHistory = false,
   profileSkills = [],
 }: {
   skillsAnswered?: boolean;
   answers: AdaptiveAnswers;
   userState?: UserStateCategory;
-  hasRegionAndTime?: boolean;
+  hasRegion?: boolean;
+  hasTime?: boolean;
   hasHistory?: boolean;
   profileSkills?: readonly string[];
 }): QuestionKey[] {
   const remaining: QuestionKey[] = [];
 
-  // 0순위: 다른 조건 변경이 요청되었거나 기본 지역/시간이 없는 경우
+  // 0순위: 다른 조건 변경이 요청되었거나 기본 지역/시간이 없는 경우.
+  // 지역·시간을 각각 따로 본다 — 하나만 프로필에 있어도 그건 다시 묻지 않는다
+  // (2026-09-30, 팀 테스트 피드백: 합쳐진 hasRegionAndTime 하나로는 "시간은 있는데
+  // 지역만 없는" 경우를 "둘 다 없음"과 구분하지 못해, 이미 아는 시간까지 다시 물었다).
   const needsRegion =
-    (answers.openingDecision === 'change' || !hasRegionAndTime) &&
+    (answers.openingDecision === 'change' || !hasRegion) &&
     !answers.travelRange &&
     !answers.selectedRegion;
   if (needsRegion) {
@@ -1388,7 +1434,7 @@ export function getRemainingQuestionKeys({
   }
 
   const needsTime =
-    (answers.openingDecision === 'change' || !hasRegionAndTime) &&
+    (answers.openingDecision === 'change' || !hasTime) &&
     !answers.timePreference &&
     (!answers.timePreferences || answers.timePreferences.length === 0);
   if (needsTime) {

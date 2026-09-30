@@ -204,7 +204,8 @@ function deriveConditionsFromText({
 
 type ReplayContext = {
   userState: UserStateCategory;
-  hasRegionAndTime: boolean;
+  hasRegion: boolean;
+  hasTime: boolean;
   hasHistory: boolean;
   profileSkills: readonly string[];
 };
@@ -257,8 +258,15 @@ function interpretAnswerForAxis(
 
   switch (axis) {
     case 'opening': {
-      if (ctx.hasRegionAndTime) {
+      // 지역·시간 중 프로필에 이미 있는 축만 확인하고, 모르는 축은 needsRegion/needsTime이
+      // 알아서 다음 턴에 새로 묻는다 (getRemainingQuestionKeys, 무변경). 여기서는 "이번 답이
+      // confirm인지 change인지"만 기록하면 된다 — 둘 다 있을 때와 똑같은 메커니즘이다.
+      if (ctx.hasRegion && ctx.hasTime) {
         next.openingDecision = /다른 조건/.test(a) ? 'change' : 'confirm';
+      } else if (ctx.hasRegion && !ctx.hasTime) {
+        next.openingDecision = /다른 지역/.test(a) ? 'change' : 'confirm';
+      } else if (!ctx.hasRegion && ctx.hasTime) {
+        next.openingDecision = /다른 시간/.test(a) ? 'change' : 'confirm';
       } else {
         next.openingDecision = 'change';
         const region = extractRegionFromText(a);
@@ -705,7 +713,8 @@ export async function POST(request: Request) {
     .map((message) => message.content);
   const replayContext: ReplayContext = {
     userState: userContext.state,
-    hasRegionAndTime: userContext.hasRegionAndTime,
+    hasRegion: userContext.hasRegion,
+    hasTime: userContext.hasTime,
     hasHistory,
     profileSkills: profile.skills ?? [],
   };
@@ -737,13 +746,15 @@ export async function POST(request: Request) {
       pastActivitySummary: userContext.pastActivitySummary,
       profileRegion: userContext.profileRegion,
       profileTimesSummary: userContext.profileTimesSummary,
-      hasRegionAndTime: userContext.hasRegionAndTime,
+      hasRegion: userContext.hasRegion,
+      hasTime: userContext.hasTime,
     });
     const openingOptions = getQuestionOptions(
       openingKey,
       SKILLS,
       userContext.state,
-      userContext.hasRegionAndTime,
+      userContext.hasRegion,
+      userContext.hasTime,
     );
 
     return NextResponse.json({
@@ -770,9 +781,10 @@ export async function POST(request: Request) {
       return NextResponse.json({
         done: false,
         reply: harmfulCheck.reason,
-        options: getQuestionOptions('skills', SKILLS, userContext.state, userContext.hasRegionAndTime, {
+        options: getQuestionOptions('skills', SKILLS, userContext.state, userContext.hasRegion, userContext.hasTime, {
           hasHistory,
-          hasRegionAndTime: userContext.hasRegionAndTime,
+          hasRegion: userContext.hasRegion,
+          hasTime: userContext.hasTime,
           answers: adaptiveAnswers,
           profileSkills: profile.skills ?? [],
         }),
@@ -868,10 +880,12 @@ export async function POST(request: Request) {
       nextAxis,
       SKILLS,
       userContext.state,
-      userContext.hasRegionAndTime,
+      userContext.hasRegion,
+      userContext.hasTime,
       {
         hasHistory,
-        hasRegionAndTime: userContext.hasRegionAndTime,
+        hasRegion: userContext.hasRegion,
+        hasTime: userContext.hasTime,
         answers: adaptiveAnswers,
         profileSkills: profile.skills ?? [],
         profileCategories: profile.categories ?? [],
