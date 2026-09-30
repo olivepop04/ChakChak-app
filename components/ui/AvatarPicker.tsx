@@ -35,8 +35,8 @@ export function AvatarPicker({
             aria-label={`아바타 ${i + 1}번`}
             onClick={() => onChange(key)}
             className={cn(
-              // 원 크기는 칸 폭에 맞추되 72px 까지만 — 375px 에서도 한 줄에 4개(누르는 칸 44px 이상)
-              'flex aspect-square w-full max-w-[72px] items-center justify-center justify-self-center rounded-full border-2 p-1 transition-colors',
+              // 원 크기는 칸 폭에 맞추되 64px 까지만 (2026-09-30 72 → 64) — 375px 에서도 한 줄에 4개(누르는 칸 44px 이상)
+              'flex aspect-square w-full max-w-[64px] items-center justify-center justify-self-center rounded-full border-2 p-1 transition-colors',
               'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
               selected ? 'border-brand' : 'border-transparent hover:border-hairline',
             )}
