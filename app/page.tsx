@@ -62,8 +62,8 @@ export default async function HomePage({
       <header className="flex items-center justify-between px-6 pb-4 pt-6">
         <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/chakchak-wordmark.png" alt="착착" className="h-[24px] w-auto" />
-          <p className="mt-1 text-[13px] text-neutral-500">
+          <img src="/brand/chakchak-wordmark.svg" alt="착착" className="h-[24px] w-auto" />
+          <p className="mt-1 font-paperlogy text-label font-bold text-[#333333]">
             착착 쌓이는 착한 일
           </p>
         </div>
