@@ -52,6 +52,19 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 특히 `action_results` 는 `18` 에서 `COMPLETED 이거나 호스트` 로 좁혀졌습니다 —
 `02` 의 `is_action_public`(ENDED 포함) 만 읽으면 **ENDED 액션의 결과가 왜 비는지 못 찾습니다.**
 
+**쓰기도 `21` 에서 좁혔습니다** (2026-09-30, 배포 전 검수). 브라우저 개발자 도구로 표를 직접 고쳐
+남의 크루챗에 들어가거나 공개 검수를 건너뛸 수 있었습니다.
+
+| 표 | 직접 고치기 | 대신 |
+|---|---|---|
+| `participations` | **UPDATE 정책 없음** — 보내도 오류 없이 아무것도 안 바뀝니다 | 나가기·소감·상태 전환은 전부 RPC |
+| `chat_messages` | **UPDATE 정책 없음** | 삭제는 `delete_chat_message` |
+| `actions` | 새로 넣을 땐 `DRAFT` 만 · `status`·`owner_id`·두 사유 칸은 못 바꿈 | 공개·취소·조기 종료·결과 공개 RPC |
+| `profiles` | `gender` 못 바꿈 (아바타처럼) | 관리자(서비스 롤)만 |
+
+막는 기준은 `current_user = 'authenticated'`(직접 요청)입니다. RPC 는 함수 주인 역할로 돌아서 그대로 됩니다.
+**그래서 새 기능에서 이 표들을 화면이 직접 UPDATE 하게 짜면 조용히 안 됩니다** — RPC 를 만들어 달라고 해주세요.
+
 **자주 걸리는 것만 표로 적어둡니다.** 실제로 확인한 결과입니다.
 
 | 무엇 | 비회원 | 로그인·미참여 | 참여한 크루 | 호스트 |
@@ -704,7 +717,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 | 담당 | 구역 |
 |---|---|
-| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/classify-core.mjs`** · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · `README.md` · `CLAUDE.md`) |
+| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/classify-core.mjs`** · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · **`vercel.json`** · `README.md` · `CLAUDE.md`) |
 | 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` · **`app/discover/`** · **`app/api/ai/discover/`** · **`lib/utils/scoring.ts`** · **`lib/utils/discover-ranking.ts`** |
 | 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · **`app/not-found.tsx`** · **`app/error.tsx`** · **`app/global-error.tsx`** · **`app/icon.svg`** · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` · **`postcss.config.mjs`** |
 | 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · **`components/my/`** · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` |
@@ -871,6 +884,11 @@ main        배포용. 민호만 병합.
 3. 브랜치는 작게, 자주 병합합니다. "다 만들면 올릴게요"보다 "목록만 되면 올릴게요"가 안전합니다.
 4. `components/ui/`, `lib/`을 고칠 때는 먼저 공유합니다.
 5. **스키마는 Supabase 콘솔에서 직접 고치지 않습니다.** 변경은 `supabase/`에 새 파일로 쌓습니다.
+
+**`main` 에 올리면 Vercel 이 바로 배포합니다** (https://final-proj-alpha.vercel.app).
+화면을 만드는 서버 위치는 `vercel.json` 의 `icn1`(서울)입니다 (2026-09-30). DB 가 서울 근처라서입니다 —
+전에는 기본값인 미국 동부(`iad1`)에서 돌아서, 화면 하나에 DB 를 여러 번 묻는 동안 매번 태평양을 건너
+**액션 상세가 3~4초** 걸렸습니다. 이 파일을 지우면 그때로 돌아갑니다.
 
 ---
 

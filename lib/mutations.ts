@@ -350,13 +350,19 @@ export async function updateProfile(
 
   if (Object.keys(patch).length === 0) return { ok: true, data: undefined };
 
-  const { error } = await supabase
+  // .select('id') 로 실제로 바뀐 행을 받습니다 (2026-09-30). 로그인이 풀린 채 저장하면
+  // RLS 가 조용히 0행을 고치고 오류가 없어서, 아무것도 안 바뀌었는데 「저장했어요」 가 떴습니다.
+  const { data: updated, error } = await supabase
     .from('profiles')
     .update(patch)
-    .eq('id', userId);
+    .eq('id', userId)
+    .select('id');
   if (error) return { ok: false, message: toMessage(error, '저장에 실패했어요.') };
+  if ((updated?.length ?? 0) === 0) return { ok: false, message: SESSION_EXPIRED_MESSAGE };
   return { ok: true, data: undefined };
 }
+
+const SESSION_EXPIRED_MESSAGE = '로그인이 풀렸어요. 다시 로그인한 뒤 저장해주세요.';
 
 /**
  * 알림 켜고 끄기 (F25).
@@ -369,10 +375,13 @@ export async function updateNotifySettings(
   userId: string,
   turnedOff: NotificationType[],
 ): Promise<Result> {
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('profiles')
     .update({ notify_off: turnedOff })
-    .eq('id', userId);
+    .eq('id', userId)
+    .select('id');
+  if (!error && (updated?.length ?? 0) === 0)
+    return { ok: false, message: SESSION_EXPIRED_MESSAGE }; // updateProfile 주석 참고
   if (error)
     return {
       ok: false,
@@ -608,7 +617,7 @@ export async function saveActionItems(
   const rows = items.map((it, i) => ({
     action_id: actionId,
     type: it.type,
-    name: it.name,
+    name: it.name.trim(),
     target_type: it.targetType,
     min_required: it.minRequired,
     max_allowed: it.targetType === 'MINIMUM' ? null : (it.maxAllowed ?? null),
@@ -773,6 +782,10 @@ export async function toggleLike(
         .from('likes')
         .insert({ user_id: user.id, action_id: actionId });
 
+  // 이미 켜져 있으면(23505 — 같은 행이 이미 있음) 원하던 상태이므로 성공으로 봅니다 (2026-09-30).
+  // 뒤로 가기로 돌아온 화면은 누르기 전 상태를 보여줄 때가 있어서, 거기서 다시 누르면
+  // 「이미 처리된 요청입니다」 가 뜨고 하트가 꺼진 채 남았습니다. 끄기(delete)는 원래 두 번 해도 괜찮습니다.
+  if (error?.code === '23505') return { ok: true, data: true };
   if (error) return { ok: false, message: toMessage(error, '처리에 실패했어요.') };
   return { ok: true, data: !currentlyLiked };
 }
@@ -797,6 +810,7 @@ export async function toggleSave(
         .from('saves')
         .insert({ user_id: user.id, action_id: actionId });
 
+  if (error?.code === '23505') return { ok: true, data: true }; // 이미 저장됨 — toggleLike 주석 참고
   if (error) return { ok: false, message: toMessage(error, '처리에 실패했어요.') };
   return { ok: true, data: !currentlySaved };
 }
@@ -823,6 +837,7 @@ export async function toggleFollow(
         .from('follows')
         .insert({ follower_id: user.id, following_id: targetUserId });
 
+  if (error?.code === '23505') return { ok: true, data: true }; // 이미 팔로우 중 — toggleLike 주석 참고
   if (error) return { ok: false, message: toMessage(error, '처리에 실패했어요.') };
   return { ok: true, data: !currentlyFollowing };
 }

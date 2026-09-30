@@ -40,7 +40,10 @@ function isUnder(pathname: string, base: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
-export function getLoginNotice(next: string): string | null {
+export function getLoginNotice(nextWithQuery: string): string | null {
+  // next 에 `?tab=…` 같은 쿼리가 붙어 올 수 있습니다 (middleware 가 2026-09-30 부터 같이 담음).
+  // 경로만 떼어 판단해야 `/activity?tab=created` 도 「내 활동」 안내를 받습니다.
+  const next = nextWithQuery.split(/[?#]/)[0];
   for (const { path, message } of NOTICES) {
     if (isUnder(next, path)) return message;
   }

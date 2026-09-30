@@ -39,9 +39,10 @@ export function validateImage(file: File): { ok: boolean; message?: string } {
   if (!UPLOAD.ALLOWED_MIME.includes(file.type as never)) {
     return { ok: false, message: 'JPG · PNG · WebP 파일만 올릴 수 있어요.' };
   }
-  if (file.size > UPLOAD.MAX_BYTES) {
+  // 원본은 넉넉히 받고, 5MB 한도는 줄인 뒤에 봅니다 (uploadImage). 폰 사진이 흔히 5MB 를 넘습니다.
+  if (file.size > UPLOAD.MAX_ORIGINAL_BYTES) {
     const mb = (file.size / 1024 / 1024).toFixed(1);
-    return { ok: false, message: `사진이 너무 커요. (${mb}MB / 최대 5MB)` };
+    return { ok: false, message: `사진이 너무 커요. (${mb}MB / 최대 25MB)` };
   }
   return { ok: true };
 }
@@ -103,6 +104,14 @@ export async function uploadImage(
   if (!check.ok) return { ok: false, message: check.message! };
 
   const blob = await resizeImage(file);
+  // 줄였는데도 크면(줄이기에 실패해 원본 그대로인 경우 등) 여기서 막습니다
+  if (blob.size > UPLOAD.MAX_BYTES) {
+    const mb = (blob.size / 1024 / 1024).toFixed(1);
+    return {
+      ok: false,
+      message: `사진을 줄였는데도 너무 커요. (${mb}MB / 최대 5MB) 다른 사진을 골라주세요.`,
+    };
+  }
   const ext = blob.type === 'image/webp' ? 'webp' : file.name.split('.').pop() || 'jpg';
   const path = `${actionId}/${crypto.randomUUID()}.${ext}`;
 

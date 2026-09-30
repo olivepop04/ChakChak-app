@@ -22,7 +22,7 @@ const admin = createClient(URL, SERVICE, {
 });
 
 let pass = 0, fail = 0;
-const created = { users: [], action: null };
+const created = { users: [], action: null, extraActions: [] };
 
 function ok(name, extra = '') {
   pass++; console.log(`  ✅ ${name}${extra ? '  — ' + extra : ''}`);
@@ -349,6 +349,96 @@ try {
   const { data: chatAsAnon } = await anon.from('chat_messages').select('id').eq('action_id', act.id);
   (chatAsAnon?.length ?? 0) === 0 ? ok('비회원은 게시판을 볼 수 없음')
                                   : no('게시판이 공개됨 !!');
+
+  // ── 10-b. 직접 고치기 막기 (21) ───────────────────────────
+  // 규칙은 전부 RPC 가 지킵니다. 표를 직접 UPDATE 해서 그 규칙을 건너뛸 수 없어야 합니다.
+  console.log('\n[10-b] 표를 직접 고쳐 규칙을 건너뛸 수 없는가  (21)');
+
+  // 옮겨 갈 곳 — A 의 다른 공개 액션. owner_id 는 CASCADE 가 아니라서(17) 계정을 지워도 안 지워집니다.
+  // 중간에 멈춰도 [정리] 에서 지우도록 목록에 넣습니다.
+  const { data: act2 } = await admin.from('actions').insert({
+    owner_id: uidA, title: '[검증] 옮겨 갈 액션', description: '자동 검증용',
+    category: '동물', image_urls: ['https://example.com/x.jpg'], thumbnail_index: 0,
+    status: 'ACTIVE',
+    recruit_end_at:    new Date(now + 3 * 86400000).toISOString(),
+    activity_start_at: new Date(now + 4 * 86400000).toISOString(),
+    activity_end_at:   new Date(now + 4 * 86400000 + 3 * 3600000).toISOString(),
+  }).select('id').single();
+  created.extraActions.push(act2.id);
+
+  const { data: partC } = await admin.from('participations')
+    .select('id, action_id, status').eq('action_id', act.id).eq('user_id', uidC).single();
+  await cC.from('participations').update({ action_id: act2.id }).eq('id', partC.id);
+  await cC.from('participations').update({ status: 'ACTUALLY_PARTICIPATED' }).eq('id', partC.id);
+  const { data: partC2 } = await admin.from('participations')
+    .select('action_id, status').eq('id', partC.id).single();
+  partC2.action_id === act.id
+    ? ok('참여 기록을 남의 액션으로 옮길 수 없음')
+    : no('참여 기록이 다른 액션으로 옮겨짐 !! — 21_update.sql 을 실행했는가');
+  partC2.status === partC.status
+    ? ok('참여 상태를 직접 「참여 완료」 로 바꿀 수 없음')
+    : no('참여 상태가 직접 바뀜 !!', `${partC.status} → ${partC2.status}`);
+
+  const { data: post2 } = await cC.from('chat_messages')
+    .insert({ action_id: act.id, user_id: uidC, content: '옮기면 안 되는 글' })
+    .select('id').single();
+  if (post2) {
+    await cC.from('chat_messages').update({ action_id: act2.id, content: '고친 글' }).eq('id', post2.id);
+    const { data: post2b } = await admin.from('chat_messages')
+      .select('action_id, content').eq('id', post2.id).single();
+    post2b.action_id === act.id && post2b.content === '옮기면 안 되는 글'
+      ? ok('크루챗 글을 직접 고치거나 옮길 수 없음')
+      : no('크루챗 글이 직접 바뀜 !!', JSON.stringify(post2b));
+    const { error: del2 } = await cC.rpc('delete_chat_message', { p_message_id: post2.id });
+    del2 ? no('직접 고치기를 막은 뒤 글 삭제(RPC)가 안 됨 !!', del2.message) : ok('글 삭제(RPC)는 그대로 됨');
+  }
+
+  const cA2 = await asUser(emailA);
+  const rSt = await cA2.from('actions').update({ status: 'COMPLETED' }).eq('id', act.id);
+  const { data: actSt } = await admin.from('actions').select('status').eq('id', act.id).single();
+  actSt.status === 'ACTIVE'
+    ? ok('호스트가 액션 상태를 직접 바꿀 수 없음', rSt.error?.message.slice(0, 24) ?? '')
+    : no('액션 상태가 직접 바뀜 !!', actSt.status);
+
+  const rIns = await cA2.from('actions').insert({
+    owner_id: uidA, title: '[검증] 바로 공개 시도', description: '자동 검증용',
+    category: '동물', image_urls: [], thumbnail_index: 0, status: 'ACTIVE',
+    recruit_end_at:    new Date(now + 3 * 86400000).toISOString(),
+    activity_start_at: new Date(now + 4 * 86400000).toISOString(),
+    activity_end_at:   new Date(now + 4 * 86400000 + 3 * 3600000).toISOString(),
+  }).select('id').maybeSingle();
+  rIns.error
+    ? ok('처음부터 ACTIVE 로 넣을 수 없음', rIns.error.message.slice(0, 24))
+    : no('검수 없이 바로 공개된 액션이 생김 !!');
+  if (rIns.data) await admin.from('actions').delete().eq('id', rIns.data.id);
+
+  const rDraft = await cA2.from('actions').insert({
+    owner_id: uidA, title: '[검증] 작성 중', category: '동물', image_urls: [], thumbnail_index: 0,
+    status: 'DRAFT',
+  }).select('id').single();
+  if (rDraft.error) {
+    no('작성 중 액션을 만들 수 없게 됨 !!', rDraft.error.message.slice(0, 40));
+  } else {
+    const rEdit = await cA2.from('actions').update({ title: '[검증] 작성 중 — 고침' }).eq('id', rDraft.data.id);
+    rEdit.error
+      ? no('작성 중 액션을 고칠 수 없게 됨 !!', rEdit.error.message.slice(0, 40))
+      : ok('작성 중 액션 만들기·고치기는 그대로 됨');
+    await admin.from('actions').delete().eq('id', rDraft.data.id);
+  }
+  const rText = await cA2.from('actions').update({ description: '공개 뒤 소개 고치기' }).eq('id', act.id);
+  rText.error
+    ? no('공개 뒤 소개 고치기가 막힘 !!', rText.error.message.slice(0, 40))
+    : ok('공개 뒤 소개 고치기는 그대로 됨');
+
+  const { data: gB } = await admin.from('profiles').select('gender').eq('id', uidB).single();
+  const rG = await cB.from('profiles').update({ gender: gB.gender === 'FEMALE' ? 'MALE' : 'FEMALE' }).eq('id', uidB);
+  const { data: gB2 } = await admin.from('profiles').select('gender').eq('id', uidB).single();
+  gB2.gender === gB.gender
+    ? ok('가입 뒤에 성별을 바꿀 수 없음', rG.error?.message.slice(0, 24) ?? '')
+    : no('성별이 바뀜 — 성별 제한을 우회할 수 있음 !!');
+  if (gB2.gender !== gB.gender) await admin.from('profiles').update({ gender: gB.gender }).eq('id', uidB);
+
+  await admin.from('actions').delete().eq('id', act2.id);
 
   // ── 11. 2026-09-01 개편분 ─────────────────────────────────
   console.log('\n[11] 개편분 — 알림 끄기 · 수정 잠금 · 나가기 사유');
@@ -1258,6 +1348,7 @@ try {
     await admin.from('actions').delete().eq('id', created.action);
     console.log('  🧹 테스트 액션 삭제');
   }
+  for (const id of created.extraActions) await admin.from('actions').delete().eq('id', id);
   // deleteUser 는 조용히 실패할 수 있습니다 (2026-09-11).
   // profiles 를 ON DELETE 절 없이 참조하는 테이블이 하나라도 남아 있으면
   // "Database error deleting user" 로 실패하는데, 전에는 에러를 안 봐서

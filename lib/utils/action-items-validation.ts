@@ -35,6 +35,9 @@ export function getActionItemsError(
     return '모집 항목을 하나 이상 추가해주세요.';
 
   for (const it of items) {
+    // 공개할 때만 이름을 요구합니다 (2026-09-30). 이름 없는 항목이 공개되면 참여 화면에
+    // 빈 줄이 뜨고, 공개 뒤에는 항목을 고칠 수 없습니다(규칙 10). 임시저장은 그대로 둡니다.
+    if (opts?.requireAtLeastOne && !it.name.trim()) return '모집 항목의 이름을 입력해주세요.';
     if (it.targetType === 'RANGE' && (it.maxAllowed ?? null) === null)
       return `「${it.name}」의 최대 인원을 입력해주세요.`;
     if (it.targetType === 'RANGE' && (it.maxAllowed as number) < it.minRequired)

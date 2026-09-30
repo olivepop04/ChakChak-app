@@ -48,6 +48,15 @@ test('항목이 있으면 requireAtLeastOne 과 무관하게 통과한다', () =
   assert.equal(getActionItemsError([사람항목()], { requireAtLeastOne: true }), null);
 });
 
+test('이름 없는 항목 — 공개는 거절, 임시저장은 통과 (2026-09-30)', () => {
+  const 빈이름 = [사람항목({ name: '   ' })];
+  assert.equal(
+    getActionItemsError(빈이름, { requireAtLeastOne: true }),
+    '모집 항목의 이름을 입력해주세요.',
+  );
+  assert.equal(getActionItemsError(빈이름), null);
+});
+
 // ── ① 함수: 정원 검사 (모집 수량 규칙) ────────────────────────
 
 test('RANGE 인데 최대 인원이 없으면 거절한다', () => {

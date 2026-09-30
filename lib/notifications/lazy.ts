@@ -134,14 +134,17 @@ export async function syncHostNotifications(userId: string): Promise<void> {
     const admin = createAdminClient();
     const nowIso = new Date().toISOString();
 
-    // 내가 만든 ACTIVE 액션 중 모집 마감이 지난 것
+    // 내가 만든 ACTIVE 액션 중 모집 마감이 지났고, 아직 활동이 시작되지 않은 것.
+    // 이 알림은 「진행할지 취소할지 정하라」 는 것인데 취소는 시작 전에만 됩니다(규칙 12).
+    // 시작 뒤에도 만들면 누를 수 없는 결정을 요구하게 됩니다 (2026-09-30).
     const { data: actions } = await admin
       .from('actions')
       .select('id')
       .eq('owner_id', userId)
       .eq('status', 'ACTIVE')
       .not('recruit_end_at', 'is', null)
-      .lt('recruit_end_at', nowIso);
+      .lt('recruit_end_at', nowIso)
+      .gt('activity_start_at', nowIso);
 
     if (!actions || actions.length === 0) return;
     const ids = actions.map((a) => a.id);

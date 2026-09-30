@@ -24,6 +24,9 @@ import {
   sanitizeClassification,
 } from '@/lib/ai/classify-spec';
 
+// 배포(Vercel) 함수가 AI 응답을 기다릴 수 있는 최대 시간 — lib/openai.ts 의 20초 × 2번보다 길게 (2026-09-30)
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {

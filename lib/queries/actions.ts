@@ -267,7 +267,9 @@ export async function getActionFeed(
     q = q.order('created_at', { ascending: false });
   }
 
-  q = q.limit(limit);
+  // 여기서 q.limit(limit) 로 다시 줄이면 안 됩니다 (2026-09-30에 뺐습니다).
+  // 위 fetchCount 만큼 받아와 아래에서 줄을 세우는 것이라, limit 만큼만 받으면
+  // 「인기순」 이 마감 임박 limit 개 안에서만 순서를 매겨 마감이 먼 인기 액션이 안 나왔습니다.
 
   const { data, error } = await q;
   if (error) throw error;
@@ -560,7 +562,11 @@ export async function getRecommendCandidates(
     .eq('status', 'ACTIVE')
     .neq('owner_id', viewerId) // 내가 만든 것 제외
     .gt('recruit_end_at', new Date().toISOString()) // 모집 마감 제외
-    .limit(50);
+    // 순서 없이 50개만 받으면, 모집 중 액션이 50개를 넘을 때 맞는 액션이 무작위로 빠졌습니다
+    // (2026-09-30 — 시드만으로 51개). 마감 임박 순으로 100개까지 받습니다.
+    // 더 늘리면 뒤에서 id 목록을 주소에 싣는 조회(.in)가 너무 길어집니다.
+    .order('recruit_end_at', { ascending: true })
+    .limit(100);
 
   // 관심 카테고리 중 하나라도 걸치면 후보에 넣습니다 (14).
   // in('category') 는 대표만 봐서, 두 번째 카테고리가 내 관심사인

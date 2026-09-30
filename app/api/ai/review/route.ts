@@ -29,6 +29,9 @@ import { callStructuredAI, ReviewSchema, AIError, type ReviewResult } from '@/li
 import { getPlaceErrors, getPlaceWarnings } from '@/lib/utils/place-validation';
 import { applyCodeFindings, type CodeWarning } from '@/lib/utils/review-result';
 
+// 배포(Vercel) 함수가 AI 응답을 기다릴 수 있는 최대 시간 — lib/openai.ts 의 20초 × 2번보다 길게 (2026-09-30)
+export const maxDuration = 60;
+
 const PROMPT_VERSION = 'review-v7';
 // v2: 착착·'인원' · v3: Owner→호스트 · v4: 장소 검수
 // v5: 심사 → 거들기. BLOCK 사유를 5가지로 좁히고, 작은 선행을 PASS 시키고,
@@ -171,6 +174,10 @@ function checkByCode(a: CodeCheckInput): {
     blockers.push('모집 마감일이 활동 시작일보다 늦어요. 마감일을 활동 시작 전으로 옮겨주세요.');
   if (a.activity_end_at && new Date(a.activity_end_at) < new Date())
     blockers.push('활동 날짜가 이미 지났어요. 날짜를 다시 잡아주세요.');
+  // 모집 마감이 지난 채로 공개되면 아무도 참여할 수 없고, 공개 뒤에는 날짜도 못 고칩니다 (2026-09-30).
+  // 문구에 「이미 지났」·「활동 종료」 를 쓰지 않아야 ActionForm 이 모집 마감 칸에 초점을 줍니다.
+  else if (a.recruit_end_at && new Date(a.recruit_end_at) <= new Date())
+    blockers.push('모집 마감일이 오늘보다 앞이에요. 마감일을 다시 잡아주세요.');
   if (a.image_urls.length === 0) blockers.push('대표 이미지를 1장 이상 올려주세요.');
   if (a.itemCount === 0)
     blockers.push('함께할 사람이나 필요한 물품을 하나 이상 적어주세요.');

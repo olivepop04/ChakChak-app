@@ -18,6 +18,16 @@ test('외부 주소와 이중 슬래시는 홈으로 막는다', () => {
   assert.equal(safeNextPath(null), '/');
 });
 
+test('역슬래시·탭으로 시작하는 주소도 홈으로 막는다 — 브라우저가 //evil 처럼 읽는다 (2026-09-30)', () => {
+  const backslash = String.fromCharCode(92);
+  const tab = String.fromCharCode(9);
+  assert.equal(safeNextPath(`/${backslash}evil.example`), '/');
+  assert.equal(safeNextPath(`/${tab}/evil.example`), '/');
+  assert.equal(safeNextPath(`/action/abc${backslash}x`), '/');
+  // 쿼리가 붙은 우리 경로는 그대로 (로그인 뒤 이어 쓰던 초안으로 돌아가야 함)
+  assert.equal(safeNextPath('/action/create?id=abc'), '/action/create?id=abc');
+});
+
 test('로그인과 가입 사이에서 돌아갈 경로를 보존한다', () => {
   assert.equal(
     withNext('/signup', '/action/abc/join'),

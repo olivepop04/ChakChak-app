@@ -82,8 +82,11 @@ export async function updateSession(request: NextRequest) {
   if (!user && needsAuth(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
-    // 로그인 후 원래 가려던 곳으로 돌려보낸다
-    url.searchParams.set('next', request.nextUrl.pathname);
+    // 로그인 후 원래 가려던 곳으로 돌려보낸다 — 주소 뒤의 ?… 까지 (2026-09-30).
+    // 전에는 경로만 담아서 `/action/create?id=…`(이어서 작성하기)가 로그인 뒤 빈 폼으로 열렸습니다.
+    // clone 에 남은 원래 쿼리는 지우고 next 하나만 둡니다.
+    url.search = '';
+    url.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
 

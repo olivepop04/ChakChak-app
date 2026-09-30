@@ -182,7 +182,13 @@ export const UPLOAD = {
   /** 결과 사진 — 최소 1장 필수 */
   RESULT_IMAGE_MIN: 1,
   RESULT_IMAGE_MAX: 5,
+  /** 줄인 뒤 올라가는 파일의 한도 */
   MAX_BYTES: 5 * 1024 * 1024,
+  /**
+   * 고르는 원본의 한도 — 줄이기 전에 브라우저가 풀어 볼 수 있는 크기까지만 (2026-09-30).
+   * 폰 사진은 5MB 를 흔히 넘는데, 전에는 줄이기 전에 5MB 로 거절해서 올릴 수 없었습니다.
+   */
+  MAX_ORIGINAL_BYTES: 25 * 1024 * 1024,
   ALLOWED_MIME: ['image/jpeg', 'image/png', 'image/webp'] as const,
 } as const;
 

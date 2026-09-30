@@ -63,3 +63,9 @@ test("'/my' 가 '/mypage' 까지 잡지 않는다", () => {
   assert.equal(getLoginNotice('/mypage'), null);
   assert.equal(getLoginNotice('/users'), null);
 });
+
+test('next 에 쿼리가 붙어도 경로로 판단한다 — middleware 가 ?… 까지 담아 보냄 (2026-09-30)', () => {
+  assert.equal(getLoginNotice('/activity?tab=created'), '내 활동은 로그인 후 볼 수 있어요.');
+  assert.equal(getLoginNotice('/action/create?id=abc'), '액션 만들기는 로그인 후 이용할 수 있어요.');
+  assert.notEqual(getLoginNotice('/action/abc/join?item=1'), null);
+});

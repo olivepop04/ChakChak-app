@@ -24,7 +24,13 @@ function getClient() {
   if (!client) {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error('OPENAI_API_KEY 가 설정되지 않았습니다.');
-    client = new OpenAI({ apiKey });
+    /*
+     * 제한 시간 20초 · 라이브러리 재시도 없음 (2026-09-30 배포 전 검수).
+     * 기본값은 10분 기다리고 두 번 더 재시도라, OpenAI 가 멈추면 요청이 배포 서버 한도까지
+     * 붙잡혀 있다가 끊겼습니다. 아래 callStructuredAI 가 이미 한 번 다시 시도하므로
+     * 가장 오래 기다려도 약 40초이고, 실패하면 각 라우트의 기본값 경로(검수는 REVISE 등)를 탑니다.
+     */
+    client = new OpenAI({ apiKey, timeout: 20_000, maxRetries: 0 });
   }
   return client;
 }

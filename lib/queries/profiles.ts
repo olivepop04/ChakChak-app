@@ -18,11 +18,17 @@ import { sortProfileActionsByLatestActivity } from '@/lib/utils/profile-actions'
 
 type DB = SupabaseClient<Database>;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function getProfile(
   supabase: DB,
   userId: string,
   viewerId: string | null,
 ): Promise<ProfileData | null> {
+  // 형식이 틀린 주소(/user/abc)는 DB 가 「uuid 형식 아님」 오류를 내서 404 대신 오류 화면이 떴습니다.
+  // 없는 사람과 같게 null 을 돌려주면 화면들이 이미 notFound() 로 404 를 띄웁니다 (2026-09-30).
+  if (!UUID_RE.test(userId)) return null;
+
   const { data: p, error } = await supabase
     .from('profiles')
     .select(
@@ -152,10 +158,14 @@ export async function searchUsers(
   // 사람이 친 글자 그대로 찾도록 막아둡니다.
   const safe = q.replace(/[\\%_]/g, (c) => `\\${c}`);
 
+  // 쉼표·괄호·큰따옴표는 .or() 문법을 깨서 결과가 늘 0명이었습니다 (2026-09-30).
+  // LIKE 의 한 글자 자리(_)로 바꾸면 문법은 안 깨지고 그 글자도 그대로 찾아집니다.
+  const orSafe = safe.replace(/[,()"]/g, '_');
+
   const { data } = await supabase
     .from('profiles')
     .select('id')
-    .or(`nickname.ilike.%${safe}%,name.ilike.%${safe}%`)
+    .or(`nickname.ilike.%${orSafe}%,name.ilike.%${orSafe}%`)
     .neq('id', viewerId)
     .limit(10);
 
