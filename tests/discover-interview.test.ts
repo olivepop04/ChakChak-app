@@ -544,6 +544,38 @@ test('[버그 수정 2026-09-30] 오프닝은 지역·시간 중 하나만 프�
   assert.equal(remainingAfterRegionConfirm.includes('time_pref'), true);
 });
 
+test('[버그 수정 2026-09-30] 시간만 프로필에 있는 오프닝에서 "다른 시간대로 찾을래요"를 고르면 지역이 아니라 시간부터 다시 묻는다', () => {
+  // 실제 재현: 프로필에 시간(상관없음)만 있고 지역은 없는 사용자가 오프닝에서
+  // "이번엔 다른 시간대로 찾을래요"를 눌렀는데, 시간 선택지 없이 곧장 지역 질문으로
+  // 넘어가 버렸다. hasRegion=false 라서 지역은 원래도 물어야 했던 축이라 needsRegion이
+  // 항상 true인데, 우선순위가 "지역 → 시간" 고정이라 방금 거절한 시간축이 뒤로 밀렸다.
+  const remaining = getRemainingQuestionKeys({
+    answers: { openingDecision: 'change' },
+    hasRegion: false,
+    hasTime: true,
+  });
+  assert.equal(remaining[0], 'time_pref', '오프닝에서 거절한 시간을 먼저 다시 물어야 한다');
+  assert.equal(remaining[1], 'travel_range', '원래도 몰랐던 지역은 그 다음이다');
+
+  // 대조군 — 지역만 프로필에 있던 경우(지역을 거절한 경우)는 기존 그대로 지역이 먼저다
+  const remainingRegionOnly = getRemainingQuestionKeys({
+    answers: { openingDecision: 'change' },
+    hasRegion: true,
+    hasTime: false,
+  });
+  assert.equal(remainingRegionOnly[0], 'travel_range');
+  assert.equal(remainingRegionOnly[1], 'time_pref');
+
+  // 대조군 — 둘 다 프로필에 있어서 둘 다 거절한 경우도 기존 그대로 지역이 먼저다 (피드백 2)
+  const remainingBoth = getRemainingQuestionKeys({
+    answers: { openingDecision: 'change' },
+    hasRegion: true,
+    hasTime: true,
+  });
+  assert.equal(remainingBoth[0], 'travel_range');
+  assert.equal(remainingBoth[1], 'time_pref');
+});
+
 test('난이도에서 누구나 참여가능을 선택하면 재능 질문을 완전히 스킵하고 환경 질문으로 전진한다', () => {
   const remaining = getRemainingQuestionKeys({
     answers: {

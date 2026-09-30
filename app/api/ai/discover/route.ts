@@ -837,29 +837,43 @@ export async function POST(request: Request) {
   if (!recommendNow) {
     const nextAxis: QuestionKey = fallbackQuestionKey ?? 'categories';
 
-    // AI의 역할은 딱 하나 — 직전 답변에 대한 짧은 공감 한 줄. 질문 축과 질문 본문·선택지는
-    // getRemainingQuestionKeys()/getQuestionReply()/getQuestionOptions() (interview.ts, 무변경)가
-    // 이미 결정하므로, AI 응답과 코드 기대값이 어긋날 여지 자체가 없다.
+    // 직전에 답한 축이 skills/difficulty이고 다음 질문이 activity_type이면, interview.ts의
+    // getQuestionReply()가 그 답을 이미 반영한 리드 문장(skillLead)을 앞에 붙인다("알려주신
+    // 재능을 살릴 수 있는 액션으로 함께 찾아볼게요!" 등). 프롬프트로 "같은 말 반복하지 말라"고
+    // 여러 번 당부해도 AI가 다른 표현으로 같은 내용을 또 말하는 사례가 실제로 나왔다
+    // (2026-09-30, 팀 테스트 피드백 — "재능을 활용하는 활동을 찾아볼게요!" 뒤에 "알려주신
+    // 재능을 살릴 수 있는 액션으로 함께 찾아볼게요!" 가 이어 붙음). 틀리면 안 되는 것은
+    // 코드가 보장한다 — 이 전이에서는 AI를 아예 부르지 않는다.
+    const priorAxis = axisPerTurn[axisPerTurn.length - 1];
+    const templateAlreadyReactsToPriorAnswer =
+      (priorAxis === 'skills' || priorAxis === 'difficulty') &&
+      (nextAxis === 'activity_type' || nextAxis === 'activity_types');
+
     let acknowledgment = '';
-    try {
-      const ackResult = await callStructuredAI({
-        agent: 'DISCOVER',
-        promptVersion: CHAT_PROMPT_VERSION,
-        system: CHAT_SYSTEM,
-        temperature: 0.5,
-        user: JSON.stringify({
-          사용자: profile.nickname,
-          직전질문: lastAssistantMsg,
-          사용자의답변: lastUserMsg,
-        }),
-        schema: AcknowledgmentSchema,
-        userId: user.id,
-      });
-      acknowledgment = ackResult.acknowledgment
-        .split(/\n\s*[-•*]\s*|\n\s*\d+[.)]\s*/)[0]
-        .trim();
-    } catch {
-      acknowledgment = '';
+    if (!templateAlreadyReactsToPriorAnswer) {
+      // AI의 역할은 딱 하나 — 직전 답변에 대한 짧은 공감 한 줄. 질문 축과 질문 본문·선택지는
+      // getRemainingQuestionKeys()/getQuestionReply()/getQuestionOptions() (interview.ts, 무변경)가
+      // 이미 결정하므로, AI 응답과 코드 기대값이 어긋날 여지 자체가 없다.
+      try {
+        const ackResult = await callStructuredAI({
+          agent: 'DISCOVER',
+          promptVersion: CHAT_PROMPT_VERSION,
+          system: CHAT_SYSTEM,
+          temperature: 0.5,
+          user: JSON.stringify({
+            사용자: profile.nickname,
+            직전질문: lastAssistantMsg,
+            사용자의답변: lastUserMsg,
+          }),
+          schema: AcknowledgmentSchema,
+          userId: user.id,
+        });
+        acknowledgment = ackResult.acknowledgment
+          .split(/\n\s*[-•*]\s*|\n\s*\d+[.)]\s*/)[0]
+          .trim();
+      } catch {
+        acknowledgment = '';
+      }
     }
 
     const templateReply = getQuestionReply(nextAxis, {

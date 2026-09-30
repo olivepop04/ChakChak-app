@@ -1429,16 +1429,25 @@ export function getRemainingQuestionKeys({
     (answers.openingDecision === 'change' || !hasRegion) &&
     !answers.travelRange &&
     !answers.selectedRegion;
-  if (needsRegion) {
-    remaining.push('travel_range');
-  }
 
   const needsTime =
     (answers.openingDecision === 'change' || !hasTime) &&
     !answers.timePreference &&
     (!answers.timePreferences || answers.timePreferences.length === 0);
-  if (needsTime) {
+
+  // 순서: 오프닝이 실제로 "이 지역/시간 그대로 할까요?" 라고 확인받은 축이 있다면, 그 축을
+  // 거절했을 때는 그 축부터 다시 묻는다. 둘 다 있던 경우(지역→시간 순으로 둘 다 확인받음)와
+  // 지역만 있던 경우(지역을 거절했으니 지역이 먼저)는 원래도 지역→시간 순이라 그대로 둔다.
+  // 시간만 있던 경우(!hasRegion && hasTime)만 예외 — 오프닝이 시간만 확인했었으므로 그걸
+  // 거절했으면 시간부터 다시 물어야 한다. 그대로 두면 "다른 시간대로 찾을래요"를 눌렀는데
+  // 지역부터 물어서 시간 선택지가 나오지 않은 채 넘어가 버린다 (2026-09-30, 팀 테스트 피드백).
+  const timeOnlyWasRejected = !hasRegion && hasTime && needsTime;
+  if (timeOnlyWasRejected) {
     remaining.push('time_pref');
+    if (needsRegion) remaining.push('travel_range');
+  } else {
+    if (needsRegion) remaining.push('travel_range');
+    if (needsTime) remaining.push('time_pref');
   }
 
   // 1순위: 관심 분야 (categories / field_preference)
