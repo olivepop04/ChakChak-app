@@ -1021,14 +1021,18 @@ export function extractAdaptiveAnswers(messages: string[]): AdaptiveAnswers {
   }
 
   // 활동 환경 (activity_types)
+  // 주의: '환경.*상관' 가지는 넣지 않는다 — "환경"은 카테고리 이름이기도 해서, 카테고리로
+  // "환경"을 고르고 (몇 턴 뒤) 아무 축에서나 "상관없음"을 고르면 전체 텍스트 안에서
+  // "환경"...(멀리 떨어진 다른 답)..."상관없음" 이 이어져 매치되어, 실제로는 묻지도 않은
+  // 활동 환경(activity_types) 질문이 이미 답한 것으로 처리되어 스킵되는 버그가 있었다
+  // (2026-09-30 확인, 실제 버튼 답 중 이 가지와 정확히 일치하는 것은 원래 없었다 —
+  // 진짜 "상관없음" 답은 extractAnswersFromDialogue 가 질문 맥락을 보고 이미 처리한다).
   if (/실내외 병행|병행/.test(text)) {
     answers.activityType = 'both';
   } else if (/실내|날씨 안 타|비 안 맞|안에서|실내 활동/.test(text)) {
     answers.activityType = 'indoor';
   } else if (/실외|야외|바깥|공원|밖에서|야외 활동/.test(text)) {
     answers.activityType = 'outdoor';
-  } else if (/환경.*상관|실내외.*상관|어디든 상관/.test(text)) {
-    answers.activityType = 'any';
   }
 
   // 활동 성격 (target_groups)
@@ -1235,7 +1239,13 @@ export function extractAnswersFromDialogue(
       }
 
       // 3. 환경 질문에 대한 답변 (4순위)
-      if (/환경|실내|실외|야외|어떤 환경/.test(q)) {
+      // 주의: 바로 '환경'만으로 판정하지 않는다 — '환경'은 카테고리 이름이기도 해서,
+      // AI가 생성하는 공감 한 줄이 "환경 분야에 관심이 있으시군요!"처럼 카테고리를
+      // 되짚어주면, 그 직후 어떤 질문(성격·난이도 등)에 "상관없음"으로 답해도
+      // 활동 환경 질문을 이미 물은 것으로 착각해 그 질문이 스킵되는 버그가 있었다
+      // (2026-09-30 확인). 실제 활동 환경 질문 문구는 항상 "어떤 환경에서"를 포함하므로
+      // 그 완전한 구절로만 잡는다.
+      if (/어떤 환경|실내|실외|야외/.test(q)) {
         if (/상관없/.test(a)) answers.activityType = 'any';
         else if (/실내외 병행|병행/.test(a)) answers.activityType = 'both';
         else if (/실내/.test(a)) answers.activityType = 'indoor';

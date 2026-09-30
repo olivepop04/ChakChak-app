@@ -581,6 +581,34 @@ test('[버그 수정 2026-09-30] 카테고리 "교육"·"아동·청소년"이�
   assert.equal(task.vibePreference, 'task');
 });
 
+test('[버그 수정 2026-09-30] 카테고리 "환경"을 고른 뒤 다른 축에서 "상관없음"을 골라도 활동 환경(activity_types) 질문이 스킵되지 않는다', () => {
+  // extractAdaptiveAnswers 는 전체 대화 텍스트를 통째로 이어붙여 검사하는데,
+  // '환경'(카테고리 이름)이 먼저 나오고 몇 턴 뒤 아무 축에서나 '상관없음'이 나오면
+  // "환경 ... 상관없음"이 이어져 활동 환경(activity_types)의 '상관없음' 정규식과
+  // 매치되어, 실제로는 묻지도 않은 활동 환경 질문이 스킵되던 버그. 브라우저로
+  // 실제 재현: 카테고리 "환경" → 활동 성격 "상관없음" → 활동 환경 질문이 통째로
+  // 건너뛰어지고 바로 모임 규모 질문으로 넘어감을 확인했다.
+  const answers = extractAdaptiveAnswers(['환경', '상관없음']);
+  assert.equal(
+    answers.activityType,
+    undefined,
+    '카테고리 "환경" + 다른 축의 "상관없음" 만으로 activityType 이 정해지면 안 된다',
+  );
+
+  const remaining = getRemainingQuestionKeys({ answers, hasHistory: false });
+  assert.equal(
+    remaining.includes('activity_type'),
+    true,
+    '환경 카테고리를 고른 뒤에도 활동 환경 질문이 남아있어야 한다',
+  );
+
+  // 실제 활동 환경 답변은 여전히 정상 인식된다
+  const indoor = extractAdaptiveAnswers(['실내 활동']);
+  assert.equal(indoor.activityType, 'indoor');
+  const outdoor = extractAdaptiveAnswers(['실외 활동']);
+  assert.equal(outdoor.activityType, 'outdoor');
+});
+
 test('[피드백 2] 오프닝에서 다른 조건으로 찾을래요 선택 시 지역 ➔ 시간 순으로 질문 키와 선택지가 일치한다', () => {
   const answersChange = extractAdaptiveAnswers(['이번엔 다른 조건으로 찾을래요 🔄']);
   assert.equal(answersChange.openingDecision, 'change');
