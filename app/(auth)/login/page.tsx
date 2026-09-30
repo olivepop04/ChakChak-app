@@ -67,10 +67,10 @@ function LoginForm() {
           src="/brand/chakchak-logo.svg"
           alt="착착"
           width={144}
-          height={71}
+          height={87}
           className="h-auto w-36"
         />
-        <p className="mt-4 text-body leading-relaxed text-neutral-500">
+        <p className="mt-4 font-paperlogy text-body font-bold leading-relaxed text-[#333333]">
           착착 쌓이는 착한 일
         </p>
 

@@ -90,7 +90,7 @@ export default async function ResultPage({
       <div className="flex flex-col gap-10 px-6 py-6">
         {/* 제목 + 장소 | 일정 + 구분선 */}
         <div>
-          <h1 className="font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
             {action.title}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-500">

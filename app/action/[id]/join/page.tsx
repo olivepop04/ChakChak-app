@@ -53,7 +53,7 @@ export default async function JoinPage({
 
       {/* 액션 요약 */}
       <section className="flex flex-col gap-3 border-b border-neutral-100 px-6 py-5">
-        <h1 className="font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
+        <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
         <div className="flex items-center gap-2">

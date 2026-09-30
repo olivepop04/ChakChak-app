@@ -484,7 +484,8 @@ export function DiscoverChat({
       {!loading && items === null && (
         <div className="flex flex-col gap-2.5 pt-1">
           {options.length > 0 && isSkillSelection ? (
-            <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 shadow-sm">
+            // 복수 선택 판 — 화면 폭 100% 회색 판 → 내 답변 말풍선처럼 오른쪽·내용 폭(최대 80%)·연한 초록 (2026-09-30, 시간 판도 같음)
+            <div className="ml-auto flex w-fit max-w-[80%] flex-col gap-3 rounded-xl rounded-br-sm bg-brand-soft p-4">
               <div className="flex items-center justify-between">
                 <span className="text-label font-bold text-neutral-900">
                   나눌 수 있는 재능을 모두 골라보세요 (복수 선택)
@@ -501,9 +502,9 @@ export function DiscoverChat({
                     <Chip
                       key={option}
                       selected={isSelected}
-                      tone="accent"
+                      tone="soft"
                       onClick={() => handleSkillToggle(option)}
-                      className="gap-1.5 py-1.5 text-[13px]"
+                      className="gap-1.5 py-1.5 text-label"
                     >
                       {isSelected && (
                         <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
@@ -519,11 +520,11 @@ export function DiscoverChat({
                   type="button"
                   disabled={selectedSkills.length === 0}
                   onClick={handleConfirmSkills}
-                  className="rounded-full bg-neutral-900 px-5 py-2 text-label font-bold text-white transition-opacity hover:bg-neutral-800 disabled:opacity-30 flex items-center gap-1.5"
+                  className="rounded-full border border-brand bg-white px-5 py-2 text-label font-bold text-brand transition-colors hover:bg-brand-soft disabled:opacity-30 flex items-center gap-1.5"
                 >
                   <span>선택 완료</span>
                   {selectedSkills.length > 0 && (
-                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold">
+                    <span className="rounded-full bg-brand-soft px-2 py-0.5 text-caption font-bold">
                       {selectedSkills.length}
                     </span>
                   )}
@@ -531,7 +532,7 @@ export function DiscoverChat({
               </div>
             </div>
           ) : options.length > 0 && isTimeSelection ? (
-            <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 shadow-sm">
+            <div className="ml-auto flex w-fit max-w-[80%] flex-col gap-3 rounded-xl rounded-br-sm bg-brand-soft p-4">
               <div className="flex items-center justify-between">
                 <span className="text-label font-bold text-neutral-900">
                   참여하기 편한 시간을 모두 골라보세요 (복수 선택)
@@ -550,7 +551,7 @@ export function DiscoverChat({
                       selected={isSelected}
                       tone="accent"
                       onClick={() => handleTimeToggle(option)}
-                      className="gap-1.5 py-1.5 text-[13px]"
+                      className="gap-1.5 py-1.5 text-label"
                     >
                       {isSelected && (
                         <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
@@ -566,11 +567,11 @@ export function DiscoverChat({
                   type="button"
                   disabled={selectedTimes.length === 0}
                   onClick={handleConfirmTimes}
-                  className="rounded-full bg-neutral-900 px-5 py-2 text-label font-bold text-white transition-opacity hover:bg-neutral-800 disabled:opacity-30 flex items-center gap-1.5"
+                  className="rounded-full border border-brand bg-white px-5 py-2 text-label font-bold text-brand transition-colors hover:bg-brand-soft disabled:opacity-30 flex items-center gap-1.5"
                 >
                   <span>선택 완료</span>
                   {selectedTimes.length > 0 && (
-                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold">
+                    <span className="rounded-full bg-brand-soft px-2 py-0.5 text-caption font-bold">
                       {selectedTimes.length}
                     </span>
                   )}
@@ -578,12 +579,13 @@ export function DiscoverChat({
               </div>
             </div>
           ) : options.length > 0 ? (
-            <div className="flex flex-wrap justify-end gap-2">
+            // 하나만 고르는 질문(지역·관심 분야 등)도 복수 선택 판과 같은 초록 말풍선 판 안에 (2026-09-30)
+            <div className="ml-auto flex w-fit max-w-[80%] flex-wrap justify-end gap-2 rounded-xl rounded-br-sm bg-brand-soft p-4">
               {options.map((option) => (
                 <Chip
                   key={option}
                   onClick={() => handleOptionClick(option)}
-                  className="border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white py-1.5 text-[13px]"
+                  className="py-1.5 text-label"
                 >
                   {option}
                 </Chip>
@@ -692,7 +694,7 @@ export function DiscoverChat({
       {/* 활동 지역 선택 바텀시트 모달 */}
       {regionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center">
-          <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl">
+          <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-t-xl bg-white sm:rounded-xl">
             <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
               <div className="flex items-center gap-2">
                 {selectedSido && (
@@ -707,7 +709,7 @@ export function DiscoverChat({
                     </svg>
                   </button>
                 )}
-                <h3 className="text-[16px] font-semibold text-neutral-900">
+                <h3 className="text-subtitle font-bold text-[#333333]">
                   {selectedSido ? selectedSido : '활동할 지역 선택'}
                 </h3>
               </div>
@@ -717,7 +719,7 @@ export function DiscoverChat({
                   setRegionModalOpen(false);
                   setSelectedSido(null);
                 }}
-                className="text-[13px] font-medium text-neutral-500 hover:text-neutral-800"
+                className="text-label font-medium text-neutral-500 hover:text-neutral-800"
               >
                 닫기
               </button>
@@ -731,7 +733,7 @@ export function DiscoverChat({
                       <button
                         type="button"
                         onClick={() => setSelectedSido(sido)}
-                        className="flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] text-neutral-800 hover:bg-neutral-50"
+                        className="flex w-full items-center justify-between px-5 py-3.5 text-left text-body text-neutral-800 hover:bg-neutral-50"
                       >
                         <span>{sido}</span>
                         <span className="text-neutral-300">›</span>
@@ -749,7 +751,7 @@ export function DiscoverChat({
                         <button
                           type="button"
                           onClick={() => handleRegionSelect(regionString)}
-                          className={`flex w-full items-center justify-between px-5 py-3.5 text-left text-[15px] hover:bg-neutral-50 ${
+                          className={`flex w-full items-center justify-between px-5 py-3.5 text-left text-body hover:bg-neutral-50 ${
                             isAll
                               ? 'bg-neutral-50 font-semibold text-neutral-900'
                               : 'text-neutral-800'
@@ -757,7 +759,7 @@ export function DiscoverChat({
                         >
                           <span>{isAll ? `${selectedSido} 전체` : g}</span>
                           {isAll && (
-                            <span className="rounded-md bg-neutral-900 px-2 py-0.5 text-[11px] font-medium text-white">
+                            <span className="rounded-lg bg-brand-soft px-2 py-0.5 text-caption font-semibold text-brand">
                               전체 선택
                             </span>
                           )}

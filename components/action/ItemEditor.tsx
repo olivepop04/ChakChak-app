@@ -21,6 +21,7 @@ import {
 } from '@/lib/constants';
 import type { ActionItemInput } from '@/lib/mutations';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 
 /** 입력값이 화면에 어떻게 보일지 미리 알려준다 */
 function preview(item: ActionItemInput): string {
@@ -53,11 +54,8 @@ const emptyGoods = (): ActionItemInput => ({
   genderRequirement: 'ANY',
 });
 
-const inputSm =
-  'min-h-11 rounded-xl border border-neutral-300 px-3 py-3 text-sm outline-none focus:border-neutral-900';
-
 const quantityInput =
-  'h-8 w-10 appearance-none rounded-lg border border-neutral-300 text-center text-sm outline-none focus:border-neutral-900 [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none';
+  'h-8 w-10 appearance-none rounded-lg border border-hairline text-center text-sm outline-none focus:border-hairline-focus [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none';
 
 function DeferredNumberInput({
   value,
@@ -162,13 +160,12 @@ export function ItemEditor({
           </div>
 
           {/* 이름 */}
-          <input
+          <Input
             value={item.name}
             onChange={(e) => update(i, { name: e.target.value })}
             placeholder={
               item.type === 'PERSON' ? '예: 요리 담당, 운반 지원' : '예: 분유, 기저귀'
             }
-            className={inputSm}
           />
 
           {/* 모집 방식 */}
@@ -245,12 +242,12 @@ export function ItemEditor({
           {item.type === 'GOODS' && (
             <div className="flex flex-col gap-1.5">
               <span className="text-label font-medium text-neutral-700">단위</span>
-              <input
+              <Input
                 type="text"
                 value={item.unit ?? ''}
                 onChange={(e) => update(i, { unit: e.target.value })}
                 placeholder="개"
-                className={`${inputSm} w-28`}
+                className="w-28"
               />
             </div>
           )}
@@ -284,11 +281,10 @@ export function ItemEditor({
                 <span className="text-label font-medium text-neutral-700">
                   참여 조건 <span className="text-caption font-normal text-neutral-400">(선택)</span>
                 </span>
-                <input
+                <Input
                   value={item.conditionName ?? ''}
                   onChange={(e) => update(i, { conditionName: e.target.value })}
                   placeholder="예: 조리사 자격증 보유"
-                  className={inputSm}
                 />
               </div>
             </>

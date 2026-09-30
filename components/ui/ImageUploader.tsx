@@ -115,7 +115,7 @@ export function ImageUploader({
                 type="button"
                 onClick={() => onThumbnailChange!(i)}
                 className={cn(
-                  'absolute bottom-1 left-1 rounded px-1.5 py-0.5 text-[10px] font-bold',
+                  'absolute bottom-1 left-1 rounded-lg px-1.5 py-0.5 text-caption font-bold',
                   i === thumbnailIndex
                     ? 'bg-brand text-white'
                     : 'bg-white/85 text-neutral-600',

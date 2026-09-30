@@ -108,7 +108,7 @@ export default async function CrewPage({
       <Header title="함께하는 크루" back backHref={`/action/${id}`} sticky />
 
       <div className="px-6 py-5">
-        <h1 className="line-clamp-2 font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
+        <h1 className="line-clamp-2 font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
       </div>

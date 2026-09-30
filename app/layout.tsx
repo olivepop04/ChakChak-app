@@ -18,7 +18,7 @@ const paperlogy = localFont({
 
 export const metadata: Metadata = {
   title: '착착',
-  description: '착한 일을 착착, 쉽고 즐겁게!',
+  description: '착착 쌓이는 착한 일',
 };
 
 /**

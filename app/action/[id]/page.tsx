@@ -197,13 +197,13 @@ export default async function ActionDetailPage({
               className="!min-w-0 !rounded-full !px-2.5"
             />
             {dday && action.status === 'ACTIVE' && (
-              <span className="ml-auto inline-flex h-6 flex-none items-center justify-center rounded-full border border-brand px-2.5 text-[13px] font-medium text-brand">
+              <span className="ml-auto inline-flex h-6 flex-none items-center justify-center rounded-full border border-brand px-2.5 text-label font-medium text-brand">
                 {dday}
               </span>
             )}
           </div>
 
-          <h1 className="font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
             {action.title}
           </h1>
 
@@ -351,7 +351,7 @@ export default async function ActionDetailPage({
         {action.notice && (
           <section className="flex flex-col gap-2">
             <SectionTitle>안내사항</SectionTitle>
-            <p className="whitespace-pre-wrap rounded-xl bg-neutral-50 p-4 text-[13px] leading-relaxed text-neutral-800">
+            <p className="whitespace-pre-wrap rounded-xl bg-neutral-50 p-4 text-label leading-relaxed text-neutral-800">
               {action.notice}
             </p>
           </section>
