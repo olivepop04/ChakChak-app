@@ -34,8 +34,7 @@ import {
 } from '@/lib/utils/scoring';
 import { sameProvince, totalGroupSize } from '@/lib/utils/discover-ranking';
 import {
-  extractAdaptiveAnswers,
-  extractAnswersFromDialogue,
+  extractRegionFromText,
   getQuestionOptions,
   getQuestionReply,
   getRecommendationReply,
@@ -48,14 +47,16 @@ import {
   ALL_15_SKILLS,
   CHEERING_OR_CASUAL_REGEX,
   type QuestionKey,
+  type UserStateCategory,
+  type AdaptiveAnswers,
 } from '@/app/api/ai/discover/interview';
 import { CATEGORIES, SKILLS, type Category } from '@/lib/constants';
 import { matchesRegion, NATIONWIDE } from '@/lib/constants/regions';
-import { formatDate, formatTime, isWeekend } from '@/lib/utils/date';
+import { isWeekend } from '@/lib/utils/date';
 import type { ActionCardData } from '@/lib/types/view';
 
-const CHAT_PROMPT_VERSION = 'discover-chat-v11-axis-locked';
-const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v12-positive-sandwich';
+const CHAT_PROMPT_VERSION = 'discover-chat-v12-no-double-ack';
+const RECOMMEND_PROMPT_VERSION = 'discover-recommend-v14-category-guard';
 const MAX_USER_TURNS = 15;
 const PARTICIPATION_MODES = [
   '시간을 내서',
@@ -110,6 +111,11 @@ const CHAT_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추천 �
 5. 분야·활동 분위기 같은 주관적 성향에는 자연스러운 공감을 짧게 담아도 됩니다.
      - 예: "동물들과 교감하는 시간을 좋아하시는군요! 🐾"
 6. '이제', '자 그럼', '보통' 같은 번역투 접두사를 쓰지 마세요.
+7. 당신의 한 줄 뒤에는 시스템이 정한 다음 질문이 곧바로 이어 붙습니다. 그 질문 문구가
+   이미 방금 답변을 언급하며 시작할 수도 있습니다(예: 재능을 고른 직후 "알려주신 재능을
+   살릴 수 있는 액션으로 찾아볼게요!"로 시작하는 질문). 같은 내용을 당신이 또 한 번
+   말하면 앞뒤로 두 번 반복하는 것처럼 보이니, 짧고 담백하게만 접수하세요. 무슨 말을
+   덧붙여야 할지 애매하면 망설이지 말고 빈 문자열("")을 반환하세요.
 
 [응답 형식 (반드시 JSON)]
 {"acknowledgment":"직전 답변에 대한 담백한 확인/공감 한 줄, 또는 빈 문자열"}`;
@@ -196,6 +202,176 @@ function deriveConditionsFromText({
   return { categories, participationMode };
 }
 
+type ReplayContext = {
+  userState: UserStateCategory;
+  hasRegionAndTime: boolean;
+  hasHistory: boolean;
+  profileSkills: readonly string[];
+};
+
+/**
+ * 사용자 답변 하나하나가 "어느 질문 축에 대한 답인지"를 추측하지 않고 확정적으로 계산한다.
+ *
+ * 예전에는 AI가 만든 질문 문구(공감 한 줄 포함)를 정규식으로 훑어서 "이게 시간 질문에
+ * 대한 답인가? 카테고리 질문에 대한 답인가?"를 추측했다. 그런데 공감 문장이 직전 축의
+ * 내용을 되짚어 말하다 보니(예: "시간에 구애받지 않으신다니 좋습니다") 그 안에 든 단어가
+ * 전혀 다른 축의 판정 키워드와 겹쳐서, 이미 답한 카테고리 질문이 통째로 다시 나오는 등의
+ * 버그가 반복됐다 (2026-09-30, 팀 테스트 피드백).
+ *
+ * 다음 질문 축이 항상 getRemainingQuestionKeys() 로 결정되는 것과 같은 이유로,
+ * "직전 답변이 어느 축의 답인지"도 추측할 필요가 없다 — i번째 사용자 답변은 항상
+ * "그 답이 나오기 직전까지의 답변만으로 계산한 getRemainingQuestionKeys() 의
+ * 첫 번째 축"에 대한 답이다. 순서대로 재생하면 매번 확정적으로 알 수 있다.
+ */
+function replayAnswers(
+  userAnswerTexts: readonly string[],
+  ctx: ReplayContext,
+): { answers: AdaptiveAnswers; axisPerTurn: QuestionKey[] } {
+  let answers: AdaptiveAnswers = {};
+  const axisPerTurn: QuestionKey[] = [];
+
+  for (let i = 0; i < userAnswerTexts.length; i++) {
+    const axis: QuestionKey =
+      i === 0
+        ? 'opening'
+        : (getRemainingQuestionKeys({ answers, ...ctx })[0] ?? 'categories');
+    axisPerTurn.push(axis);
+    answers = interpretAnswerForAxis(axis, userAnswerTexts[i], answers, ctx);
+  }
+
+  return { answers, axisPerTurn };
+}
+
+/**
+ * 축이 이미 확정된 상태에서 답변 텍스트 하나를 해석한다. 어느 축인지 확신하고 시작하므로
+ * 다른 축과 헷갈릴 여지가 없다 — "지금 이 질문을 묻고 있나?"를 되짚어 추측하는 정규식이
+ * 필요 없다. 버튼 기반 UI라 각 축의 답은 정해진 몇 개 문자열(또는 그 조합) 중 하나뿐이다.
+ */
+function interpretAnswerForAxis(
+  axis: QuestionKey,
+  a: string,
+  prev: AdaptiveAnswers,
+  ctx: ReplayContext,
+): AdaptiveAnswers {
+  const next: AdaptiveAnswers = { ...prev };
+
+  switch (axis) {
+    case 'opening': {
+      if (ctx.hasRegionAndTime) {
+        next.openingDecision = /다른 조건/.test(a) ? 'change' : 'confirm';
+      } else {
+        next.openingDecision = 'change';
+        const region = extractRegionFromText(a);
+        if (region.selectedRegion) next.selectedRegion = region.selectedRegion;
+        if (region.travelRange) next.travelRange = region.travelRange;
+      }
+      break;
+    }
+
+    case 'travel_range': {
+      const region = extractRegionFromText(a);
+      if (region.selectedRegion) next.selectedRegion = region.selectedRegion;
+      if (region.travelRange) next.travelRange = region.travelRange;
+      break;
+    }
+
+    case 'time_pref': {
+      const prefs = new Set<string>();
+      if (/상관없/.test(a)) prefs.add('시간 상관없음');
+      if (/주말 오전/.test(a)) prefs.add('주말 오전');
+      if (/주말 오후/.test(a)) prefs.add('주말 오후');
+      if (/평일 낮/.test(a)) prefs.add('평일 낮');
+      if (/평일 저녁/.test(a)) prefs.add('평일 저녁');
+      next.timePreferences = prefs.size > 0 ? Array.from(prefs) : ['시간 상관없음'];
+      break;
+    }
+
+    case 'categories':
+    case 'field_preference': {
+      if (/상관없/.test(a)) {
+        next.fieldPreference = 'any';
+        next.selectedCategory = '상관없음';
+        next.selectedCategories = ['상관없음'];
+      } else if (/같은 분야|네,\s*이 분야로|이 분야로/.test(a)) {
+        next.fieldPreference = 'familiar';
+      } else if (/새로운|다른 분야/.test(a)) {
+        next.fieldPreference = 'new';
+      } else {
+        const matched = CATEGORIES.filter((c) => a.includes(c));
+        if (matched.length > 0) {
+          next.selectedCategories = matched;
+          next.selectedCategory = matched[0];
+          next.fieldPreference = 'selected';
+        }
+      }
+      break;
+    }
+
+    case 'target_groups':
+    case 'vibe_preference': {
+      if (/상관없/.test(a)) next.vibePreference = 'any';
+      else if (/교류|소통/.test(a)) next.vibePreference = 'social';
+      else if (/과업|육체|집중/.test(a)) next.vibePreference = 'task';
+      break;
+    }
+
+    case 'difficulty': {
+      if (/상관없/.test(a)) next.difficultyPreference = 'any';
+      else if (/누구나/.test(a)) next.difficultyPreference = 'easy';
+      else if (/기초 체력/.test(a)) next.difficultyPreference = 'physical';
+      else if (/전문지식/.test(a)) next.difficultyPreference = 'expert';
+      break;
+    }
+
+    case 'skills': {
+      if (/그대로|프로필|예.*그럴|그럴게/.test(a)) {
+        next.selectedSkill = 'profile';
+        next.selectedSkills = [...ctx.profileSkills];
+        next.talentPreference = 'use';
+      } else if (/다른 재능|새로운 재능/.test(a)) {
+        next.talentPreference = 'new_skill';
+      } else {
+        const matched = ALL_15_SKILLS.filter((s) => s !== '기타' && a.includes(s));
+        if (matched.length > 0) {
+          next.selectedSkill = matched[0];
+          next.selectedSkills = matched;
+          next.talentPreference = 'use';
+        } else if (a.includes('기타')) {
+          next.selectedSkill = '기타';
+          next.selectedSkills = ['기타'];
+          next.talentPreference = 'any';
+        } else if (/상관없|부담 없/.test(a)) {
+          next.talentPreference = 'any';
+        }
+      }
+      break;
+    }
+
+    case 'activity_type':
+    case 'activity_types': {
+      if (/상관없/.test(a)) next.activityType = 'any';
+      else if (/병행/.test(a)) next.activityType = 'both';
+      else if (/실내/.test(a)) next.activityType = 'indoor';
+      else if (/실외|야외/.test(a)) next.activityType = 'outdoor';
+      break;
+    }
+
+    case 'group_size':
+    case 'participation_modes': {
+      if (/상관없/.test(a)) next.groupSizePreference = 'any';
+      else if (/소규모|10명 안팎|10명 이내|소그룹/.test(a)) next.groupSizePreference = 'small';
+      else if (/중규모|10-20|10~20|중그룹/.test(a)) next.groupSizePreference = 'medium';
+      else if (/대규모|20명 이상|대그룹/.test(a)) next.groupSizePreference = 'large';
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  return next;
+}
+
 function allowedCategories(values: string[]): Category[] {
   return values.filter((value): value is Category =>
     (CATEGORIES as readonly string[]).includes(value),
@@ -209,6 +385,7 @@ function filterRecommendationReason({
   userSelectedSkills = [],
   scoringAnswers,
   mismatchNotes = [],
+  positiveHighlights = [],
 }: {
   reason: string;
   item: ScoredAction;
@@ -221,6 +398,8 @@ function filterRecommendationReason({
   scoringAnswers: ScoringAnswers;
   /** buildMismatchNotes()가 미리 골라준, 정직하게 언급해도 되는 불일치 사실 (없으면 날조 검증을 그대로 적용) */
   mismatchNotes?: string[];
+  /** buildPositiveHighlights()가 미리 골라준, 실제로 사용자와 매칭된 사실 (카테고리 날조 검증에 씀) */
+  positiveHighlights?: string[];
 }): string {
   let cleaned = reason.trim();
   if (!cleaned) return fallbackReason(item);
@@ -337,7 +516,27 @@ function filterRecommendationReason({
     }
   }
 
-  // 8) 추천 이유는 반드시 긍정적으로 끝나야 한다 — 불일치를 정직하게 한 번 언급하는 것은
+  // 8) 카테고리 날조 검증 — positiveHighlights에 실제로 매칭된 카테고리가 없는데
+  // "관심있어 하는 OO 분야"처럼 사용자 관심사와 엮어 서술하는 경우 감지한다.
+  // (2026-09-30, 팀 테스트 피드백: 사용자가 카테고리를 '상관없음'으로 골랐는데도, AI가
+  // 액션 제목에 있는 단어("청소년 연극 캠프"의 "청소년")를 보고 "관심있어 하는 아동·청소년
+  // 분야"라고 지어낸 사례. positiveHighlights에 카테고리 항목이 없다는 건 코드가 실제로는
+  // 그 카테고리를 사용자 관심사로 매칭하지 않았다는 뜻이므로, "관심있어/관심이 많다"는
+  // 표현과 함께 다른 카테고리 이름이 나오면 날조로 본다.)
+  const matchedCategory = positiveHighlights
+    .find((h) => h.startsWith('관심 분야('))
+    ?.match(/관심 분야\((.+)\)/)?.[1];
+  const mentionedOtherCategory = CATEGORIES.some(
+    (c) => c !== matchedCategory && cleaned.includes(c),
+  );
+  if (
+    mentionedOtherCategory &&
+    /관심\s*있어|관심\s*있는|관심이\s*많|관심을\s*가지/.test(cleaned)
+  ) {
+    return fallbackReason(item);
+  }
+
+  // 9) 추천 이유는 반드시 긍정적으로 끝나야 한다 — 불일치를 정직하게 한 번 언급하는 것은
   // 괜찮지만, 마지막 문장이 그 불일치로 끝나면 안 된다. AI가 클로징 지시를 안 지켰을 때의
   // 안전장치로, 억지로 문장을 이어붙이지 않고 통째로 fallbackReason으로 교체한다.
   // (2026-09-30, 팀 피드백: "~와는 맞지 않아요"로 끝나는 추천 이유가 불쾌감을 줄 수 있다)
@@ -504,20 +703,13 @@ export async function POST(request: Request) {
   const userAnswers = messages
     .filter((message) => message.role === 'user')
     .map((message) => message.content);
-  const adaptiveAnswers = {
-    ...extractAdaptiveAnswers(userAnswers),
-    ...extractAnswersFromDialogue(messages),
+  const replayContext: ReplayContext = {
+    userState: userContext.state,
+    hasRegionAndTime: userContext.hasRegionAndTime,
+    hasHistory,
+    profileSkills: profile.skills ?? [],
   };
-  if (
-    adaptiveAnswers.selectedSkill === 'profile' &&
-    profile.skills &&
-    profile.skills.length > 0 &&
-    (!adaptiveAnswers.selectedSkills || adaptiveAnswers.selectedSkills.length === 0)
-  ) {
-    adaptiveAnswers.selectedSkills = profile.skills;
-    adaptiveAnswers.selectedSkill = 'profile';
-    adaptiveAnswers.talentPreference = 'use';
-  }
+  const { answers: adaptiveAnswers, axisPerTurn } = replayAnswers(userAnswers, replayContext);
   const inferredSkills = extractSkillsAnswer(messages);
   const effectiveSkills = inferredSkills ?? profile.skills;
   const selectedSkills =
@@ -526,10 +718,7 @@ export async function POST(request: Request) {
       : [];
   const remainingQuestionKeys = getRemainingQuestionKeys({
     answers: adaptiveAnswers,
-    userState: userContext.state,
-    hasRegionAndTime: userContext.hasRegionAndTime,
-    hasHistory,
-    profileSkills: profile.skills ?? [],
+    ...replayContext,
   });
   const fallbackQuestionKey = remainingQuestionKeys[0] ?? null;
 
@@ -571,28 +760,9 @@ export async function POST(request: Request) {
   const assistantMessages = messages.filter((m) => m.role === 'assistant');
   const lastAssistantMsg = assistantMessages[assistantMessages.length - 1]?.content ?? '';
 
-  // 직전 턴에 실제로 어떤 축을 물었는지 결정론적으로 재계산한다 (AI 생성 텍스트를 정규식으로
-  // 스니핑하지 않는다 — 질문은 항상 getRemainingQuestionKeys() 가 고른 축에서 나오기 때문에
-  // 같은 함수를 "직전 답변 반영 전" 상태에 대해 한 번 더 돌리면 직전 질문 축이 그대로 나온다).
-  const priorUserAnswers = userAnswers.slice(0, -1);
-  const priorMessages = messages.slice(0, -1);
-  const priorAdaptive = {
-    ...extractAdaptiveAnswers(priorUserAnswers),
-    ...extractAnswersFromDialogue(priorMessages),
-  };
-  const skillAlreadyDecided =
-    Boolean(priorAdaptive.selectedSkills && priorAdaptive.selectedSkills.length > 0) ||
-    priorAdaptive.selectedSkill === 'profile' ||
-    priorAdaptive.talentPreference === 'any';
-  const previousAxis =
-    getRemainingQuestionKeys({
-      answers: priorAdaptive,
-      userState: userContext.state,
-      hasRegionAndTime: userContext.hasRegionAndTime,
-      hasHistory,
-      profileSkills: profile.skills ?? [],
-    })[0] ?? null;
-  const isSkillContext = previousAxis === 'skills' && !skillAlreadyDecided;
+  // 직전 답변(lastUserMsg)이 실제로 어느 축에 대한 것이었는지는 replayAnswers()가 재생하며
+  // 이미 확정적으로 계산해뒀다 — axisPerTurn의 마지막 값이 바로 그것이다.
+  const isSkillContext = axisPerTurn[axisPerTurn.length - 1] === 'skills';
 
   if (isSkillContext && lastUserMsg) {
     const harmfulCheck = validateHarmfulSkillInput(lastUserMsg);
@@ -618,10 +788,8 @@ export async function POST(request: Request) {
     const isKnownSkill = ALL_15_SKILLS.some((s) => lastUserMsg.includes(s));
 
     if (isProfileConfirm) {
-      // 프로필 재능 그대로 활용 확정 ➔ 재능 바인딩 후 다음 질문으로 정상 진행
-      adaptiveAnswers.selectedSkill = 'profile';
-      adaptiveAnswers.selectedSkills = profile.skills ?? [];
-      adaptiveAnswers.talentPreference = 'use';
+      // 프로필 재능 그대로 활용 확정 — adaptiveAnswers는 이미 replayAnswers() 단계에서
+      // 이 축(skills)을 'profile'로 해석해뒀으므로 여기서 더 손댈 게 없다. 다음 질문으로 진행.
     } else if (isNewSkillRequest) {
       // 새로운 재능 선택 요청 ➔ 16종 선택지 노출
       return NextResponse.json({
@@ -902,14 +1070,28 @@ export async function POST(request: Request) {
           : (adaptiveAnswers.selectedSkill ? [adaptiveAnswers.selectedSkill] : selectedSkills));
   const resolvedSkill = resolvedSkills[0] ?? null;
   const resolvedCategory =
-    adaptiveAnswers.selectedCategory && adaptiveAnswers.selectedCategory !== '상관없음'
-      ? adaptiveAnswers.selectedCategory
-      : (filterCategories.length === 1 ? filterCategories[0] : null);
+    adaptiveAnswers.selectedCategory === '상관없음'
+      ? '상관없음'
+      : adaptiveAnswers.selectedCategory
+        ? adaptiveAnswers.selectedCategory
+        : (filterCategories.length === 1 ? filterCategories[0] : null);
+
+  // scoreAction()은 category/categories에 '상관없음'이 그대로 들어와야 "카테고리 전체
+  // 허용"(wantsAll)으로 인식한다. filterCategories는 후보 필터링용으로 '상관없음'을 미리
+  // 걸러낸 배열이라, 그걸 그대로 스코어링에 넘기면 "사용자가 상관없다고 골랐다"와 "아직
+  // 안 답했다"가 똑같이 빈 배열이 되어 구분이 안 된다 — scoreAction이 이걸 "응답 없음"으로
+  // 보고 조용히 프로필 관심분야로 대신 매칭해버린다 (2026-09-30, 팀 테스트 피드백:
+  // 카테고리를 '상관없음'으로 골랐는데도 추천 이유가 "선택하신 OO 분야"라며 사용자가
+  // 고르지 않은 특정 분야를 골랐다는 듯이 서술한 사례).
+  const scoringCategories =
+    adaptiveAnswers.selectedCategories && adaptiveAnswers.selectedCategories.length > 0
+      ? adaptiveAnswers.selectedCategories
+      : filterCategories;
 
   const scoringAnswers: ScoringAnswers = {
     participationMode,
     category: resolvedCategory,
-    categories: filterCategories,
+    categories: scoringCategories,
     range: relaxation.length > 0 ? 'any' : null,
     talentPreference:
       adaptiveAnswers.talentPreference === 'new_skill'
@@ -985,12 +1167,15 @@ export async function POST(request: Request) {
       : (scoringAnswers.selectedSkill && scoringAnswers.selectedSkill !== '기타' ? [scoringAnswers.selectedSkill] : []);
 
   // 2) 선정된 Top 3 후보에 대해 AI가 개인화 맞춤 추천 이유(reason) 서술
+  // AI에게는 "이미 매칭이 끝난 결과"만 넘긴다 — 액션 자체의 원본 속성(카테고리·성격·환경 등)은
+  // 일부러 넘기지 않는다. 예전엔 이 필드들도 같이 줬는데, AI가 "사용자와 매칭된 것"
+  // (positiveHighlights)과 "액션 자신의 성격 설명"을 구분 못 하고 후자를 보고 "이것도
+  // 관심사겠거니" 끼워맞추는 사고가 있었다 (2026-09-30, 팀 테스트 피드백: 사용자가 고르지도
+  // 않은 카테고리를 "관심있어 하는 분야"라고 서술). "왜 맞는지/안 맞는지"의 유일한 근거는
+  // positiveHighlights·mismatchNotes 두 배열뿐이어야 헷갈릴 여지가 없다.
   const candidateSummaries = codeRanked.map((item) => {
     const action = item.action;
     const meta = metasById.get(action.id);
-    const scheduleStr = action.activityStartAt
-      ? `${formatDate(action.activityStartAt)} ${formatTime(action.activityStartAt)} (${isWeekend(action.activityStartAt) ? '주말' : '평일'})`
-      : '일정 미정';
     const rawItems = itemsByAction.get(action.id) ?? [];
     const recruitmentItems = rawItems
       .filter((it) => it.name && it.name.trim().length > 0)
@@ -998,36 +1183,13 @@ export async function POST(request: Request) {
 
     const actionSkills = meta?.skills ?? [];
     const matchedUserSkills = actionSkills.filter((s) => userSelectedSkills.includes(s));
-    const isSocialAction = (meta?.target_groups ?? []).some((g) => /교류|교육|소통/.test(g));
-    const isTaskAction = (meta?.target_groups ?? []).some((g) => /과업|육체|집중/.test(g));
-    const actualVibeDescription =
-      isSocialAction && isTaskAction
-        ? '교류·소통과 육체적 작업이 함께 있는 복합 활동'
-        : isSocialAction
-          ? '사람과의 대화, 상담, 정서적 유대가 중심인 교류·소통형 활동'
-          : isTaskAction
-            ? '작업, 땀 흘리기, 결과물 완성이 중심인 육체·과업·집중형 활동'
-            : '일반 활동';
-
-    const actionActivityTypes = meta?.activity_types ?? [];
 
     return {
       actionId: action.id,
       title: action.title,
-      category: action.category,
-      address: action.address,
-      activityTypes: actionActivityTypes,
-      targetGroups: meta?.target_groups ?? [],
-      actualVibeDescription,
-      isSocialAction,
-      isTaskAction,
-      participationModes: meta?.participation_modes ?? [],
       matchedUserSkills,
       actionRequiresSkills: actionSkills,
       recruitmentItems,
-      actualSchedule: scheduleStr,
-      isWeekendAction: action.activityStartAt ? isWeekend(action.activityStartAt) : null,
-      matchedReasons: item.matched,
       positiveHighlights: buildPositiveHighlights(item.matched),
       mismatchNotes: buildMismatchNotes({ action, meta, scoringAnswers }),
     };
@@ -1064,10 +1226,13 @@ export async function POST(request: Request) {
    - 'matchedUserSkills'가 빈 배열([])이면 재능 이야기는 일체 하지 마세요. 액션 정보(actionRequiresSkills)에 적힌 다른 재능을
      사용자가 가지고 있다고 절대 거짓 서술하지 마세요.
      (위반 금지 예시: 교육·멘토링을 선택한 사용자에게 액션이 네일아트라고 해서 "미술·공예 재능을 활용하여..."라고 쓰는 것은 심각한 날조입니다.)
+   - 같은 이유로, 'positiveHighlights'에 '관심 분야(...)' 항목이 없으면 "관심있어 하는 OO 분야"처럼
+     특정 카테고리를 사용자의 관심사로 엮어 말하지 마세요. 액션 제목이나 소개에 어떤 분야 단어가
+     보여도, 그게 사용자가 실제로 고른 관심사라는 뜻은 아닙니다.
 
-2. ★★★ [활동 환경(실내/실외) 및 활동 성격 왜곡 절대 금지]:
-   - 액션의 'activityTypes'가 '실내 활동'인데 "실외에서", "야외에서", "땀 흘리며" 등으로 왜곡하지 마세요.
-   - 액션의 'activityTypes'가 '실외 활동'인데 "실내에서", "아늑한 실내" 등으로 왜곡하지 마세요.
+2. ★★★ [활동 환경(실내/실외) 언급 절대 금지 — mismatchNotes에 있는 것 제외]:
+   - 이 액션이 실내인지 실외인지에 대한 정보는 드리지 않습니다. 'mismatchNotes'에 그 내용이
+     있을 때만 그대로 전달하고, 그 외에는 실내·실외·야외에 대해 아무 말도 지어내지 마세요.
    - '교류·소통형'이나 '육체·과업·집중형'은 활동의 '분위기'이지 '재능'이 아닙니다. "육체적인 재능" 같은 표현 금지.
 
 3. ★★★ [불일치는 오직 'mismatchNotes'에 있는 것만]:
@@ -1126,6 +1291,7 @@ export async function POST(request: Request) {
       userSelectedSkills,
       scoringAnswers,
       mismatchNotes: buildMismatchNotes({ action: item.action, meta, scoringAnswers }),
+      positiveHighlights: buildPositiveHighlights(item.matched),
     });
 
     return {
