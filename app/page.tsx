@@ -85,7 +85,7 @@ export default async function HomePage({
         ) : (
           <Link
             href="/login"
-            className="rounded-lg px-3 py-2 text-[13px] font-semibold text-neutral-700"
+            className="rounded-lg px-3 py-2 text-label font-semibold text-neutral-700"
           >
             로그인
           </Link>

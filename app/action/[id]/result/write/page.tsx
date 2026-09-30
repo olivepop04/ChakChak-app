@@ -58,7 +58,7 @@ export default async function ResultWritePage({
       <Header title="결과 작성" back backHref={`/action/${id}`} sticky />
 
       <div className="border-b border-neutral-100 px-6 py-4">
-        <h1 className="font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
+        <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
         {/* 장소 | 일정 — 결과 보기 화면과 같은 형식 */}

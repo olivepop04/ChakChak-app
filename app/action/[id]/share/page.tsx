@@ -28,7 +28,7 @@ export default async function SharePage({
       <Header title="공유하기" back backHref={`/action/${id}`} sticky />
 
       <div className="border-b border-neutral-100 px-6 py-4">
-        <h1 className="line-clamp-2 font-paperlogy text-[20px] font-bold leading-snug tracking-tight text-neutral-900">
+        <h1 className="line-clamp-2 font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
       </div>
