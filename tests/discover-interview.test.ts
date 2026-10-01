@@ -337,27 +337,13 @@ test('analyzeUserContext는 사용자 상태 A~F를 정확히 분류한다', () 
   assert.equal(userE.state, 'E');
 });
 
-test('추천 시작 문장에 대화에서 확인한 성향을 자연스럽게 연결하며 한글 액션을 사용한다', () => {
-  const reply = getRecommendationReply({
-    nickname: '성은',
-    answers: {
-      talentPreference: 'use',
-      activityType: 'indoor',
-      vibePreference: 'social',
-      groupSizePreference: 'small',
-      fieldPreference: 'new',
-    },
-    selectedSkills: ['사진 촬영'],
-    fieldReferenceCategories: ['동물'],
-  });
+test('[버그 수정 2026-10-01] 추천 완료 멘트는 "~님의 선택" 칩 카드와 같은 조건을 다시 나열하지 않는다', () => {
+  // 화면의 요약 칩 카드(DiscoverChat.tsx)가 재능·분야·성격·환경·규모를 전부 칩으로
+  // 보여주는데, 이 멘트까지 같은 조건을 문장으로 풀어 쓰면 같은 내용이 두 번 나온다
+  // (2026-10-01, 팀 테스트 피드백 — 스크린샷으로 확인: 채팅 말풍선과 칩 카드가 동일 내용).
+  const reply = getRecommendationReply({ nickname: '성은' });
 
-  assert.equal(
-    reply,
-    [
-      '성은님께서 사진 촬영 재능을 살릴 수 있으면서, 날씨 안 타는 실내에서, 따뜻한 교류를 나누는, 10명 이내 소규모 참여하실 수 있는',
-      '새로운 분야의 액션으로 골라봤어요. 마음에 드는 활동을 확인해보세요! 😊',
-    ].join('\n'),
-  );
+  assert.equal(reply, '성은님을 위한 액션을 찾았어요! 마음에 드는 활동을 확인해보세요! 😊');
   assert.equal(/Action/i.test(reply), false);
 });
 
