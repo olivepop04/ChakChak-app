@@ -132,27 +132,6 @@ const RECOMMEND_SYSTEM = `당신은 선한 영향력 SNS '착착'의 액션 추�
 형식:
 {"topActionIds":["actionId1", "actionId2", "actionId3"]}`;
 
-function extractSkillsAnswer(messages: ChatMessage[]): string[] | null {
-  const userText = messages
-    .filter((message) => message.role === 'user')
-    .map((message) => message.content)
-    .join(' ');
-
-  if (userText.includes('재능 없음')) return [];
-  if (userText.includes('아직 모르겠음')) return null;
-
-  const cleanText = userText
-    .replace(/교류·교육·소통형/g, '')
-    .replace(/전문지식\/자격\/재능 활용/g, '');
-
-  const selected = ALL_15_SKILLS.filter((skill) => {
-    if (skill === '기타') return false;
-    const words = skill.split(/[·\s]+/).filter((word) => word.length >= 2);
-    return words.some((word) => cleanText.includes(word));
-  });
-  return selected.length > 0 ? [...selected] : null;
-}
-
 /**
  * 대화에서 명시적으로 뽑히지 않은 관심 분야·참여 방식을 자유 텍스트에서 보조로 추정한다.
  * adaptiveAnswers(interview.ts)가 못 잡은 경우에만 쓰이는 마지막 보조 수단이다.
@@ -719,12 +698,25 @@ export async function POST(request: Request) {
     profileSkills: profile.skills ?? [],
   };
   const { answers: adaptiveAnswers, axisPerTurn } = replayAnswers(userAnswers, replayContext);
-  const inferredSkills = extractSkillsAnswer(messages);
-  const effectiveSkills = inferredSkills ?? profile.skills;
+  // 재능은 adaptiveAnswers(replayAnswers의 결정론적 축 재생)만 근거로 삼는다. 예전엔 대화
+  // 전체 텍스트에서 재능 이름의 낱말 조각을 정규식으로 긁어와(extractSkillsAnswer) 프로필
+  // 재능 자리를 통째로 대신했는데, 그 낱말 조각이 재능과 무관한 답(예: 카테고리 "교육" 선택)과
+  // 겹쳐서 사용자가 고르지도 않은 재능이 "재능 활용"으로 매칭·추천 이유에 등장했다
+  // (2026-09-30, 팀 테스트 피드백). 사용자가 이번 대화에서 실제로 고른 재능은 항상
+  // adaptiveAnswers.selectedSkills에 있고, 없으면 프로필에 등록된 실제 재능을 그대로 쓴다.
   const selectedSkills =
-    adaptiveAnswers.talentPreference === 'use'
-      ? (inferredSkills ?? profile.skills ?? [])
-      : [];
+    adaptiveAnswers.talentPreference === 'use' ? (profile.skills ?? []) : [];
+  // 대화에서 실제로 확정된 재능 — 구체적 재능을 골랐으면 그것, 프로필 그대로 쓰기로
+  // 확인했으면 프로필 재능, 둘 다 아니면 위 selectedSkills(프로필 재능 또는 빈 배열)로
+  // 대체한다. 사용자에게 보여줄 최종 요약 문구(getRecommendationReply)는 반드시 이 값을
+  // 써야 한다 — selectedSkills만 쓰면 "다른 재능으로 할게요"를 누르고 새 재능을 골라도
+  // 요약 문구가 여전히 프로필 재능을 살릴 수 있다고 말한다 (2026-09-30, 팀 테스트 피드백).
+  const resolvedSkills =
+    adaptiveAnswers.selectedSkills && adaptiveAnswers.selectedSkills.length > 0
+      ? adaptiveAnswers.selectedSkills
+      : (adaptiveAnswers.selectedSkill === 'profile'
+          ? (profile.skills ?? [])
+          : (adaptiveAnswers.selectedSkill ? [adaptiveAnswers.selectedSkill] : selectedSkills));
   const remainingQuestionKeys = getRemainingQuestionKeys({
     answers: adaptiveAnswers,
     ...replayContext,
@@ -924,7 +916,7 @@ export async function POST(request: Request) {
 
   const scoringProfile: ScoringProfile = {
     categories: profile.categories,
-    skills: effectiveSkills ?? [],
+    skills: profile.skills ?? [],
     historyCategories: fieldReferenceCategories,
     timePrefs: profile.timePrefs,
     availableTimes: profile.availableTimes,
@@ -932,12 +924,7 @@ export async function POST(request: Request) {
     followingIds: following.map((person) => person.id),
   };
 
-  const finalReply = getRecommendationReply({
-    nickname: profile.nickname,
-    answers: adaptiveAnswers,
-    selectedSkills,
-    fieldReferenceCategories,
-  });
+  const finalReply = getRecommendationReply({ nickname: profile.nickname });
 
   // 사용자가 대화에서 '같은 분야' 또는 프로필 관심 분야를 확인하고 수락한 경우 (familiar) 카테고리 자동 설정
   if (
@@ -1090,12 +1077,6 @@ export async function POST(request: Request) {
   }
 
   const participationMode = conditionsFromText.participationMode;
-  const resolvedSkills =
-    adaptiveAnswers.selectedSkills && adaptiveAnswers.selectedSkills.length > 0
-      ? adaptiveAnswers.selectedSkills
-      : (adaptiveAnswers.selectedSkill === 'profile'
-          ? (profile.skills ?? [])
-          : (adaptiveAnswers.selectedSkill ? [adaptiveAnswers.selectedSkill] : selectedSkills));
   const resolvedSkill = resolvedSkills[0] ?? null;
   const resolvedCategory =
     adaptiveAnswers.selectedCategory === '상관없음'

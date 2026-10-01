@@ -937,70 +937,15 @@ export function getQuestionReply(
 }
 
 /**
- * 추천 완료 시점의 따뜻한 공감 및 요약 문장 생성
+ * 추천 완료 시점의 따뜻한 공감 멘트 생성.
+ *
+ * 예전엔 여기서 재능·분야·성격·환경·규모를 전부 문장으로 풀어 썼는데, 화면의
+ * "~님의 선택" 요약 칩 카드(DiscoverChat.tsx)가 같은 조건을 그대로 다시 보여주고 있어서
+ * 같은 내용이 채팅 말풍선과 칩 카드에 두 번 나왔다 (2026-10-01, 팀 테스트 피드백 — 스크린샷
+ * 으로 확인). 조건 나열은 칩 카드 하나에만 맡기고, 여기는 짧은 전환 인사만 한다.
  */
-export function getRecommendationReply({
-  nickname,
-  answers,
-  selectedSkills,
-  fieldReferenceCategories,
-}: {
-  nickname: string;
-  answers: AdaptiveAnswers;
-  selectedSkills: readonly string[];
-  fieldReferenceCategories: readonly string[];
-}): string {
-  const parts: string[] = [];
-  const skill = compactList(selectedSkills);
-
-  if (answers.talentPreference === 'use' && skill) {
-    parts.push(`${skill} 재능을 살릴 수 있으면서`);
-  } else if (answers.talentPreference === 'use') {
-    parts.push('재능을 살릴 수 있으면서');
-  } else if (answers.participationMode === 'goods') {
-    parts.push('물품으로 힘을 보태면서');
-  } else if (answers.participationMode === 'direct') {
-    parts.push('직접 행동으로 함께하면서');
-  } else if (answers.participationMode === 'time') {
-    parts.push('시간을 내어 참여하면서');
-  } else if (answers.talentPreference === 'any') {
-    parts.push('부담 없이 가볍게 참여할 수 있으면서');
-  }
-
-  if (answers.activityType === 'indoor') {
-    parts.push('날씨 안 타는 실내에서');
-  } else if (answers.activityType === 'outdoor') {
-    parts.push('활기찬 야외에서');
-  }
-
-  if (answers.vibePreference === 'social') {
-    parts.push('따뜻한 교류를 나누는');
-  } else if (answers.vibePreference === 'task') {
-    parts.push('활동에 집중할 수 있는');
-  }
-
-  if (answers.groupSizePreference === 'small') {
-    parts.push('10명 이내 소규모');
-  } else if (answers.groupSizePreference === 'medium') {
-    parts.push('10~20명 규모');
-  } else if (answers.groupSizePreference === 'large') {
-    parts.push('20명 이상 규모');
-  }
-
-  const categories = compactList(fieldReferenceCategories);
-  const ending =
-    answers.fieldPreference === 'new'
-      ? '새로운 분야의 액션으로 골라봤어요.'
-      : answers.fieldPreference === 'familiar' && categories
-        ? `${categories} 분야의 액션으로 골라봤어요.`
-        : '액션들을 골라봤어요.';
-
-  if (parts.length === 0) return DISCOVER_RECOMMENDATION_REPLY;
-
-  return [
-    `${nickname}님께서 ${parts.join(', ')} 참여하실 수 있는`,
-    `${ending} 마음에 드는 활동을 확인해보세요! 😊`,
-  ].join('\n');
+export function getRecommendationReply({ nickname }: { nickname: string }): string {
+  return `${nickname}님을 위한 액션을 찾았어요! 마음에 드는 활동을 확인해보세요! 😊`;
 }
 
 /**
