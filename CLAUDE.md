@@ -546,7 +546,7 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 |---|---|---|
 | `app/api/ai/review/` | `PROMPT_VERSION` | `review-v7` |
 | `app/api/ai/classify/` — 규칙은 `lib/ai/classify-spec.ts` | `CLASSIFY_PROMPT_VERSION` | `classify-v4` |
-| `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v3` |
+| `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v3` — **화면에서 뺐습니다** (2026-10-01, 트렌드 AI 는 이번 MVP 범위 밖 · 조장 결정). 라우트는 남겨 둠 |
 | `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-chat-v12-no-double-ack` · `discover-recommend-v14-category-guard` |
 
 **번호는 올리기만 하세요.** 이름을 바꾸면서 숫자가 내려가면(`v7` → `v3`) 발표 자료에서 어느 쪽이 나중인지 헷갈립니다.

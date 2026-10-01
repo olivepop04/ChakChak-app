@@ -16,7 +16,6 @@ import {
   RegionChart,
   StatusBar,
 } from '@/components/trends/Charts';
-import { InsightPanel } from '@/components/trends/InsightPanel';
 import { ChartColumn } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 
@@ -61,7 +60,9 @@ export default async function TrendsPage() {
         </div>
 
         <SummaryTiles stats={stats} />
-        <InsightPanel />
+        {/* AI 해설(InsightPanel)은 뺐습니다 — 트렌드 AI 는 이번 MVP 범위 밖 (2026-10-01 조장 결정).
+            부품(components/trends/InsightPanel.tsx)과 라우트(app/api/ai/trends)는 남겨 뒀습니다.
+            다시 켜려면 import 와 <InsightPanel /> 한 줄을 여기에 되돌리면 됩니다. */}
         <CategoryChart stats={stats} />
         <WeeklyChart stats={stats} />
         <RegionChart stats={stats} />
