@@ -39,9 +39,10 @@ export function ResultWriteForm({
   const [imageUrls, setImageUrls] = useState<string[]>(initial?.imageUrls ?? []);
   const [ownerVoice, setOwnerVoice] = useState(initial?.ownerVoice ?? '');
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   async function handleSave() {
-    if (busy) return;
+    if (busy || uploading) return;
 
     setBusy(true);
     const supabase = createClient();
@@ -58,11 +59,13 @@ export function ResultWriteForm({
     }
 
     toast('결과를 임시저장했어요.', 'success');
+    // 이동 후 돌아와도 방금 저장한 서버 데이터가 RSC payload 에 남도록 갱신합니다.
+    router.refresh();
     setBusy(false);
   }
 
   async function handlePublish() {
-    if (busy) return;
+    if (busy || uploading) return;
 
     if (imageUrls.length < UPLOAD.RESULT_IMAGE_MIN) {
       toast('결과 사진을 최소 1장 올려주세요.', 'error');
@@ -218,6 +221,7 @@ export function ResultWriteForm({
           max={UPLOAD.RESULT_IMAGE_MAX}
           urls={imageUrls}
           onChange={setImageUrls}
+          onBusyChange={setUploading}
         />
         <p className="text-caption text-neutral-400">
           최소 {UPLOAD.RESULT_IMAGE_MIN}장, 최대 {UPLOAD.RESULT_IMAGE_MAX}장이에요.
@@ -245,6 +249,7 @@ export function ResultWriteForm({
             size="lg"
             onClick={handleSave}
             loading={busy}
+            disabled={uploading}
             className="min-w-[76px] shrink-0 px-5"
           >
             저장
@@ -255,6 +260,7 @@ export function ResultWriteForm({
             fullWidth
             onClick={handlePublish}
             loading={busy}
+            disabled={uploading}
             className="min-w-0 flex-1"
           >
             결과 공개하기
