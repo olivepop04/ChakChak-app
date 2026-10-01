@@ -29,7 +29,7 @@ function LegalHeader({ title }: { title: LegalDocument['headerTitle'] }) {
     fallbackHref = '/my';
   }
 
-  return <Header title={title} back fallbackHref={fallbackHref} sticky />;
+  return <Header title={title} back fallbackHref={fallbackHref} sticky asH1={false} />;
 }
 
 function OtherDocumentLink({
@@ -79,7 +79,7 @@ export function LegalDocumentPage({
   return (
     <main className="min-h-dvh bg-white pb-8">
       <Suspense
-        fallback={<Header title={document.headerTitle} back fallbackHref="/my" sticky />}
+        fallback={<Header title={document.headerTitle} back fallbackHref="/my" sticky asH1={false} />}
       >
         <LegalHeader title={document.headerTitle} />
       </Suspense>

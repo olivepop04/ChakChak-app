@@ -4,6 +4,7 @@
  *   <Header title="JOIN ACTION" back />              뒤로가기 + 제목
  *   <Header title="MY" right={<Link…>⚙</Link>} />    우측 버튼
  *   <Header title="NOTIFICATIONS" back sticky />     스크롤해도 위에 붙어 있음
+ *   <Header title="액션 상세" back asH1={false} />    본문에 큰 제목(h1)이 따로 있는 화면
  */
 'use client';
 
@@ -21,6 +22,13 @@ interface HeaderProps {
   fallbackHref?: string;
   right?: React.ReactNode;
   sticky?: boolean;
+  /**
+   * 제목을 h1(페이지 대표 제목)로 쓸지. 기본값 true — 지금까지와 같습니다.
+   * 본문에 액션 제목 같은 큰 제목(h1)이 따로 있는 화면만 false 로 끄세요.
+   * 안 끄면 한 페이지에 h1 이 2개가 됩니다 (2026-10-01, 이중 h1 정리 · 가-2 안).
+   * 보이는 모양은 둘 다 똑같습니다 — 태그만 바뀝니다.
+   */
+  asH1?: boolean;
   className?: string;
 }
 
@@ -31,9 +39,11 @@ export function Header({
   fallbackHref,
   right,
   sticky,
+  asH1 = true,
   className,
 }: HeaderProps) {
   const router = useRouter();
+  const TitleTag = asH1 ? 'h1' : 'p';
 
   const handleBack = () => {
     const fallback = fallbackHref ?? backHref ?? '/';
@@ -93,12 +103,13 @@ export function Header({
                올려도 됩니다만, 나중에 h-14 를 건드릴 때 이 값을 기억하세요.
 
         8쪽의 나머지(자간·색 통일, 이중 h1 정리)는 발표 후 소정님 전담입니다.
-        → 자간은 2026-09-28 0em(tracking-normal)으로 통일. 이중 h1 은 아직.
+        → 자간은 2026-09-28 0em(tracking-normal)으로 통일.
+        → 이중 h1 은 2026-10-01 asH1 옵션으로 정리 (본문 h1 이 있는 10개 화면만 끔).
         → 색은 2026-09-30 #333 으로 통일 (모달 제목과 같은 색, 뒤로 아이콘도 같이).
       */}
-      <h1 className="flex-1 truncate text-body font-bold tracking-normal text-[#333333]">
+      <TitleTag className="flex-1 truncate text-body font-bold tracking-normal text-[#333333]">
         {title}
-      </h1>
+      </TitleTag>
 
       <div className="flex items-center gap-1">{right}</div>
     </header>

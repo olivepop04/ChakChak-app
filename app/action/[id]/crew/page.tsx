@@ -105,7 +105,7 @@ export default async function CrewPage({
 
   return (
     <main className="pb-36">
-      <Header title="함께하는 크루" back backHref={`/action/${id}`} sticky />
+      <Header title="함께하는 크루" back backHref={`/action/${id}`} sticky asH1={false} />
 
       <div className="px-6 py-5">
         <h1 className="line-clamp-2 font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">

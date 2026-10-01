@@ -48,7 +48,7 @@ export default async function TrendsPage() {
 
   return (
     <main className="pb-24">
-      <Header title="트렌드" back backHref="/" sticky />
+      <Header title="트렌드" back backHref="/" sticky asH1={false} />
 
       <div className="flex flex-col gap-5 px-6 py-5">
         <div>
