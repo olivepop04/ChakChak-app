@@ -43,6 +43,7 @@ export default async function WelcomePage({
       <header className="flex h-14 items-center gap-2 px-3">
         <Link
           href={`/action/${id}`}
+          replace
           aria-label="뒤로 가기"
           className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
         >
