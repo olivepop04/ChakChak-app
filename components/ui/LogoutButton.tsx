@@ -16,7 +16,8 @@ export function LogoutButton() {
 
     setBusy(true);
     try {
-      await createClient().auth.signOut();
+      // 이 기기만 로그아웃 — 기본값(global)은 같은 계정의 다른 기기까지 로그아웃시킵니다
+      await createClient().auth.signOut({ scope: 'local' });
       setOpen(false);
       router.push('/');
       // 서버 컴포넌트가 로그아웃 상태를 다시 읽게 한다
