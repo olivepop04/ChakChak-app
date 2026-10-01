@@ -97,20 +97,75 @@ export function shortRegion(region: string): string {
 }
 
 /**
+ * 시·도 표기를 하나로 맞춥니다 — '서울특별시' 와 '서울' 이 같은 곳이 되게.
+ *
+ * 저장된 활동 지역은 `REGIONS` 의 정식 이름('서울특별시 강남구')인데,
+ * 주소는 우편번호 검색이 주는 줄인 이름('서울 강남구 …')으로도 들어옵니다.
+ * '충청북도 → 충북' 처럼 글자를 떼는 것만으로는 안 맞는 곳이 있어 표로 둡니다.
+ */
+const SIDO_SHORT: Record<string, string> = {
+  서울특별시: '서울',
+  부산광역시: '부산',
+  대구광역시: '대구',
+  인천광역시: '인천',
+  광주광역시: '광주',
+  대전광역시: '대전',
+  울산광역시: '울산',
+  세종특별자치시: '세종',
+  경기도: '경기',
+  강원특별자치도: '강원',
+  충청북도: '충북',
+  충청남도: '충남',
+  전북특별자치도: '전북',
+  전라남도: '전남',
+  경상북도: '경북',
+  경상남도: '경남',
+  제주특별자치도: '제주',
+};
+
+function shortSido(name: string): string {
+  return SIDO_SHORT[name] ?? name;
+}
+
+/**
  * 액션의 주소(자유 텍스트)가 사용자의 활동 지역과 겹치는지.
  * Discover 추천 점수 계산에 씁니다. 좌표가 없으므로 문자열로만 비교합니다.
+ *
+ * ★ 시·도를 먼저 맞추고, 시·군·구는 토막 단위로 비교합니다 (2026-10-01).
+ *
+ *   전에는 시·군·구 이름이 주소 안에 들어 있기만 하면 일치로 봤습니다.
+ *   그래서 두 가지가 한꺼번에 틀렸습니다.
+ *
+ *     「부산광역시 남구」 사용자 → 「서울특별시 강남구」 액션이 가까운 지역
+ *       '강남구' 안에 '남구' 가 들어 있어서입니다. 이런 쌍이 9개 있습니다
+ *       (남구⊂강남구 · 동구⊂성동구 · 서구⊂강서구 · 양주시⊂남양주시 …).
+ *
+ *     「부산광역시 남구」 사용자 → 「대구광역시 남구」 액션이 가까운 지역
+ *       같은 이름의 구가 여러 시·도에 있습니다 (중구·동구·서구·남구·북구·강서구).
+ *
+ *   주소에 시·도가 아예 없으면(예: '강남구 테헤란로 1') 예전처럼 시·군·구만 봅니다.
+ *   그 경우에도 토막 단위라 '강남구' 가 '남구' 로 걸리지는 않습니다.
  */
 export function matchesRegion(address: string | null, userRegions: string[]): boolean {
   if (!address) return false;
   if (userRegions.includes(NATIONWIDE)) return true;
 
+  const tokens = address.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return false;
+
+  const addressSido = shortSido(tokens[0]);
+  const hasSido = SIDO_LIST.some((s) => shortSido(s) === addressSido);
+  const rest = hasSido ? tokens.slice(1) : tokens;
+
   return userRegions.some((r) => {
     const [sido, sigungu] = r.split(' ');
     if (!sigungu) return false;
-    if (sigungu === PROVINCE_WIDE) {
-      return address.includes(sido);
+    if (hasSido && shortSido(sido) !== addressSido) return false;
+    if (sigungu === PROVINCE_WIDE) return hasSido;
+    // 세종처럼 시·도 아래 지역이 하나뿐이면 주소에 그 이름이 따로 안 적힙니다
+    if (hasSido && REGIONS[sido]?.length === 1 && REGIONS[sido][0] === sigungu) {
+      return true;
     }
-    // '서울특별시 성동구' 는 주소에 '성동구' 가 있으면 일치로 본다
-    return address.includes(sigungu);
+    return rest.includes(sigungu);
   });
 }
