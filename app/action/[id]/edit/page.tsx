@@ -44,7 +44,7 @@ export default async function EditActionPage({
 
   return (
     <main>
-      <Header title="액션 수정" back backHref={`/action/${id}`} sticky />
+      <Header title="액션 수정" back backHref={`/action/${id}`} sticky asH1={false} />
 
       <section className="border-b border-neutral-100 px-6 py-4">
         <div className="mb-2 flex items-center gap-1.5">

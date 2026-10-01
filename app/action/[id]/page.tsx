@@ -138,6 +138,7 @@ export default async function ActionDetailPage({
         title="액션 상세"
         back
         backHref="/"
+        asH1={false}
         right={
           action.isOwner ? (
             <ActionHostActions
