@@ -85,7 +85,7 @@ export default async function ResultPage({
 
   return (
     <main className={canWriteVoice ? 'pb-52' : 'pb-24'}>
-      <Header title="액션 결과" back backHref={`/action/${id}`} sticky />
+      <Header title="액션 결과" back backHref={`/action/${id}`} sticky asH1={false} />
 
       <div className="flex flex-col gap-10 px-6 py-6">
         {/* 제목 + 장소 | 일정 + 구분선 */}

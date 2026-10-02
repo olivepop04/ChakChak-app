@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/Input';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { safeNextPath, withNext } from '@/app/(auth)/auth-navigation';
+import { getLoginErrorMessage } from '@/app/(auth)/login-error';
 import { getLoginNotice } from '@/lib/utils/auth-notice';
 
 function LoginForm() {
@@ -46,7 +47,8 @@ function LoginForm() {
     });
 
     if (signInError) {
-      setError('이메일 또는 비밀번호가 맞지 않아요.');
+      // 인터넷이 끊겼을 때도 「비밀번호가 맞지 않아요」 가 나오던 것을 가릅니다 (2026-10-01).
+      setError(getLoginErrorMessage(signInError));
       setBusy(false);
       return;
     }

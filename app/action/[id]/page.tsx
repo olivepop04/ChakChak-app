@@ -138,6 +138,7 @@ export default async function ActionDetailPage({
         title="액션 상세"
         back
         backHref="/"
+        asH1={false}
         right={
           action.isOwner ? (
             <ActionHostActions
@@ -161,10 +162,10 @@ export default async function ActionDetailPage({
         {/* 조기 종료 사유 */}
         {action.earlyEndReason && (
           <div className="rounded-xl border border-danger bg-danger-soft p-4">
-            <p className="text-sm font-semibold text-[#333333]">
+            <p className="text-body font-semibold text-[#333333]">
               이 액션은 조기 종료되었어요
             </p>
-            <p className="mt-1 text-sm leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
+            <p className="mt-1 text-body leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
               {action.earlyEndReason}
             </p>
           </div>
@@ -173,10 +174,10 @@ export default async function ActionDetailPage({
         {/* 취소 사유 */}
         {action.status === 'CANCELLED' && action.cancelReason && (
           <div className="rounded-xl border border-danger bg-danger-soft p-4">
-            <p className="text-sm font-semibold text-[#333333]">
+            <p className="text-body font-semibold text-[#333333]">
               이 액션은 취소되었어요
             </p>
-            <p className="mt-1 text-sm leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
+            <p className="mt-1 text-body leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
               {action.cancelReason}
             </p>
           </div>
@@ -235,11 +236,11 @@ export default async function ActionDetailPage({
           <Link href={`/user/${action.owner?.id ?? ''}`} className="flex items-center gap-3">
             <Avatar name={action.owner?.nickname ?? '?'} avatar={action.owner?.avatar} />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-neutral-900">
+              <span className="text-label font-semibold text-neutral-900">
                 @{action.owner?.nickname ?? '알 수 없음'}
               </span>
               {action.owner?.bio && (
-                <span className="line-clamp-1 text-[12px] text-neutral-500">
+                <span className="line-clamp-1 text-caption text-neutral-500">
                   {action.owner.bio}
                 </span>
               )}
@@ -255,11 +256,11 @@ export default async function ActionDetailPage({
         </div>
 
         {/* 상단 버튼 그룹 (참여인원 · 좋아요 · 저장 · 공유) */}
-        <div className="flex items-center gap-1 border-y border-neutral-100 py-2 text-xs tabular-nums text-neutral-500">
+        <div className="flex items-center gap-1 border-y border-neutral-100 py-2 text-label tabular-nums text-neutral-500">
           <CrewAnchorButton
             count={action.crewCount}
             suffixLabel={action.status === 'ACTIVE' ? '명 참여 중' : '명 참여'}
-            className="px-1 py-0.5 text-xs gap-1"
+            className="px-1 py-0.5 text-label gap-1"
           />
           <span className="mx-2 h-3.5 w-px flex-none bg-neutral-200" aria-hidden="true" />
           <LikeButton
@@ -268,7 +269,7 @@ export default async function ActionDetailPage({
             initialCount={action.likeCount}
             disabled={likeDisabled}
             disabledReason={reactionDisabledReason}
-            className="px-1 py-0.5 text-xs gap-1"
+            className="px-1 py-0.5 text-label gap-1"
           />
           <SaveButton
             actionId={action.id}
@@ -276,7 +277,7 @@ export default async function ActionDetailPage({
             initialCount={action.saveCount}
             disabled={saveDisabled}
             disabledReason={reactionDisabledReason}
-            className="px-1 py-0.5 text-xs gap-1"
+            className="px-1 py-0.5 text-label gap-1"
           />
           <ShareButton
             actionId={action.id}
@@ -285,13 +286,13 @@ export default async function ActionDetailPage({
             count={action.shareCount}
             disabled={shareDisabled}
             disabledReason={reactionDisabledReason}
-            className="px-1 py-0.5 text-xs gap-1"
+            className="px-1 py-0.5 text-label gap-1"
           />
         </div>
 
         {/* 소개 */}
         {action.description && (
-          <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-neutral-700">
+          <p className="whitespace-pre-wrap text-body leading-relaxed text-neutral-700">
             {action.description}
           </p>
         )}
@@ -301,13 +302,13 @@ export default async function ActionDetailPage({
           <div className="flex items-baseline gap-2">
             <SectionTitle>모집 현황</SectionTitle>
             {action.recruitEndAt && (
-              <span className="text-[12px] text-neutral-500">
+              <span className="text-caption text-neutral-500">
                 마감 : {formatDateShort(action.recruitEndAt)}
               </span>
             )}
           </div>
           {action.items.length === 0 ? (
-            <p className="text-sm text-neutral-400">등록된 모집 항목이 없어요.</p>
+            <p className="text-label text-neutral-400">등록된 모집 항목이 없어요.</p>
           ) : (
             <div className="flex flex-col gap-5 rounded-xl p-4">
               {action.items.flatMap((item, i) => [
@@ -333,7 +334,7 @@ export default async function ActionDetailPage({
             <div className="flex flex-col gap-3 rounded-xl bg-neutral-50 p-4">
               <div className="flex items-start gap-2">
                 <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
-                <p className="text-sm font-medium text-neutral-900">
+                <p className="text-body font-medium text-neutral-900">
                   {formatActivityPeriod(action.activityStartAt, action.activityEndAt)}
                 </p>
               </div>

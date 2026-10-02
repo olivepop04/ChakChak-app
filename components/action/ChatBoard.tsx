@@ -191,7 +191,10 @@ export function ChatBoard({
                   isMine={post.isMine}
                   onReply={canReplyToPost ? () => { setReplyTo(post.id); setReplyText(''); } : undefined}
                   onDelete={
-                    post.isMine && !post.deletedAt && post.kind !== 'LEFT_NOTICE'
+                    post.isMine &&
+                    !post.deletedAt &&
+                    post.kind !== 'LEFT_NOTICE' &&
+                    post.kind !== 'EARLY_END_NOTICE'
                       ? () => setDeleteTarget({ messageId: post.id, isPost: true })
                       : undefined
                   }

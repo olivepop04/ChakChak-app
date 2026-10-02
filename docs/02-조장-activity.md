@@ -27,7 +27,7 @@ git merge origin/dev        # ← 이 줄을 빼면 안 됩니다
 |---|---|---|
 | 내 활동 (참여/생성 탭) | `/activity` | `app/activity/page.tsx` · `components/action/ActivityButtons.tsx` |
 | 트렌드 대시보드 | `/trends` | `app/trends/page.tsx` · `components/trends/` |
-| 트렌드 AI 해설 | — | `app/api/ai/trends/route.ts` |
+| 트렌드 AI 해설 | — | `app/api/ai/trends/route.ts` — **화면에서 뺌** (2026-10-01, MVP 범위 밖). 다시 켜려면 `app/trends/page.tsx` 에 `<InsightPanel />` 를 되돌리면 됩니다 |
 | 집계 | — | `lib/queries/stats.ts` |
 | 시연 데이터 | — | `scripts/seed.mjs` · `scripts/data/` · `scripts/check_seed_meta.mjs` |
 | **액션 찾기(Discover)** | `/discover` | `app/discover/` · `app/api/ai/discover/` · `components/action/DiscoverChat.tsx` · `lib/utils/scoring.ts` · `lib/utils/discover-ranking.ts` — **2026-09-29부터** |
@@ -144,8 +144,8 @@ const PROMPT_VERSION = 'trends-v2';   // → 'trends-v3'
 - [ ] 취소하면 참여자에게 알림이 간다 (다른 계정으로 확인)
 - [ ] 두 탭 모두 빈 상태 화면이 나온다
 - [ ] 그래프 3종이 실제 DB 숫자로 그려진다
-- [ ] **AI 해설의 숫자가 그래프와 맞다** (틀리면 프롬프트를 고치고 버전을 올린다)
-- [ ] AI 호출이 실패해도 그래프는 나온다
+- ~~AI 해설의 숫자가 그래프와 맞다~~ — 트렌드 AI 는 이번 MVP 에서 뺐습니다 (2026-10-01)
+- [ ] 「모집 달성률」 에 작성 중 액션이 섞이지 않는다 (2026-10-01 고침)
 
 ---
 

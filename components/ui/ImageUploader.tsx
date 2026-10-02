@@ -7,7 +7,10 @@
  *   이 컴포넌트를 보여주세요.
  *
  * 업로드 전에 브라우저에서 가로 1200px · WebP 로 줄입니다.
- * 5MB 사진이 200~300KB 가 되어 저장 용량을 아낍니다.
+ * 원본은 25MB 까지 받고, 줄이면 200~300KB 가 되어 저장 용량을 아낍니다.
+ *
+ * ★ X(삭제)는 화면 목록에서만 뺍니다 — Storage 파일은 지우지 않습니다 (2026-10-01).
+ *   저장하기 전에 파일을 지우면, 저장 없이 나갔을 때 DB 에 남은 주소가 깨진 사진이 됩니다.
  *
  *   <ImageUploader
  *     bucket="action-images"
@@ -15,6 +18,7 @@
  *     max={3}
  *     urls={urls}
  *     onChange={setUrls}
+ *     onBusyChange={setUploading}
  *     thumbnailIndex={thumbIdx}
  *     onThumbnailChange={setThumbIdx}
  *   />
@@ -23,7 +27,8 @@
 
 import { useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { uploadImages, deleteImage, type UploadBucket } from '@/lib/upload';
+import { uploadImages, type UploadBucket } from '@/lib/upload';
+import { UPLOAD } from '@/lib/constants';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils/cn';
 
@@ -33,6 +38,8 @@ interface ImageUploaderProps {
   max: number;
   urls: string[];
   onChange: (urls: string[]) => void;
+  /** 업로드 진행 상태를 저장 버튼 등 부모 UI와 공유할 때 넘기세요 */
+  onBusyChange?: (busy: boolean) => void;
   /** 대표 이미지를 고르게 할 때만 넘기세요 (Creation) */
   thumbnailIndex?: number;
   onThumbnailChange?: (index: number) => void;
@@ -45,6 +52,7 @@ export function ImageUploader({
   max,
   urls,
   onChange,
+  onBusyChange,
   thumbnailIndex,
   onThumbnailChange,
   className,
@@ -61,25 +69,31 @@ export function ImageUploader({
     if (files.length === 0) return;
 
     setBusy(true);
-    const room = max - urls.length;
-    const { urls: added, errors } = await uploadImages(
-      createClient(),
-      bucket,
-      actionId,
-      files,
-      room,
-    );
+    onBusyChange?.(true);
 
-    if (added.length > 0) onChange([...urls, ...added]);
-    errors.forEach((msg) => toast(msg, 'error'));
+    try {
+      const room = max - urls.length;
+      const { urls: added, errors } = await uploadImages(
+        createClient(),
+        bucket,
+        actionId,
+        files,
+        room,
+      );
 
-    setBusy(false);
-    // 같은 파일을 다시 고를 수 있도록 초기화
-    if (inputRef.current) inputRef.current.value = '';
+      if (added.length > 0) onChange([...urls, ...added]);
+      errors.forEach((msg) => toast(msg, 'error'));
+    } catch {
+      toast('사진 업로드에 실패했어요. 잠시 후 다시 시도해주세요.', 'error');
+    } finally {
+      setBusy(false);
+      onBusyChange?.(false);
+      // 같은 파일을 다시 고를 수 있도록 초기화
+      if (inputRef.current) inputRef.current.value = '';
+    }
   }
 
-  async function handleRemove(index: number) {
-    const target = urls[index];
+  function handleRemove(index: number) {
     const next = urls.filter((_, i) => i !== index);
     onChange(next);
 
@@ -88,9 +102,7 @@ export function ImageUploader({
       if (index === thumbnailIndex) onThumbnailChange!(0);
       else if (index < thumbnailIndex) onThumbnailChange!(thumbnailIndex - 1);
     }
-
-    // Storage 에서도 지운다. 실패해도 화면은 이미 반영됐으므로 조용히 넘어간다.
-    void deleteImage(createClient(), bucket, target);
+    // Storage 파일은 여기서 지우지 않습니다 — 맨 위 주석 참고
   }
 
   return (
@@ -156,7 +168,7 @@ export function ImageUploader({
       </div>
 
       <p className="text-caption text-neutral-400">
-        {urls.length} / {max}장 · JPG · PNG · WebP · 한 장당 5MB 이하
+        {urls.length} / {max}장 · JPG · PNG · WebP · 한 장당 {UPLOAD.MAX_ORIGINAL_BYTES / 1024 / 1024}MB 이하
       </p>
 
       <input

@@ -17,7 +17,6 @@ import { PreviousPageBar } from '@/components/layout/PreviousPageBar';
 
 export default function GlobalError({
   error,
-  reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
@@ -48,7 +47,9 @@ export default function GlobalError({
             </p>
             <button
               type="button"
-              onClick={reset}
+              // reset 만으로는 서버에서 난 오류가 그대로 남습니다 — 바깥 틀까지 깨진 상황이라
+              // 라우터를 믿지 않고 전체 새로고침으로 서버에서 다시 받습니다 (2026-10-01)
+              onClick={() => window.location.reload()}
               className="mt-4 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-[#333333] transition-colors hover:bg-neutral-100"
             >
               <RotateCw className="h-4 w-4" aria-hidden="true" />

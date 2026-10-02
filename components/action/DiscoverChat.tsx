@@ -14,6 +14,7 @@ import {
   Lock,
   MapPin,
   MessageCircleQuestion,
+  RotateCw,
   SearchX,
   Sparkle,
   Sparkles,
@@ -484,9 +485,15 @@ export function DiscoverChat({
         </div>
       </div>
 
+      {/* 내 답 다음에 오는 새 질문(턴)은 위 여백을 16px 더 → 「질문 + 내 답」 묶음 사이 32px (2026-10-01 목업 확정) */}
       {messages.map((message, index) =>
         message.role === 'assistant' ? (
-          <Bubble key={`${message.role}-${index}`}>{message.content}</Bubble>
+          <Bubble
+            key={`${message.role}-${index}`}
+            className={cn(messages[index - 1]?.role === 'user' && 'mt-4')}
+          >
+            {message.content}
+          </Bubble>
         ) : (
           <div key={`${message.role}-${index}`} className="flex justify-end">
             {/* 내 답변 — 검정 → 연한 포인트 그린 + 초록 글씨 (2026-09-27) */}
@@ -497,7 +504,7 @@ export function DiscoverChat({
         ),
       )}
       {loading && (
-        <Bubble>
+        <Bubble className={cn(messages[messages.length - 1]?.role === 'user' && 'mt-4')}>
           <span className="inline-flex items-center gap-2">
             {messages.length === 0
               ? '잠시만요. AI가 대화를 준비하고 있어요 😊'
@@ -511,29 +518,34 @@ export function DiscoverChat({
         </Bubble>
       )}
 
-      {!loading && items === null && (
-        <div className="flex flex-col gap-2.5 pt-1">
-          {options.length > 0 && isSkillSelection ? (
-            // 복수 선택 판 — 화면 폭 100% 회색 판 → 내 답변 말풍선처럼 오른쪽·내용 폭(최대 80%)·연한 초록 (2026-09-30, 시간 판도 같음)
-            <div className="ml-auto flex w-fit max-w-[80%] flex-col gap-3 rounded-xl rounded-br-sm bg-brand-soft p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-label font-bold text-neutral-900">
-                  나눌 수 있는 재능을 모두 골라보세요 (복수 선택)
-                </span>
-                <span className="text-caption font-semibold text-brand">
-                  {selectedSkills.length}개 선택됨
-                </span>
-              </div>
+      {/*
+        선택지 — 2026-10-01 목업 확정(「액션 찾기 — 선택지 말풍선 판」 보드):
+          · 내 답변 말풍선 같은 초록 판(오른쪽)을 없애고 챗봇 말풍선 바로 아래에 둡니다.
+            왼쪽은 말풍선 글자 시작점(아바타 28 + 간격 8 = ml-9),
+            폭은 말풍선 최대 폭(max-w-[80%])과 같게 — 오른쪽 끝이 말풍선과 맞습니다.
+          · 여러 개 고르기: 제목 대신 안내문 「여러 개 고를 수 있어요」 하나로 통일,
+            「N개 선택됨」·버튼 옆 개수 배지 삭제, 「선택 완료」는 가로 꽉 찬 초록 버튼(44px · 12px · hover 없음)
+          · 시간 칩도 고르면 재능 칩과 같은 연한 초록(tone="soft")
+      */}
+      {!loading && items === null && options.length > 0 && (
+        <div className="ml-9 max-w-[80%]">
+          {isSkillSelection || isTimeSelection ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-label font-medium text-neutral-500">여러 개 고를 수 있어요</p>
 
               <div className="flex flex-wrap gap-2">
                 {options.map((option) => {
-                  const isSelected = selectedSkills.includes(option);
+                  const isSelected = isSkillSelection
+                    ? selectedSkills.includes(option)
+                    : selectedTimes.includes(option);
                   return (
                     <Chip
                       key={option}
                       selected={isSelected}
                       tone="soft"
-                      onClick={() => handleSkillToggle(option)}
+                      onClick={() =>
+                        isSkillSelection ? handleSkillToggle(option) : handleTimeToggle(option)
+                      }
                       className="gap-1.5 py-1.5 text-label"
                     >
                       {isSelected && (
@@ -545,72 +557,17 @@ export function DiscoverChat({
                 })}
               </div>
 
-              <div className="flex items-center justify-end pt-1">
-                <button
-                  type="button"
-                  disabled={selectedSkills.length === 0}
-                  onClick={handleConfirmSkills}
-                  className="rounded-full border border-brand bg-white px-5 py-2 text-label font-bold text-brand transition-colors hover:bg-brand-soft disabled:opacity-30 flex items-center gap-1.5"
-                >
-                  <span>선택 완료</span>
-                  {selectedSkills.length > 0 && (
-                    <span className="rounded-full bg-brand-soft px-2 py-0.5 text-caption font-bold">
-                      {selectedSkills.length}
-                    </span>
-                  )}
-                </button>
-              </div>
+              <button
+                type="button"
+                disabled={isSkillSelection ? selectedSkills.length === 0 : selectedTimes.length === 0}
+                onClick={isSkillSelection ? handleConfirmSkills : handleConfirmTimes}
+                className="flex min-h-11 w-full items-center justify-center rounded-xl bg-brand px-5 text-body font-bold text-white disabled:opacity-30"
+              >
+                선택 완료
+              </button>
             </div>
-          ) : options.length > 0 && isTimeSelection ? (
-            <div className="ml-auto flex w-fit max-w-[80%] flex-col gap-3 rounded-xl rounded-br-sm bg-brand-soft p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-label font-bold text-neutral-900">
-                  참여하기 편한 시간을 모두 골라보세요 (복수 선택)
-                </span>
-                <span className="text-caption font-semibold text-brand">
-                  {selectedTimes.length}개 선택됨
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {options.map((option) => {
-                  const isSelected = selectedTimes.includes(option);
-                  return (
-                    <Chip
-                      key={option}
-                      selected={isSelected}
-                      tone="accent"
-                      onClick={() => handleTimeToggle(option)}
-                      className="gap-1.5 py-1.5 text-label"
-                    >
-                      {isSelected && (
-                        <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
-                      )}
-                      <span>{option}</span>
-                    </Chip>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center justify-end pt-1">
-                <button
-                  type="button"
-                  disabled={selectedTimes.length === 0}
-                  onClick={handleConfirmTimes}
-                  className="rounded-full border border-brand bg-white px-5 py-2 text-label font-bold text-brand transition-colors hover:bg-brand-soft disabled:opacity-30 flex items-center gap-1.5"
-                >
-                  <span>선택 완료</span>
-                  {selectedTimes.length > 0 && (
-                    <span className="rounded-full bg-brand-soft px-2 py-0.5 text-caption font-bold">
-                      {selectedTimes.length}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
-          ) : options.length > 0 ? (
-            // 하나만 고르는 질문(지역·관심 분야 등)도 복수 선택 판과 같은 초록 말풍선 판 안에 (2026-09-30)
-            <div className="ml-auto flex w-fit max-w-[80%] flex-wrap justify-end gap-2 rounded-xl rounded-br-sm bg-brand-soft p-4">
+          ) : (
+            <div className="flex flex-wrap gap-2">
               {options.map((option) => (
                 <Chip
                   key={option}
@@ -621,19 +578,26 @@ export function DiscoverChat({
                 </Chip>
               ))}
             </div>
-          ) : null}
+          )}
         </div>
       )}
 
       <div ref={chatEndRef} />
 
+      {/* 오류 — 빨간 상자 대신 챗봇이 말하듯 회색 말풍선 + 아래 「다시 시도」 칩 (2026-10-01 목업 J · A안) */}
       {error && (
-        <div className="flex flex-col gap-3 rounded-xl bg-danger-soft px-4 py-3 text-label text-danger">
-          <p>{error}</p>
-          <Button variant="secondary" size="sm" onClick={retryLastRequest}>
-            다시 시도
-          </Button>
-        </div>
+        <>
+          <Bubble className={cn(messages[messages.length - 1]?.role === 'user' && 'mt-4')}>
+            {error}
+          </Bubble>
+          <div className="ml-9 flex max-w-[80%] flex-wrap gap-2">
+            {/* 오류 뒤 「다시 시도」 는 대화를 지우지 않고 같은 요청만 다시 보냅니다 (성은님 10/1 수정 유지) */}
+            <Chip onClick={retryLastRequest} className="gap-1.5 py-1.5 text-label">
+              <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>다시 시도</span>
+            </Chip>
+          </div>
+        </>
       )}
 
       {items && (
@@ -715,9 +679,13 @@ export function DiscoverChat({
             </div>
           )}
 
-          <Button variant="secondary" fullWidth onClick={restart}>
-            다시 추천받기
-          </Button>
+          {/* 가로 꽉 찬 흰 버튼 → 오류 「다시 시도」와 같은 칩(RotateCw + 글자), 가운데 (2026-10-01) */}
+          <div className="flex justify-center">
+            <Chip onClick={restart} className="gap-1.5 py-1.5 text-label">
+              <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>다시 추천받기</span>
+            </Chip>
+          </div>
         </section>
       )}
 
@@ -738,6 +706,10 @@ export function DiscoverChat({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
+                )}
+                {/* 1단계 제목 앞 map-pin (2026-10-01 목업 K) */}
+                {!selectedSido && (
+                  <MapPin className="h-5 w-5 shrink-0 text-[#333333]" aria-hidden="true" />
                 )}
                 <h3 className="text-subtitle font-bold text-[#333333]">
                   {selectedSido ? selectedSido : '활동할 지역 선택'}
@@ -807,9 +779,9 @@ export function DiscoverChat({
   );
 }
 
-function Bubble({ children }: { children: React.ReactNode }) {
+function Bubble({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="flex gap-2">
+    <div className={cn('flex gap-2', className)}>
       {/* 착착 AI 아바타 — 검정 원 "착" 글자 → 초록 픽셀 표정 (2026-09-27, public/avatars/discover_avatar_01.svg) */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
