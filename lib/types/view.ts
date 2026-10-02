@@ -198,8 +198,8 @@ export interface ProfileData extends UserSummary {
 }
 
 /** 게시판 원글 + 댓글 */
-/** NORMAL 은 보통 글, LEFT_NOTICE 는 참여를 취소하며 남긴 사유 */
-export type ChatKind = 'NORMAL' | 'LEFT_NOTICE';
+/** NORMAL 은 보통 글, LEFT_NOTICE 는 참여 취소, EARLY_END_NOTICE 는 조기 종료 공지 */
+export type ChatKind = 'NORMAL' | 'LEFT_NOTICE' | 'EARLY_END_NOTICE';
 
 export interface ChatPost {
   id: string;

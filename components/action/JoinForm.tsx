@@ -10,7 +10,7 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, Minus, Plus, UsersRound, Package } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -45,6 +45,25 @@ export function JoinForm({
     Object.fromEntries(items.map((i) => [i.id, { checked: false, quantity: 1 }])),
   );
 
+  // 서버 거절 뒤 refresh 된 모집 현황과 로컬 선택 상태를 맞춥니다.
+  // 이미 마감됐거나 성별 조건이 맞지 않는 항목은 체크된 채 잠기지 않도록 해제합니다.
+  useEffect(() => {
+    setSelection((prev) => {
+      let changed = Object.keys(prev).length !== items.length;
+      const next = Object.fromEntries(
+        items.map((item) => {
+          const previous = prev[item.id] ?? { checked: false, quantity: 1 };
+          const checked = previous.checked && !item.isFull && meetsGender(item, myGender);
+
+          if (!prev[item.id] || checked !== previous.checked) changed = true;
+          return [item.id, { ...previous, checked }];
+        }),
+      );
+
+      return changed ? next : prev;
+    });
+  }, [items, myGender]);
+
   function toggle(itemId: string) {
     setSelection((prev) => ({
       ...prev,
@@ -72,7 +91,9 @@ export function JoinForm({
     }));
   }
 
-  const chosen = items.filter((i) => selection[i.id]?.checked);
+  const chosen = items.filter(
+    (i) => selection[i.id]?.checked && !i.isFull && meetsGender(i, myGender),
+  );
 
   async function handleSubmit() {
     if (busy) return;

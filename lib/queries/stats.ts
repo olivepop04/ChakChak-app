@@ -83,7 +83,11 @@ export async function getTrendStats(supabase: DB): Promise<TrendStats> {
     ]);
 
   const rows = actions ?? [];
-  const prog = progress ?? [];
+  // 진행률 뷰는 액션 상태를 몰라서 작성 중(DRAFT) 액션의 모집 항목까지 들어왔습니다.
+  // 「모집 달성률」·물품 종류에 공개 전 액션이 섞이지 않게, 위에서 고른 공개된 액션의 항목만 남깁니다
+  // (2026-10-01, 조장 요청 · 민호 작업).
+  const rowIds = new Set(rows.map((a) => a.id));
+  const prog = (progress ?? []).filter((p) => p.action_id !== null && rowIds.has(p.action_id));
 
   // 액션별 참여 인원 (사람 항목만 합산)
   const crewByAction = new Map<string, number>();

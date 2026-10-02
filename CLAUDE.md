@@ -491,10 +491,10 @@ Day 5(Foundations, 2026-09-15) ~ Day 10(2026-09-19) 에 확정된 것이 전부 
 | 색 | 포인트 `#00A56E` · 기능색 5종(위험·주의·완료·진행중·중립) · 회색 5단계(Surface 2 · Text 2 · Hairline) |
 | 타이포 | 6단계 — 24 · 20 · 17 · 15 · 13 · 11px (서체·굵기·쓰는 곳까지) |
 | 간격 | 8단계 — 4 · 8 · 12 · 16 · 20 · 24 · 32px + 안전영역 예외 |
-| 모서리 | **pill 999px 아니면 12px. 두 값만** |
+| 모서리 | **pill 999px 아니면 12px. 두 값만** — 단, 40px 이하 작은 상자(스테퍼 등)는 8px 예외 |
 | 그림자 | **안 씀(플랫).** 모달은 그림자 대신 딤 처리 |
 | 컴포넌트 | 버튼 · 인풋 · 카드 · 카테고리 칩 · 모달 공통 규격 |
-| 상태 스티커 | 표정 아이콘 3톤 · 9개 상태 배정 · 원 40px · 카드 우상단 |
+| 상태 스티커 | **폐기 (2026-09-29 회의)** — 카드는 상태 배지를 그대로 씁니다. 표정 그림은 가입 아바타로 재활용 |
 | 로고 | 최소 크기 · 여백 · 컬러 선택 기준 (**제안, 확정 전**) |
 
 **디자인 값을 소정님께 묻기 전에 여기를 먼저 보세요.** 가이드에 있는 값이면 물을 것이 아니라
@@ -546,7 +546,7 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 |---|---|---|
 | `app/api/ai/review/` | `PROMPT_VERSION` | `review-v7` |
 | `app/api/ai/classify/` — 규칙은 `lib/ai/classify-spec.ts` | `CLASSIFY_PROMPT_VERSION` | `classify-v4` |
-| `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v3` |
+| `app/api/ai/trends/` | `PROMPT_VERSION` | `trends-v3` — **화면에서 뺐습니다** (2026-10-01, 트렌드 AI 는 이번 MVP 범위 밖 · 조장 결정). 라우트는 남겨 둠 |
 | `app/api/ai/discover/` | `CHAT_PROMPT_VERSION` · `RECOMMEND_PROMPT_VERSION` | `discover-chat-v12-no-double-ack` · `discover-recommend-v14-category-guard` |
 
 **번호는 올리기만 하세요.** 이름을 바꾸면서 숫자가 내려가면(`v7` → `v3`) 발표 자료에서 어느 쪽이 나중인지 헷갈립니다.

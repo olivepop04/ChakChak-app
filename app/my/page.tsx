@@ -77,7 +77,10 @@ export default async function MyPage() {
           followerCount: profile.followerCount,
           followingCount: profile.followingCount,
           ledHref: '/activity',
-          participatedHref: '/activity?tab=joined',
+          // 「참여 완료 액션 N」 은 소감까지 쓴 것만 센 숫자입니다 (규칙 4).
+          // 전에는 /activity?tab=joined 로 보냈는데 거기는 참여 예정·취소까지
+          // 전부 보여주는 「참여한 액션」 이라, 숫자와 목록이 어긋났습니다 (2026-10-01).
+          participatedHref: `/user/${user.id}/joined`,
           followersHref: `/user/${user.id}/followers`,
           followingHref: `/user/${user.id}/following`,
         })}

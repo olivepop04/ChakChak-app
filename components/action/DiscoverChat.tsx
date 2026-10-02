@@ -67,9 +67,19 @@ interface DiscoverResponse {
   isLastQuestion?: boolean;
 }
 
-const DISCOVER_SESSION_KEY = 'chakchak_discover_session_v1';
+const DISCOVER_SESSION_KEY_PREFIX = 'chakchak_discover_session_v1';
 /** 10분 만료 — 상세페이지 둘러보고 와도 3개 추천을 보존하며, 10분 후 자동 리셋 (사용자 지정) */
 const SESSION_TTL_MS = 10 * 60 * 1000;
+
+/**
+ * 계정별로 키를 나눈다 — sessionStorage는 로그인 상태가 아니라 브라우저 탭에 묶여서,
+ * 같은 탭에서 로그아웃 후 다른 계정으로 들어와도 이전 계정의 대화·추천이 그대로 남아
+ * 있었다(2026-09-30, 팀 테스트 피드백: 로그아웃 후 다른 계정으로 들어가면 앞 사람의
+ * 액션 찾기 결과가 보임). userId가 키에 들어가야 계정이 바뀌면 자연히 다른 칸을 본다.
+ */
+function getSessionKey(userId: string | null): string {
+  return `${DISCOVER_SESSION_KEY_PREFIX}:${userId ?? 'guest'}`;
+}
 
 interface DiscoverSessionData {
   messages: ChatMessage[];
@@ -81,21 +91,24 @@ interface DiscoverSessionData {
   timestamp: number;
 }
 
-function saveSessionToStorage(data: {
-  messages: ChatMessage[];
-  options: string[];
-  items: Recommendation[] | null;
-  summaryChips: string[];
-  relaxation: string[];
-  isServerLastQuestion?: boolean;
-}) {
+function saveSessionToStorage(
+  sessionKey: string,
+  data: {
+    messages: ChatMessage[];
+    options: string[];
+    items: Recommendation[] | null;
+    summaryChips: string[];
+    relaxation: string[];
+    isServerLastQuestion?: boolean;
+  },
+) {
   if (typeof window === 'undefined') return;
   try {
     const payload: DiscoverSessionData = {
       ...data,
       timestamp: Date.now(),
     };
-    sessionStorage.setItem(DISCOVER_SESSION_KEY, JSON.stringify(payload));
+    sessionStorage.setItem(sessionKey, JSON.stringify(payload));
   } catch {
     // sessionStorage 용량 초과 또는 접근 불가 무시
   }
@@ -104,10 +117,13 @@ function saveSessionToStorage(data: {
 export function DiscoverChat({
   nickname,
   authenticated = true,
+  userId = null,
 }: {
   nickname: string;
   authenticated?: boolean;
+  userId?: string | null;
 }) {
+  const sessionKey = getSessionKey(userId);
   const started = useRef(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -133,10 +149,10 @@ export function DiscoverChat({
     if (!authenticated || started.current) return;
     started.current = true;
 
-    // 세션 스토리지에서 10분 이내 직전 대화/추천 복원 시도
+    // 세션 스토리지에서 10분 이내 직전 대화/추천 복원 시도 (계정별 키, sessionKey)
     if (typeof window !== 'undefined') {
       try {
-        const raw = sessionStorage.getItem(DISCOVER_SESSION_KEY);
+        const raw = sessionStorage.getItem(sessionKey);
         if (raw) {
           const parsed = JSON.parse(raw) as DiscoverSessionData;
           const isFresh = Date.now() - (parsed.timestamp ?? 0) < SESSION_TTL_MS;
@@ -150,16 +166,16 @@ export function DiscoverChat({
             setLoading(false);
             return;
           } else {
-            sessionStorage.removeItem(DISCOVER_SESSION_KEY);
+            sessionStorage.removeItem(sessionKey);
           }
         }
       } catch {
-        sessionStorage.removeItem(DISCOVER_SESSION_KEY);
+        sessionStorage.removeItem(sessionKey);
       }
     }
 
     void requestNext([]);
-  }, [authenticated]);
+  }, [authenticated, sessionKey]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -201,7 +217,7 @@ export function DiscoverChat({
         if (data.summaryChips) setSummaryChips(nextChips);
       }
 
-      saveSessionToStorage({
+      saveSessionToStorage(sessionKey, {
         messages: withReply,
         options: nextOptions,
         items: nextItems,
@@ -309,10 +325,21 @@ export function DiscoverChat({
     choose(`📍 ${region}`);
   }
 
+  /**
+   * 오류 배너 전용 재시도 — 지금까지의 대화(messages)는 그대로 둔 채 같은 요청만 다시 보낸다.
+   * choose()가 실패 직전에 이미 사용자의 마지막 답을 messages에 반영해 둔 상태라, 여기서
+   * 다시 messages를 지우거나 새로 만들 필요가 없다. 예전엔 이 버튼이 restart()를 불러서
+   * 오류 한 번에 1번 질문부터 대화가 통째로 리셋됐다 (2026-09-30, 팀 테스트 피드백).
+   */
+  function retryLastRequest() {
+    setError('');
+    void requestNext(messages);
+  }
+
   function restart() {
     if (typeof window !== 'undefined') {
       try {
-        sessionStorage.removeItem(DISCOVER_SESSION_KEY);
+        sessionStorage.removeItem(sessionKey);
       } catch {
         // sessionStorage 비활성화 환경 무시
       }
@@ -561,7 +588,8 @@ export function DiscoverChat({
             {error}
           </Bubble>
           <div className="ml-9 flex max-w-[80%] flex-wrap gap-2">
-            <Chip onClick={restart} className="gap-1.5 py-1.5 text-label">
+            {/* 실패한 요청만 다시 보냄(대화 유지) — 조장님 8e6867a 의 retryLastRequest */}
+            <Chip onClick={retryLastRequest} className="gap-1.5 py-1.5 text-label">
               <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
               <span>다시 시도</span>
             </Chip>

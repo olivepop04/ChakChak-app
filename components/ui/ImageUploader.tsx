@@ -18,6 +18,7 @@
  *     max={3}
  *     urls={urls}
  *     onChange={setUrls}
+ *     onBusyChange={setUploading}
  *     thumbnailIndex={thumbIdx}
  *     onThumbnailChange={setThumbIdx}
  *   />
@@ -37,6 +38,8 @@ interface ImageUploaderProps {
   max: number;
   urls: string[];
   onChange: (urls: string[]) => void;
+  /** 업로드 진행 상태를 저장 버튼 등 부모 UI와 공유할 때 넘기세요 */
+  onBusyChange?: (busy: boolean) => void;
   /** 대표 이미지를 고르게 할 때만 넘기세요 (Creation) */
   thumbnailIndex?: number;
   onThumbnailChange?: (index: number) => void;
@@ -49,6 +52,7 @@ export function ImageUploader({
   max,
   urls,
   onChange,
+  onBusyChange,
   thumbnailIndex,
   onThumbnailChange,
   className,
@@ -65,21 +69,28 @@ export function ImageUploader({
     if (files.length === 0) return;
 
     setBusy(true);
-    const room = max - urls.length;
-    const { urls: added, errors } = await uploadImages(
-      createClient(),
-      bucket,
-      actionId,
-      files,
-      room,
-    );
+    onBusyChange?.(true);
 
-    if (added.length > 0) onChange([...urls, ...added]);
-    errors.forEach((msg) => toast(msg, 'error'));
+    try {
+      const room = max - urls.length;
+      const { urls: added, errors } = await uploadImages(
+        createClient(),
+        bucket,
+        actionId,
+        files,
+        room,
+      );
 
-    setBusy(false);
-    // 같은 파일을 다시 고를 수 있도록 초기화
-    if (inputRef.current) inputRef.current.value = '';
+      if (added.length > 0) onChange([...urls, ...added]);
+      errors.forEach((msg) => toast(msg, 'error'));
+    } catch {
+      toast('사진 업로드에 실패했어요. 잠시 후 다시 시도해주세요.', 'error');
+    } finally {
+      setBusy(false);
+      onBusyChange?.(false);
+      // 같은 파일을 다시 고를 수 있도록 초기화
+      if (inputRef.current) inputRef.current.value = '';
+    }
   }
 
   function handleRemove(index: number) {

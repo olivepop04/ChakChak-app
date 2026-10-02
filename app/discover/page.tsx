@@ -16,6 +16,7 @@ export default async function DiscoverPage() {
       <DiscoverChat
         nickname={profile?.nickname ?? '회원'}
         authenticated={Boolean(user)}
+        userId={user?.id ?? null}
       />
     </main>
   );
