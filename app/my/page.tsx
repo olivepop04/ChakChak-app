@@ -117,6 +117,14 @@ export default async function MyPage() {
           알림 설정
           <ChevronRight className="h-[18px] w-[18px] text-faint" aria-hidden="true" />
         </Link>
+        {/* 운영진에게 의견 보내기 (2026-10-02) — 위 줄과 같은 모양 */}
+        <Link
+          href="/my/feedback"
+          className="flex min-h-[52px] items-center justify-between px-6 text-body font-medium text-neutral-800 hover:bg-neutral-50"
+        >
+          문의·건의하기
+          <ChevronRight className="h-[18px] w-[18px] text-faint" aria-hidden="true" />
+        </Link>
         <LogoutButton />
       </section>
 
