@@ -61,6 +61,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 | `chat_messages` | **UPDATE 정책 없음** | 삭제는 `delete_chat_message` |
 | `actions` | 새로 넣을 땐 `DRAFT` 만 · `status`·`owner_id`·두 사유 칸은 못 바꿈 | 공개·취소·조기 종료·결과 공개 RPC |
 | `profiles` | `gender` 못 바꿈 (아바타처럼) | 관리자(서비스 롤)만 |
+| `feedback` · `admins` (22) | **INSERT 정책 없음** · 문의는 관리자만 읽음 · 관리자 목록은 아무도 못 읽음 | 보내기는 `submit_feedback` · 관리자 지정은 서비스 롤로만 (저장소에 이메일을 적지 않음) |
 
 막는 기준은 `current_user = 'authenticated'`(직접 요청)입니다. RPC 는 함수 주인 역할로 돌아서 그대로 됩니다.
 **그래서 새 기능에서 이 표들을 화면이 직접 UPDATE 하게 짜면 조용히 안 됩니다** — RPC 를 만들어 달라고 해주세요.
@@ -594,6 +595,7 @@ AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인�
 | `getProfile` / `getFollowers` / `getFollowing` / `searchUsers` | 프로필·팔로우 |
 | `getPublicParticipationCounts` / `getPublicParticipatedActionIds` | 남에게도 보이는 참여 통계 |
 | `getNotifications` / `getUnreadCount` | 알림 · 안 읽은 수 |
+| `isAdmin` / `getFeedbackForAdmin` | 관리자인지 · 문의·건의 모아보기 (관리자가 아니면 빈 배열) — 2026-10-02 |
 
 ### 쓰기 — 전부 `lib/mutations.ts`
 
@@ -611,7 +613,7 @@ if (!res.ok) { setError(res.message); return; }
 `postChatMessage` · `deleteChatMessage` ·
 `saveActionDraft` · `updateActionText` · `saveActionItems` · **`addActionItems`** · `saveActionResult` · `publishAction` · `completeAction` · `cancelAction` · **`endActionEarly`** · `deleteDraft` ·
 `updateProfile` · `isNicknameTaken` · `updateNotifySettings` ·
-`toggleLike` · `toggleSave` · `toggleFollow` · `shareToUser` · `markNotificationRead`
+`toggleLike` · `toggleSave` · `toggleFollow` · `shareToUser` · `markNotificationRead` · **`submitFeedback`**
 
 **나가기는 `leaveActionWithReason` 하나뿐입니다.** 사유 없이 나가는 `leaveAction` 은
 2026-09-11에 뺐습니다 — 그 함수는 `participations` 를 `LEFT` 로 바꾸기만 해서
@@ -717,7 +719,7 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 | 담당 | 구역 |
 |---|---|
-| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/classify-core.mjs`** · `app/notifications/` · `app/action/[id]/share/` · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · **`vercel.json`** · `README.md` · `CLAUDE.md`) |
+| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/classify-core.mjs`** · `app/notifications/` · `app/action/[id]/share/` · **`app/admin/`** · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · **`vercel.json`** · `README.md` · `CLAUDE.md`) |
 | 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` · **`app/discover/`** · **`app/api/ai/discover/`** · **`lib/utils/scoring.ts`** · **`lib/utils/discover-ranking.ts`** |
 | 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · **`app/not-found.tsx`** · **`app/error.tsx`** · **`app/global-error.tsx`** · **`app/icon.svg`** · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` · **`postcss.config.mjs`** |
 | 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · **`components/my/`** · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` |

@@ -440,6 +440,55 @@ try {
 
   await admin.from('actions').delete().eq('id', act2.id);
 
+  // ── 10-c. 문의·건의 (22) ─────────────────────────────────
+  // 보낸 글은 관리자만 읽고, 쓰기는 submit_feedback() 으로만. 관리자 목록은 아무도 못 읽습니다.
+  // 테스트 계정을 지울 때 feedback · admins 행도 같이 지워집니다 (ON DELETE CASCADE).
+  console.log('\n[10-c] 문의·건의는 관리자만 읽고, 쓰기는 함수로만  (22)');
+
+  const { data: fbId, error: fbErr } = await cB.rpc('submit_feedback', {
+    p_category: 'BUG', p_body: '[검증] 오류 신고 테스트입니다',
+  });
+  fbErr || !fbId
+    ? no('문의를 보낼 수 없음 — 22_update.sql 을 실행했는가', fbErr?.message.slice(0, 40) ?? '')
+    : ok('로그인한 사람은 문의를 보낼 수 있음');
+
+  const { error: fbDirect } = await cB.from('feedback')
+    .insert({ user_id: uidB, category: 'BUG', body: '[검증] 직접 넣기 시도' });
+  fbDirect ? ok('문의 표에 직접 넣을 수 없음 (함수로만)')
+           : no('문의 표에 직접 들어감 !! — 검사·횟수 제한을 건너뜀');
+
+  const { error: fbShort } = await cB.rpc('submit_feedback', { p_category: 'BUG', p_body: '짧음' });
+  fbShort?.message.includes('5자') ? ok('5자보다 짧으면 거절', fbShort.message.slice(0, 20))
+                                   : no('짧은 문의가 거절되지 않음', fbShort?.message ?? '오류 없음');
+
+  const { data: fbAsB } = await cB.from('feedback').select('id');
+  (fbAsB?.length ?? 0) === 0 ? ok('보낸 사람도 문의를 다시 못 읽음 (관리자만)')
+                             : no('관리자 아닌 사람이 문의를 읽음 !!', `${fbAsB.length}건`);
+  const { data: fbAsAnon } = await anon.from('feedback').select('id');
+  (fbAsAnon?.length ?? 0) === 0 ? ok('비회원은 문의를 못 읽음') : no('비회원이 문의를 읽음 !!');
+
+  const { data: admAsB } = await cB.from('admins').select('user_id');
+  (admAsB?.length ?? 0) === 0 ? ok('관리자 목록은 아무도 못 읽음') : no('관리자 목록이 보임 !!');
+  const { error: selfAdmin } = await cB.from('admins').insert({ user_id: uidB });
+  selfAdmin ? ok('스스로 관리자가 될 수 없음') : no('스스로 관리자가 됨 !!');
+
+  await admin.from('admins').insert({ user_id: uidA });
+  const { data: isAdmA } = await cA.rpc('is_admin');
+  const { data: isAdmB } = await cB.rpc('is_admin');
+  const { data: fbAsA } = await cA.from('feedback').select('id').eq('id', fbId ?? '');
+  isAdmA === true && isAdmB === false && fbAsA?.length === 1
+    ? ok('관리자로 지정하면 문의를 읽음 · 다른 사람은 여전히 아님')
+    : no('관리자 판정·읽기 오류', JSON.stringify({ isAdmA, isAdmB, rows: fbAsA?.length }));
+  await admin.from('admins').delete().eq('user_id', uidA);
+
+  // 1시간에 5건 — 위에서 1건 보냈으니 4건 더 보내고 6번째가 막혀야 합니다
+  for (let i = 0; i < 4; i++) {
+    await cB.rpc('submit_feedback', { p_category: 'SUGGESTION', p_body: `[검증] 횟수 제한 ${i + 2}` });
+  }
+  const { error: fbLimit } = await cB.rpc('submit_feedback', { p_category: 'SUGGESTION', p_body: '[검증] 횟수 제한 6' });
+  fbLimit?.message.includes('5건') ? ok('한 시간에 5건을 넘으면 거절', fbLimit.message.slice(0, 20))
+                                   : no('횟수 제한이 안 걸림 !!', fbLimit?.message ?? '6번째가 들어감');
+
   // ── 11. 2026-09-01 개편분 ─────────────────────────────────
   console.log('\n[11] 개편분 — 알림 끄기 · 수정 잠금 · 나가기 사유');
 

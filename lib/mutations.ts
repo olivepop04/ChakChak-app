@@ -18,6 +18,10 @@ import type { Database } from '@/lib/types/database';
 import { LIMITS, UPLOAD, type NotificationType } from '@/lib/constants';
 import { getBioValidationError } from '@/lib/utils/profile-validation';
 import { getActionItemsError } from '@/lib/utils/action-items-validation';
+import {
+  getFeedbackValidationError,
+  type FeedbackCategory,
+} from '@/lib/utils/feedback';
 
 type DB = SupabaseClient<Database>;
 
@@ -870,4 +874,41 @@ export async function markNotificationRead(
     .eq('id', notificationId);
   if (error) return { ok: false, message: toMessage(error, '처리에 실패했어요.') };
   return { ok: true, data: undefined };
+}
+
+// ─────────────────────────────────────────────────────────────
+// 문의·건의하기 (2026-10-02)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * 관리자에게 문의·건의·오류 신고를 보냅니다.
+ *
+ * 저장은 submit_feedback() 함수로만 합니다 (supabase/22). feedback 표에는 INSERT 정책이 없어
+ * 직접 넣을 수 없고, 함수가 종류·글자 수·횟수(1시간 5건)를 검사합니다.
+ * 보낸 글은 관리자만 읽습니다.
+ *
+ * submit_feedback 은 22 를 적용한 뒤에 생성 타입(database.ts)에 들어오므로,
+ * 그 전까지 public-stats.ts 와 같은 방식으로 타입을 붙여 부릅니다.
+ */
+type RpcSubmitFeedback = (
+  fn: 'submit_feedback',
+  args: { p_category: FeedbackCategory; p_body: string },
+) => PromiseLike<{ data: string | null; error: { message: string } | null }>;
+
+export async function submitFeedback(
+  supabase: DB,
+  category: FeedbackCategory,
+  body: string,
+): Promise<Result<string>> {
+  const invalid = getFeedbackValidationError(category, body);
+  if (invalid) return { ok: false, message: invalid };
+
+  const { data, error } = await (supabase.rpc as unknown as RpcSubmitFeedback)(
+    'submit_feedback',
+    { p_category: category, p_body: body.trim() },
+  );
+  if (error || !data) {
+    return { ok: false, message: toMessage(error, '보내지 못했어요. 잠시 후 다시 시도해주세요.') };
+  }
+  return { ok: true, data };
 }
