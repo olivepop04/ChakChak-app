@@ -174,6 +174,9 @@ export function DiscoverChat({
     }
 
     void requestNext([]);
+    // requestNext는 매 렌더 새로 만들어지는 함수라 deps에 넣어도 그 자체로는 의미가 없다.
+    // 이 effect는 started.current 가드로 마운트당 정확히 한 번만 실행되도록 막혀 있어 안전하다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticated, sessionKey]);
 
   useEffect(() => {
