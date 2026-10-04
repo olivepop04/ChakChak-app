@@ -59,8 +59,9 @@ function LoginForm() {
     router.refresh();
   }
 
-  // 2026-09-30 Day19 인증군 통일안 — 글자 「착착」 → 메인 로고(CHAK CHAK · 두 얼굴) 폭 144px 가운데,
+  // 2026-09-30 Day19 인증군 통일안 — 글자 「착착」 → 메인 로고 폭 144px 가운데,
   // 위 여백 72px · 로고 묶음 아래 48px(소정님 목업에서 직접 조정한 값) · 태그라인은 홈과 같은 문구(조장 승인)
+  // 2026-10-04 메인 로고 교체(CHAK CHAK · C·K 픽셀 + 초록 얼굴 하나, 225×106) — height 는 비율값 144×106/225
   return (
     <main className="flex min-h-dvh flex-col px-6 pb-8 pt-[72px]">
       <div className="mb-12 flex flex-col items-center text-center">
@@ -69,7 +70,7 @@ function LoginForm() {
           src="/brand/chakchak-logo.svg"
           alt="착착"
           width={144}
-          height={87}
+          height={68}
           className="h-auto w-36"
         />
         <p className="mt-4 font-paperlogy text-body font-bold leading-relaxed text-[#333333]">
