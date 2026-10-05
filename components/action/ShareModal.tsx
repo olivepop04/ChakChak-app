@@ -76,9 +76,11 @@ export function ShareModal({
           </button>
         </div>
 
-        {/* 모임 제목 영역 */}
+        {/* 모임 제목 영역 — 위에 안내 한 줄(2026-10-05): 「공유하기」 제목과 같은 크기·굵기라
+            두 번째 제목처럼 묻혀 보여서, 아래 글자가 공유할 대상이라는 걸 먼저 알려줌 */}
         {actionTitle && (
-          <div className="mx-5 border-b border-neutral-100 py-3">
+          <div className="mx-5 flex flex-col gap-1 border-b border-neutral-100 py-3">
+            <p className="text-caption font-medium text-neutral-500">이 액션을 공유해요</p>
             <p className="line-clamp-2 font-paperlogy text-subtitle font-bold leading-snug text-[#333333]">
               {actionTitle}
             </p>

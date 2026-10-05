@@ -60,9 +60,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={show}>
       {children}
 
-      {/* 하단 탭 및 하단 고정 CTA 버튼보다 위에 띄워지도록 z-index 및 bottom 오프셋 설정 */}
+      {/* 하단 탭 및 하단 고정 CTA 버튼보다 위에 띄워지도록 z-index 및 bottom 오프셋 설정.
+          z-[60] — 모달(z-50)보다 한 단계 위. 같은 50이면 나중에 그려진 모달 딤이 토스트를 덮어
+          공유 모달에서 「@닉네임님에게 보냈어요」 가 딤 뒤에 흐리게 깔렸음 (2026-10-05 소정님 훑어보기) */}
       <div
-        className="pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-44 z-50 flex w-full max-w-[calc(100%-32px)] sm:max-w-[calc(480px-32px)] flex-col items-center gap-2"
+        className="pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-44 z-[60] flex w-full max-w-[calc(100%-32px)] sm:max-w-[calc(480px-32px)] flex-col items-center gap-2"
         role="status"
         aria-live="polite"
       >
