@@ -545,9 +545,12 @@ export function DiscoverChat({
                       }
                       className="gap-1.5 py-1.5 text-label"
                     >
-                      {isSelected && (
-                        <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
-                      )}
+                      {/* 체크는 늘 그려 두고 색만 바꿈 — 고를 때 체크가 새로 생기며 칩 폭이 늘어
+                          옆 칩들이 밀리던 것 (2026-10-05 소정님 훑어보기). 안 고른 칩은 연회색 체크 */}
+                      <Check
+                        className={cn('h-3.5 w-3.5 stroke-[2.5]', !isSelected && 'text-neutral-300')}
+                        aria-hidden="true"
+                      />
                       <span>{option}</span>
                     </Chip>
                   );

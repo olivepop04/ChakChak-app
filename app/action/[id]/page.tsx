@@ -197,10 +197,22 @@ export default async function ActionDetailPage({
               customLabel={customStatusLabel}
               className="!min-w-0 !rounded-full !px-2.5"
             />
-            {dday && action.status === 'ACTIVE' && (
-              <span className="ml-auto inline-flex h-6 flex-none items-center justify-center rounded-full border border-brand px-2.5 text-label font-medium text-brand">
-                {dday}
-              </span>
+            {/* 마감일을 D-day 옆으로 — 모집 현황 제목 옆에 따로 있던 「마감 : 날짜」를 옮겨 와
+                한 덩어리(「10월 6일 마감 · D-1」)로 읽히게 (2026-10-05 소정님 훑어보기).
+                D-day 는 모집 중일 때만, 마감일은 날짜가 있으면 늘 보임(마감 뒤에도 언제였는지 남김) */}
+            {(action.recruitEndAt || (dday && action.status === 'ACTIVE')) && (
+              <div className="ml-auto flex flex-none items-center gap-2">
+                {action.recruitEndAt && (
+                  <span className="text-caption text-neutral-500">
+                    {formatDateShort(action.recruitEndAt)} 마감
+                  </span>
+                )}
+                {dday && action.status === 'ACTIVE' && (
+                  <span className="inline-flex h-6 flex-none items-center justify-center rounded-full border border-brand px-2.5 text-label font-medium text-brand">
+                    {dday}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
@@ -299,14 +311,8 @@ export default async function ActionDetailPage({
 
         {/* 모집 현황 */}
         <section className="flex flex-col gap-4">
-          <div className="flex items-baseline gap-2">
-            <SectionTitle>모집 현황</SectionTitle>
-            {action.recruitEndAt && (
-              <span className="text-caption text-neutral-500">
-                마감 : {formatDateShort(action.recruitEndAt)}
-              </span>
-            )}
-          </div>
+          {/* 마감일은 2026-10-05 제목 영역의 D-day 옆으로 옮김 */}
+          <SectionTitle>모집 현황</SectionTitle>
           {action.items.length === 0 ? (
             <p className="text-label text-neutral-400">등록된 모집 항목이 없어요.</p>
           ) : (

@@ -29,6 +29,8 @@ export function Chip({
   /**
    * 기본값 'md' — 필터 칩 크기(13px), 기존 그대로.
    * 'sm'은 Day10 확정값(카드용 11px, 타입스케일 "캡션") — 카드 카테고리 칩 전용(2026-09-22).
+   * 위 여백 1.5px — 글자 칸이 칸 가운데보다 0.75px 위로 떠서(배포 화면 실측, 위 4.75 / 아래 6.25px)
+   * 「글자가 위에 붙은 느낌」이 나던 것을 맞춤. 1.5px 에서 위아래 5.5px 로 같아짐 (2026-10-05).
    */
   size = 'md',
 }: {
@@ -48,7 +50,7 @@ export function Chip({
       className={cn(
         'inline-flex items-center justify-center whitespace-nowrap rounded-full border transition-colors',
         size === 'sm'
-          ? 'h-[24px] px-2.5 text-caption font-medium'
+          ? 'h-[24px] px-2.5 pt-[1.5px] text-caption font-medium'
           : tone === 'neutral'
             ? 'gap-1 border-transparent px-3.5 py-2 text-label'
             : 'px-3.5 py-2 text-label font-medium',

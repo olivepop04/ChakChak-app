@@ -475,7 +475,8 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
               >
                 {isSelected && (
                   <span
-                    className={`flex h-4 w-4 items-center justify-center rounded-full text-caption font-bold ${
+                    // pt-[1.5px] — 숫자가 원 위쪽에 붙어 보이던 것(위 0.75 / 아래 2.25px)을 가운데로 (2026-10-05 실측)
+                    className={`flex h-4 w-4 items-center justify-center rounded-full pt-[1.5px] text-caption font-bold ${
                       isPrimary ? 'bg-brand text-white' : 'bg-hairline-focus text-white'
                     }`}
                   >
