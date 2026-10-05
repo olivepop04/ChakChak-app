@@ -185,7 +185,8 @@ export default async function ActionDetailPage({
 
         {/* 제목 영역 */}
         <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
+          {/* items-start — 오른쪽 D-day·마감일 덩어리가 두 줄이라, 칩이 그 가운데로 떠 보이지 않게 위(캡슐 높이)에 맞춤 */}
+          <div className="flex flex-wrap items-start gap-1.5">
             {detailCategories.map((cat, i) => (
               <Chip key={cat} as="span" tone="accent" size="sm" selected={i === 0}>
                 {cat}
@@ -197,19 +198,20 @@ export default async function ActionDetailPage({
               customLabel={customStatusLabel}
               className="!min-w-0 !rounded-full !px-2.5"
             />
-            {/* 마감일을 D-day 옆으로 — 모집 현황 제목 옆에 따로 있던 「마감 : 날짜」를 옮겨 와
-                한 덩어리(「10월 6일 마감 · D-1」)로 읽히게 (2026-10-05 소정님 훑어보기).
-                D-day 는 모집 중일 때만, 마감일은 날짜가 있으면 늘 보임(마감 뒤에도 언제였는지 남김) */}
+            {/* 마감일을 D-day 쪽으로 — 모집 현황 제목 옆에 따로 있던 「마감 : 날짜」를 옮겨 옴 (2026-10-05 소정님 훑어보기).
+                같은 날 세로로 바꿈: 캡슐 위 · 「10월 6일 마감」 아래, 둘 다 오른쪽 끝.
+                D-day 는 모집 중일 때만, 마감일은 날짜가 있으면 늘 보임(마감 뒤에도 언제였는지 남김).
+                캡슐은 홈 카드(ActionCard)와 같은 픽셀 글꼴 11px — 홈에서 넘어와도 같은 모양 */}
             {(action.recruitEndAt || (dday && action.status === 'ACTIVE')) && (
-              <div className="ml-auto flex flex-none items-center gap-2">
+              <div className="ml-auto flex flex-none flex-col items-end gap-1">
+                {dday && action.status === 'ACTIVE' && (
+                  <span className="inline-flex h-6 flex-none items-center rounded-full border border-brand px-2.5 font-pixel-mono text-caption leading-none text-brand">
+                    {dday}
+                  </span>
+                )}
                 {action.recruitEndAt && (
                   <span className="text-caption text-neutral-500">
                     {formatDateShort(action.recruitEndAt)} 마감
-                  </span>
-                )}
-                {dday && action.status === 'ACTIVE' && (
-                  <span className="inline-flex h-6 flex-none items-center justify-center rounded-full border border-brand px-2.5 text-label font-medium text-brand">
-                    {dday}
                   </span>
                 )}
               </div>
