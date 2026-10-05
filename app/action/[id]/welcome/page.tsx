@@ -6,7 +6,7 @@
  */
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { ChevronLeft, Check, MessageSquareQuote } from 'lucide-react';
+import { ChevronLeft, MessageSquareQuote } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getActionCrew } from '@/lib/queries/participations';
 import { Avatar } from '@/components/ui/Avatar';
@@ -33,7 +33,8 @@ export default async function WelcomePage({
 
   const { owner, crew } = await getActionCrew(supabase, id, user.id);
   const everyone = [...(owner ? [owner] : []), ...crew];
-  const shown = everyone.slice(0, 5);
+  // 입장권 아래칸 오른쪽 — 아바타 3개 + 「+나머지」 (2026-10-05, 전에는 가운데 5개)
+  const shown = everyone.slice(0, 3);
   const rest = everyone.length - shown.length;
 
   return (
@@ -55,53 +56,66 @@ export default async function WelcomePage({
         <span className="w-9" />
       </header>
 
-      {/* 위 여백 24 → 48px — 상단 바와 체크 원 사이가 좁아 보인다는 의견(2026-10-05 소정님 훑어보기).
-          축하 화면이라 가입 완료(위 여백 120px)처럼 간격 단계(최대 32px) 밖 값을 씀 */}
+      {/* 2026-10-05 픽셀 포인트 목업 「참여 완료 B-2 (소정 수정본)」 — 체크 원 대신 입장권 카드.
+          위 여백 48px(상단 바와 제목 사이). 픽셀(갈무리)은 You're In! · CHAK CHAK · CREW 세 곳만 */}
       <div className="flex flex-col px-6 pt-12">
         <div className="flex flex-col items-center text-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white">
-            <Check className="h-8 w-8 text-brand" aria-hidden="true" />
-          </span>
-          <h2 className="mt-5 font-paperlogy text-2xl font-bold leading-snug text-white">
-            You&apos;re In!
-          </h2>
-          <p className="mt-2 text-body text-white/85">
+          {/* 픽셀 글꼴은 기준 11px 의 배수에서 선명 — 목업 28px 대신 33px */}
+          <h2 className="font-pixel text-[33px] leading-tight text-white">You&apos;re In!</h2>
+          <p className="mt-2.5 text-body text-white/85">
             좋은 일을 함께 시작하게 되었어요.
           </p>
         </div>
 
-        {/* 액션 제목 + 함께하는 크루: 초록 배경 위 흰 카드 */}
+        {/* 입장권 — 위칸(라벨 + 액션 제목) / 점선 + 양옆 홈 / 아래칸(CREW N명 + 아바타).
+            카드 전체를 누르면 크루 목록으로 가는 건 그대로 */}
         <Link
           href={`/action/${id}/crew`}
-          className="mt-8 flex flex-col items-center gap-3.5 rounded-xl bg-white p-5 text-center"
+          className="mt-7 flex flex-col overflow-hidden rounded-xl bg-white"
         >
-          <p className="line-clamp-2 font-paperlogy text-subtitle font-bold leading-snug text-neutral-900">
-            {action.title}
-          </p>
-          <div className="flex items-center justify-center">
-            {shown.map((p, i) => (
-              <span
-                key={p.id}
-                className="relative -ml-3 first:ml-0"
-                style={{ zIndex: i + 1 }}
-              >
-                <Avatar name={p.nickname} avatar={p.avatar} className="border-[3px] border-white" />
-              </span>
-            ))}
-            {rest > 0 && (
-              <span
-                className="relative -ml-3"
-                style={{ zIndex: shown.length + 1 }}
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-white bg-neutral-100 text-label font-semibold text-neutral-500">
-                  +{rest}
-                </span>
-              </span>
-            )}
+          <div className="flex flex-col gap-1.5 p-5">
+            <span className="font-pixel text-caption leading-none tracking-wide text-brand">
+              CHAK CHAK
+            </span>
+            <p className="line-clamp-2 font-paperlogy text-xl font-bold leading-snug text-neutral-900">
+              {action.title}
+            </p>
           </div>
-          <p className="text-body text-neutral-700">
-            현재 <b className="font-semibold text-neutral-900">{everyone.length}명</b>이 함께하고 있어요.
-          </p>
+
+          {/* 점선 + 양옆 홈 — 홈은 바탕(초록)과 같은 색 원을 카드 가장자리에 반쯤 걸쳐 그림(overflow-hidden 이 반을 자름) */}
+          <div className="relative mx-4 border-t-2 border-dashed border-neutral-200" aria-hidden="true">
+            <span className="absolute -left-[26px] -top-[11px] h-5 w-5 rounded-full bg-brand" />
+            <span className="absolute -right-[26px] -top-[11px] h-5 w-5 rounded-full bg-brand" />
+          </div>
+
+          <div className="flex items-center justify-between gap-3 p-5">
+            <div className="flex flex-col gap-1.5">
+              <span className="font-pixel text-caption leading-none text-neutral-500">CREW</span>
+              <span className="text-subtitle font-bold text-neutral-900">{everyone.length}명</span>
+            </div>
+            <div className="flex items-center">
+              {shown.map((p, i) => (
+                <span
+                  key={p.id}
+                  className="relative -ml-2.5 first:ml-0"
+                  style={{ zIndex: i + 1 }}
+                >
+                  <Avatar
+                    name={p.nickname}
+                    avatar={p.avatar}
+                    className="!h-9 !w-9 border-[3px] border-white"
+                  />
+                </span>
+              ))}
+              {rest > 0 && (
+                <span className="relative -ml-2.5" style={{ zIndex: shown.length + 1 }}>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-white bg-neutral-100 text-caption font-semibold text-neutral-500">
+                    +{rest}
+                  </span>
+                </span>
+              )}
+            </div>
+          </div>
         </Link>
 
         <p className="mt-10 text-center text-label leading-relaxed text-white/75">

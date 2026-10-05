@@ -110,18 +110,21 @@ export default async function HomePage({
           ))}
         </div>
 
-        {/* 정렬 필터 — 세그먼트 컨트롤 */}
-        <div className="flex items-center gap-1 rounded-full bg-[#F5F5F7] p-1">
-          <Link href={makeSortUrl('DEADLINE')} scroll={false} className="flex-1">
-            <Chip selected={currentSort === 'DEADLINE'} as="span" tone="neutral" className="w-full">
-              마감 임박
-            </Chip>
-          </Link>
-          <Link href={makeSortUrl('POPULAR')} scroll={false} className="flex-1">
-            <Chip selected={currentSort === 'POPULAR'} as="span" tone="neutral" className="w-full">
-              인기순
-            </Chip>
-          </Link>
+        {/* 정렬 필터 — 세그먼트 컨트롤.
+            2026-10-05: 폭을 꽉 채워 너무 커 보인다는 의견(소정님 훑어보기) → 글자 폭만큼 줄여 가운데 */}
+        <div className="flex justify-center">
+          <div className="inline-flex items-center gap-1 rounded-full bg-[#F5F5F7] p-1">
+            <Link href={makeSortUrl('DEADLINE')} scroll={false}>
+              <Chip selected={currentSort === 'DEADLINE'} as="span" tone="neutral">
+                마감 임박
+              </Chip>
+            </Link>
+            <Link href={makeSortUrl('POPULAR')} scroll={false}>
+              <Chip selected={currentSort === 'POPULAR'} as="span" tone="neutral">
+                인기순
+              </Chip>
+            </Link>
+          </div>
         </div>
       </div>
 

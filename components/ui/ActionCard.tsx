@@ -26,7 +26,7 @@ import type { ActionCardData } from '@/lib/types/view';
 import { cn } from '@/lib/utils/cn';
 // 날짜 표시는 공용 함수를 쓴다 (CLAUDE.md 규칙) — 요일까지 나오는 "8월 30일 (토)" 형식.
 // 카드가 자체적으로 갖고 있던 formatDate(요일 없음)를 지우고 이걸로 통일했다 (2026-09-21).
-import { formatDate } from '@/lib/utils/date';
+import { deadlineDDay, formatDate } from '@/lib/utils/date';
 
 interface ActionCardProps {
   action: ActionCardData;
@@ -73,6 +73,9 @@ export function ActionCard({
   const isRecruitClosed =
     action.recruitClosed ??
     (action.recruitEndAt ? new Date(action.recruitEndAt) < new Date() : false);
+  // 세로형 카드 D-day — 모집 중이고 마감 전일 때만 (액션 상세와 같은 deadlineDDay)
+  const dday =
+    action.status === 'ACTIVE' && !isRecruitClosed ? deadlineDDay(action.recruitEndAt) : null;
 
   // 좋아요·저장: 초안·취소·종료·완료에서 "새로" 누르는 것을 막는다 (기획 결정 2026-09-10).
   //   이미 누른 것은 풀 수 있어야 한다 — 끝난 액션이 「저장한 액션」에 영영 남아
@@ -334,13 +337,20 @@ export function ActionCard({
         </Link>
 
         <div className={cn('flex flex-col gap-2 pt-3 pb-4', boxed && 'px-4')}>
-          {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
-          <div className="flex flex-wrap gap-1">
+          {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어.
+              2026-10-05: 칩 반대쪽(오른쪽)에 모집 마감 D-day 픽셀 캡슐 — 액션 상세의 D-day 와 같은 자리·같은 규칙
+              (모집 중일 때만, 마감 지나면 안 보임). 세로형·boxed 카드만, 가로형(내 액션·프로필)은 그대로 */}
+          <div className="flex flex-wrap items-center gap-1">
             {allCategories.map((c, i) => (
               <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0}>
                 {c}
               </Chip>
             ))}
+            {dday && (
+              <span className="ml-auto inline-flex h-6 flex-none items-center rounded-full border border-brand px-2.5 font-pixel-mono text-caption leading-none text-brand">
+                {dday}
+              </span>
+            )}
           </div>
 
           {/* 고배율에서 잘리지 않게 말줄임 없이 전체 노출. 카드가 길어지는 건 감수 (배율 확대 사용자는 전부 보길 원함) */}
