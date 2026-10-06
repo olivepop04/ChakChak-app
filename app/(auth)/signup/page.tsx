@@ -529,7 +529,8 @@ function SignUpForm() {
             나중에 프로필에서 언제든 바꿀 수 있으니 편하게 선택해 보세요.
           </p>
 
-          <div className="mt-8 flex flex-col gap-8">
+          {/* 3단계 항목 사이 32 → 48px (2026-10-06 디자인 패치 — 선택 항목이 4개라 덩어리가 붙어 보임) */}
+          <div className="mt-8 flex flex-col gap-12">
             <div className="flex flex-col gap-3">
               <FieldLabel>
                 관심 카테고리{' '}

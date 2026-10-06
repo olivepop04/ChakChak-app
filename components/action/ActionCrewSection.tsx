@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Lock } from 'lucide-react';
+import { EyeOff } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { useToast } from '@/components/ui/Toast';
@@ -22,7 +22,7 @@ interface ActionCrewSectionProps {
  *
  * 2026-10-06 디자인 패치 확정 — 상태 셋:
  *   ① 크루·호스트: 아바타 최대 3개(첫 번째가 맨 뒤) + 나머지 「+n」 원 · 「전체보기 ›」로 크루 목록
- *   ② 크루 아님: 자물쇠 + 문장만(아바타 없음) · 누르면 지금처럼 토스트
+ *   ② 크루 아님: 눈 가림 아이콘 + 문장만(아바타 없음) · 누르면 지금처럼 토스트
  *   ③ 0명: 점선 원 3개 + 「첫 번째 크루가 되어 보세요」
  * 문구는 셋 다 문장형으로 맞춤 — 「N명 참여 중」 → 「N명이 함께하고 있어요」.
  */
@@ -75,7 +75,8 @@ export function ActionCrewSection({
           <>
             <div className={canViewCrew ? 'flex min-w-0 items-center gap-3' : 'flex min-w-0 items-center gap-1.5'}>
               {!canViewCrew && (
-                <Lock className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true" />
+                // 로그인 비밀번호 칸의 「가림」 아이콘과 같은 모양 — 크루만 볼 수 있다는 뜻 (2026-10-06)
+                <EyeOff className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true" />
               )}
               {shown.length > 0 && (
                 <div className="flex shrink-0 -space-x-2">

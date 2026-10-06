@@ -81,7 +81,8 @@ export function ShareModal({
         {actionTitle && (
           <div className="mx-5 flex flex-col gap-1 border-b border-neutral-100 py-3">
             <p className="text-caption font-medium text-neutral-500">이 액션을 공유해요</p>
-            <p className="line-clamp-2 font-paperlogy text-subtitle font-bold leading-snug text-[#333333]">
+            {/* 액션명 포인트 그린 — 공유 화면(app/action/[id]/share)과 같게 (2026-10-06) */}
+            <p className="line-clamp-2 font-paperlogy text-subtitle font-bold leading-snug text-brand">
               {actionTitle}
             </p>
           </div>

@@ -131,7 +131,9 @@ export function BottomNav() {
         아이콘·라벨 크기를 여기서 더 키운다면 app/globals.css 의 --nav-h(64px)도
         같이 올릴 것 — 하단 고정 바가 있는 11개 화면이 전부 이 변수로 자기 위치를 잡는다.
       */}
-      <ul className="flex h-[var(--nav-h)] items-center justify-between px-4">
+      {/* 좌우 여백 16 → 32px — 본문 여백(24px)보다 안쪽으로 들어가 탭이 화면 끝에 붙어 보이지 않게 (2026-10-06).
+          375px 에서도 활성 탭(아이콘 + 글자) + 아이콘 4개가 들어가는 폭 */}
+      <ul className="flex h-[var(--nav-h)] items-center justify-between px-8">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           const Icon = tab.icon;
