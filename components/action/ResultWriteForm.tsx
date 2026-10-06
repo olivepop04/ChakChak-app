@@ -102,7 +102,8 @@ export function ResultWriteForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-6 pb-[calc(8.5rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-5">
+    // 2026-10-06 디자인 패치 — 결과 보기와 같은 짜임: 섹션 간격 40px · 자동 집계 뒤 구분선 · 나머지 셋은 한 덩어리
+    <div className="flex flex-col gap-10 px-6 pb-[calc(8.5rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-10">
       {/* 자동 집계 — 수정 불가 */}
       <section className="flex flex-col gap-3">
         <div>
@@ -112,8 +113,8 @@ export function ResultWriteForm({
           </p>
         </div>
 
-        {/* 결과 보기 "함께 모은 것"과 같은 형식 — 박스 테두리 없이 항목 사이 구분선 */}
-        <div className="flex flex-col gap-5 p-4">
+        {/* 결과 보기 "함께 모은 것"과 같은 형식 — 얇은 회색 선 상자 + 항목 사이 구분선 */}
+        <div className="flex flex-col gap-5 rounded-xl border border-hairline p-4">
           {items.length === 0 ? (
             <p className="text-label text-neutral-400">모집 항목이 없어요.</p>
           ) : (
@@ -198,9 +199,12 @@ export function ResultWriteForm({
         </div>
       </section>
 
+      <div aria-hidden="true" className="-my-5 h-px bg-[#EEEEEE]" />
+
+      <div className="flex flex-col gap-6">
       {/* 이렇게 마무리했어요 */}
       <label className="flex flex-col gap-2">
-        <span className="text-subtitle font-bold text-neutral-500">이렇게 마무리했어요</span>
+        <span className="text-subtitle font-bold text-neutral-900">이렇게 마무리했어요</span>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -212,7 +216,7 @@ export function ResultWriteForm({
 
       {/* 결과 사진 */}
       <div className="flex flex-col gap-2">
-        <span className="text-subtitle font-bold text-neutral-500">
+        <span className="text-subtitle font-bold text-neutral-900">
           결과 사진 <span className="text-danger">*</span>
         </span>
         <ImageUploader
@@ -228,9 +232,17 @@ export function ResultWriteForm({
         </p>
       </div>
 
-      {/* 호스트의 한마디 */}
+      {/* 호스트의 한마디 — 결과 보기에서 보일 모양(초록 큰 따옴표 머리)과 같게 */}
       <label className="flex flex-col gap-2">
-        <span className="text-subtitle font-bold text-neutral-500">호스트의 한마디</span>
+        <span className="flex items-start gap-2">
+          <span
+            aria-hidden="true"
+            className="h-6 flex-none font-paperlogy text-[40px] font-extrabold leading-[0.8] text-brand"
+          >
+            “
+          </span>
+          <span className="pt-0.5 font-paperlogy text-label font-bold leading-snug text-brand">호스트의 한마디</span>
+        </span>
         <textarea
           value={ownerVoice}
           onChange={(e) => setOwnerVoice(e.target.value)}
@@ -239,6 +251,7 @@ export function ResultWriteForm({
           className="min-h-[80px] w-full resize-none rounded-xl border border-hairline p-4 text-body leading-relaxed text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-hairline-focus"
         />
       </label>
+      </div>
 
       {/* 탭이 보이는 화면이라 탭 높이(--nav-h)만큼 띄웁니다 (2026-09-18) */}
       <div className="fixed inset-x-0 bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-app bg-white px-6 py-4">

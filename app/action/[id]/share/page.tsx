@@ -30,7 +30,8 @@ export default async function SharePage({
       {/* 위 안내 한 줄 — 공유 모달(ShareModal)과 같은 모양 (2026-10-05) */}
       <div className="flex flex-col gap-1 border-b border-neutral-100 px-6 py-4">
         <p className="text-caption font-medium text-neutral-500">이 액션을 공유해요</p>
-        <h1 className="line-clamp-2 font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
+        {/* 2026-10-06 디자인 패치 — 공유할 액션명을 초록으로 강조 */}
+        <h1 className="line-clamp-2 font-paperlogy text-xl font-bold leading-snug tracking-tight text-brand">
           {action.title}
         </h1>
       </div>
