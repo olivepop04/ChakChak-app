@@ -360,8 +360,9 @@ export function ActionCard({
             {action.title}
           </h3>
 
+          {/* 소개 글은 읽는 글이라 정보·반응 줄(회색)보다 한 단계 진하게 — 글과 기능이 구분되게 (2026-10-06) */}
           {action.summary && (
-            <p className="font-sans text-body font-medium leading-relaxed text-neutral-500">
+            <p className="font-sans text-body font-medium leading-relaxed text-neutral-700">
               {action.summary}
             </p>
           )}
@@ -390,8 +391,9 @@ export function ActionCard({
           </div>
 
           {/* 좋아요·저장·공유 — "내 반응" 줄. 참여인원은 위 정보줄로.
-              공유는 원래 상단 작성자 줄에 있었는데 이 줄로 이동(2026-09-22), 같은 gap-3로 나열 */}
-          <div className="pointer-events-auto mt-1 flex items-center gap-3 pt-1 text-xs tabular-nums text-neutral-500">
+              공유는 원래 상단 작성자 줄에 있었는데 이 줄로 이동(2026-09-22), 같은 gap-3로 나열.
+              2026-10-06: 위 여백 4 → 12px(pt-3) — 정보 줄과 떨어뜨려 「기능」 줄로 보이게 (구분선은 안 씀) */}
+          <div className="pointer-events-auto mt-1 flex items-center gap-3 pt-3 text-xs tabular-nums text-neutral-500">
             <LikeButton
               actionId={action.id}
               initialLiked={action.likedByMe}
