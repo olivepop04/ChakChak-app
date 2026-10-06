@@ -7,7 +7,9 @@
  * 모양은 공용 Input 그대로(44px·12px·15px·hairline) + 오른쪽 44px 누르는 칸.
  * 화면 안에서 type 만 password ↔ text 로 바꿀 뿐, 값·제출 로직은 건드리지 않습니다.
  *
- * 가려짐 → Eye(「비밀번호 보기」) · 보이는 중 → EyeOff(「비밀번호 숨기기」)
+ * 아이콘은 「지금 상태」를 그립니다 — 가려짐 → EyeOff(감은 눈) · 보이는 중 → Eye(뜬 눈).
+ * 읽어 주는 이름(aria-label)은 「누르면 할 일」 그대로 — 가려짐 「비밀번호 보기」 · 보이는 중 「비밀번호 숨기기」.
+ * 2026-10-05 소정님 훑어보기: 가려진 칸에 뜬 눈이 보여 반대로 느껴진다는 의견으로 아이콘만 바꿈.
  */
 'use client';
 
@@ -21,7 +23,7 @@ type PasswordInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'typ
 export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   function PasswordInput({ className, ...props }, ref) {
     const [visible, setVisible] = useState(false);
-    const Icon = visible ? EyeOff : Eye;
+    const Icon = visible ? Eye : EyeOff;
 
     return (
       <div className="relative">

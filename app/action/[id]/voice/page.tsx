@@ -10,6 +10,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { VoiceForm } from '@/components/action/VoiceForm';
+import { formatActivityPeriod } from '@/lib/utils/date';
 import { Header } from '@/components/layout/Header';
 import { Hourglass, Lock } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -29,7 +30,7 @@ export default async function VoicePage({
 
   const { data: action } = await supabase
     .from('actions')
-    .select('id, title, status')
+    .select('id, title, status, place_name, address, activity_start_at, activity_end_at')
     .eq('id', id)
     .maybeSingle();
   if (!action) notFound();
@@ -99,7 +100,12 @@ export default async function VoicePage({
   return (
     <main>
       <Header title="소감 남기기" back backHref={`/action/${id}/result`} sticky />
-      <VoiceForm actionId={id} actionTitle={action.title} />
+      <VoiceForm
+        actionId={id}
+        actionTitle={action.title}
+        location={action.place_name || action.address}
+        period={formatActivityPeriod(action.activity_start_at, action.activity_end_at)}
+      />
     </main>
   );
 }

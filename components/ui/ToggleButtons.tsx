@@ -160,7 +160,7 @@ function DisabledNoticeModal({
         </span>
         <h2
           id="reaction-disabled-title"
-          className="mt-3 text-subtitle font-bold text-[#333333]"
+          className="mt-3 text-subtitle font-bold text-charcoal"
         >
           {title}
         </h2>
@@ -311,7 +311,7 @@ export function LikeButton({
               </span>
               <h2
                 id="like-login-title"
-                className="mt-3 text-subtitle font-bold text-[#333333]"
+                className="mt-3 text-subtitle font-bold text-charcoal"
               >
                 로그인하고 관심을 표현해보세요
               </h2>
@@ -485,7 +485,7 @@ export function SaveButton({
               </span>
               <h2
                 id="save-login-title"
-                className="mt-3 text-subtitle font-bold text-[#333333]"
+                className="mt-3 text-subtitle font-bold text-charcoal"
               >
                 로그인하고 액션을 저장해보세요
               </h2>
@@ -568,12 +568,14 @@ export function FollowButton({
       }}
       aria-pressed={on}
       className={cn(
-        'inline-flex min-h-9 items-center gap-1 rounded-full px-3.5 py-2 text-label font-semibold transition-colors',
-        // 2026-09-29 프로필군 통일안 — 팔로우 = 초록 채움(이 자리의 주 행동) · 팔로잉 = 회색 면.
-        // 액션 상세 작성자 줄의 팔로우 버튼도 같이 바뀝니다
+        'inline-flex min-h-9 items-center gap-1 rounded-full border px-3.5 py-2 text-label font-semibold transition-colors',
+        // 2026-09-29 프로필군 통일안 — 팔로잉 = 회색 면.
+        // 2026-10-06 디자인 패치 — 팔로우 = 초록 채움 → 흰 바탕 + 회색 선(내 프로필 「프로필 수정」 버튼과 같은 모양).
+        //   초록은 「참여하기」 같은 주 행동에만. 팔로우 전 = 선 · 팔로잉 = 면 으로 상태가 갈림.
+        // 액션 상세 작성자 줄 · 타인 프로필이 같이 바뀝니다
         on
-          ? 'bg-neutral-100 text-neutral-800'
-          : 'bg-brand text-white',
+          ? 'border-transparent bg-neutral-100 text-neutral-800'
+          : 'border-hairline bg-white text-neutral-800',
         className,
       )}
     >

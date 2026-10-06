@@ -27,7 +27,7 @@ export default async function SignupWelcomePage({
         >
           <PartyPopper className="h-8 w-8 text-brand" />
         </span>
-        <h1 className="mt-5 font-paperlogy text-2xl font-extrabold text-[#333333]">
+        <h1 className="mt-5 font-paperlogy text-2xl font-extrabold text-charcoal">
           환영합니다!
         </h1>
         <p className="mt-3 text-subtitle font-semibold text-neutral-800">

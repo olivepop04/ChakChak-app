@@ -7,7 +7,7 @@
  */
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Calendar, Pencil } from 'lucide-react';
+import { Calendar, Hourglass, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/server';
 import { getActionDetail } from '@/lib/queries/actions';
@@ -26,7 +26,7 @@ import { Header } from '@/components/layout/Header';
 import {
   deadlineDDay,
   formatActivityPeriod,
-  formatDateShort,
+  formatDate,
 } from '@/lib/utils/date';
 import { getActionCta } from '@/lib/utils/action-cta';
 import type { CrewMember } from '@/lib/types/view';
@@ -73,9 +73,13 @@ export default async function ActionDetailPage({
    *
    * 호스트는 크루 전체 목록(`/action/[id]/crew`)에서 「호스트」로 따로 보여줍니다.
    */
-  const summaryMembers = crew.slice(0, 4);
+  // 2026-10-06 디자인 패치: 아바타 3개 + 나머지는 「+n」 원 (ActionCrewSection)
+  const summaryMembers = crew.slice(0, 3);
 
   const dday = deadlineDDay(action.recruitEndAt);
+  // 모집 중 = 진행 중이면서 모집이 아직 안 닫힘. 이때만 D-day 를 보이고 상태 배지는 숨김 (2026-10-06)
+  const isRecruiting = action.status === 'ACTIVE' && !action.recruitClosed;
+  const showDDay = isRecruiting && !!dday;
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
   // 취소된 액션은 고칠 수 없다 — 「없던 일」 이라 그 시점 내용이 남아야 한다 (2026-09-29, supabase/19)
   const canEditActionText =
@@ -162,10 +166,10 @@ export default async function ActionDetailPage({
         {/* 조기 종료 사유 */}
         {action.earlyEndReason && (
           <div className="rounded-xl border border-danger bg-danger-soft p-4">
-            <p className="text-body font-semibold text-[#333333]">
+            <p className="text-body font-semibold text-charcoal">
               이 액션은 조기 종료되었어요
             </p>
-            <p className="mt-1 text-body leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
+            <p className="mt-1 text-body leading-relaxed text-charcoal break-words whitespace-pre-wrap">
               {action.earlyEndReason}
             </p>
           </div>
@@ -174,10 +178,10 @@ export default async function ActionDetailPage({
         {/* 취소 사유 */}
         {action.status === 'CANCELLED' && action.cancelReason && (
           <div className="rounded-xl border border-danger bg-danger-soft p-4">
-            <p className="text-body font-semibold text-[#333333]">
+            <p className="text-body font-semibold text-charcoal">
               이 액션은 취소되었어요
             </p>
-            <p className="mt-1 text-body leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
+            <p className="mt-1 text-body leading-relaxed text-charcoal break-words whitespace-pre-wrap">
               {action.cancelReason}
             </p>
           </div>
@@ -185,26 +189,38 @@ export default async function ActionDetailPage({
 
         {/* 제목 영역 */}
         <div className="flex flex-col gap-2">
+          {/* 2026-10-06 디자인 패치 — 「모집 중」·D-day 가 같은 말이라 한 줄로 정리.
+              모집 중이면 상태 배지를 숨기고(D-day 가 그 뜻을 대신함), 다른 상태면 같은 자리에 배지.
+              오른쪽 끝 D-day 캡슐은 홈 카드(ActionCard)와 같은 모양. 마감일은 아래 「모집 일정」 칸으로 */}
           <div className="flex flex-wrap items-center gap-1.5">
             {detailCategories.map((cat, i) => (
-              <Chip key={cat} as="span" tone="accent" size="sm" selected={i === 0}>
+              <Chip
+                key={cat}
+                as="span"
+                tone="accent"
+                size="sm"
+                selected={i === 0}
+                className="!text-label"
+              >
                 {cat}
               </Chip>
             ))}
-            <StatusBadge
-              status={action.status}
-              recruitClosed={action.recruitClosed}
-              customLabel={customStatusLabel}
-              className="!min-w-0 !rounded-full !px-2.5"
-            />
-            {dday && action.status === 'ACTIVE' && (
-              <span className="ml-auto inline-flex h-6 flex-none items-center justify-center rounded-full border border-brand px-2.5 text-label font-medium text-brand">
+            {!isRecruiting && (
+              <StatusBadge
+                status={action.status}
+                recruitClosed={action.recruitClosed}
+                customLabel={customStatusLabel}
+                className="!min-w-0 !rounded-full !px-2.5"
+              />
+            )}
+            {showDDay && (
+              <span className="ml-auto inline-flex h-6 flex-none items-center rounded-full border border-brand bg-white px-2.5 text-label font-medium leading-none text-brand">
                 {dday}
               </span>
             )}
           </div>
 
-          <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="font-paperlogy text-2xl font-bold leading-[1.3] tracking-tight text-neutral-900">
             {action.title}
           </h1>
 
@@ -234,7 +250,7 @@ export default async function ActionDetailPage({
         {/* 만든 사람 */}
         <div className="flex items-center gap-3">
           <Link href={`/user/${action.owner?.id ?? ''}`} className="flex items-center gap-3">
-            <Avatar name={action.owner?.nickname ?? '?'} avatar={action.owner?.avatar} />
+            <Avatar name={action.owner?.nickname ?? '?'} avatar={action.owner?.avatar} className="!h-10 !w-10" />
             <div className="flex flex-col">
               <span className="text-label font-semibold text-neutral-900">
                 @{action.owner?.nickname ?? '알 수 없음'}
@@ -299,18 +315,12 @@ export default async function ActionDetailPage({
 
         {/* 모집 현황 */}
         <section className="flex flex-col gap-4">
-          <div className="flex items-baseline gap-2">
-            <SectionTitle>모집 현황</SectionTitle>
-            {action.recruitEndAt && (
-              <span className="text-caption text-neutral-500">
-                마감 : {formatDateShort(action.recruitEndAt)}
-              </span>
-            )}
-          </div>
+          {/* 마감일은 2026-10-05 제목 영역의 D-day 옆으로 옮김 */}
+          <SectionTitle>모집 현황</SectionTitle>
           {action.items.length === 0 ? (
             <p className="text-label text-neutral-400">등록된 모집 항목이 없어요.</p>
           ) : (
-            <div className="flex flex-col gap-5 rounded-xl p-4">
+            <div className="flex flex-col gap-5 rounded-xl border border-hairline p-4">
               {action.items.flatMap((item, i) => [
                 i > 0 && (
                   <div key={`divider-${item.id}`} className="h-px bg-neutral-100" />
@@ -327,10 +337,25 @@ export default async function ActionDetailPage({
           )}
         </section>
 
-        {/* 일정 · 장소 — 활동 일정 + 활동 장소 통합 (2026-09-22) */}
+        {/* 모집 일정 — 모집 마감일만 따로 한 칸 (2026-10-06 디자인 패치).
+            소제목이 뜻을 알려 줘서 칸 안은 아래 「액션 일정 · 장소」와 같은 아이콘 + 한 줄.
+            모집이 끝나도 남겨서 언제까지였는지 기록이 됨 */}
+        {action.recruitEndAt && (
+          <section className="flex flex-col gap-3">
+            <SectionTitle>모집 일정</SectionTitle>
+            <div className="flex items-start gap-2 rounded-xl bg-neutral-50 p-4">
+              <Hourglass className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
+              <p className="text-body font-medium text-neutral-900">
+                {formatDate(action.recruitEndAt)}까지
+              </p>
+            </div>
+          </section>
+        )}
+
+        {/* 액션 일정 · 장소 — 활동 일정 + 활동 장소 통합 (2026-09-22). 모집 일정과 헷갈리지 않게 「액션」 붙임 (2026-10-06) */}
         {(action.activityStartAt || action.placeName || action.address) && (
           <section className="flex flex-col gap-3">
-            <SectionTitle>일정 · 장소</SectionTitle>
+            <SectionTitle>액션 일정 · 장소</SectionTitle>
             <div className="flex flex-col gap-3 rounded-xl bg-neutral-50 p-4">
               <div className="flex items-start gap-2">
                 <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />

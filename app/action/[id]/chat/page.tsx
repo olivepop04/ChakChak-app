@@ -8,6 +8,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getChatPosts, canWriteChat } from '@/lib/queries/chat';
+import { formatActivityPeriod } from '@/lib/utils/date';
 import { ChatBoard } from '@/components/action/ChatBoard';
 import { Header } from '@/components/layout/Header';
 import { Lock } from 'lucide-react';
@@ -29,7 +30,7 @@ export default async function ChatPage({
 
   const { data: action } = await supabase
     .from('actions')
-    .select('id, title, status, owner_id')
+    .select('id, title, status, owner_id, place_name, address, activity_start_at, activity_end_at')
     .eq('id', id)
     .maybeSingle();
   if (!action) notFound();
@@ -62,18 +63,32 @@ export default async function ChatPage({
   const posts = await getChatPosts(supabase, id, user.id);
   const status = action.status as ActionStatus;
   const writable = canWriteChat(status);
+  // 장소 | 일정 — 결과 보기·결과 작성과 같은 표기
+  const location = action.place_name || action.address;
+  const period = formatActivityPeriod(action.activity_start_at, action.activity_end_at);
 
   return (
     <main>
       <Header title="크루 채팅" back backHref={`/action/${id}`} sticky asH1={false} />
 
-      <div className="border-b border-neutral-100 px-6 py-4">
-        <h1 className="line-clamp-1 font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
+      {/* 상단 액션명 강조 — 작은 라벨(오른쪽 글 수) · 제목 · 장소 | 일정 · 아래 구분선 (2026-10-06 디자인 패치, 함께하는 크루와 같은 틀) */}
+      <div className="border-b border-neutral-100 px-6 py-5">
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="text-label font-medium text-neutral-500">이 액션의 채팅</p>
+          <span className="text-label font-medium text-neutral-500">글 {posts.length}개</span>
+        </div>
+        <h1 className="mt-1 line-clamp-2 break-keep font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
-        <p className="mt-0.5 text-caption text-neutral-500">
-          글 {posts.length}개
-        </p>
+        {(location || period) && (
+          <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-500">
+            {location && <span>{location}</span>}
+            {location && period && (
+              <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />
+            )}
+            {period && <span>{period}</span>}
+          </div>
+        )}
       </div>
 
       <ChatBoard

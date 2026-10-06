@@ -342,7 +342,7 @@ function SignUpForm() {
           <span
             key={s}
             className={`h-1 flex-1 rounded-full ${
-              s <= step ? 'bg-brand' : 'bg-neutral-200'
+              s <= step ? 'bg-charcoal' : 'bg-neutral-200'
             }`}
           />
         ))}
@@ -351,7 +351,7 @@ function SignUpForm() {
       {/* ── 1단계 ── */}
       {step === 1 && (
         <>
-          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-[#333333]">
+          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-charcoal">
             착착 쌓이는
             <br />
             착한 일
@@ -445,7 +445,7 @@ function SignUpForm() {
       {/* ── 2단계 ── */}
       {step === 2 && (
         <>
-          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-[#333333]">
+          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-charcoal">
             먼저, 당신을
             <br />
             조금만 알려주세요.
@@ -518,7 +518,7 @@ function SignUpForm() {
       {/* ── 3단계 ── */}
       {step === 3 && (
         <>
-          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-[#333333]">
+          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-charcoal">
             어떻게
             <br />
             활동하고 싶으세요?
@@ -529,7 +529,8 @@ function SignUpForm() {
             나중에 프로필에서 언제든 바꿀 수 있으니 편하게 선택해 보세요.
           </p>
 
-          <div className="mt-8 flex flex-col gap-8">
+          {/* 3단계 항목 사이 32 → 48px (2026-10-06 디자인 패치 — 선택 항목이 4개라 덩어리가 붙어 보임) */}
+          <div className="mt-8 flex flex-col gap-12">
             <div className="flex flex-col gap-3">
               <FieldLabel>
                 관심 카테고리{' '}
@@ -632,7 +633,7 @@ function SignUpForm() {
           이미 계정이 있나요?{' '}
           <Link
             href={withNext('/login', next)}
-            className="font-semibold text-[#333333] underline"
+            className="font-semibold text-charcoal underline"
           >
             로그인
           </Link>

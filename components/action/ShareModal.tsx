@@ -63,7 +63,7 @@ export function ShareModal({
         {/* 상단 헤더: 타이틀 & 닫기 버튼 — 모달 안쪽 여백 20px 안에서 구분선 */}
         <div className="mx-5 flex items-center justify-between border-b border-neutral-100 pb-3 pt-5">
           {/* 제목 색 #333 — 모달 제목 통일 (2026-09-30) */}
-          <h2 id="share-modal-title" className="text-subtitle font-bold text-[#333333]">
+          <h2 id="share-modal-title" className="text-subtitle font-bold text-charcoal">
             공유하기
           </h2>
           <button
@@ -76,10 +76,13 @@ export function ShareModal({
           </button>
         </div>
 
-        {/* 모임 제목 영역 */}
+        {/* 모임 제목 영역 — 위에 안내 한 줄(2026-10-05): 「공유하기」 제목과 같은 크기·굵기라
+            두 번째 제목처럼 묻혀 보여서, 아래 글자가 공유할 대상이라는 걸 먼저 알려줌 */}
         {actionTitle && (
-          <div className="mx-5 border-b border-neutral-100 py-3">
-            <p className="line-clamp-2 font-paperlogy text-subtitle font-bold leading-snug text-[#333333]">
+          <div className="mx-5 flex flex-col gap-1 border-b border-neutral-100 py-3">
+            <p className="text-caption font-medium text-neutral-500">이 액션을 공유해요</p>
+            {/* 액션명 포인트 그린 — 공유 화면(app/action/[id]/share)과 같게 (2026-10-06) */}
+            <p className="line-clamp-2 font-paperlogy text-subtitle font-bold leading-snug text-brand">
               {actionTitle}
             </p>
           </div>

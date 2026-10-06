@@ -5,7 +5,7 @@
  * 공개 이후 상태의 본문을 수정하거나 새 모집 항목만 추가합니다.
  */
 import { notFound, redirect } from 'next/navigation';
-import { Pencil, PencilOff, UsersRound, Package } from 'lucide-react';
+import { PencilOff, UsersRound, Package } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getActionDetail } from '@/lib/queries/actions';
 import { Header } from '@/components/layout/Header';
@@ -13,6 +13,7 @@ import { ActionTextEditForm } from '@/components/action/ActionTextEditForm';
 import { AddActionItemsForm } from '@/components/action/AddActionItemsForm';
 import { GENDER_REQUIREMENT_LABEL } from '@/lib/constants';
 import { describeTarget } from '@/lib/utils/quota';
+import { formatActivityPeriod } from '@/lib/utils/date';
 
 export default async function EditActionPage({
   params,
@@ -40,22 +41,32 @@ export default async function EditActionPage({
     redirect(`/action/${id}`);
   }
 
+  // 장소 | 일정 — 결과 보기·크루 화면과 같은 표기
+  const editLocation = action.placeName || action.address;
+  const editPeriod = formatActivityPeriod(action.activityStartAt, action.activityEndAt);
   const canAddActionItems = action.status === 'ACTIVE' && !action.recruitClosed;
 
   return (
     <main>
       <Header title="액션 수정" back backHref={`/action/${id}`} sticky asH1={false} />
 
-      <section className="border-b border-neutral-100 px-6 py-4">
-        <div className="mb-2 flex items-center gap-1.5">
-          <Pencil className="h-3.5 w-3.5 text-neutral-500" />
-          <p className="text-body font-bold text-neutral-500">수정 중인 액션</p>
-        </div>
-        <div className="h-px bg-neutral-100" />
-        <h1 className="mt-3 line-clamp-2 font-paperlogy text-xl font-bold leading-snug text-hairline-focus">
+      {/* 크루·크루 채팅·참여 신청과 같은 머리: 라벨 · 제목 · 장소 | 일정 (2026-10-06 디자인 패치).
+          제목 색은 다른 액션 화면과 같은 neutral-900 (전엔 입력칸 테두리용 hairline-focus 를 글자색으로 씀) */}
+      <section className="border-b border-neutral-100 px-6 py-5">
+        <p className="text-label font-medium text-neutral-500">이 액션을 수정해요</p>
+        <h1 className="mt-1 line-clamp-2 break-keep font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
-        <p className="mt-2 text-caption leading-relaxed text-neutral-500">
+        {(editLocation || editPeriod) && (
+          <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-500">
+            {editLocation && <span>{editLocation}</span>}
+            {editLocation && editPeriod && (
+              <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />
+            )}
+            {editPeriod && <span>{editPeriod}</span>}
+          </div>
+        )}
+        <p className="mt-3 text-caption leading-relaxed text-neutral-500">
           소개와 안내사항은 계속 고칠 수 있고, 모집 중엔 새 항목도 자유롭게 추가하세요.
         </p>
       </section>

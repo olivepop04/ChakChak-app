@@ -9,6 +9,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ChevronRight, Lock, MessageSquareQuote, UsersRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getActionCrew, groupCrewByItem } from '@/lib/queries/participations';
+import { formatActivityPeriod } from '@/lib/utils/date';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Header } from '@/components/layout/Header';
@@ -69,7 +70,7 @@ export default async function CrewPage({
 
   const { data: action } = await supabase
     .from('actions')
-    .select('id, title, owner_id, activity_start_at, activity_end_at')
+    .select('id, title, owner_id, place_name, address, activity_start_at, activity_end_at')
     .eq('id', id)
     .maybeSingle();
   if (!action) notFound();
@@ -102,15 +103,29 @@ export default async function CrewPage({
   const startDate = toKoreanDateKey(action.activity_start_at);
   const endDate = toKoreanDateKey(action.activity_end_at);
   const isMultiDay = startDate !== null && endDate !== null && startDate !== endDate;
+  // 장소 | 일정 — 결과 보기·결과 작성과 같은 표기
+  const location = action.place_name || action.address;
+  const period = formatActivityPeriod(action.activity_start_at, action.activity_end_at);
 
   return (
     <main className="pb-36">
       <Header title="함께하는 크루" back backHref={`/action/${id}`} sticky asH1={false} />
 
-      <div className="px-6 py-5">
-        <h1 className="line-clamp-2 font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
+      {/* 상단 액션명 강조 — 작은 라벨 · 제목 · 장소 | 일정 · 아래 구분선 (2026-10-06 디자인 패치, 크루 채팅과 같은 틀) */}
+      <div className="border-b border-neutral-100 px-6 py-5">
+        <p className="text-label font-medium text-neutral-500">이 액션의 크루</p>
+        <h1 className="mt-1 line-clamp-2 break-keep font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
           {action.title}
         </h1>
+        {(location || period) && (
+          <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-500">
+            {location && <span>{location}</span>}
+            {location && period && (
+              <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />
+            )}
+            {period && <span>{period}</span>}
+          </div>
+        )}
       </div>
 
       {/* 호스트는 따로 칸을 두지 않고 목록 맨 위 + 이름 옆 배지 (Day14 통일안) */}
