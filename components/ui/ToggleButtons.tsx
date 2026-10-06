@@ -567,16 +567,15 @@ export function FollowButton({
         handle();
       }}
       aria-pressed={on}
-      // 글자가 없어서 화면 읽기 프로그램용 이름표를 붙임
-      aria-label={on ? '팔로잉' : '팔로우'}
       className={cn(
-        // 2026-10-06 디자인 패치 — 32px 원 안에 아이콘만. 팔로우 전 = 회색 원 + ＋ · 팔로잉 = 흰 원 + 회색 선 + 체크.
-        // 원은 작아도 누르는 범위는 44px(after 로 사방 6px 넓힘). 액션 상세 작성자 줄 · 타인 프로필이 같이 바뀝니다
-        // (그 전 2026-09-29 프로필군 통일안: 팔로우 = 초록 채움 · 팔로잉 = 회색 면, 글자 포함)
-        "relative inline-flex h-8 w-8 flex-none items-center justify-center rounded-full border transition-colors after:absolute after:-inset-1.5 after:content-['']",
+        'inline-flex min-h-9 items-center gap-1 rounded-full border px-3.5 py-2 text-label font-semibold transition-colors',
+        // 2026-09-29 프로필군 통일안 — 팔로잉 = 회색 면.
+        // 2026-10-06 디자인 패치 — 팔로우 = 초록 채움 → 흰 바탕 + 회색 선(내 프로필 「프로필 수정」 버튼과 같은 모양).
+        //   초록은 「참여하기」 같은 주 행동에만. 팔로우 전 = 선 · 팔로잉 = 면 으로 상태가 갈림.
+        // 액션 상세 작성자 줄 · 타인 프로필이 같이 바뀝니다
         on
-          ? 'border-faint bg-white text-[#7A7A7A]'
-          : 'border-transparent bg-faint text-[#7A7A7A]',
+          ? 'border-transparent bg-neutral-100 text-neutral-800'
+          : 'border-hairline bg-white text-neutral-800',
         className,
       )}
     >
@@ -585,6 +584,7 @@ export function FollowButton({
       ) : (
         <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       )}
+      {on ? '팔로잉' : '팔로우'}
     </button>
   );
 }
