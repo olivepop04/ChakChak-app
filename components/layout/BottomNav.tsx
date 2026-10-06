@@ -148,7 +148,7 @@ export function BottomNav() {
                   // 터치 타겟 44px 이상 — 활성 캡슐은 py-2.5(10px×2)+아이콘 24px = 44px
                   active
                     ? 'bg-brand px-4 py-2.5 text-white'
-                    : 'h-11 w-11 text-[#333333] hover:text-neutral-600',
+                    : 'h-11 w-11 text-charcoal hover:text-neutral-600',
                 )}
               >
                 <Icon className={cn(tab.iconClassName || 'h-6 w-6', 'shrink-0')} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />

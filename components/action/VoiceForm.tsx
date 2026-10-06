@@ -8,7 +8,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PencilSparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { submitCrewVoice } from '@/lib/mutations';
 import { Button } from '@/components/ui/Button';
@@ -18,9 +17,14 @@ import { LIMITS } from '@/lib/constants';
 export function VoiceForm({
   actionId,
   actionTitle,
+  location,
+  period,
 }: {
   actionId: string;
   actionTitle: string;
+  /** 장소 | 일정 줄 — 없으면 줄을 그리지 않음 (2026-10-06) */
+  location?: string | null;
+  period?: string | null;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -50,16 +54,25 @@ export function VoiceForm({
   return (
     <div className="flex flex-col gap-5 px-6 pb-[calc(8rem+var(--nav-h)+env(safe-area-inset-bottom))] pt-6">
       <div>
-        <div className="mb-2 flex items-center gap-1.5">
-          <PencilSparkles className="h-[18px] w-[18px] flex-none text-neutral-500" aria-hidden="true" />
-          <p className="text-body font-bold text-neutral-500">함께한 소감을 남겨주세요.</p>
+        {/* 크루·크루 채팅·참여 신청과 같은 머리: 라벨 · 제목 20px · 장소 | 일정 · 구분선 (2026-10-06 디자인 패치).
+            그 전엔 제목이 15px 이라 다른 액션 화면보다 훨씬 작았음 */}
+        <div className="border-b border-neutral-100 pb-5">
+          <p className="text-label font-medium text-neutral-500">함께한 소감을 남겨주세요</p>
+          <h1 className="mt-1 line-clamp-2 break-keep font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
+            {actionTitle}
+          </h1>
+          {(location || period) && (
+            <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-500">
+              {location && <span>{location}</span>}
+              {location && period && (
+                <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />
+              )}
+              {period && <span>{period}</span>}
+            </div>
+          )}
         </div>
-        <div className="h-px bg-neutral-100" />
-        <h1 className="mt-5 line-clamp-2 font-paperlogy text-body font-bold leading-snug text-neutral-900">
-          {actionTitle}
-        </h1>
 
-        <div className="mt-3 flex flex-col gap-1.5">
+        <div className="mt-5 flex flex-col gap-1.5">
           <textarea
             autoFocus
             value={content}

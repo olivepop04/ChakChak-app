@@ -160,7 +160,7 @@ function DisabledNoticeModal({
         </span>
         <h2
           id="reaction-disabled-title"
-          className="mt-3 text-subtitle font-bold text-[#333333]"
+          className="mt-3 text-subtitle font-bold text-charcoal"
         >
           {title}
         </h2>
@@ -311,7 +311,7 @@ export function LikeButton({
               </span>
               <h2
                 id="like-login-title"
-                className="mt-3 text-subtitle font-bold text-[#333333]"
+                className="mt-3 text-subtitle font-bold text-charcoal"
               >
                 로그인하고 관심을 표현해보세요
               </h2>
@@ -485,7 +485,7 @@ export function SaveButton({
               </span>
               <h2
                 id="save-login-title"
-                className="mt-3 text-subtitle font-bold text-[#333333]"
+                className="mt-3 text-subtitle font-bold text-charcoal"
               >
                 로그인하고 액션을 저장해보세요
               </h2>

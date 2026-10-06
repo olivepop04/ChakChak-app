@@ -55,7 +55,7 @@ export function ActionCrewSection({
       <button
         type="button"
         onClick={handleClick}
-        className="flex w-full items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 text-left transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+        className="flex w-full items-center justify-between rounded-xl border border-hairline bg-white p-4 text-left transition-colors hover:bg-neutral-50 active:bg-neutral-100"
       >
         {isEmpty ? (
           <div className="flex min-w-0 items-center gap-3">
@@ -67,7 +67,7 @@ export function ActionCrewSection({
                 />
               ))}
             </div>
-            <span className="truncate text-label font-semibold text-[#333333]">
+            <span className="truncate text-label font-semibold text-charcoal">
               첫 번째 크루가 되어 보세요
             </span>
           </div>
@@ -101,7 +101,7 @@ export function ActionCrewSection({
                   )}
                 </div>
               )}
-              <span className="truncate text-label font-semibold text-[#333333]">
+              <span className="truncate text-label font-semibold text-charcoal">
                 {crewCount}명이 {verb}
               </span>
             </div>

@@ -59,8 +59,8 @@ function EmptyActionCard({
         <span className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
           {icon}
         </span>
-        <p className="text-body font-semibold leading-relaxed text-[#333333]">{title}</p>
-        <p className="text-label leading-relaxed text-[#7a7a7a]">{description}</p>
+        <p className="text-body font-semibold leading-relaxed text-charcoal">{title}</p>
+        <p className="text-label leading-relaxed text-neutral-500">{description}</p>
       </Link>
     </div>
   );
@@ -71,7 +71,7 @@ function EmptyFilterResult({ filterLabel }: { filterLabel: string }) {
   return (
     <div className="flex flex-col items-center gap-1.5 px-6 py-10 text-center">
       <SearchX className="mb-1 h-6 w-6 text-faint" strokeWidth={2} aria-hidden="true" />
-      <p className="text-label font-semibold text-[#7a7a7a]">&apos;{filterLabel}&apos; 액션이 없어요</p>
+      <p className="text-label font-semibold text-neutral-500">&apos;{filterLabel}&apos; 액션이 없어요</p>
     </div>
   );
 }
@@ -476,7 +476,7 @@ export default async function ActivityPage({
         created.length === 0 ? (
           <EmptyActionCard
             href="/action/create"
-            icon={<Plus className="h-6 w-6 text-[#7a7a7a]" strokeWidth={2.2} aria-hidden="true" />}
+            icon={<Plus className="h-6 w-6 text-neutral-500" strokeWidth={2.2} aria-hidden="true" />}
             title="첫 액션을 만들어보세요"
             description="아직 호스트한 액션이 없어요. 함께할 사람을 모아보세요."
           />
@@ -509,7 +509,7 @@ export default async function ActivityPage({
       ) : joined.length === 0 ? (
         <EmptyActionCard
           href="/discover"
-          icon={<Search className="h-6 w-6 text-[#7a7a7a]" strokeWidth={2.2} aria-hidden="true" />}
+          icon={<Search className="h-6 w-6 text-neutral-500" strokeWidth={2.2} aria-hidden="true" />}
           title="참여할 액션을 찾아보세요"
           description="아직 참여한 액션이 없어요. 마음에 드는 액션에 함께해 보세요."
         />

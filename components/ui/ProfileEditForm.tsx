@@ -271,7 +271,7 @@ export function ProfileEditForm({
                   onClick={() => toggleNotification(type)}
                   // 켬 = 진회색 #333 · 끔 = #CCCCCC (2026-09-29 — 초록이 너무 많아 스위치는 회색 계열로)
                   className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-                    enabled ? 'bg-[#333333]' : 'bg-faint'
+                    enabled ? 'bg-charcoal' : 'bg-faint'
                   }`}
                 >
                   <span

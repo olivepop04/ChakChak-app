@@ -16,8 +16,8 @@ import { CATEGORIES, type Category } from '@/lib/constants';
 import { cn } from '@/lib/utils/cn';
 
 // 홈 카테고리 칩 덮어쓰기 (2026-10-06 디자인 패치) — 고른 칩 #333 채움 · 안 고른 칩 연회색 면(테두리 없음)
-const HOME_CHIP_ON = '!border-transparent !bg-[#333333] !text-white';
-const HOME_CHIP_OFF = '!border-transparent !bg-[#F5F5F7] !text-[#7A7A7A]';
+const HOME_CHIP_ON = '!border-transparent !bg-charcoal !text-white';
+const HOME_CHIP_OFF = '!border-transparent !bg-[#F5F5F7] !text-neutral-500';
 
 export default async function HomePage({
   searchParams,
@@ -68,7 +68,7 @@ export default async function HomePage({
         <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/chakchak-wordmark.svg" alt="착착" className="h-[24px] w-auto" />
-          <p className="mt-1 font-paperlogy text-label font-bold text-[#333333]">
+          <p className="mt-1 font-paperlogy text-label font-bold text-charcoal">
             착착 쌓이는 착한 일
           </p>
         </div>

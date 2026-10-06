@@ -197,7 +197,7 @@ export default async function ResultPage({
         {/* 결과 내용 + 사진 + 호스트의 한마디 — 한 덩어리(내부 간격 12px).
             2026-10-06 디자인 패치: 덩어리 사이 얇은 구분선 — 섹션 간격 40px 은 그대로 두고 선만 가운데(-my-5) */}
         {(result.content || result.imageUrls.length > 0 || result.ownerVoice) && (
-          <div aria-hidden="true" className="-my-5 h-px bg-[#EEEEEE]" />
+          <div aria-hidden="true" className="-my-5 h-px bg-neutral-100" />
         )}
         {(result.content || result.imageUrls.length > 0 || result.ownerVoice) && (
           <div className="flex flex-col gap-3">
@@ -251,7 +251,7 @@ export default async function ResultPage({
           </div>
         )}
 
-        <div aria-hidden="true" className="-my-5 h-px bg-[#EEEEEE]" />
+        <div aria-hidden="true" className="-my-5 h-px bg-neutral-100" />
 
         {/* 크루들의 한마디 */}
         <section className="flex flex-col gap-3">

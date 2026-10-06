@@ -470,9 +470,9 @@ export function DiscoverChat({
                 className={cn(
                   'flex h-7 w-7 flex-none items-center justify-center rounded-full border-[1.5px] text-label font-bold tabular-nums',
                   answered
-                    ? 'border-[#333333] bg-[#333333] text-white'
+                    ? 'border-charcoal bg-charcoal text-white'
                     : current
-                      ? 'border-[#333333] bg-white text-[#333333]'
+                      ? 'border-charcoal bg-white text-charcoal'
                       : 'border-neutral-100 bg-neutral-100 text-neutral-400',
                 )}
               >
@@ -713,9 +713,9 @@ export function DiscoverChat({
                 )}
                 {/* 1단계 제목 앞 map-pin (2026-10-01 목업 K) */}
                 {!selectedSido && (
-                  <MapPin className="h-5 w-5 shrink-0 text-[#333333]" aria-hidden="true" />
+                  <MapPin className="h-5 w-5 shrink-0 text-charcoal" aria-hidden="true" />
                 )}
-                <h3 className="text-subtitle font-bold text-[#333333]">
+                <h3 className="text-subtitle font-bold text-charcoal">
                   {selectedSido ? selectedSido : '활동할 지역 선택'}
                 </h3>
               </div>

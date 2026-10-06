@@ -342,7 +342,7 @@ function SignUpForm() {
           <span
             key={s}
             className={`h-1 flex-1 rounded-full ${
-              s <= step ? 'bg-brand' : 'bg-neutral-200'
+              s <= step ? 'bg-charcoal' : 'bg-neutral-200'
             }`}
           />
         ))}
@@ -351,7 +351,7 @@ function SignUpForm() {
       {/* ── 1단계 ── */}
       {step === 1 && (
         <>
-          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-[#333333]">
+          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-charcoal">
             착착 쌓이는
             <br />
             착한 일
@@ -445,7 +445,7 @@ function SignUpForm() {
       {/* ── 2단계 ── */}
       {step === 2 && (
         <>
-          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-[#333333]">
+          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-charcoal">
             먼저, 당신을
             <br />
             조금만 알려주세요.
@@ -518,7 +518,7 @@ function SignUpForm() {
       {/* ── 3단계 ── */}
       {step === 3 && (
         <>
-          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-[#333333]">
+          <h1 className="font-paperlogy text-2xl font-extrabold leading-snug text-charcoal">
             어떻게
             <br />
             활동하고 싶으세요?
@@ -633,7 +633,7 @@ function SignUpForm() {
           이미 계정이 있나요?{' '}
           <Link
             href={withNext('/login', next)}
-            className="font-semibold text-[#333333] underline"
+            className="font-semibold text-charcoal underline"
           >
             로그인
           </Link>

@@ -199,7 +199,7 @@ export function ResultWriteForm({
         </div>
       </section>
 
-      <div aria-hidden="true" className="-my-5 h-px bg-[#EEEEEE]" />
+      <div aria-hidden="true" className="-my-5 h-px bg-neutral-100" />
 
       <div className="flex flex-col gap-6">
       {/* 이렇게 마무리했어요 */}

@@ -51,7 +51,7 @@ export default function ErrorPage({
         >
           <TriangleAlert className="h-8 w-8 text-neutral-500" />
         </span>
-        <h1 className="mt-5 text-subtitle font-bold text-[#333333]">
+        <h1 className="mt-5 text-subtitle font-bold text-charcoal">
           잠시 문제가 생겼어요
         </h1>
         <p className="mt-2 text-label leading-relaxed text-neutral-500 break-keep">
@@ -60,7 +60,7 @@ export default function ErrorPage({
         <button
           type="button"
           onClick={retry}
-          className="mt-4 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-[#333333] transition-colors hover:bg-neutral-100"
+          className="mt-4 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-charcoal transition-colors hover:bg-neutral-100"
         >
           <RotateCw className="h-4 w-4" aria-hidden="true" />
           다시 시도

@@ -63,7 +63,7 @@ export function ShareModal({
         {/* 상단 헤더: 타이틀 & 닫기 버튼 — 모달 안쪽 여백 20px 안에서 구분선 */}
         <div className="mx-5 flex items-center justify-between border-b border-neutral-100 pb-3 pt-5">
           {/* 제목 색 #333 — 모달 제목 통일 (2026-09-30) */}
-          <h2 id="share-modal-title" className="text-subtitle font-bold text-[#333333]">
+          <h2 id="share-modal-title" className="text-subtitle font-bold text-charcoal">
             공유하기
           </h2>
           <button

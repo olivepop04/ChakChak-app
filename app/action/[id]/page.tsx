@@ -166,10 +166,10 @@ export default async function ActionDetailPage({
         {/* 조기 종료 사유 */}
         {action.earlyEndReason && (
           <div className="rounded-xl border border-danger bg-danger-soft p-4">
-            <p className="text-body font-semibold text-[#333333]">
+            <p className="text-body font-semibold text-charcoal">
               이 액션은 조기 종료되었어요
             </p>
-            <p className="mt-1 text-body leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
+            <p className="mt-1 text-body leading-relaxed text-charcoal break-words whitespace-pre-wrap">
               {action.earlyEndReason}
             </p>
           </div>
@@ -178,10 +178,10 @@ export default async function ActionDetailPage({
         {/* 취소 사유 */}
         {action.status === 'CANCELLED' && action.cancelReason && (
           <div className="rounded-xl border border-danger bg-danger-soft p-4">
-            <p className="text-body font-semibold text-[#333333]">
+            <p className="text-body font-semibold text-charcoal">
               이 액션은 취소되었어요
             </p>
-            <p className="mt-1 text-body leading-relaxed text-[#333333] break-words whitespace-pre-wrap">
+            <p className="mt-1 text-body leading-relaxed text-charcoal break-words whitespace-pre-wrap">
               {action.cancelReason}
             </p>
           </div>
@@ -215,7 +215,7 @@ export default async function ActionDetailPage({
             )}
             {(showDDay || action.recruitEndAt) && (
               <p className="ml-auto flex flex-none items-baseline gap-1 text-label">
-                {showDDay && <span className="font-bold text-[#333333]">{dday}</span>}
+                {showDDay && <span className="font-bold text-charcoal">{dday}</span>}
                 {action.recruitEndAt && (
                   <span className="font-medium text-neutral-500">
                     {showDDay && '· '}

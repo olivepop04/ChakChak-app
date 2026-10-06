@@ -470,8 +470,8 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
                     ? isPrimary
                       ? 'border-brand bg-brand-soft text-brand'
                       : 'border-hairline-focus bg-white text-hairline-focus'
-                    : // 2026-10-06 디자인 패치 — 안 고른 칩은 한 단계 연하게(#CCC 선 · #7A7A7A 글자)
-                      'border-faint bg-white text-[#7A7A7A] hover:border-neutral-400'
+                    : // 2026-10-06 디자인 패치 — 안 고른 칩은 한 단계 연하게(#CCC 선 · neutral-500 글자)
+                      'border-faint bg-white text-neutral-500 hover:border-neutral-400'
                 }`}
               >
                 {isSelected && (
@@ -804,7 +804,7 @@ function ReviewModal({
         className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="review-modal-title" className="text-subtitle font-bold text-[#333333]">
+          <h2 id="review-modal-title" className="text-subtitle font-bold text-charcoal">
             AI 검수 결과
           </h2>
           <button

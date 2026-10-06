@@ -74,7 +74,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           return (
             <div
               key={t.id}
-              className="pointer-events-auto flex w-full animate-[toast-in_180ms_ease-out] items-center justify-center gap-2 rounded-xl bg-[#333333] px-4 py-3 text-center text-label font-medium text-white"
+              className="pointer-events-auto flex w-full animate-[toast-in_180ms_ease-out] items-center justify-center gap-2 rounded-xl bg-charcoal px-4 py-3 text-center text-label font-medium text-white"
             >
               {tone && Icon && (
                 <Icon

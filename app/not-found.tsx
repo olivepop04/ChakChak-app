@@ -21,7 +21,7 @@ export default function NotFound() {
         >
           <SearchX className="h-8 w-8 text-neutral-500" />
         </span>
-        <h1 className="mt-5 text-subtitle font-bold text-[#333333]">
+        <h1 className="mt-5 text-subtitle font-bold text-charcoal">
           페이지를 찾을 수 없어요
         </h1>
         <p className="mt-2 text-label leading-relaxed text-neutral-500 break-keep">
