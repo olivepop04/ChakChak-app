@@ -88,7 +88,7 @@ export default async function ResultPage({
       <Header title="액션 결과" back backHref={`/action/${id}`} sticky asH1={false} />
 
       <div className="flex flex-col gap-10 px-6 py-6">
-        {/* 제목 + 장소 | 일정 — 연한 초록 카드 (2026-10-06 형태 실험).
+        {/* 제목 + 장소 | 일정 — 연한 초록 카드 (2026-10-06 디자인 패치).
             상단 바는 흰색 그대로, 큰 구역 초록 칠은 참여 완료 화면만(조장 의견).
             연한 초록 위라 장소·일정 글자는 #737373 → #525252 로 한 단계 진하게(대비) */}
         <div className="rounded-xl bg-brand-soft p-5">
@@ -107,7 +107,7 @@ export default async function ResultPage({
         </div>
 
         {/* 자동 집계 — 액션 상세 "모집 현황"과 같은 형식(아이콘 원 + 항목 사이 구분선).
-            2026-10-06 형태 실험: 상세와 같이 얇은 회색 선 상자로 묶음 */}
+            2026-10-06 디자인 패치: 상세와 같이 얇은 회색 선 상자로 묶음 */}
         <section className="flex flex-col gap-4">
           <h2 className="text-subtitle font-bold text-neutral-900">함께 모은 것</h2>
           <div className="flex flex-col gap-5 rounded-xl border border-hairline p-4">
@@ -195,7 +195,7 @@ export default async function ResultPage({
         </section>
 
         {/* 결과 내용 + 사진 + 호스트의 한마디 — 한 덩어리(내부 간격 12px).
-            2026-10-06 형태 실험: 덩어리 사이 얇은 구분선 — 섹션 간격 40px 은 그대로 두고 선만 가운데(-my-5) */}
+            2026-10-06 디자인 패치: 덩어리 사이 얇은 구분선 — 섹션 간격 40px 은 그대로 두고 선만 가운데(-my-5) */}
         {(result.content || result.imageUrls.length > 0 || result.ownerVoice) && (
           <div aria-hidden="true" className="-my-5 h-px bg-[#EEEEEE]" />
         )}
@@ -228,7 +228,7 @@ export default async function ResultPage({
               </ArrowScroller>
             )}
 
-            {/* 호스트의 한마디 — 2026-10-06 형태 실험: 상자 없이 큰 따옴표 + 옆에 「호스트의 한마디 - @핸들」.
+            {/* 호스트의 한마디 — 2026-10-06 디자인 패치: 상자 없이 큰 따옴표 + 옆에 「호스트의 한마디 - @핸들」.
                 위 제목 카드와 연한 초록 상자가 겹쳐 둘 다 약해 보여서 상자를 뺌 */}
             {result.ownerVoice && (
               <section className="flex flex-col gap-2 pb-1 pt-2">

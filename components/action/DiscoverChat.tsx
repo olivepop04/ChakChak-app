@@ -455,7 +455,7 @@ export function DiscoverChat({
   return (
     <div className="flex flex-col gap-4 px-6 pb-24 pt-4">
       {/* 인트로 제목 + 숫자 칩 5개 — 답함=#333 채움 · 지금=#333 테두리 · 남음=회색
-          (2026-09-27 목업 확정 → 2026-10-06 형태 실험: 초록 → #333. 초록은 누르는 것에만) */}
+          (2026-09-27 목업 확정 → 2026-10-06 디자인 패치: 초록 → #333. 초록은 누르는 것에만) */}
       <div className="flex flex-col gap-3 border-b border-neutral-100 pb-5">
         <h2 className="font-paperlogy text-body font-medium leading-relaxed text-neutral-900">
           {nickname}님에게 맞는 액션을 찾기 위해 몇 가지만 물어볼게요

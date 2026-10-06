@@ -470,7 +470,7 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
                     ? isPrimary
                       ? 'border-brand bg-brand-soft text-brand'
                       : 'border-hairline-focus bg-white text-hairline-focus'
-                    : // 2026-10-06 형태 실험 — 안 고른 칩은 한 단계 연하게(#CCC 선 · #7A7A7A 글자)
+                    : // 2026-10-06 디자인 패치 — 안 고른 칩은 한 단계 연하게(#CCC 선 · #7A7A7A 글자)
                       'border-faint bg-white text-[#7A7A7A] hover:border-neutral-400'
                 }`}
               >

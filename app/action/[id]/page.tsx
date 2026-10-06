@@ -73,7 +73,7 @@ export default async function ActionDetailPage({
    *
    * 호스트는 크루 전체 목록(`/action/[id]/crew`)에서 「호스트」로 따로 보여줍니다.
    */
-  // 2026-10-06 형태 실험: 아바타 3개 + 나머지는 「+n」 원 (ActionCrewSection)
+  // 2026-10-06 디자인 패치: 아바타 3개 + 나머지는 「+n」 원 (ActionCrewSection)
   const summaryMembers = crew.slice(0, 3);
 
   const dday = deadlineDDay(action.recruitEndAt);
@@ -189,7 +189,7 @@ export default async function ActionDetailPage({
 
         {/* 제목 영역 */}
         <div className="flex flex-col gap-2">
-          {/* 2026-10-06 형태 실험(FX 목업) — 「모집 중」·D-day·마감일이 같은 말이라 한 줄로 정리.
+          {/* 2026-10-06 디자인 패치 — 「모집 중」·D-day·마감일이 같은 말이라 한 줄로 정리.
               모집 중이면 상태 배지를 숨기고(D-day 가 그 뜻을 대신함), 다른 상태면 같은 자리에 배지.
               오른쪽은 캡슐 없이 글자 한 줄 「D-1 · 10월 7일 마감」, 13px · 바닥선 정렬 · 오른쪽 끝 맞춤 */}
           <div className="flex flex-wrap items-center gap-1.5">

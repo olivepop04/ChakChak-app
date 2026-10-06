@@ -15,7 +15,7 @@ import { Chip } from '@/components/ui/Chip';
 import { CATEGORIES, type Category } from '@/lib/constants';
 import { cn } from '@/lib/utils/cn';
 
-// 홈 카테고리 칩 덮어쓰기 (2026-10-06 형태 실험) — 고른 칩 #333 채움 · 안 고른 칩 연회색 면(테두리 없음)
+// 홈 카테고리 칩 덮어쓰기 (2026-10-06 디자인 패치) — 고른 칩 #333 채움 · 안 고른 칩 연회색 면(테두리 없음)
 const HOME_CHIP_ON = '!border-transparent !bg-[#333333] !text-white';
 const HOME_CHIP_OFF = '!border-transparent !bg-[#F5F5F7] !text-[#7A7A7A]';
 
@@ -98,10 +98,10 @@ export default async function HomePage({
       </header>
 
       {/* 필터 영역 (카테고리 + 정렬)
-          2026-10-06 형태 실험: 두 줄 사이 20 → 16px · 칩 줄 위 16px / 아래 8px */}
+          2026-10-06 디자인 패치: 두 줄 사이 20 → 16px · 칩 줄 위 16px / 아래 8px */}
       <div className="flex flex-col gap-4 px-6 pb-1">
         {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다.
-            2026-10-06 형태 실험: 고른 칩 = #333 채움 · 안 고른 칩 = 테두리 없는 연회색 면.
+            2026-10-06 디자인 패치: 고른 칩 = #333 채움 · 안 고른 칩 = 테두리 없는 연회색 면.
             공용 Chip 을 고치지 않고 이 화면에서만 덮어씀 (다른 화면 칩은 그대로) */}
         <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-6 px-6 pb-2 pt-4 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link href={makeCategoryUrl(undefined)} scroll={false} className="shrink-0">
@@ -131,7 +131,7 @@ export default async function HomePage({
         {/* 정렬 필터 — 세그먼트 컨트롤.
             2026-10-05: 폭을 꽉 채워 너무 커 보인다는 의견(소정님 훑어보기) → 글자 폭만큼 줄여 가운데 */}
         <div className="flex justify-center">
-          {/* 2026-10-06 형태 실험: 바깥 44px · 안쪽 칸 32px */}
+          {/* 2026-10-06 디자인 패치: 바깥 44px · 안쪽 칸 32px */}
           <div className="inline-flex h-11 items-center gap-1 rounded-full bg-[#F5F5F7] p-1">
             <Link href={makeSortUrl('DEADLINE')} scroll={false}>
               <Chip selected={currentSort === 'DEADLINE'} as="span" tone="neutral" className="h-8 !py-0">

@@ -11,9 +11,6 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
         paperlogy: ['var(--font-paperlogy)', 'Paperlogy', 'sans-serif'],
-        // 2026-10-05 픽셀 포인트(갈무리) — globals.css @font-face. 숫자·짧은 라벨 전용
-        pixel: ['Galmuri11', 'monospace'],
-        'pixel-mono': ['GalmuriMono11', 'monospace'],
       },
       // 디자인 가이드 Day5 확정값. DEFAULT=진한값(배경) · soft=연한값(배경/보조) ·
       // ink=그진한 배경 위에 얹는 글자색(대부분 soft와 같음, warning만 예외).

@@ -20,24 +20,8 @@
   font-display: swap;
 }
 
-/* 2026-10-05: 픽셀 포인트 글꼴(갈무리, SIL OFL — 라이선스 public/fonts/Galmuri-OFL.md).
-   숫자·짧은 라벨에만, 화면당 1~2곳(참여 완료 입장권 · 카드 D-day). 본문·버튼·입력칸엔 안 씀.
-   픽셀 글꼴이라 기준 크기의 배수(11 · 22 · 33px)에서 가장 선명하다.
-   @font-face 는 그 글꼴을 쓰는 글자가 화면에 있을 때만 파일을 받으므로 다른 화면은 무게가 늘지 않는다. */
-@font-face {
-  font-family: 'Galmuri11';
-  src: url('/fonts/Galmuri11-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'GalmuriMono11';
-  src: url('/fonts/GalmuriMono11.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* 2026-10-06: 픽셀 포인트 글꼴(갈무리, 10/5 추가)은 디자인 패치에서 쓰지 않기로 해 등록·파일을 지움.
+   카드 D-day 가 마지막 사용처였다(ActionCard) — 지금은 프리텐다드 13px. */
 
 /* 2026-09-21: 본문 폰트(Pretendard). 파일은 public/fonts/ 에 9개 다 있었는데
    실제로 연결된 곳이 없어서 그동안 시스템 기본 고딕(맑은 고딕 등)으로 보이고 있었다.

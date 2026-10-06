@@ -159,7 +159,8 @@ export function ActionCard({
                   썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어난다. 2026-09-10 회의 */}
               <div className="mb-1.5 flex flex-wrap items-center gap-1">
                 {allCategories.map((c, i) => (
-                  <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0}>
+                  // 2026-10-06 디자인 패치 — 카드 카테고리 칩 11 → 13px(라벨 단계)
+                  <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0} className="!text-label">
                     {c}
                   </Chip>
                 ))}
@@ -338,16 +339,17 @@ export function ActionCard({
 
         <div className={cn('flex flex-col gap-2 pt-3 pb-4', boxed && 'px-4')}>
           {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어.
-              2026-10-05: 칩 반대쪽(오른쪽)에 모집 마감 D-day 픽셀 캡슐 — 액션 상세의 D-day 와 같은 자리·같은 규칙
-              (모집 중일 때만, 마감 지나면 안 보임). 세로형·boxed 카드만, 가로형(내 액션·프로필)은 그대로 */}
+              2026-10-05: 칩 반대쪽(오른쪽)에 모집 마감 D-day 캡슐 — 액션 상세의 D-day 와 같은 규칙
+              (모집 중일 때만, 마감 지나면 안 보임). 세로형·boxed 카드만, 가로형(내 액션·프로필)은 그대로.
+              2026-10-06 디자인 패치: 픽셀 글꼴(갈무리) 뺌 → 카테고리 칩과 같은 13px · 굵기 500 */}
           <div className="flex flex-wrap items-center gap-1">
             {allCategories.map((c, i) => (
-              <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0}>
+              <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0} className="!text-label">
                 {c}
               </Chip>
             ))}
             {dday && (
-              <span className="ml-auto inline-flex h-6 flex-none items-center rounded-full border border-brand px-2.5 font-pixel-mono text-caption leading-none text-brand">
+              <span className="ml-auto inline-flex h-6 flex-none items-center rounded-full border border-brand bg-white px-2.5 text-label font-medium leading-none text-brand">
                 {dday}
               </span>
             )}
