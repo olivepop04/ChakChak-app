@@ -26,28 +26,9 @@
 /* 2026-09-21: 본문 폰트(Pretendard). 파일은 public/fonts/ 에 9개 다 있었는데
    실제로 연결된 곳이 없어서 그동안 시스템 기본 고딕(맑은 고딕 등)으로 보이고 있었다.
    next/font/local 로 9개를 묶으면 빌드 시 메모리 32GB 를 먹고 dev 서버가 죽어서
-   (실측 확인) Paperlogy 와 달리 일반 @font-face 로 연결한다. */
-@font-face {
-  font-family: 'Pretendard';
-  src: url('/fonts/Pretendard-Thin.woff2') format('woff2');
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Pretendard';
-  src: url('/fonts/Pretendard-ExtraLight.woff2') format('woff2');
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Pretendard';
-  src: url('/fonts/Pretendard-Light.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
+   (실측 확인) Paperlogy 와 달리 일반 @font-face 로 연결한다.
+   2026-10-06: 실제로 쓰는 굵기 4개(400·500·600·700)만 남기고 100·200·300·800·900 은 등록·파일 삭제.
+   새 굵기가 필요하면 파일과 이 등록을 같이 되살릴 것. */
 @font-face {
   font-family: 'Pretendard';
   src: url('/fonts/Pretendard-Regular.woff2') format('woff2');
@@ -73,20 +54,6 @@
   font-family: 'Pretendard';
   src: url('/fonts/Pretendard-Bold.woff2') format('woff2');
   font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Pretendard';
-  src: url('/fonts/Pretendard-ExtraBold.woff2') format('woff2');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Pretendard';
-  src: url('/fonts/Pretendard-Black.woff2') format('woff2');
-  font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
