@@ -175,6 +175,9 @@ export function DiscoverChat({
     }
 
     void requestNext([]);
+    // requestNext는 매 렌더 새로 만들어지는 함수라 deps에 넣어도 그 자체로는 의미가 없다.
+    // 이 effect는 started.current 가드로 마운트당 정확히 한 번만 실행되도록 막혀 있어 안전하다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticated, sessionKey]);
 
   useEffect(() => {
@@ -591,7 +594,7 @@ export function DiscoverChat({
             {error}
           </Bubble>
           <div className="ml-9 flex max-w-[80%] flex-wrap gap-2">
-            {/* 실패한 요청만 다시 보냄(대화 유지) — 조장님 8e6867a 의 retryLastRequest */}
+            {/* 오류 뒤 「다시 시도」 는 대화를 지우지 않고 같은 요청만 다시 보냅니다 (성은님 10/1 수정 유지) */}
             <Chip onClick={retryLastRequest} className="gap-1.5 py-1.5 text-label">
               <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
               <span>다시 시도</span>
