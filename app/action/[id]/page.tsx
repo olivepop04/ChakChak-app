@@ -73,9 +73,13 @@ export default async function ActionDetailPage({
    *
    * 호스트는 크루 전체 목록(`/action/[id]/crew`)에서 「호스트」로 따로 보여줍니다.
    */
-  const summaryMembers = crew.slice(0, 4);
+  // 2026-10-06 형태 실험: 아바타 3개 + 나머지는 「+n」 원 (ActionCrewSection)
+  const summaryMembers = crew.slice(0, 3);
 
   const dday = deadlineDDay(action.recruitEndAt);
+  // 모집 중 = 진행 중이면서 모집이 아직 안 닫힘. 이때만 D-day 를 보이고 상태 배지는 숨김 (2026-10-06)
+  const isRecruiting = action.status === 'ACTIVE' && !action.recruitClosed;
+  const showDDay = isRecruiting && !!dday;
   const allFull = action.items.length > 0 && action.items.every((i) => i.isFull);
   // 취소된 액션은 고칠 수 없다 — 「없던 일」 이라 그 시점 내용이 남아야 한다 (2026-09-29, supabase/19)
   const canEditActionText =
@@ -185,40 +189,44 @@ export default async function ActionDetailPage({
 
         {/* 제목 영역 */}
         <div className="flex flex-col gap-2">
-          {/* items-start — 오른쪽 D-day·마감일 덩어리가 두 줄이라, 칩이 그 가운데로 떠 보이지 않게 위(캡슐 높이)에 맞춤 */}
-          <div className="flex flex-wrap items-start gap-1.5">
+          {/* 2026-10-06 형태 실험(FX 목업) — 「모집 중」·D-day·마감일이 같은 말이라 한 줄로 정리.
+              모집 중이면 상태 배지를 숨기고(D-day 가 그 뜻을 대신함), 다른 상태면 같은 자리에 배지.
+              오른쪽은 캡슐 없이 글자 한 줄 「D-1 · 10월 7일 마감」, 13px · 바닥선 정렬 · 오른쪽 끝 맞춤 */}
+          <div className="flex flex-wrap items-center gap-1.5">
             {detailCategories.map((cat, i) => (
-              <Chip key={cat} as="span" tone="accent" size="sm" selected={i === 0}>
+              <Chip
+                key={cat}
+                as="span"
+                tone="accent"
+                size="sm"
+                selected={i === 0}
+                className="!text-label"
+              >
                 {cat}
               </Chip>
             ))}
-            <StatusBadge
-              status={action.status}
-              recruitClosed={action.recruitClosed}
-              customLabel={customStatusLabel}
-              className="!min-w-0 !rounded-full !px-2.5"
-            />
-            {/* 마감일을 D-day 쪽으로 — 모집 현황 제목 옆에 따로 있던 「마감 : 날짜」를 옮겨 옴 (2026-10-05 소정님 훑어보기).
-                같은 날 세로로 바꿈: 캡슐 위 · 「10월 6일 마감」 아래, 둘 다 오른쪽 끝.
-                D-day 는 모집 중일 때만, 마감일은 날짜가 있으면 늘 보임(마감 뒤에도 언제였는지 남김).
-                캡슐은 홈 카드(ActionCard)와 같은 픽셀 글꼴 11px — 홈에서 넘어와도 같은 모양 */}
-            {(action.recruitEndAt || (dday && action.status === 'ACTIVE')) && (
-              <div className="ml-auto flex flex-none flex-col items-end gap-1">
-                {dday && action.status === 'ACTIVE' && (
-                  <span className="inline-flex h-6 flex-none items-center rounded-full border border-brand px-2.5 font-pixel-mono text-caption leading-none text-brand">
-                    {dday}
-                  </span>
-                )}
+            {!isRecruiting && (
+              <StatusBadge
+                status={action.status}
+                recruitClosed={action.recruitClosed}
+                customLabel={customStatusLabel}
+                className="!min-w-0 !rounded-full !px-2.5"
+              />
+            )}
+            {(showDDay || action.recruitEndAt) && (
+              <p className="ml-auto flex flex-none items-baseline gap-1 text-label">
+                {showDDay && <span className="font-bold text-[#333333]">{dday}</span>}
                 {action.recruitEndAt && (
-                  <span className="text-caption text-neutral-500">
+                  <span className="font-medium text-neutral-500">
+                    {showDDay && '· '}
                     {formatDateShort(action.recruitEndAt)} 마감
                   </span>
                 )}
-              </div>
+              </p>
             )}
           </div>
 
-          <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
+          <h1 className="font-paperlogy text-2xl font-bold leading-[1.3] tracking-tight text-neutral-900">
             {action.title}
           </h1>
 
@@ -248,7 +256,7 @@ export default async function ActionDetailPage({
         {/* 만든 사람 */}
         <div className="flex items-center gap-3">
           <Link href={`/user/${action.owner?.id ?? ''}`} className="flex items-center gap-3">
-            <Avatar name={action.owner?.nickname ?? '?'} avatar={action.owner?.avatar} />
+            <Avatar name={action.owner?.nickname ?? '?'} avatar={action.owner?.avatar} className="!h-10 !w-10" />
             <div className="flex flex-col">
               <span className="text-label font-semibold text-neutral-900">
                 @{action.owner?.nickname ?? '알 수 없음'}
@@ -318,7 +326,7 @@ export default async function ActionDetailPage({
           {action.items.length === 0 ? (
             <p className="text-label text-neutral-400">등록된 모집 항목이 없어요.</p>
           ) : (
-            <div className="flex flex-col gap-5 rounded-xl p-4">
+            <div className="flex flex-col gap-5 rounded-xl border border-hairline p-4">
               {action.items.flatMap((item, i) => [
                 i > 0 && (
                   <div key={`divider-${item.id}`} className="h-px bg-neutral-100" />
