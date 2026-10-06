@@ -98,6 +98,28 @@ test('남은 시간 계산에는 KST 변환을 넣지 않는다 (차이만 본�
   assert.equal(deadlineDDay(past), null);
 });
 
+test('D-day 는 KST 달력 날짜로 센다 — 남은 시간이 24시간보다 짧아도 내일이면 D-1 (2026-10-06)', () => {
+  // 지수님이 본 화면: 지금 10월 6일(화) 15:25 · 마감 10월 7일(수) 14:00 → 22시간 남았지만 D-1
+  const now = new Date('2026-10-06T06:25:00Z'); // KST 10/6 15:25
+  assert.equal(deadlineDDay('2026-10-07T05:00:00Z', now), 'D-1'); // KST 10/7 14:00
+
+  // 오늘 밤 마감 → D-Day
+  assert.equal(deadlineDDay('2026-10-06T14:00:00Z', now), 'D-Day'); // KST 10/6 23:00
+
+  // 밤 11시 30분에 다음날 0시 30분 마감 → 1시간 남았어도 날짜가 바뀌니 D-1
+  const lateNight = new Date('2026-10-06T14:30:00Z'); // KST 10/6 23:30
+  assert.equal(deadlineDDay('2026-10-06T15:30:00Z', lateNight), 'D-1'); // KST 10/7 00:30
+
+  // UTC 로는 날짜가 다르지만 KST 로는 같은 날 → D-Day (UTC 날짜로 세면 D-1 로 틀림)
+  const kstEarly = new Date('2026-10-06T16:00:00Z'); // KST 10/7 01:00
+  assert.equal(deadlineDDay('2026-10-07T05:00:00Z', kstEarly), 'D-Day'); // KST 10/7 14:00
+
+  // 사흘 뒤 · 지난 마감
+  assert.equal(deadlineDDay('2026-10-09T05:00:00Z', now), 'D-3');
+  assert.equal(deadlineDDay('2026-10-06T06:00:00Z', now), null);
+  assert.equal(deadlineDDay(null, now), null);
+});
+
 test('날짜가 없는 DRAFT 는 그대로 안내 문구', () => {
   assert.equal(formatDate(null), '날짜 미정');
   assert.equal(formatDateShort(null), '날짜 미정');
