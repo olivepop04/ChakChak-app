@@ -121,7 +121,8 @@ const IMG = {
   tree: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200',
   recycle: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=1200',
   beach: 'https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=1200',
-  river: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1200',
+  // 강둑에서 쓰레기를 줍는 봉사자들 — 전에는 색색의 분리수거 통 사진이라 하천 정화와 안 맞았다
+  river: 'https://images.unsplash.com/photo-1758599668932-484f54cdf48f?w=1200',
   garden: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200',
 
   // 아동·청소년
@@ -138,7 +139,8 @@ const IMG = {
   senior_wallpaper: '/images/actions/wallpaper.jpg',
   senior_boardgame: '/images/actions/boardgame.jpg',
   senior_nail_art: '/images/actions/nail_art.jpg',
-  senior_care: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=1200',
+  // 돌봄 장면(요양 시설에서 어르신을 부축하며 웃는 돌보미) — 전에는 부엌에서 칼로 생선을 손질하는 사진이라 목욕 봉사와 안 맞았다
+  senior_care: 'https://images.unsplash.com/photo-1773227055624-07b515ba87c5?w=1200',
 
   // 장애 (신규 맞춤 이미지로 교체)
   wheelchair: '/images/actions/wheelchair.jpg',
@@ -154,7 +156,8 @@ const IMG = {
   briquette: '/images/actions/briquette.jpg',
   food: 'https://images.unsplash.com/photo-1593113630400-ea4288922497?w=1200',
   cooking: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1200',
-  mural: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1200',
+  // 사다리에 올라 벽에 그림을 그리는 모습 — 전에는 꽃 정물화(그림 작품) 사진이라 벽화 봉사와 안 맞았다
+  mural: 'https://images.unsplash.com/photo-1684783593166-2828c7531eee?w=1200',
   snow: 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?w=1200',
 
   // 교육
