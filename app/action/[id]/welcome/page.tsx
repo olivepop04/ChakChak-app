@@ -55,7 +55,10 @@ export default async function WelcomePage({
         <span className="w-9" />
       </header>
 
-      <div className="flex flex-col px-6 pt-6">
+      {/* 위 여백 120px — 상단 바와 체크 원 사이가 좁아 보인다는 의견(2026-10-05 소정님 훑어보기, 24 → 48 → 120).
+          축하 화면이라 가입 완료(위 여백 120px)와 같은 값, 간격 단계(최대 32px) 밖 예외.
+          같은 날 입장권 카드(a480249)를 넣었다가 이 모양(체크 원 + 흰 카드)으로 되돌림 */}
+      <div className="flex flex-col px-6 pt-[120px]">
         <div className="flex flex-col items-center text-center">
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white">
             <Check className="h-8 w-8 text-brand" aria-hidden="true" />

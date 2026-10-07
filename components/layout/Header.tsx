@@ -68,9 +68,9 @@ export function Header({
           type="button"
           onClick={handleBack}
           aria-label="뒤로 가기"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-[#333333] hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-charcoal hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
         >
-          <ChevronLeft className="h-5 w-5 text-[#333333]" />
+          <ChevronLeft className="h-5 w-5 text-charcoal" />
         </button>
       ) : (
         <span className="w-2" />
@@ -107,7 +107,7 @@ export function Header({
         → 이중 h1 은 2026-10-01 asH1 옵션으로 정리 (본문 h1 이 있는 10개 화면만 끔).
         → 색은 2026-09-30 #333 으로 통일 (모달 제목과 같은 색, 뒤로 아이콘도 같이).
       */}
-      <TitleTag className="flex-1 truncate text-body font-bold tracking-normal text-[#333333]">
+      <TitleTag className="flex-1 truncate text-body font-bold tracking-normal text-charcoal">
         {title}
       </TitleTag>
 

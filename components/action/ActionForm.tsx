@@ -470,12 +470,14 @@ export function ActionForm({ initial }: { initial: ActionFormInitial }) {
                     ? isPrimary
                       ? 'border-brand bg-brand-soft text-brand'
                       : 'border-hairline-focus bg-white text-hairline-focus'
-                    : 'border-neutral-300 bg-white text-neutral-600 hover:border-neutral-400'
+                    : // 2026-10-06 디자인 패치 — 안 고른 칩은 한 단계 연하게(#CCC 선 · neutral-500 글자)
+                      'border-faint bg-white text-neutral-500 hover:border-neutral-400'
                 }`}
               >
                 {isSelected && (
                   <span
-                    className={`flex h-4 w-4 items-center justify-center rounded-full text-caption font-bold ${
+                    // pt-[1.5px] — 숫자가 원 위쪽에 붙어 보이던 것(위 0.75 / 아래 2.25px)을 가운데로 (2026-10-05 실측)
+                    className={`flex h-4 w-4 items-center justify-center rounded-full pt-[1.5px] text-caption font-bold ${
                       isPrimary ? 'bg-brand text-white' : 'bg-hairline-focus text-white'
                     }`}
                   >
@@ -802,7 +804,7 @@ function ReviewModal({
         className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="review-modal-title" className="text-subtitle font-bold text-[#333333]">
+          <h2 id="review-modal-title" className="text-subtitle font-bold text-charcoal">
             AI 검수 결과
           </h2>
           <button

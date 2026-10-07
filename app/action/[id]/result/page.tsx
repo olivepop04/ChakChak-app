@@ -8,7 +8,7 @@ import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getActionResult } from '@/lib/queries/participations';
-import { UsersRound, Package, MessageSquareQuote, FileText } from 'lucide-react';
+import { UsersRound, Package, FileText } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
@@ -88,27 +88,29 @@ export default async function ResultPage({
       <Header title="액션 결과" back backHref={`/action/${id}`} sticky asH1={false} />
 
       <div className="flex flex-col gap-10 px-6 py-6">
-        {/* 제목 + 장소 | 일정 + 구분선 */}
-        <div>
-          <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
+        {/* 제목 + 장소 | 일정 — 연한 초록 카드 (2026-10-06 디자인 패치).
+            상단 바는 흰색 그대로, 큰 구역 초록 칠은 참여 완료 화면만(조장 의견).
+            연한 초록 위라 장소·일정 글자는 #737373 → #525252 로 한 단계 진하게(대비) */}
+        <div className="rounded-xl bg-brand-soft p-5">
+          <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-brand">
             {action.title}
           </h1>
-          <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-500">
+          <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-600">
             {location && (
               <>
                 <span>{location}</span>
-                <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />
+                <span className="mx-2 h-3 w-px flex-none bg-[#BDBDBD]" aria-hidden="true" />
               </>
             )}
             <span>{formatActivityPeriod(action.activity_start_at, action.activity_end_at)}</span>
           </div>
-          <div className="mt-4 h-px bg-neutral-100" />
         </div>
 
-        {/* 자동 집계 — 액션 상세 "모집 현황"과 같은 형식(아이콘 원 + 항목 사이 구분선), 박스 테두리 없음 */}
+        {/* 자동 집계 — 액션 상세 "모집 현황"과 같은 형식(아이콘 원 + 항목 사이 구분선).
+            2026-10-06 디자인 패치: 상세와 같이 얇은 회색 선 상자로 묶음 */}
         <section className="flex flex-col gap-4">
           <h2 className="text-subtitle font-bold text-neutral-900">함께 모은 것</h2>
-          <div className="flex flex-col gap-5 p-4">
+          <div className="flex flex-col gap-5 rounded-xl border border-hairline p-4">
             {result.items.map((item, idx) => {
               const { ratio, isMet } = describeResultRatio(item, item.currentCount);
               const Icon = item.type === 'PERSON' ? UsersRound : Package;
@@ -192,7 +194,11 @@ export default async function ResultPage({
           </div>
         </section>
 
-        {/* 결과 내용 + 사진 + 호스트의 한마디 — 한 덩어리(내부 간격 12px) */}
+        {/* 결과 내용 + 사진 + 호스트의 한마디 — 한 덩어리(내부 간격 12px).
+            2026-10-06 디자인 패치: 덩어리 사이 얇은 구분선 — 섹션 간격 40px 은 그대로 두고 선만 가운데(-my-5) */}
+        {(result.content || result.imageUrls.length > 0 || result.ownerVoice) && (
+          <div aria-hidden="true" className="-my-5 h-px bg-neutral-100" />
+        )}
         {(result.content || result.imageUrls.length > 0 || result.ownerVoice) && (
           <div className="flex flex-col gap-3">
             {result.content && (
@@ -222,23 +228,30 @@ export default async function ResultPage({
               </ArrowScroller>
             )}
 
-            {/* 호스트의 한마디 — 검정 박스 → 연한 그린 강조 박스 (Day14 통일안) */}
+            {/* 호스트의 한마디 — 2026-10-06 디자인 패치: 상자 없이 큰 따옴표 + 옆에 「호스트의 한마디 - @핸들」.
+                위 제목 카드와 연한 초록 상자가 겹쳐 둘 다 약해 보여서 상자를 뺌 */}
             {result.ownerVoice && (
-              <section className="flex flex-col gap-1 rounded-xl bg-brand-soft p-4">
-                <div className="flex items-center gap-1.5">
-                  <MessageSquareQuote className="h-3.5 w-3.5 flex-none text-brand" aria-hidden="true" />
-                  <h2 className="text-label font-semibold text-brand">호스트의 한마디</h2>
+              <section className="flex flex-col gap-2 pb-1 pt-2">
+                <div className="flex items-start gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="h-6 flex-none font-paperlogy text-[40px] font-extrabold leading-[0.8] text-brand"
+                  >
+                    “
+                  </span>
+                  <h2 className="pt-0.5 font-paperlogy text-label font-bold leading-snug text-brand">
+                    호스트의 한마디{owner && ` - @${owner.nickname}`}
+                  </h2>
                 </div>
-                <p className="whitespace-pre-wrap text-body leading-relaxed text-neutral-900">
+                <p className="whitespace-pre-wrap break-keep text-body font-medium leading-relaxed text-neutral-900">
                   {result.ownerVoice}
                 </p>
-                {owner && (
-                  <p className="mt-1 text-caption text-neutral-500">@{owner.nickname}</p>
-                )}
               </section>
             )}
           </div>
         )}
+
+        <div aria-hidden="true" className="-my-5 h-px bg-neutral-100" />
 
         {/* 크루들의 한마디 */}
         <section className="flex flex-col gap-3">

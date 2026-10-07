@@ -454,7 +454,8 @@ export function DiscoverChat({
 
   return (
     <div className="flex flex-col gap-4 px-6 pb-24 pt-4">
-      {/* 인트로 제목 + 숫자 칩 5개 — 답함=초록 채움 · 지금=초록 테두리 · 남음=회색 (2026-09-27 목업 확정) */}
+      {/* 인트로 제목 + 숫자 칩 5개 — 답함=#333 채움 · 지금=#333 테두리 · 남음=회색
+          (2026-09-27 목업 확정 → 2026-10-06 디자인 패치: 초록 → #333. 초록은 누르는 것에만) */}
       <div className="flex flex-col gap-3 border-b border-neutral-100 pb-5">
         <h2 className="font-paperlogy text-body font-medium leading-relaxed text-neutral-900">
           {nickname}님에게 맞는 액션을 찾기 위해 몇 가지만 물어볼게요
@@ -469,9 +470,9 @@ export function DiscoverChat({
                 className={cn(
                   'flex h-7 w-7 flex-none items-center justify-center rounded-full border-[1.5px] text-label font-bold tabular-nums',
                   answered
-                    ? 'border-brand bg-brand text-white'
+                    ? 'border-charcoal bg-charcoal text-white'
                     : current
-                      ? 'border-brand bg-white text-brand'
+                      ? 'border-charcoal bg-white text-charcoal'
                       : 'border-neutral-100 bg-neutral-100 text-neutral-400',
                 )}
               >
@@ -548,9 +549,12 @@ export function DiscoverChat({
                       }
                       className="gap-1.5 py-1.5 text-label"
                     >
-                      {isSelected && (
-                        <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
-                      )}
+                      {/* 체크는 늘 그려 두고 색만 바꿈 — 고를 때 체크가 새로 생기며 칩 폭이 늘어
+                          옆 칩들이 밀리던 것 (2026-10-05 소정님 훑어보기). 안 고른 칩은 연회색 체크 */}
+                      <Check
+                        className={cn('h-3.5 w-3.5 stroke-[2.5]', !isSelected && 'text-neutral-300')}
+                        aria-hidden="true"
+                      />
                       <span>{option}</span>
                     </Chip>
                   );
@@ -709,9 +713,9 @@ export function DiscoverChat({
                 )}
                 {/* 1단계 제목 앞 map-pin (2026-10-01 목업 K) */}
                 {!selectedSido && (
-                  <MapPin className="h-5 w-5 shrink-0 text-[#333333]" aria-hidden="true" />
+                  <MapPin className="h-5 w-5 shrink-0 text-charcoal" aria-hidden="true" />
                 )}
-                <h3 className="text-subtitle font-bold text-[#333333]">
+                <h3 className="text-subtitle font-bold text-charcoal">
                   {selectedSido ? selectedSido : '활동할 지역 선택'}
                 </h3>
               </div>

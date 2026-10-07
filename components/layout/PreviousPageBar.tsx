@@ -28,7 +28,7 @@ export function PreviousPageBar() {
       <button
         type="button"
         onClick={handleBack}
-        className="flex min-h-11 items-center gap-2 rounded-full pr-3 text-[#333333] transition-colors hover:bg-neutral-100 active:bg-neutral-200"
+        className="flex min-h-11 items-center gap-2 rounded-full pr-3 text-charcoal transition-colors hover:bg-neutral-100 active:bg-neutral-200"
       >
         <span className="flex h-9 w-9 items-center justify-center">
           <ChevronLeft className="h-5 w-5" aria-hidden="true" />

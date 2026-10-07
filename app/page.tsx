@@ -13,6 +13,11 @@ import { ActionCard } from '@/components/ui/ActionCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Chip } from '@/components/ui/Chip';
 import { CATEGORIES, type Category } from '@/lib/constants';
+import { cn } from '@/lib/utils/cn';
+
+// 홈 카테고리 칩 덮어쓰기 (2026-10-06 디자인 패치) — 고른 칩 #333 채움 · 안 고른 칩 연회색 면(테두리 없음)
+const HOME_CHIP_ON = '!border-transparent !bg-charcoal !text-white';
+const HOME_CHIP_OFF = '!border-transparent !bg-[#F5F5F7] !text-neutral-500';
 
 export default async function HomePage({
   searchParams,
@@ -63,7 +68,7 @@ export default async function HomePage({
         <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/chakchak-wordmark.svg" alt="착착" className="h-[24px] w-auto" />
-          <p className="mt-1 font-paperlogy text-label font-bold text-[#333333]">
+          <p className="mt-1 font-paperlogy text-label font-bold text-charcoal">
             착착 쌓이는 착한 일
           </p>
         </div>
@@ -92,36 +97,53 @@ export default async function HomePage({
         )}
       </header>
 
-      {/* 필터 영역 (카테고리 + 정렬) */}
-      <div className="flex flex-col gap-5 px-6 pb-1">
-        {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다 */}
-        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-6 px-6 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* 필터 영역 (카테고리 + 정렬)
+          2026-10-06 디자인 패치: 두 줄 사이 20 → 16px · 칩 줄 위 16px / 아래 8px */}
+      <div className="flex flex-col gap-4 px-6 pb-1">
+        {/* 카테고리 필터 — 주소로 관리하므로 useState 가 필요 없습니다.
+            2026-10-06 디자인 패치: 고른 칩 = #333 채움 · 안 고른 칩 = 테두리 없는 연회색 면.
+            공용 Chip 을 고치지 않고 이 화면에서만 덮어씀 (다른 화면 칩은 그대로) */}
+        <div className="flex flex-row flex-nowrap items-center gap-2 overflow-x-auto -mx-6 px-6 pb-2 pt-4 scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link href={makeCategoryUrl(undefined)} scroll={false} className="shrink-0">
-            <Chip selected={!selected} as="span" tone="accent" className="whitespace-nowrap">
+            <Chip
+              selected={!selected}
+              as="span"
+              tone="accent"
+              className={cn('whitespace-nowrap', !selected ? HOME_CHIP_ON : HOME_CHIP_OFF)}
+            >
               전체
             </Chip>
           </Link>
           {CATEGORIES.map((c) => (
             <Link key={c} href={makeCategoryUrl(c)} scroll={false} className="shrink-0">
-              <Chip selected={selected === c} as="span" tone="accent" className="whitespace-nowrap">
+              <Chip
+                selected={selected === c}
+                as="span"
+                tone="accent"
+                className={cn('whitespace-nowrap', selected === c ? HOME_CHIP_ON : HOME_CHIP_OFF)}
+              >
                 {c}
               </Chip>
             </Link>
           ))}
         </div>
 
-        {/* 정렬 필터 — 세그먼트 컨트롤 */}
-        <div className="flex items-center gap-1 rounded-full bg-[#F5F5F7] p-1">
-          <Link href={makeSortUrl('DEADLINE')} scroll={false} className="flex-1">
-            <Chip selected={currentSort === 'DEADLINE'} as="span" tone="neutral" className="w-full">
-              마감 임박
-            </Chip>
-          </Link>
-          <Link href={makeSortUrl('POPULAR')} scroll={false} className="flex-1">
-            <Chip selected={currentSort === 'POPULAR'} as="span" tone="neutral" className="w-full">
-              인기순
-            </Chip>
-          </Link>
+        {/* 정렬 필터 — 세그먼트 컨트롤.
+            2026-10-05: 폭을 꽉 채워 너무 커 보인다는 의견(소정님 훑어보기) → 글자 폭만큼 줄여 가운데 */}
+        <div className="flex justify-center">
+          {/* 2026-10-06 디자인 패치: 바깥 44px · 안쪽 칸 32px */}
+          <div className="inline-flex h-11 items-center gap-1 rounded-full bg-[#F5F5F7] p-1">
+            <Link href={makeSortUrl('DEADLINE')} scroll={false}>
+              <Chip selected={currentSort === 'DEADLINE'} as="span" tone="neutral" className="h-8 !py-0">
+                마감 임박
+              </Chip>
+            </Link>
+            <Link href={makeSortUrl('POPULAR')} scroll={false}>
+              <Chip selected={currentSort === 'POPULAR'} as="span" tone="neutral" className="h-8 !py-0">
+                인기순
+              </Chip>
+            </Link>
+          </div>
         </div>
       </div>
 

@@ -132,16 +132,29 @@ export function timeUntilDeadline(iso: string | null): string | null {
 }
 
 /**
- * 모집 마감까지 남은 일수를 D-day 뱃지 문구로. 지났거나 없으면 null
+ * 모집 마감까지 남은 **날짜 수**를 D-day 뱃지 문구로. 지났거나 없으면 null
  *
- * **시간대와 무관합니다** — 위와 같이 차이만 봅니다.
+ *   마감이 오늘(KST)  → 'D-Day'
+ *   마감이 내일(KST)  → 'D-1'   — 남은 시간이 24시간보다 짧아도
+ *
+ * **KST 달력 날짜로 셉니다** (2026-10-06 고침). 전에는 남은 시간을 24시간으로 나눠서,
+ * 지금 10월 6일 15:25 · 마감 10월 7일 14:00 이면 22시간 남아 「D-Day」 가 떴습니다.
+ * 같은 화면의 「모집 일정 — 10월 7일 (수)까지」 와 어긋났습니다 (지수님 보고).
+ * 날짜를 보므로 시간대가 필요합니다 — 배포(UTC)에서도 한국 날짜로 셉니다.
+ *
+ * @param now 시험용. 화면에서는 넘기지 마세요.
  */
-export function deadlineDDay(iso: string | null): string | null {
+export function deadlineDDay(iso: string | null, now: Date = new Date()): string | null {
   if (!iso) return null;
-  const diffMs = new Date(iso).getTime() - Date.now();
-  if (diffMs <= 0) return null;
-  const days = Math.floor(diffMs / 86400000);
+  const end = new Date(iso).getTime();
+  if (end <= now.getTime()) return null;
+  const days = kstDayNumber(end) - kstDayNumber(now.getTime());
   return days >= 1 ? `D-${days}` : 'D-Day';
+}
+
+/** KST 기준으로 1970-01-01 부터 며칠째인지. 두 값의 차이가 달력 날짜 차이입니다 */
+function kstDayNumber(ms: number): number {
+  return Math.floor((ms + KST_OFFSET_MS) / 86400000);
 }
 
 /**

@@ -126,11 +126,14 @@ export function BottomNav() {
         2026-09-21 홈피드 개편 — 활성 탭만 캡슐 배경 + 라벨, 비활성 탭은 아이콘만.
         라벨을 영구히 지운 게 아니라 활성 상태에 따라 매번 바뀌는 것이 핵심(고정 삭제 아님).
         색은 브랜드 그린 토큰(brand/brand-soft, tailwind.config.ts) 사용.
+        2026-10-06 디자인 패치: 활성 = 초록 채움 + 흰 글자 · 비활성 아이콘 = #333 (회색 → 진하게)
 
         아이콘·라벨 크기를 여기서 더 키운다면 app/globals.css 의 --nav-h(64px)도
         같이 올릴 것 — 하단 고정 바가 있는 11개 화면이 전부 이 변수로 자기 위치를 잡는다.
       */}
-      <ul className="flex h-[var(--nav-h)] items-center justify-between px-4">
+      {/* 좌우 여백 16 → 32px — 본문 여백(24px)보다 안쪽으로 들어가 탭이 화면 끝에 붙어 보이지 않게 (2026-10-06).
+          375px 에서도 활성 탭(아이콘 + 글자) + 아이콘 4개가 들어가는 폭 */}
+      <ul className="flex h-[var(--nav-h)] items-center justify-between px-8">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           const Icon = tab.icon;
@@ -144,8 +147,8 @@ export function BottomNav() {
                   'flex min-w-0 items-center justify-center gap-1.5 rounded-full transition-all duration-300 ease-in-out',
                   // 터치 타겟 44px 이상 — 활성 캡슐은 py-2.5(10px×2)+아이콘 24px = 44px
                   active
-                    ? 'bg-brand-soft px-4 py-2.5 text-brand'
-                    : 'h-11 w-11 text-neutral-400 hover:text-neutral-600',
+                    ? 'bg-brand px-4 py-2.5 text-white'
+                    : 'h-11 w-11 text-charcoal hover:text-neutral-600',
                 )}
               >
                 <Icon className={cn(tab.iconClassName || 'h-6 w-6', 'shrink-0')} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />

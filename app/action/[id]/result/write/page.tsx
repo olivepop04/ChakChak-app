@@ -57,19 +57,21 @@ export default async function ResultWritePage({
     <main>
       <Header title="결과 작성" back backHref={`/action/${id}`} sticky asH1={false} />
 
-      <div className="border-b border-neutral-100 px-6 py-4">
-        <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-neutral-900">
-          {action.title}
-        </h1>
-        {/* 장소 | 일정 — 결과 보기 화면과 같은 형식 */}
-        <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-500">
-          {location && (
-            <>
-              <span>{location}</span>
-              {period && <span className="mx-2 h-3 w-px flex-none bg-neutral-200" aria-hidden="true" />}
-            </>
-          )}
-          {period && <span>{period}</span>}
+      {/* 제목 + 장소 | 일정 — 결과 보기와 같은 연한 초록 카드 (2026-10-06 디자인 패치) */}
+      <div className="px-6 pt-6">
+        <div className="rounded-xl bg-brand-soft p-5">
+          <h1 className="font-paperlogy text-xl font-bold leading-snug tracking-tight text-brand">
+            {action.title}
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center gap-y-1 text-label font-semibold text-neutral-600">
+            {location && (
+              <>
+                <span>{location}</span>
+                {period && <span className="mx-2 h-3 w-px flex-none bg-[#BDBDBD]" aria-hidden="true" />}
+              </>
+            )}
+            {period && <span>{period}</span>}
+          </div>
         </div>
       </div>
 

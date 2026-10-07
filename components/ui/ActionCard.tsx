@@ -26,7 +26,7 @@ import type { ActionCardData } from '@/lib/types/view';
 import { cn } from '@/lib/utils/cn';
 // 날짜 표시는 공용 함수를 쓴다 (CLAUDE.md 규칙) — 요일까지 나오는 "8월 30일 (토)" 형식.
 // 카드가 자체적으로 갖고 있던 formatDate(요일 없음)를 지우고 이걸로 통일했다 (2026-09-21).
-import { formatDate } from '@/lib/utils/date';
+import { deadlineDDay, formatDate } from '@/lib/utils/date';
 
 interface ActionCardProps {
   action: ActionCardData;
@@ -73,6 +73,9 @@ export function ActionCard({
   const isRecruitClosed =
     action.recruitClosed ??
     (action.recruitEndAt ? new Date(action.recruitEndAt) < new Date() : false);
+  // 세로형 카드 D-day — 모집 중이고 마감 전일 때만 (액션 상세와 같은 deadlineDDay)
+  const dday =
+    action.status === 'ACTIVE' && !isRecruitClosed ? deadlineDDay(action.recruitEndAt) : null;
 
   // 좋아요·저장: 초안·취소·종료·완료에서 "새로" 누르는 것을 막는다 (기획 결정 2026-09-10).
   //   이미 누른 것은 풀 수 있어야 한다 — 끝난 액션이 「저장한 액션」에 영영 남아
@@ -156,7 +159,8 @@ export function ActionCard({
                   썸네일 밖(정보 영역)에 두어 고배율에서도 이미지를 안 벗어난다. 2026-09-10 회의 */}
               <div className="mb-1.5 flex flex-wrap items-center gap-1">
                 {allCategories.map((c, i) => (
-                  <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0}>
+                  // 2026-10-06 디자인 패치 — 카드 카테고리 칩 11 → 13px(라벨 단계)
+                  <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0} className="!text-label">
                     {c}
                   </Chip>
                 ))}
@@ -334,13 +338,21 @@ export function ActionCard({
         </Link>
 
         <div className={cn('flex flex-col gap-2 pt-3 pb-4', boxed && 'px-4')}>
-          {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어 */}
-          <div className="flex flex-wrap gap-1">
+          {/* 카테고리 1~3개. 대표(첫 번째)는 채운 칩, 나머지는 외곽선 칩 — 홈 상단 필터 칩과 같은 시각 언어.
+              2026-10-05: 칩 반대쪽(오른쪽)에 모집 마감 D-day 캡슐 — 액션 상세의 D-day 와 같은 규칙
+              (모집 중일 때만, 마감 지나면 안 보임). 세로형·boxed 카드만, 가로형(내 액션·프로필)은 그대로.
+              2026-10-06 디자인 패치: 픽셀 글꼴(갈무리) 뺌 → 카테고리 칩과 같은 13px · 굵기 500 */}
+          <div className="flex flex-wrap items-center gap-1">
             {allCategories.map((c, i) => (
-              <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0}>
+              <Chip key={c} as="span" tone="accent" size="sm" selected={i === 0} className="!text-label">
                 {c}
               </Chip>
             ))}
+            {dday && (
+              <span className="ml-auto inline-flex h-6 flex-none items-center rounded-full border border-brand bg-white px-2.5 text-label font-medium leading-none text-brand">
+                {dday}
+              </span>
+            )}
           </div>
 
           {/* 고배율에서 잘리지 않게 말줄임 없이 전체 노출. 카드가 길어지는 건 감수 (배율 확대 사용자는 전부 보길 원함) */}
@@ -348,8 +360,9 @@ export function ActionCard({
             {action.title}
           </h3>
 
+          {/* 소개 글은 읽는 글이라 정보·반응 줄(회색)보다 한 단계 진하게 — 글과 기능이 구분되게 (2026-10-06) */}
           {action.summary && (
-            <p className="font-sans text-body font-medium leading-relaxed text-neutral-500">
+            <p className="font-sans text-body font-medium leading-relaxed text-neutral-700">
               {action.summary}
             </p>
           )}
@@ -378,8 +391,9 @@ export function ActionCard({
           </div>
 
           {/* 좋아요·저장·공유 — "내 반응" 줄. 참여인원은 위 정보줄로.
-              공유는 원래 상단 작성자 줄에 있었는데 이 줄로 이동(2026-09-22), 같은 gap-3로 나열 */}
-          <div className="pointer-events-auto mt-1 flex items-center gap-3 pt-1 text-xs tabular-nums text-neutral-500">
+              공유는 원래 상단 작성자 줄에 있었는데 이 줄로 이동(2026-09-22), 같은 gap-3로 나열.
+              2026-10-06: 위 여백 4 → 12px(pt-3) — 정보 줄과 떨어뜨려 「기능」 줄로 보이게 (구분선은 안 씀) */}
+          <div className="pointer-events-auto mt-1 flex items-center gap-3 pt-3 text-xs tabular-nums text-neutral-500">
             <LikeButton
               actionId={action.id}
               initialLiked={action.likedByMe}
