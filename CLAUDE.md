@@ -1,7 +1,11 @@
 # 착착(CHAK CHAK) MVP — 개발 규칙
 
-이 파일은 Claude Code와 팀원 모두가 읽는 기준 문서입니다.
-새로 합의한 내용이 생기면 여기에 먼저 적고 코드를 고칩니다.
+이 파일은 Claude Code 가 읽는 기준 문서입니다.
+새로 정한 내용이 생기면 여기에 먼저 적고 코드를 고칩니다.
+
+> **2026-10-14 부터 혼자 고도화합니다.** 5인 팀 MVP 는 `proj_mvp` 브랜치 · `v1.0-mvp` 태그로 박제했습니다 (아래 「브랜치 · 배포」).
+> 본문에 나오는 팀원 이름(민호 · 조장 · 성은 · 지수 · 소정)은 **그때 누가 무엇을 정했는지의 기록**입니다 — 지금 누구에게 물어보라는 뜻이 아닙니다.
+> `docs/` 의 역할 문서(00~05)도 팀 시절 문서입니다.
 
 ---
 
@@ -64,7 +68,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 | `feedback` · `admins` (22) | **INSERT 정책 없음** · 문의는 관리자만 읽음 · 관리자 목록은 아무도 못 읽음 | 보내기는 `submit_feedback` · 관리자 지정은 서비스 롤로만 (저장소에 이메일을 적지 않음) |
 
 막는 기준은 `current_user = 'authenticated'`(직접 요청)입니다. RPC 는 함수 주인 역할로 돌아서 그대로 됩니다.
-**그래서 새 기능에서 이 표들을 화면이 직접 UPDATE 하게 짜면 조용히 안 됩니다** — RPC 를 만들어 달라고 해주세요.
+**그래서 새 기능에서 이 표들을 화면이 직접 UPDATE 하게 짜면 조용히 안 됩니다** — `supabase/` 에 다음 번호 파일로 RPC 를 만들고 `lib/mutations.ts` 에서 부르세요.
 
 **자주 걸리는 것만 표로 적어둡니다.** 실제로 확인한 결과입니다.
 
@@ -427,7 +431,7 @@ npm run seed
 
 **AI 분류(`action_ai_metadata`)는 시드가 `scripts/data/action_ai_metadata_all.json` 에서 제목으로 찾아 넣습니다.**
 그 JSON 에 없는 제목(새로 끝에 붙인 액션)은 기본값(`실내 활동` · `누구나 참여가능`)으로 들어가서
-Discover 의 환경·난이도 점수가 틀어집니다. 그럴 때는 다시 분류합니다 (민호 담당, 2026-09-29에 고침).
+Discover 의 환경·난이도 점수가 틀어집니다. 그럴 때는 다시 분류합니다 (2026-09-29에 고침).
 
 ```bash
 npm run reclassify                    # 미리보기 — 무엇을 분류할지 목록만 (AI·DB 쓰기 없음)
@@ -445,8 +449,8 @@ npm run reclassify:active             # 모집 중 액션을 지금 판으로 �
 
 `--export-seed` 는 새 내용이 비었거나 기존 파일보다 10% 넘게 줄면 쓰지 않습니다(`--force` 로만). `seed:clean` 뒤에 돌려 빈 파일이 되는 사고를 막습니다.
 전에는 「`classify-v2` 가 아닌 것」 을 골라서 앱에서 분류한 v3 를 덮어쓰고, 정작 시드 기본값은 건너뛰었습니다.
-서비스 롤 키로 공유 DB 에 바로 쓰니 **먼저 미리보기로 목록을 보세요.** 결과는 `ai_runs` 에도 남습니다.
-한 가지 남은 것 — `scripts/seed.mjs` 는 JSON 의 판 이름을 읽지 않고 늘 `classify-v3` 로 넣습니다(조장 구역).
+서비스 롤 키로 운영 DB 에 바로 쓰니 **먼저 미리보기로 목록을 보세요.** 결과는 `ai_runs` 에도 남습니다.
+한 가지 남은 것 — `scripts/seed.mjs` 는 JSON 의 판 이름을 읽지 않고 늘 `classify-v3` 로 넣습니다.
 그래서 `seed` 를 다시 돌리면 내용은 v4 인데 이름표가 v3 가 되어, `reclassify:active` 미리보기에 모집 중 전부가 다시 잡힙니다 — 분류가 틀린 게 아니니 급하지 않습니다.
 
 **2026-09-30 에 모집 중 51개를 v4 로 다시 분류하고 시드 JSON 도 새로 썼습니다** (민호, 성은님 요청).
@@ -481,8 +485,8 @@ npm run reclassify:active             # 모집 중 액션을 지금 판으로 �
 
 ## 디자인 값은 디자인 가이드가 원본입니다
 
-색·타이포·간격·굵기·모서리 같은 값은 **소정님이 관리하는 디자인 가이드**에 있습니다.
-링크만 있으면 열립니다.
+색·타이포·간격·굵기·모서리 같은 값은 **팀 시절 소정님이 만든 디자인 가이드**에 있습니다.
+링크만 있으면 열립니다. **팀원 계정의 페이지라 언젠가 사라질 수 있으니**, 계속 쓸 값은 이 문서나 `tailwind.config.ts` 로 옮겨 두세요.
 
 > **착착 디자인 가이드** — https://claude.ai/artifact/P6DCcoQW5AEhvV5Q2qxc2s
 
@@ -499,11 +503,11 @@ Day 5(Foundations, 2026-09-15) ~ Day 10(2026-09-19) 에 확정된 것이 전부 
 | 상태 스티커 | **폐기 (2026-09-29 회의)** — 카드는 상태 배지를 그대로 씁니다. 표정 그림은 가입 아바타로 재활용 |
 | 로고 | 최소 크기 · 여백 · 컬러 선택 기준 (**제안, 확정 전**) |
 
-**디자인 값을 소정님께 묻기 전에 여기를 먼저 보세요.** 가이드에 있는 값이면 물을 것이 아니라
+**디자인 값을 새로 정하기 전에 여기를 먼저 보세요.** 가이드에 있는 값이면 새로 정할 것이 아니라
 **코드가 가이드를 따르는지 대조하는 것**이 할 일입니다.
 
 2026-09-22에 실제로 이걸로 헛걸음했습니다 — 「주버튼이 검정에서 초록으로 바뀌는데
-의도한 범위인가」 를 소정님께 확인 요청했는데, 가이드 Day 9 에 **실사용 28곳 조사와 함께**
+의도한 범위인가」 를 확인 요청했는데, 가이드 Day 9 에 **실사용 28곳 조사와 함께**
 「검정 → 포인트 그린. 새 규칙 아님 — 토큰 표에 이미 CTA 버튼으로 적혀 있었는데
 코드가 안 따르고 있었음」 이라고 적혀 있었습니다.
 
@@ -534,7 +538,7 @@ warnings   아쉬운 것                      → 알려만 주고 호스트가 
 
 장소도 같습니다 — `getPlaceErrors()` 는 **비었는지**만 보고,
 넓어서 찾아가기 어려운 것은 `getPlaceWarnings()` 가 알려주기만 합니다.
-액션 만들기 화면(개발 B)과 검수(민호)가 같은 함수를 씁니다.
+액션 만들기 화면과 검수가 같은 함수를 씁니다.
 
 AI 는 **날짜와 이미지를 보지 못합니다.** 코드가 따로 확인합니다.
 프롬프트에서 그것들을 판단하게 시키면 없는 말을 지어냅니다.
@@ -651,7 +655,8 @@ router.refresh();
 > 그 비용이 이동 앞에 붙어 **누르고 4~9초 뒤에 이동**했습니다. `push` 뒤의 `refresh` 는
 > 같은 일을 이동 뒤로 미룹니다.
 
-**필요한 함수가 없으면 직접 추가하지 말고 민호에게 요청하세요.** `lib/`은 공유 구역입니다.
+**필요한 함수가 없으면 화면에 쿼리를 짜지 말고 `lib/queries/` · `lib/mutations.ts` 에 추가하세요.**
+쓰기 함수는 위 모양(`{ ok, data }` / `{ ok: false, message }`, 한국어 메시지)을 그대로 따릅니다.
 
 ---
 
@@ -714,154 +719,40 @@ import { getQuotaState, describeTarget } from '@/lib/utils/quota';
 
 ---
 
-## 폴더 담당 (충돌 방지)
+## 공용 부품 — 고치면 영향이 번지는 곳
 
-브랜치 충돌은 여러 명이 같은 파일을 건드릴 때 납니다. 아래를 지키면 거의 안 납니다.
+팀 시절의 폴더 담당 표는 2026-10-14 혼자 고도화로 바뀌면서 없앴습니다. 누가 만든 코드인지는 `git log` 로 봅니다.
+아래는 담당과 상관없이 **한 파일을 고치면 여러 화면이 같이 바뀌는 곳**입니다.
 
-| 담당 | 구역 |
+| 파일 | 쓰는 곳 |
 |---|---|
-| 민호 (통합) | `lib/` · `supabase/` · `middleware.ts` · `scripts/verify-db.mjs` · **`scripts/reclassify_all_actions.mjs`** · **`scripts/batch_reclassify_active.mjs`** · **`scripts/classify-core.mjs`** · `app/notifications/` · `app/action/[id]/share/` · **`app/admin/`** · `app/api/ai/review/` · `app/api/ai/classify/` · **`docs/`** · **루트 설정 파일**(`package.json` · `package-lock.json` · `tsconfig.json` · `next.config.ts` · `.eslintrc.json` · `.gitignore` · `.claude/launch.json` · **`vercel.json`** · `README.md` · `CLAUDE.md`) |
-| 조장 | `app/activity/` · `app/trends/` · `components/trends/` · `app/api/ai/trends/` · `scripts/seed.mjs` · **`scripts/data/`** · **`scripts/check_seed_meta.mjs`** · `lib/queries/stats.ts` · **`app/discover/`** · **`app/api/ai/discover/`** · **`lib/utils/scoring.ts`** · **`lib/utils/discover-ranking.ts`** |
-| 디자이너 | `components/ui/` · `components/layout/` · `app/page.tsx` · `app/layout.tsx` · **`app/not-found.tsx`** · **`app/error.tsx`** · **`app/global-error.tsx`** · **`app/icon.svg`** · `app/globals.css` · `app/action/[id]/page.tsx` · `tailwind.config.ts` · **`postcss.config.mjs`** |
-| 개발 A | `app/(auth)/` · `app/my/` · `app/user/` · **`components/my/`** · **`app/api/auth/check-email/`** · `lib/constants/regions.ts` |
-| 개발 B | `app/action/create/` · `app/action/[id]/` 하위 (join · welcome · crew · chat · **edit** · result · voice) |
-| 공유 | `tests/` — **누구나 추가**할 수 있습니다. 남의 담당 로직 테스트를 **고칠** 때는 그 담당에게 말하세요 |
+| `components/layout/Header.tsx` | **23개 화면** (2026-09-29). 고치면 거의 모든 화면 상단 바가 바뀝니다. 형제 `BottomNav.tsx` 는 `app/layout.tsx` 한 곳뿐 |
+| `components/action/ReasonModal.tsx` | 취소·조기 종료(`ActionHostActions`) · 나가기(`LeaveButton`) · 삭제 확인 · `components/ui/LogoutButton.tsx` · `components/action/ActivityButtons.tsx` |
+| `components/action/SharePanel.tsx` | 공유 화면(`app/action/[id]/share/`)과 `ShareModal` 두 곳. `ShareModal` 은 모달 껍데기뿐이고 친구 전송·링크 복사는 전부 `SharePanel` 이 합니다 |
+| `components/action/ActionCrewSection.tsx` | 액션 상세의 **요약 카드**뿐입니다 — 실제 크루 목록은 `/crew` 화면이 그립니다 |
+| `components/action/QuotaProgress.tsx` | 2026-09-25 부터 **액션 상세에서만** 씁니다(참여 화면은 안 씀) |
 
-**액션 찾기(Discover)는 2026-09-29부터 조장 담당입니다.** 9/23 부터 성은님이 개편을 맡았고,
-9/29 지수님이 「제 작업 범위에서 빼겠다」 고 해서 옮겼습니다.
-`lib/constants/regions.ts` 는 가입·프로필 지역 선택(`RegionPicker`)도 같이 써서 **개발 A 에 남깁니다** — Discover 쪽에서 고쳐야 하면 지수님께 말해주세요.
-액션 자동 분류(`app/api/ai/classify/`)는 **민호 담당으로 정했습니다** (9/29). 한꺼번에 다시 분류하는 스크립트(`scripts/reclassify_all_actions.mjs` · `batch_reclassify_active.mjs`)도 **민호가 맡습니다** — 공개 때 분류와 같은 AI 지시문을 따로 들고 있어서 한 사람이 같이 고쳐야 합니다. 시드용 결과 파일(`scripts/data/`)과 `check_seed_meta.mjs` 는 시드와 한 몸이라 조장 그대로입니다.
+> **`app/api/auth/check-email/` 은 보안 판단이 들어 있습니다.** 서비스 롤 키(`createAdminClient()`)를 쓰고,
+> 자체 레이트리밋을 돌리고, 「계정 존재 여부를 오류로 흘리지 않습니다」. 가입 화면 기능이지만
+> 이 세 가지를 바꿀 때는 보안 영향부터 보세요. `lib/auth/email-availability.ts` 와 `tests/signup-followup.test.ts` 가 같이 걸립니다.
 
-`components/action/` 은 **파일 단위로 담당**이 있습니다.
+### 새 화면은 `components/ui/` 의 것을 먼저 쓰세요
 
-| 파일 | 담당 |
-|---|---|
-| ActionForm · ItemEditor · JoinForm · ChatBoard · ResultWriteForm · VoiceForm · **LeaveButton** · **AddressSearch** · **ActionHostActions** · **ActionTextEditForm** · **AddActionItemsForm** · **CrewVoiceList** · **ReasonModal** · **DateTimePickerModal** | 개발 B |
-| ActivityButtons | 조장 |
-| DiscoverChat | **조장** (2026-09-29) |
-| SharePanel | **공유** — 공유 화면(민호)과 `ShareModal`(디자이너)이 같이 씁니다. 고치기 전에 말하기 |
-| ActionGallery · AddressBox · **ActionCrewSection** · **ShareModal** | 디자이너 |
-| QuotaProgress | 디자이너 — 2026-09-25 부터 **액션 상세에서만** 씁니다(참여 화면은 안 씀). 2026-09-29 에 「공유」 에서 바꿈 |
+스타일·문구를 통일하는 일이 수십 파일로 번지는 이유는 **공통 컴포넌트를 거치지 않는 것**입니다.
+팀 시절 「화면 제목 한글 통일」 이 7파일, 「버튼 높이 고정 해제」 가 21파일에 걸쳤습니다.
+`Button.tsx` 를 쓰는 파일은 **15개**인데 `<button>` 을 직접 쓴 파일이 **27개**입니다 (2026-09-28 실측 —
+세는 기준은 `grep -rl "<button" app/ components/` 에서 `Button.tsx` 자신을 뺀 것).
+없으면 `components/ui/` 에 먼저 만드세요 — 그 한 번이 다음 통일 작업의 21파일을 1파일로 줄입니다.
 
-`AddressSearch` 와 `ActionHostActions` 는 이 표에 없어서 담당이 비어 있었습니다 (2026-09-14에 채웠습니다).
-쓰이는 곳으로 갈랐습니다 — `AddressSearch` 는 `ActionForm` 에서만, `ActionHostActions` 는
-액션 상세에서만 씁니다. `ActionHostActions` 는 호출하는 화면이 디자이너 구역이지만
-**내용이 취소·조기 종료 모달**이라 개발 B 로 두었습니다 (형제 파일 `LeaveButton` 과 같은 성격).
+**입력칸은 `components/ui/Input.tsx` 를 쓰세요** (2026-09-22). 전에는 같은
+`min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px]` 이 16개 파일에 복사돼 있었습니다.
+지금 6개 파일이 `Input` 을 씁니다(2026-09-30). 손으로 적은 곳은 9/22 기준 12개였습니다 —
+손대는 화면이 생길 때 하나씩 옮기면 됩니다.
+`Chip` 에는 `size="sm"` 이, `Button` 에는 `href`(링크로 렌더) 가 있고
+`tailwind.config.ts` 에 `brand` · `danger` · `warning` · `info` 토큰이 있습니다.
+대괄호로 색을 적던 곳(`bg-[#00A56E]` 등)은 토큰을 쓰세요.
 
-그때 **같은 폴더의 6개가 또 비어 있었습니다** (2026-09-17에 채웠습니다).
-9/14에는 눈에 띈 둘만 채웠는데, 이번에는 `components/action/` **21개를 전수로 세어** 표의 15개와
-대조했습니다. 빠진 6개 중 5개는 9/14보다 **먼저 있던 파일**입니다 — 표를 눈으로만 훑으면 또 빕니다.
-
-| 파일 | 쓰는 곳 | 담당 | 왜 |
-|---|---|---|---|
-| ActionTextEditForm · AddActionItemsForm | `app/action/[id]/edit/` | 개발 B | 공개 뒤 본문 수정·항목 추가 폼. 규칙 10 이 걸립니다 |
-| CrewVoiceList | `app/action/[id]/result/` | 개발 B | 소감 접기·펼치기 목록 |
-| ActionCrewSection | `app/action/[id]/page.tsx` | 디자이너 | 상세 화면의 **요약 카드**입니다 — 아바타 + 「N명 참여 중」 + 전체보기. 실제 크루 목록은 `/crew`(개발 B)가 그리고 이 파일은 거기로 보내기만 합니다 |
-| ShareModal | `components/ui/ToggleButtons.tsx` | 디자이너 | **공유 로직이 한 줄도 없습니다** — portal · Esc 닫기 · 스크롤 잠금 · 제목뿐인 모달 껍데기이고, 친구 전송·링크 복사는 전부 `SharePanel` 이 합니다 |
-
-`ActionCrewSection` 과 `ShareModal` 은 `ActionHostActions` 와 같은 자리에 있지만 **뒤집지 않았습니다.**
-`ActionHostActions` 를 개발 B 로 옮긴 이유는 내용이 규칙 12(취소·조기 종료)의 **상태 전이**였기 때문입니다.
-이 둘은 내용도 화면 UI 라 호출하는 쪽과 방향이 같습니다.
-
-> **`ShareModal` 을 디자이너로 두면서 `SharePanel` 이 「공유」가 됐습니다.** 공유 화면(민호)과
-> `ShareModal`(디자이너) 두 곳에서 쓰이기 때문입니다.
-> `ShareModal` 은 모달 제목 17px · 액션 제목 15px 을 들고 있어 **8쪽 타이포 전담 PR 의 대상**입니다.
-> 민호에게 주면 그 PR 이 담당 경계를 넘게 됩니다.
-
-`ReasonModal` 은 2026-09-17에 새로 만들어진 파일입니다 (개발 B). 취소·조기 종료·나가기·
-삭제 확인을 한 모달로 모은 것이라 내용이 `ActionHostActions`·`LeaveButton` 과 같은 성격입니다.
-다만 **담당이 다른 사용처가 둘 더 있습니다** — `components/ui/LogoutButton.tsx`(디자이너) 와
-`components/action/ActivityButtons.tsx`(조장). 고치기 전에 말해주세요.
-
-> **새 파일을 만들면 이 표에 한 줄을 같이 넣으세요.** 9/14 에 둘, 9/17 에 여섯을 뒤늦게 채웠고
-> `ReasonModal` 도 만든 날 표에 안 들어가 2026-09-21에 채웠습니다. 표는 훑어서는 안 메워집니다 —
-> `ls components/action` 으로 세어 대조해야 빈 줄이 드러납니다.
-> `DateTimePickerModal`(2026-09-23, 소정님)도 **병합한 9/24 에 민호가 안 넣어서** 9/27 에 채웠습니다.
-> `ActionForm` 에서만 쓰는 입력 부품이라 `AddressSearch` 와 같은 이유로 개발 B 입니다.
-
-**`MessageAccessButton` 은 지웠습니다** (2026-09-17). 저장소 전체에서 `import` 가 **0건**이었습니다.
-F29(「메시지 보기」 안내)로 만들었는데, 상세 화면 하단이 `getActionCta()` 로 바뀌면서(규칙 15)
-호출이 끊겼습니다. 같은 문구는 지금 `getActionCta()` 가 냅니다.
-`app/action/[id]/page.tsx` 에 남아 있던 쓰이지 않는 지역변수 두 개
-(`canViewChat` · `showMessageAccessButton`)도 같이 지웠습니다.
-
-폴더 쪽도 세 군데가 비어 있었습니다.
-
-| 경로 | 담당 | 왜 |
-|---|---|---|
-| `components/my/` | 개발 A | 4개 파일을 `app/my/` · `app/user/` 에서만 씁니다. **2026-09-17 전까지** 문서 어디에도 한 번도 없었습니다 |
-| `app/action/[id]/edit/` | 개발 B | 실재하는데 위 괄호 목록에서 빠져 있었습니다. 위 두 폼이 이 화면 부품입니다 |
-| `app/api/auth/check-email/` | 개발 A | 가입 이메일 중복 확인. `app/api/auth/` 가 통째로 비어 있었습니다 |
-
-> **`check-email` 은 서비스 롤 키(`createAdminClient()`)를 쓰고 자체 레이트리밋을 돌리며
-> 「계정 존재 여부를 오류로 흘리지 않는다」 판단이 들어 있습니다.** 기능 주인이 가입 화면이라
-> 개발 A 로 두었지만, **그 세 가지를 건드릴 때는 민호에게 말해주세요** (보안 규칙이 걸립니다).
-> 이 라우트가 쓰는 `lib/auth/email-availability.ts` 도 민호 구역입니다 (`tests/signup-followup.test.ts` 가 같이 씁니다).
-
-### 여러 구역에 걸친 변경은 한 사람이 전부 맡습니다 (2026-09-14)
-
-> **스타일·문구·제목을 통일하는 일은 폴더로 나눠지지 않습니다.**
-> 한 사람이 전부 맡고, 그동안 그 파일은 아무도 건드리지 않습니다. **한 PR 로 올립니다.**
-
-폴더 담당은 「각자 자기 화면을 만든다」에는 잘 맞지만, **위치가 아니라 패턴을 따라가는 변경**에는
-맞지 않습니다. 실제로 두 번 겪었습니다.
-
-| 요청 | 걸친 범위 |
-|---|---|
-| 화면 제목 한글로 통일 | 4명 · 7파일 |
-| 버튼 높이 고정 해제 (글자 200%) | 5명 · 21파일 |
-
-번지는 이유는 **공통 컴포넌트를 거치지 않는 것**입니다. `Button.tsx` 를 쓰는 파일은 **15개**인데
-`<button>` 을 직접 쓴 파일이 **27개**입니다 (2026-09-28 실측 · 9/22 에는 16 · 26 — 세는 기준은
-`grep -rl "<button" app/ components/` 에서 `Button.tsx` 자신을 뺀 것).
-새 화면을 만들 때는 **`components/ui/` 의 것을 먼저 찾아 쓰세요.** 없으면 만들자고 말해주세요 —
-그 한 번이 다음 통일 작업의 21파일을 1파일로 줄입니다.
-
-**입력칸 공통 컴포넌트가 생겼습니다** — `components/ui/Input.tsx` (2026-09-22, 소정님).
-전에는 이것이 없어서 같은 `min-h-11 rounded-xl border border-neutral-300 px-4 py-3 text-[15px]`
-이 16개 파일에 복사돼 있었습니다. 지금 6개 파일이 `Input` 을 씁니다(2026-09-30 — 모집 항목 입력칸 `ItemEditor` 가 옮겨 와 하나 늘었습니다). 손으로 적은 곳은 9/22 기준 12개였습니다.
-**새로 만드는 입력칸은 손으로 짜지 말고 `Input` 을 쓰세요.** 남은 12개는 손대는 화면이
-생길 때 하나씩 옮기면 됩니다 — 그것만으로 다음 타이포·높이 통일 작업이 1파일이 됩니다.
-같은 PR 로 `Chip` 에 `size="sm"` 이, `Button` 에 `href`(링크로 렌더) 가 들어왔고
-`tailwind.config.ts` 에 `brand` · `danger` · `warning` · `info` 토큰이 생겼습니다.
-대괄호로 색을 적던 곳(`bg-[#00A56E]` 등)은 이제 토큰을 쓸 수 있습니다.
-
-절차는 이렇게 합니다.
-
-1. **시작 전에 민호에게 알립니다.** 어떤 파일을 건드릴지 목록으로 주세요.
-2. 민호가 공지하고, 그 기간에는 **다른 사람이 그 파일을 건드리지 않습니다.**
-3. **파일별로 쪼개 나눠 고치지 마세요.** 세 명이 나누면 같은 패턴이 세 가지로 갈립니다.
-4. 한 PR 로 올리면 민호가 점검하고 병합합니다.
-
-**「미리 알려야 하는 것」 을 두 가지로 좁혔습니다** (2026-09-22, 소정님 제안).
-
-화면을 만들다 보면 남의 구역 파일 몇 개를 스치는 일은 계속 생깁니다. 그때마다 공지하면
-일이 멈추기만 합니다. 그래서 **디자인·화면 구성 개편처럼 이미 전체 공지가 된 작업이라면,
-그 안에서 남의 파일 몇 개가 걸치는 것은 그 공지에 포함된 것으로 봅니다** —
-단 **로직·백엔드를 안 건드리는 선까지**입니다.
-
-대신 아래 두 경우는 **시작 전에 민호에게 한 줄 주세요.**
-
-| 언제 | 왜 |
-|---|---|
-| **`components/ui/` · `components/layout/` · `lib/` 을 건드릴 때** — 화면 하나짜리 작업이든 아니든 | 이 세 곳은 쓰는 쪽이 전부 남의 화면입니다. `Header.tsx` 하나가 23개 화면에 걸칩니다 |
-| **앱 전체에 같은 패턴을 한 번에 쓸어담는 작업** | 위 표(제목 통일 · 버튼 높이)의 그 종류입니다. 나눠 고치면 패턴이 갈립니다 |
-
-실제 사례 — `a39a673`(Foundations 반영)은 **16파일**이었고 그중 **8개가 남의 구역**이었습니다
-(개발 A 3 · 개발 B 3 · 조장 1 · 공유 1). 로직은 한 줄도 안 건드리고 손으로 짠
-`input`·`button` 을 공통 컴포넌트로 바꾼 것이라, **규칙대로 한 사람이 한 PR** 로 올라왔고
-충돌도 없었습니다. 다만 `components/ui/` 와 `tailwind.config.ts` 가 들어 있어
-**위 첫 번째 조건에는 해당**합니다.
-
-**`components/ui/` · `components/layout/` · `lib/` 은 공유 구역입니다.** 고칠 때는 먼저 말해주세요.
-`components/layout/Header.tsx` 는 **23개 화면이 씁니다** (2026-09-29 — 약관·개인정보 화면이 공용 상단 바로 바뀜. 9/28 에는 22) — 다섯 담당 전원의 구역에 걸칩니다.
-파일은 디자이너 것이지만, 여기를 고치면 남의 화면 상단 바가 전부 바뀝니다.
-(형제 파일 `BottomNav.tsx` 는 `app/layout.tsx` 한 곳에서만 쓰므로 해당 없습니다.)
-예외 — 위 표에 적힌 `lib/` 파일 4개(`stats.ts` · `regions.ts` · `scoring.ts` · `discover-ranking.ts`)는 각 담당이 바로 고쳐도 됩니다.
-**2026-09-17까지 이 문장은 「4개」 인데 위 표에는 3개만 있었습니다** — `discover-ranking.ts` 가 빠져 있어
-문서가 자기 자신과 어긋났습니다. 표에 넣어 맞췄습니다.
-
-`tests/` 는 **누구나 추가**할 수 있습니다. 자기 담당 로직의 테스트를 붙이는 건 언제나 환영입니다.
+### 테스트
 
 ```bash
 npm test
@@ -869,29 +760,70 @@ npm test
 
 Node 내장 테스트 러너를 씁니다. **새로 설치할 패키지가 없습니다.**
 
-> **담당이 바뀌면 세 곳을 같이 고칩니다** — 이 표, 다른 쪽 표(CLAUDE.md ↔ docs/00-공통규칙.md), 그리고 해당 역할 문서(docs/01~05).
-> 한 곳만 고치면 파일마다 답이 달라집니다. 2026-09-01에 실제로 그런 혼선이 있었습니다.
-
 ---
 
-## 브랜치
+## 브랜치 · 배포
+
+2026-10-14 에 팀 레포에서 **개인 레포로 옮겼습니다.** 이제 혼자 작업합니다.
 
 ```
-main        배포용. 민호만 병합.
- └ dev      통합용. 모든 PR은 여기로.
-    └ feature/이름-화면
+main          계속 작업하는 곳. push 하면 바로 운영 배포됩니다
+ └ feature/…  큰 작업만 따서 PR 로 main 에 합칩니다 (Vercel 이 PR 마다 미리보기 주소를 만듭니다)
+proj_mvp      팀 MVP 최종본 박제. GitHub Ruleset 으로 잠갔습니다 — 커밋하지 마세요
+v1.0-mvp      같은 지점의 태그
 ```
 
-1. `main`에 직접 push하지 않습니다.
-2. 작업 시작 전 항상 `git pull origin dev`.
-3. 브랜치는 작게, 자주 병합합니다. "다 만들면 올릴게요"보다 "목록만 되면 올릴게요"가 안전합니다.
-4. `components/ui/`, `lib/`을 고칠 때는 먼저 공유합니다.
-5. **스키마는 Supabase 콘솔에서 직접 고치지 않습니다.** 변경은 `supabase/`에 새 파일로 쌓습니다.
+| remote | 레포 | |
+|---|---|---|
+| `origin` | `olivepop04/ChakChak-app` | 내 레포. 여기로 push |
+| `team` | `minho880910-spec/final_proj` | 옛 팀 레포. **push 는 `no_push` 로 막아 뒀습니다.** 팀원이 뒤늦게 고친 게 있는지 볼 때만 씁니다 |
 
-**`main` 에 올리면 Vercel 이 바로 배포합니다** (https://final-proj-alpha.vercel.app).
-화면을 만드는 서버 위치는 `vercel.json` 의 `icn1`(서울)입니다 (2026-09-30). DB 가 서울 근처라서입니다 —
-전에는 기본값인 미국 동부(`iad1`)에서 돌아서, 화면 하나에 DB 를 여러 번 묻는 동안 매번 태평양을 건너
-**액션 상세가 3~4초** 걸렸습니다. 이 파일을 지우면 그때로 돌아갑니다.
+```bash
+git fetch team
+git log --oneline main..team/main   # 팀 레포에만 있는 커밋
+```
+
+1. **스키마는 Supabase 콘솔에서 직접 고치지 않습니다.** 변경은 `supabase/` 에 다음 번호 파일(`23_….sql`)로 쌓습니다 — 무료 플랜은 자동 백업이 없어서 **이 파일들이 곧 백업**입니다.
+2. 브랜치는 작게, 자주 합칩니다.
+
+### Vercel
+
+**`main` 에 push 하면 Vercel 이 바로 운영 배포합니다** — 본인 Hobby 공간의 `chakchak-app` 프로젝트.
+
+- 환경변수 4개(`NEXT_PUBLIC_SUPABASE_URL` · `NEXT_PUBLIC_SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` · `OPENAI_API_KEY`)는 Vercel **Settings → Environment Variables** 에 있습니다.
+  **값을 바꾸면 Redeploy 해야 반영됩니다** — 환경변수는 배포할 때 들어갑니다.
+- `next.config.ts` 의 사진 주소 허용은 **빌드할 때** `NEXT_PUBLIC_SUPABASE_URL` 을 읽습니다. 그 값 없이 빌드하면 사진이 깨집니다.
+- 화면을 만드는 서버 위치는 `vercel.json` 의 `icn1`(서울)입니다 (2026-09-30). DB 가 서울이라서입니다 —
+  전에는 기본값인 미국 동부(`iad1`)에서 돌아서 **액션 상세가 3~4초** 걸렸습니다. 이 파일을 지우면 그때로 돌아갑니다.
+  확인은 응답 헤더 `x-vercel-id` 의 마지막 지역 코드가 `icn1` 인지 봅니다.
+
+> 옛 팀 배포(`final-proj-alpha.vercel.app`)는 팀원 계정에 남아 **팀 DB** 를 봅니다. 내 배포와는 별개입니다.
+
+### Supabase
+
+본인 조직의 프로젝트(서울)입니다. DB 를 새로 만들어야 하면 이 순서입니다.
+
+1. SQL Editor 에서 `supabase/01` → `02` → `03` → `05` → … → 마지막 번호까지 **순서대로 한 번씩** 실행합니다.
+   **`04_seed.sql` 은 건너뜁니다**(사용 중지). `02`·`03` 은 다시 실행하면 안 됩니다(파일 머리 참고).
+   「RLS 없이 테이블을 만든다」 경고가 뜨면 **Run without RLS** — 같은 파일이나 뒤 파일이 RLS 를 켭니다.
+2. **Authentication → Sign In / Providers → Email → Confirm email 을 끕니다.**
+   가입 화면(`app/(auth)/signup/page.tsx`)은 `signUp` 직후 바로 로그인된 상태라고 보고 취향을 저장합니다.
+   이메일 인증이 켜져 있으면 계정만 생기고 취향이 저장되지 않습니다.
+3. `.env.local` 을 새 프로젝트 값으로 바꾸고 `npm run seed` → `npm run verify:db`.
+   `SUPABASE_SERVICE_ROLE_KEY` 자리에 anon 키를 넣으면 시드가 「계정 생성 실패」 로 끝납니다 — 두 키가 위아래로 붙어 있어 헷갈리기 쉽습니다.
+4. **Authentication → URL Configuration** 에 Site URL(배포 주소)과 Redirect URLs(`배포주소/**` · `http://localhost:3000/**`).
+
+**관리자 지정** — 앱에서 가입한 뒤 SQL Editor 에서 넣습니다(저장소에 이메일을 적지 않습니다).
+
+```sql
+INSERT INTO admins (user_id) SELECT id FROM auth.users WHERE email = '이메일';
+```
+
+이메일이 틀려도 `Success` 가 나오니 `SELECT * FROM admins` 로 확인하세요.
+관리자 화면은 **`/admin/feedback`** 입니다 — `/admin` 이라는 화면은 없습니다. 관리자가 아니면 일부러 404 를 냅니다.
+
+**무료 플랜은 1주일 동안 아무도 안 쓰면 일시정지됩니다.** 사이트에서 로그인·목록이 전부 안 되면
+대시보드에서 프로젝트를 열어 **Restore** 하세요. 데이터는 남아 있습니다.
 
 ---
 
@@ -899,8 +831,25 @@ main        배포용. 민호만 병합.
 
 - `SUPABASE_SERVICE_ROLE_KEY`는 서버 전용입니다. `NEXT_PUBLIC_` 접두사를 붙이면 절대 안 됩니다.
 - 클라이언트 컴포넌트에서 `lib/openai.ts`를 import하지 마세요. `server-only`가 걸려 있어 빌드가 실패합니다.
-- `.env.local`은 `.gitignore`에 있습니다. **키를 메신저로 주고받지 마세요.** 캡처가 남고 대화방은 검색됩니다.
-- OpenAI 키는 **각자 발급받은 것만** 쓰세요. 빌려주고 빌려 쓰면 사용량이 섞이고, 하나가 새면 여럿이 멈춥니다.
+- `.env.local`은 `.gitignore`에 있습니다. **키를 메신저·캡처로 남기지 마세요.**
+- `.env.team.local` 은 옛 팀 키 백업입니다. **env 백업 파일 이름은 끝이 `.local` 이어야** `.gitignore` 의 `.env*.local` 에 걸려 Git 에 안 올라갑니다 (`.env.local.team` 은 올라갑니다).
+
+### OpenAI 키
+
+지금은 **교육기관이 지원한 키**라 언젠가 끊길 수 있습니다.
+**끊겨도 화면은 안 깨집니다** — 검수는 건너뛰고 공개되고(`app/api/ai/review/route.ts`), 분류는 기본값으로 채우고(`classify`),
+추천은 고정 질문·코드 점수로 돕니다(`discover`). 그래서 **끊긴 걸 늦게 알아채기 쉽습니다.**
+
+```bash
+node --env-file=.env.local -e "fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+process.env.OPENAI_API_KEY},body:JSON.stringify({model:'gpt-4o-mini',max_tokens:1,messages:[{role:'user',content:'hi'}]})}).then(async r=>{const j=await r.json();console.log(r.status,j.error?(j.error.code||j.error.message):'정상')})"
+```
+
+`200 정상` · `401 invalid_api_key`(폐기) · `429 insufficient_quota`(크레딧 소진). 언제부터 끊겼는지는 `ai_runs` 에서
+`SUCCESS` 가 사라지고 `API_FAIL` 만 남은 날짜로 봅니다.
+
+바꿀 때는 `.env.local` → `npm run dev` 재시작 → Vercel 환경변수 → **Redeploy** →
+끊긴 동안 기본값으로 분류된 액션을 `npm run reclassify`(미리보기) → `-- --apply` 로 다시 분류합니다.
+내 키로 바꾸면 OpenAI **월 사용 한도**를 꼭 정해 두세요 — 배포 사이트는 누구나 AI 기능을 부를 수 있습니다.
 
 ---
 
